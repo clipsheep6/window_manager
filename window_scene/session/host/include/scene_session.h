@@ -50,6 +50,9 @@ using GetAINavigationBarArea = std::function<WSRect(uint64_t displayId)>;
 using RecoveryCallback = std::function<void(int32_t persistentId, Rect rect)>;
 using NotifyBindDialogSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySessionRectChangeFunc = std::function<void(const WSRect& rect, const SizeChangeReason& reason)>;
+using NotifySessionPiPControlStatusChangeFunc = std::function<void(PiPControlType controlType,
+    PiPControlStatus status)>;
+using NotifySessionPiPControlEnableChangeFunc = std::function<void(PiPControlType controlType, bool enabled)>;
 using NotifySessionEventFunc = std::function<void(int32_t eventId, SessionEventParam param)>;
 using NotifySessionTopmostChangeFunc = std::function<void(const bool topmost)>;
 using NotifyRaiseToTopFunc = std::function<void()>;
@@ -190,6 +193,8 @@ public:
     void SetFloatingScale(float floatingScale) override;
     WSError RaiseAboveTarget(int32_t subWindowId) override;
     WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason) override;
+    WSError UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status) override;
+    WSError SetPiPControlEnabled(PiPControlType controlType, bool enabled) override;
     void NotifyPiPWindowPrepareClose() override;
     void SetScale(float scaleX, float scaleY, float pivotX, float pivotY) override;
     void RequestHideKeyboard(bool isAppColdStart = false);
@@ -217,6 +222,8 @@ public:
     void SetWindowDragHotAreaListener(const NotifyWindowDragHotAreaFunc& func);
     void SetSessionEventParam(SessionEventParam param);
     void SetSessionRectChangeCallback(const NotifySessionRectChangeFunc& func);
+    void SetSessionPiPControlStatusChangeCallback(const NotifySessionPiPControlStatusChangeFunc& func);
+    void SetSessionPiPControlEnableChangeCallback(const NotifySessionPiPControlEnableChangeFunc& func);
     void SetIsDisplayStatusBarTemporarily(bool isTemporary);
     void SetRestoringRectForKeyboard(WSRect rect);
     void SetSkipDraw(bool skip);
@@ -282,6 +289,7 @@ public:
     void SetIsSystemSpecificSession(bool isSystemSpecificSession);
     void SetShouldHideNonSecureWindows(bool shouldHide);
     WSError SetPipActionEvent(const std::string& action, int32_t status);
+    WSError SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status);
     void UpdateExtWindowFlags(int32_t extPersistentId, const ExtensionWindowFlags& extWindowFlags,
         const ExtensionWindowFlags& extWindowActions);
     ExtensionWindowFlags GetCombinedExtWindowFlags();
@@ -357,6 +365,8 @@ private:
     void RotateDragWindow(std::shared_ptr<RSTransaction> rsTransaction);
 #endif // DEVICE_STATUS_ENABLE
     void NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
+    void NotifySessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status);
+    void NotifySessionPiPControlEnableChange(PiPControlType controlType, bool enabled);
     void OnMoveDragCallback(const SizeChangeReason& reason);
     void FixRectByLimits(WindowLimits limits, WSRect& rect, float ratio, bool isDecor, float vpr);
     bool FixRectByAspectRatio(WSRect& rect);
@@ -431,6 +441,8 @@ private:
         const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action);
 
     NotifySessionRectChangeFunc sessionRectChangeFunc_;
+    NotifySessionPiPControlStatusChangeFunc sessionPiPControlStatusChangeFunc_;
+    NotifySessionPiPControlEnableChangeFunc sessionPiPControlEnableChangeFunc_;
     static wptr<SceneSession> enterSession_;
     static std::mutex enterSessionMutex_;
     mutable std::mutex sessionChangeCbMutex_;

@@ -72,6 +72,34 @@ HWTEST_F(PictureInPictureOptionTest, PipTemplate, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: PipTemplate
+ * @tc.desc: SetPiPControlStatus/GetControlStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureOptionTest, PiPControlStatus, Function | SmallTest | Level2)
+{
+    sptr<PipOption> option = new PipOption();
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus::PLAY;
+    option->SetPiPControlStatus(controlType, status);
+    ASSERT_NE(0, option->GetControlStatus().size());
+}
+
+/**
+ * @tc.name: PipTemplate
+ * @tc.desc: SetPiPControlEnabled/GetControlEnable
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureOptionTest, PiPControlEnable, Function | SmallTest | Level2)
+{
+    sptr<PipOption> option = new PipOption();
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    bool enabled = true;
+    option->SetPiPControlEnabled(controlType, enabled);
+    ASSERT_NE(0, option->GetControlEnable().size());
+}
+
+/**
  * @tc.name: NavigationId
  * @tc.desc: SetNavigationId/GetNavigationId
  * @tc.type: FUNC

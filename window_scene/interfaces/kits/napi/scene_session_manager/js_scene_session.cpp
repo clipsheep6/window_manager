@@ -30,6 +30,8 @@ const std::string SESSION_STATE_CHANGE_CB = "sessionStateChange";
 const std::string BUFFER_AVAILABLE_CHANGE_CB = "bufferAvailableChange";
 const std::string SESSION_EVENT_CB = "sessionEvent";
 const std::string SESSION_RECT_CHANGE_CB = "sessionRectChange";
+const std::string SESSION_PIP_CONTROL_STATUS_CHANGE_CB = "sessionPiPControlStatusChange";
+const std::string SESSION_PIP_CONTROL_ENABLE_CHANGE_CB = "sessionPiPControlEnableChange";
 const std::string CREATE_SUB_SESSION_CB = "createSpecificSession";
 const std::string BIND_DIALOG_TARGET_CB = "bindDialogTarget";
 const std::string RAISE_TO_TOP_CB = "raiseToTop";
@@ -73,8 +75,41 @@ constexpr int ARG_INDEX_3 = 3;
 
 std::map<int32_t, napi_ref> JsSceneSession::jsSceneSessionMap_;
 
+napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatusInfo controlStatusInfo)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called");
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called objValue == nullptr");
+        return NapiGetUndefined(env);
+    }
+    uint32_t controlType = static_cast<uint32_t>(controlStatusInfo.controlType);
+    int32_t status = static_cast<int32_t>(controlStatusInfo.status);
+    napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
+    napi_set_named_property(env, objValue, "status", CreateJsValue(env, status));
+    return objValue;
+}
+
+napi_value CreateJsPiPControlEnableObject(napi_env env, PiPControlEnableInfo controlEnableInfo)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "CreateJsPiPControlEnableObject is called");
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlEnableObject is called objValue == nullptr");
+        return NapiGetUndefined(env);
+    }
+    uint32_t controlType = static_cast<uint32_t>(controlEnableInfo.controlType);
+    bool enabled = controlEnableInfo.enabled;
+    napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
+    napi_set_named_property(env, objValue, "enabled", CreateJsValue(env, enabled));
+    return objValue;
+}
+
 static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& session)
 {
+    TLOGI(WmsLogTag::WMS_PIP, "CreatePipTemplateInfo is called");
     napi_value pipTemplateInfoValue = nullptr;
     napi_create_object(env, &pipTemplateInfoValue);
     napi_set_named_property(env, pipTemplateInfoValue, "pipTemplateType",
@@ -89,6 +124,24 @@ static napi_value CreatePipTemplateInfo(napi_env env, const sptr<SceneSession>& 
         napi_set_element(env, controlArrayValue, index++, CreateJsValue(env, controlGroup));
     }
     napi_set_named_property(env, pipTemplateInfoValue, "controlGroup", controlArrayValue);
+    napi_value controlStatusArrayValue = nullptr;
+    std::vector<PiPControlStatusInfo> controlStatusInfoList = session->GetPiPTemplateInfo().pipControlStatusInfoList;
+    napi_create_array_with_length(env, controlStatusInfoList.size(), &controlStatusArrayValue);
+    auto indexControlStatus = 0;
+    for (const auto& controlStatus : controlStatusInfoList) {
+        napi_set_element(env, controlStatusArrayValue, indexControlStatus++,
+            CreateJsPiPControlStatusObject(env, controlStatus));
+    }
+    napi_set_named_property(env, pipTemplateInfoValue, "pipControlStatusInfoList", controlStatusArrayValue);
+    napi_value controlEnableArrayValue = nullptr;
+    std::vector<PiPControlEnableInfo> controlEnableInfoList = session->GetPiPTemplateInfo().pipControlEnableInfoList;
+    napi_create_array_with_length(env, controlEnableInfoList.size(), &controlEnableArrayValue);
+    auto indexControlEnable = 0;
+    for (const auto& controlEnableInfo : controlEnableInfoList) {
+        napi_set_element(env, controlEnableArrayValue, indexControlEnable++,
+            CreateJsPiPControlEnableObject(env, controlEnableInfo));
+    }
+    napi_set_named_property(env, pipTemplateInfoValue, "pipControlEnableInfoList", controlEnableArrayValue);
     return pipTemplateInfoValue;
 }
 
@@ -151,6 +204,7 @@ void JsSceneSession::BindNativeMethod(napi_env env, napi_value objValue, const c
     BindNativeFunction(env, objValue, "setOffset", moduleName, JsSceneSession::SetOffset);
     BindNativeFunction(env, objValue, "setWaterMarkFlag", moduleName, JsSceneSession::SetWaterMarkFlag);
     BindNativeFunction(env, objValue, "setPipActionEvent", moduleName, JsSceneSession::SetPipActionEvent);
+    BindNativeFunction(env, objValue, "setPiPControlEvent", moduleName, JsSceneSession::SetPiPControlEvent);
     BindNativeFunction(env, objValue, "notifyDisplayStatusBarTemporarily", moduleName,
         JsSceneSession::NotifyDisplayStatusBarTemporarily);
     BindNativeFunction(env, objValue, "setTemporarilyShowWhenLocked", moduleName,
@@ -205,6 +259,8 @@ void JsSceneSession::InitListenerFuncs()
         { BUFFER_AVAILABLE_CHANGE_CB,            &JsSceneSession::ProcessBufferAvailableChangeRegister},
         { SESSION_EVENT_CB,                      &JsSceneSession::ProcessSessionEventRegister },
         { SESSION_RECT_CHANGE_CB,                &JsSceneSession::ProcessSessionRectChangeRegister },
+        { SESSION_PIP_CONTROL_STATUS_CHANGE_CB,  &JsSceneSession::ProcessSessionPiPControlStatusChangeRegister },
+        { SESSION_PIP_CONTROL_ENABLE_CHANGE_CB,  &JsSceneSession::ProcessSessionPiPControlEnableChangeRegister },
         { CREATE_SUB_SESSION_CB,                 &JsSceneSession::ProcessCreateSubSessionRegister },
         { BIND_DIALOG_TARGET_CB,                 &JsSceneSession::ProcessBindDialogTargetRegister },
         { RAISE_TO_TOP_CB,                       &JsSceneSession::ProcessRaiseToTopRegister },
@@ -616,6 +672,34 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
     }
     session->SetSessionRectChangeCallback(func);
     WLOGFD("ProcessSessionRectChangeRegister success");
+}
+
+void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
+{
+    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlStatusChangeRegister success");
+    NotifySessionPiPControlStatusChangeFunc func = [this](PiPControlType controlType, PiPControlStatus status) {
+        this->OnSessionPiPControlStatusChange(controlType, status);
+    };
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("session is nullptr");
+        return;
+    }
+    session->SetSessionPiPControlStatusChangeCallback(func);
+}
+
+void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
+{
+    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlEnableChangeRegister success");
+    NotifySessionPiPControlEnableChangeFunc func = [this](PiPControlType controlType, bool enabled) {
+        this->OnSessionPiPControlEnableChange(controlType, enabled);
+    };
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("session is nullptr");
+        return;
+    }
+    session->SetSessionPiPControlEnableChangeCallback(func);
 }
 
 void JsSceneSession::ProcessRaiseToTopRegister()
@@ -1127,6 +1211,13 @@ napi_value JsSceneSession::SetPipActionEvent(napi_env env, napi_callback_info in
     return (me != nullptr) ? me->OnSetPipActionEvent(env, info) : nullptr;
 }
 
+napi_value JsSceneSession::SetPiPControlEvent(napi_env env, napi_callback_info info)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "[NAPI]SetPiPControlEvent");
+    JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
+    return (me != nullptr) ? me->OnSetPiPControlEvent(env, info) : nullptr;
+}
+
 napi_value JsSceneSession::NotifyDisplayStatusBarTemporarily(napi_env env, napi_callback_info info)
 {
     JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
@@ -1596,6 +1687,50 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
     std::string rectInfo = "OnSessionRectChange [" + std::to_string(rect.posX_) + "," + std::to_string(rect.posY_)
         + "], [" + std::to_string(rect.width_) + ", " + std::to_string(rect.height_);
     taskScheduler_->PostMainThreadTask(task, rectInfo);
+}
+
+void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlStatusChange");
+    std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_STATUS_CHANGE_CB);
+    if (jsCallBack == nullptr) {
+        return;
+    }
+
+    auto task = [controlType, status, jsCallBack, env = env_]() {
+        if (!jsCallBack) {
+            WLOGFE("[NAPI]jsCallBack is nullptr");
+            return;
+        }
+        napi_value statusChangeType = CreateJsValue(env, controlType);
+        napi_value statusChangeValue = CreateJsValue(env, status);
+        napi_value argv[] = {statusChangeType, statusChangeValue};
+        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
+    };
+    std::string statusChangeInfo = "OnSessionPiPControlStatusChange";
+    taskScheduler_->PostMainThreadTask(task, statusChangeInfo);
+}
+
+void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType, bool enabled)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlEnableChange is called");
+    std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_ENABLE_CHANGE_CB);
+    if (jsCallBack == nullptr) {
+        return;
+    }
+
+    auto task = [controlType, enabled, jsCallBack, env = env_]() {
+        if (!jsCallBack) {
+            WLOGFE("[NAPI]jsCallBack is nullptr");
+            return;
+        }
+        napi_value enableChangeType = CreateJsValue(env, controlType);
+        napi_value enableChangeValue = CreateJsValue(env, enabled);
+        napi_value argv[] = {enableChangeType, enableChangeValue};
+        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
+    };
+    std::string enableChangeInfo = "OnSessionPiPControlEnableChange";
+    taskScheduler_->PostMainThreadTask(task, enableChangeInfo);
 }
 
 void JsSceneSession::OnRaiseToTop()
@@ -2724,6 +2859,43 @@ napi_value JsSceneSession::OnSetPipActionEvent(napi_env env, napi_callback_info 
         return NapiGetUndefined(env);
     }
     session->SetPipActionEvent(action, status);
+    return NapiGetUndefined(env);
+}
+
+napi_value JsSceneSession::OnSetPiPControlEvent(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    if (argc < 1) {
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Argc count is invalid: %{public}zu", argc);
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+                                      "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    if (!ConvertFromJsValue(env, argv[0], controlType)) {
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");
+        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+            "Input parameter is missing or invalid"));
+        return NapiGetUndefined(env);
+    }
+    auto status = PiPControlStatus::PLAY;
+    if (argc > 1) {
+        if (!ConvertFromJsValue(env, argv[1], status)) {
+            TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
+                "Input parameter is missing or invalid"));
+            return NapiGetUndefined(env);
+        }
+    }
+
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Session is nullptr");
+        return NapiGetUndefined(env);
+    }
+    session->SetPiPControlEvent(controlType, status);
     return NapiGetUndefined(env);
 }
 
