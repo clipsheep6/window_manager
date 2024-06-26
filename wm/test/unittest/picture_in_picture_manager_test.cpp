@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include "picture_in_picture_manager.h"
 #include "singleton_container.h"
+#include "wm_common.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -80,6 +81,19 @@ HWTEST_F(PictureInPictureManagerTest, ReportPiPActionEvent, Function | SmallTest
     std::string actionEvent = "";
     SingletonContainer::Get<PiPReporter>().ReportPiPActionEvent(1, actionEvent);
     ASSERT_EQ(result, 0);
+}
+
+/**
+ * @tc.name: ReportPiPControlEvent
+ * @tc.desc: ReportPiPControlEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureManagerTest, ReportPiPControlEvent, Function | SmallTest | Level2)
+{
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    SingletonContainer::Get<PiPReporter>().ReportPiPControlEvent(1, controlType);
+    int result = 0;
+    ASSERT_NE(result, 0);
 }
 
 /**
