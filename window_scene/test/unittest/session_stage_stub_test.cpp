@@ -445,7 +445,7 @@ HWTEST_F(SessionStageStubTest, HandleSetPiPControlEvent, Function | SmallTest | 
     MessageParcel data;
     MessageParcel reply;
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus.PLAY;
+    auto status = PiPControlStatus::PLAY;
     data.WriteUint32(static_cast<uint32_t>(controlType));
     data.WriteInt32(static_cast<int32_t>(status));
     ASSERT_TRUE((sessionStageStub_ != nullptr));

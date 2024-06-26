@@ -829,7 +829,7 @@ HWTEST_F(SceneSessionTest, NotifySessionPiPControlStatusChange, Function | Small
     sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus.PLAY;
+    auto status = PiPControlStatus::PLAY;
     sceneSession->NotifySessionPiPControlStatusChange(controlType, status);
 }
 

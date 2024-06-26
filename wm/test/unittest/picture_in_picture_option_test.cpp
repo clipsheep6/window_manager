@@ -79,8 +79,8 @@ HWTEST_F(PictureInPictureOptionTest, PipTemplate, Function | SmallTest | Level2)
 HWTEST_F(PictureInPictureOptionTest, PiPControlStatus, Function | SmallTest | Level2)
 {
     sptr<PipOption> option = new PipOption();
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus.PLAY;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus::PLAY;
     option->SetPiPControlStatus(controlType, status);
     ASSERT_NE(0, option->GetControlStatus().size());
 }
@@ -93,7 +93,7 @@ HWTEST_F(PictureInPictureOptionTest, PiPControlStatus, Function | SmallTest | Le
 HWTEST_F(PictureInPictureOptionTest, PiPControlEnable, Function | SmallTest | Level2)
 {
     sptr<PipOption> option = new PipOption();
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     bool enabled = true;
     option->SetPiPControlEnabled(controlType, enabled);
     ASSERT_NE(0, option->GetControlEnable().size());

@@ -248,8 +248,8 @@ HWTEST_F(SessionStubTest, HandleUpdatePiPControlStatus, Function | SmallTest | L
 {
     MessageParcel data;
     MessageParcel reply;
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus.PLAY;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus::PLAY;
     data.WriteUint32(static_cast<uint32_t>(controlType));
     data.WriteInt32(static_cast<int32_t>(status));
     auto res = session_->HandleUpdatePiPControlStatus(data, reply);
@@ -266,7 +266,7 @@ HWTEST_F(SessionStubTest, HandleSetPiPControlEnabled, Function | SmallTest | Lev
 {
     MessageParcel data;
     MessageParcel reply;
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     bool enabled = true;
     data.WriteUint32(static_cast<uint32_t>(controlType));
     data.WriteBool(enabled);

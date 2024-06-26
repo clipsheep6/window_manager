@@ -90,7 +90,7 @@ HWTEST_F(PictureInPictureManagerTest, ReportPiPActionEvent, Function | SmallTest
  */
 HWTEST_F(PictureInPictureManagerTest, ReportPiPControlEvent, Function | SmallTest | Level2)
 {
-    auto controlType = PiPControlType.VIDEO_PLAY_PAUSE;
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     SingletonContainer::Get<PiPReporter>().ReportPiPControlEvent(1, controlType);
     int result = 0;
     ASSERT_NE(result, 0);
