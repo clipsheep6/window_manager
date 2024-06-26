@@ -54,9 +54,9 @@ private:
     uint32_t contentHeight_ = 0;
     std::shared_ptr<XComponentController> xComponentController_;
     std::vector<std::uint32_t> controlGroup_;
+    napi_ref customNodeController_;
     std::vector<PiPControlStatusInfo> pipControlStatusInfoList_ = {};
     std::vector<PiPControlEnableInfo> pipControlEnableInfoList_ = {};
-    napi_ref customNodeController_;
 };
 }
 }
