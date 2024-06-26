@@ -1308,20 +1308,20 @@ HWTEST_F(SceneSessionTest2, SetPipActionEvent, Function | SmallTest | Level2)
     SessionInfo info;
     info.abilityName_ = "SetPipActionEvent";
     info.bundleName_ = "SetPipActionEvent";
-    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(sceneSession, nullptr);
+    sptr<SceneSession> scenesession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(scenesession, nullptr);
 
     sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
-    sceneSession->SetSessionProperty(property);
-    WSError res = sceneSession->SetPipActionEvent("close", 0);
+    scenesession->SetSessionProperty(property);
+    WSError res = scenesession->SetPipActionEvent("close", 0);
     ASSERT_EQ(res, WSError::WS_ERROR_INVALID_TYPE);
 
     property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     property->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
-    sceneSession->SetSessionProperty(property);
-    res = sceneSession->SetPipActionEvent("close", 0);
+    scenesession->SetSessionProperty(property);
+    res = scenesession->SetPipActionEvent("close", 0);
     ASSERT_EQ(res, WSError::WS_ERROR_NULLPTR);
 }
 

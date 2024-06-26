@@ -426,8 +426,8 @@ HWTEST_F(PictureInPictureControllerTest, UpdateContentSize01, Function | SmallTe
 HWTEST_F(PictureInPictureControllerTest, UpdateContentSize02, Function | SmallTest | Level2)
 {
     auto mw = sptr<MockWindow>::MakeSptr();
-    auto option = sptr<PipOption>::MakeSptr();
     ASSERT_NE(nullptr, mw);
+    auto option = sptr<PipOption>::MakeSptr();
     ASSERT_NE(nullptr, option);
     std::shared_ptr<MockXComponentController> xComponentController = std::make_shared<MockXComponentController>();
     ASSERT_NE(nullptr, xComponentController);
@@ -460,8 +460,9 @@ HWTEST_F(PictureInPictureControllerTest, UpdateContentSize02, Function | SmallTe
 HWTEST_F(PictureInPictureControllerTest, UpdatePiPControlStatus, Function | SmallTest | Level2)
 {
     auto mw = sptr<MockWindow>::MakeSptr();
-    auto option = sptr<PipOption>::MakeSptr();
     ASSERT_NE(nullptr, mw);
+    auto option = sptr<PipOption>::MakeSptr();
+    ASSERT_NE(nullptr, option);
     auto pipControl = sptr<PictureInPictureController>::MakeSptr(option, mw, 100, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus::PLAY;
@@ -476,8 +477,9 @@ HWTEST_F(PictureInPictureControllerTest, UpdatePiPControlStatus, Function | Smal
 HWTEST_F(PictureInPictureControllerTest, SetPiPControlEnabled, Function | SmallTest | Level2)
 {
     auto mw = sptr<MockWindow>::MakeSptr();
-    sptr<PipOption> option = new PipOption();
     ASSERT_NE(nullptr, mw);
+    auto option = sptr<PipOption>::MakeSptr();
+    ASSERT_NE(nullptr, option);
     auto pipControl = sptr<PictureInPictureController>::MakeSptr(option, mw, 100, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     bool enabled = true;
