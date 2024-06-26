@@ -64,7 +64,7 @@ private:
 
 template<typename T1, typename T2>
 ClientAgentContainer<T1, T2>::ClientAgentContainer() : deathRecipient_(
-    new AgentDeathRecipient([this](const sptr<IRemoteObject>& remoteObject) { this->RemoveAgent(remoteObject); }) {}
+    new AgentDeathRecipient([this](const sptr<IRemoteObject>& remoteObject) { this->RemoveAgent(remoteObject); })) {}
 
 template<typename T1, typename T2>
 bool ClientAgentContainer<T1, T2>::RegisterAgent(const sptr<T1>& agent, T2 type)
