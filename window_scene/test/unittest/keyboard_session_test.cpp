@@ -710,7 +710,6 @@ HWTEST_F(KeyboardSessionTest, CheckIfNeedRaiseCallingSession, Function | SmallTe
  * @tc.name: NotifyKeyboardPanelInfoChange
  * @tc.desc: NotifyKeyboardPanelInfoChange
  * @tc.type: FUNC
- * @tc.date: 2024/06/27
  */
 HWTEST_F(KeyboardSessionTest, NotifyKeyboardPanelInfoChange, Function | SmallTest | Level1)
 {
@@ -751,7 +750,6 @@ HWTEST_F(KeyboardSessionTest, NotifyKeyboardPanelInfoChange, Function | SmallTes
  * @tc.name: NotifyKeyboardPanelInfoChange
  * @tc.desc: NotifyKeyboardPanelInfoChange
  * @tc.type: FUNC
- * @tc.date: 2024/06/27
  */
 HWTEST_F(KeyboardSessionTest, OpenKeyboardSyncTransaction01, Function | SmallTest | Level1)
 {
@@ -785,7 +783,6 @@ HWTEST_F(KeyboardSessionTest, OpenKeyboardSyncTransaction01, Function | SmallTes
  * @tc.name: NotifyKeyboardPanelInfoChange
  * @tc.desc: NotifyKeyboardPanelInfoChange
  * @tc.type: FUNC
- * @tc.date: 2024/06/27
  */
 HWTEST_F(KeyboardSessionTest, UpdateCallingSessionIdAndPosition, Function | SmallTest | Level1)
 {
@@ -805,16 +802,13 @@ HWTEST_F(KeyboardSessionTest, UpdateCallingSessionIdAndPosition, Function | Smal
     sptr<KeyboardSession> keyboardSession = new (std::nothrow) KeyboardSession(info, nullptr, nullptr);
     EXPECT_NE(keyboardSession, nullptr);
 
-    keyboardSession->property_->callingSessionId_ = INVALID_SESSION_ID;
-    keyboardSession->
-    
     // first condition's result is false
-    keyboardSession->isKeyboardSyncTransactionOpen_ = true;
+    keyboardSession->property_->callingSessionId_ = INVALID_WINDOW_ID;
     keyboardSession->UpdateCallingSessionIdAndPosition(0);
 
     //second condition's result is false
-    keyboardSession->isKeyboardSyncTransactionOpen_ = 0;
-    keyboardSession->UpdateCallingSessionIdAndPosition(0);
+    keyboardSession->property_->callingSessionId_ = 1;
+    keyboardSession->UpdateCallingSessionIdAndPosition(1);
 
     //third condition's result is false;
     keyboardSession->state_ = SessionState::STATE_DISCONNECT;
