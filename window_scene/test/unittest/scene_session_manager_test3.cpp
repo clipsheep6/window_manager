@@ -1931,7 +1931,6 @@ HWTEST_F(SceneSessionManagerTest3, GetTopWindowId, Function | SmallTest | Level3
         WMError::WM_ERROR_INVALID_WINDOW);
 }
 
-
 /**
  * @tc.name: NotifyStackEmpty
  * @tc.desc: SceneSesionManager notify stack empty
