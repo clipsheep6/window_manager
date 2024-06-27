@@ -191,7 +191,7 @@ HWTEST_F(MainSessionTest, TransferKeyEvent03, Function | SmallTest | Level1)
 HWTEST_F(MainSessionTest, ProcessPointDownSession01, Function | SmallTest | Level1)
 {
     EXPECT_EQ(WSError::WS_OK, mainSession_->ProcessPointDownSession(100, 200));
-    mainSession_->ClearDiglogVector();
+    mainSession_->ClearDialogVector();
     EXPECT_EQ(WSError::WS_OK, mainSession_->ProcessPointDownSession(10, 20));
 }
 
@@ -235,8 +235,8 @@ HWTEST_F(MainSessionTest, CheckPointerEventDispatch03, Function | SmallTest | Le
     mainSession_->SetSessionState(SessionState::STATE_ACTIVE);
     mainSession_->CheckPointerEventDispatch(pointerEvent);
 
-    pointerEvent->setPointerAction(MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW);
-    mainSession_->SetSessionState(SessionState::STATE_DISCONNECTED);
+    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW);
+    mainSession_->SetSessionState(SessionState::STATE_DISCONNECT);
     mainSession_->CheckPointerEventDispatch(pointerEvent);
 }
 
