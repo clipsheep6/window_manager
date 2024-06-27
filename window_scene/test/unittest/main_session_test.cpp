@@ -182,7 +182,6 @@ HWTEST_F(MainSessionTest, TransferKeyEvent03, Function | SmallTest | Level1)
 }
 
 
-
 /**
  * @tc.name: ProcessPointDownSession01
  * @tc.desc: check func ProcessPointDownSession
