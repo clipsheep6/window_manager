@@ -129,6 +129,7 @@ int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
                 return this->HandleNotifyKeyboardPanelInfoChange(data, reply);
             } break;
     }
+    WLOGFE("Failed to find function handler!");
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
