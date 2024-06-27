@@ -41,7 +41,7 @@ int WindowEventChannelStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
         return ERR_INVALID_STATE;
     }
 
-    switch(code) {
+    switch (code) {
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_KEY_EVENT): {
             return this->HandleTransferKeyEvent(data, reply);
         } break;
