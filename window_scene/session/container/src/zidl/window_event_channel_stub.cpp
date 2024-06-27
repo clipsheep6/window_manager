@@ -43,41 +43,41 @@ int WindowEventChannelStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
 
     switch (code) {
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_KEY_EVENT): {
-            return this->HandleTransferKeyEvent(data, reply);
-        } break;
+                return this->HandleTransferKeyEvent(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_KEY_EVENT_ASYNC): {
-            return this->HandleTransferKeyEventAsync(data, reply);
-        } break;
+                return this->HandleTransferKeyEventAsync(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_POINTER_EVENT): {
-            return this->HandleTransferPointerEvent(data, reply);
-        } break;
+                return this->HandleTransferPointerEvent(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_ACTIVE_EVENT): {
-            return this->HandleTransferFocusActiveEvent(data, reply);
-        } break;
+                return this->HandleTransferFocusActiveEvent(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_STATE_EVENT): {
-            return this->HandleTransferFocusStateEvent(data, reply);
-        } break;
+                return this->HandleTransferFocusStateEvent(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_BACKPRESSED_EVENT): {
-            return this->HandleTransferBackpressedEvent(data, reply);
-        } break;
+                return this->HandleTransferBackpressedEvent(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_SEARCH_ELEMENT_INFO): {
-            return this->HandleTransferSearchElementInfo(data, reply);
-        } break;
+                return this->HandleTransferSearchElementInfo(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_SEARCH_ELEMENT_INFO_BY_TEXT): {
-            return this->HandleTransferSearchElementInfosByText(data, reply);
-        } break;
+                return this->HandleTransferSearchElementInfosByText(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FIND_FOCUSED_ELEMENT_INFO): {
-            return this->HandleTransferFindFocusedElementInfo(data, reply);
-        } break;
+                return this->HandleTransferFindFocusedElementInfo(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_MOVE_SEARCH): {
-            return this->HandleTransferFocusMoveSearch(data, reply);
-        } break;
+                return this->HandleTransferFocusMoveSearch(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_EXECUTE_ACTION): {
-            return this->HandleTransferExecuteAction(data, reply);
-        } break;
+                return this->HandleTransferExecuteAction(data, reply);
+            } break;
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_ACCESSIBILITY_HOVER_EVENT): {
-            return this->HandleTransferAccessibilityHoverEvent(data, reply);
-        } break;
+                return this->HandleTransferAccessibilityHoverEvent(data, reply);
+            } break;
     }
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
