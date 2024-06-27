@@ -2784,9 +2784,9 @@ HWTEST_F(WindowSessionImplTest, NotifySizeChange, Function | SmallTest | Level2)
     class WindowRectChangeMockListener : public IWindowRectChangeListener
     {
     };
-    sptr<IWindowRectChangeListener> listener1 = new (std::nothrow) WindowRectChangeMockListener();
-    ASSERT_NE(nullptr, listener1);
-    window->RegisterWindowRectChangeListener(listener1);
+    sptr<WindowRectChangeMockListener> listener = new (std::nothrow) WindowRectChangeMockListener();
+    ASSERT_NE(nullptr, listener);
+    window->RegisterWindowRectChangeListener(listener);
 }
 }
 } // namespace Rosen
