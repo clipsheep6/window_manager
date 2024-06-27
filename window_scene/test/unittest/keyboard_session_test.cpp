@@ -706,6 +706,121 @@ HWTEST_F(KeyboardSessionTest, CheckIfNeedRaiseCallingSession, Function | SmallTe
     WLOGFI("CheckIfNeedRaiseCallingSession end!");
 }
 
+/**
+ * @tc.name: NotifyKeyboardPanelInfoChange
+ * @tc.desc: NotifyKeyboardPanelInfoChange
+ * @tc.type: FUNC
+ */
+HWTEST_F(KeyboardSessionTest, NotifyKeyboardPanelInfoChange, Function | SmallTest | Level1)
+{
+    WLOGFI("NotifyKeyboardPanelInfoChange begin!");
+    SessionInfo info;
+    info.abilityName_ = "NotifyKeyboardPanelInfoChange";
+    info.bundleName_ = "NotifyKeyboardPanelInfoChange";
+
+    sptr<SceneSession::SpecificSessionCallback> specificCb = 
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCb, nullptr);
+
+    sptr<KeyboardSession::KeyboardSessionCallback> keyboardCb =
+        new (std::nothrow) KeyboardSession::KeyboardSessionCallback();
+    EXPECT_NE(keyboardCb, nullptr);
+
+    sptr<KeyboardSession> keyboardSession = new (std::nothrow) KeyboardSession(info, nullptr, nullptr);
+    EXPECT_NE(keyboardSession, nullptr);
+
+    info.windowType_1 = 1;
+
+    sptr<SceneSession> sceneSession = 
+        new (std::nothrow) SceneSession(info, specificCb);
+    EXPECT_NE(sceneSession, nullptr);
+
+    auto id = sceneSession->GetPersistentId();
+    EXPECT_NE(id, 0);
+
+    WSRect rect = {0, 0, 0, 0};
+
+    keyboardSession->GetSessionProperty()->SetCallingSessionId(id);
+    keyboardSession->NotifyKeyboardPanelInfoChange(rect, true);
+    WLOGFI("NotifyKeyboardPanelInfoChange end!");
+}
+
+// OpenKeyboardSyncTransaction
+/**
+ * @tc.name: NotifyKeyboardPanelInfoChange
+ * @tc.desc: NotifyKeyboardPanelInfoChange
+ * @tc.type: FUNC
+ */
+HWTEST_F(KeyboardSessionTest, OpenKeyboardSyncTransaction01, Function | SmallTest | Level1)
+{
+    WLOGFI("OpenKeyboardSyncTransaction01 begin!");
+    SessionInfo info;
+    info.abilityName_ = "OpenKeyboardSyncTransaction01";
+    info.bundleName_ = "OpenKeyboardSyncTransaction01";
+
+    sptr<SceneSession::SpecificSessionCallback> specificCb = 
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCb, nullptr);
+
+    sptr<KeyboardSession::KeyboardSessionCallback> keyboardCb =
+        new (std::nothrow) KeyboardSession::KeyboardSessionCallback();
+    EXPECT_NE(keyboardCb, nullptr);
+
+    sptr<KeyboardSession> keyboardSession = new (std::nothrow) KeyboardSession(info, nullptr, nullptr);
+    EXPECT_NE(keyboardSession, nullptr);
+
+    info.windowType_1 = 1;
+    keyboardSession->OpenKeyboardSyncTransaction();
+    
+    keyboardSession->isKeyboardSyncTransactionOpen_ = true;
+    keyboardSession->OpenKeyboardSyncTransaction();
+    
+    WLOGFI("OpenKeyboardSyncTransaction end!");
+}
+
+
+/**
+ * @tc.name: NotifyKeyboardPanelInfoChange
+ * @tc.desc: NotifyKeyboardPanelInfoChange
+ * @tc.type: FUNC
+ */
+HWTEST_F(KeyboardSessionTest, UpdateCallingSessionIdAndPosition, Function | SmallTest | Level1)
+{
+    WLOGFI("UpdateCallingSessionIdAndPosition begin!");
+    SessionInfo info;
+    info.abilityName_ = "UpdateCallingSessionIdAndPosition";
+    info.bundleName_ = "UpdateCallingSessionIdAndPosition";
+
+    sptr<SceneSession::SpecificSessionCallback> specificCb = 
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCb, nullptr);
+
+    sptr<KeyboardSession::KeyboardSessionCallback> keyboardCb =
+        new (std::nothrow) KeyboardSession::KeyboardSessionCallback();
+    EXPECT_NE(keyboardCb, nullptr);
+
+    sptr<KeyboardSession> keyboardSession = new (std::nothrow) KeyboardSession(info, nullptr, nullptr);
+    EXPECT_NE(keyboardSession, nullptr);
+
+    // first condition's result is false
+    keyboardSession->property_->callingSessionId_ = INVALID_WINDOW_ID;
+    keyboardSession->UpdateCallingSessionIdAndPosition(0);
+
+    //second condition's result is false
+    keyboardSession->property_->callingSessionId_ = 1;
+    keyboardSession->UpdateCallingSessionIdAndPosition(1);
+
+    //third condition's result is false;
+    keyboardSession->state_ = SessionState::STATE_DISCONNECT;
+    keyboardSession->UpdateCallingSessionIdAndPosition(-1);
+
+    // all condition's results are true
+    keyboardSession->state_ = SessionState::STATE_FOREGROUND;
+    keyboardSession->UpdateCallingSessionIdAndPosition(-1);
+    
+    WLOGFI("UpdateCallingSessionIdAndPosition end!");
+}
+
 }
 }
 }
