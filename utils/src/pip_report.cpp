@@ -130,7 +130,7 @@ void PiPReporter::ReportPiPActionEvent(int32_t templateType, const std::string &
 
 void PiPReporter::ReportPiPControlEvent(int32_t templateType, PiPControlType controlType)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "Report pip widow control event");
+    TLOGI(WmsLogTag::WMS_PIP, "templateType:%{public}d, controlType:%{public}d", templateType, controlType);
     std::string eventName = "CONTROL_CONTROL_EVENT";
     int32_t ret = HiSysEventWrite(
         OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,

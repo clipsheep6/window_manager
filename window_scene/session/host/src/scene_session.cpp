@@ -788,7 +788,7 @@ void SceneSession::SetSessionPiPControlStatusChangeCallback(const NotifySessionP
     auto task = [weakThis = wptr(this), func]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_PIP, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         session->sessionPiPControlStatusChangeFunc_ = func;
@@ -802,7 +802,7 @@ void SceneSession::SetSessionPiPControlEnableChangeCallback(const NotifySessionP
     auto task = [weakThis = wptr(this), func]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_PIP, "session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         session->sessionPiPControlEnableChangeFunc_ = func;
@@ -1639,11 +1639,11 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
 
 void SceneSession::NotifySessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "NotifySessionPiPControlStatusChange is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
     auto task = [weakThis = wptr(this), controlType, status]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_PIP, "session is null");
             return;
         }
         if (session->sessionPiPControlStatusChangeFunc_) {
@@ -1656,11 +1656,11 @@ void SceneSession::NotifySessionPiPControlStatusChange(PiPControlType controlTyp
 
 void SceneSession::NotifySessionPiPControlEnableChange(PiPControlType controlType, bool enabled)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "NotifySessionPiPControlEnableChange is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
     auto task = [weakThis = wptr(this), controlType, enabled]() {
         auto session = weakThis.promote();
         if (!session) {
-            WLOGFE("session is null");
+            TLOGE(WmsLogTag::WMS_PIP, "session is null");
             return;
         }
         if (session->sessionPiPControlEnableChangeFunc_) {
@@ -3301,7 +3301,7 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
 
 WSError SceneSession::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "UpdatePiPControlStatus is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, status:%{public}d", controlType, status);
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
         return WSError::WS_DO_NOTHING;
     }
@@ -3320,7 +3320,7 @@ WSError SceneSession::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
 
 WSError SceneSession::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
         return WSError::WS_DO_NOTHING;
     }

@@ -2488,7 +2488,7 @@ WSError WindowSessionImpl::SetPipActionEvent(const std::string& action, int32_t 
 
 WSError WindowSessionImpl::SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "action: %{public}u, status: %{public}u", controlType, status);
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
     auto task = [controlType, status]() {
         PictureInPictureManager::DoControlEvent(controlType, status);
     };
@@ -3165,9 +3165,9 @@ void WindowSessionImpl::UpdatePiPRect(const Rect& rect, WindowSizeChangeReason r
 
 void WindowSessionImpl::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "UpdatePiPControlStatus is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, status:%{public}d", controlType, status);
     if (IsWindowSessionInvalid()) {
-        WLOGFE("HostSession is invalid");
+        TLOGI(WmsLogTag::WMS_PIP, "HostSession is invalid");
         return;
     }
     hostSession_->UpdatePiPControlStatus(controlType, status);
@@ -3175,9 +3175,9 @@ void WindowSessionImpl::UpdatePiPControlStatus(PiPControlType controlType, PiPCo
 
 void WindowSessionImpl::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
     if (IsWindowSessionInvalid()) {
-        WLOGFE("HostSession is invalid");
+        TLOGI(WmsLogTag::WMS_PIP, "HostSession is invalid");
         return;
     }
     hostSession_->SetPiPControlEnabled(controlType, enabled);

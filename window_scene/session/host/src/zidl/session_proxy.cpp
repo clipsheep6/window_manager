@@ -1058,7 +1058,7 @@ WSError SessionProxy::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
 
 WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "UpdatePiPControlStatus is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, status:%{public}d", controlType, status);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -1085,7 +1085,7 @@ WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
 
 WSError SessionProxy::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

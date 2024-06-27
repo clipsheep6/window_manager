@@ -487,7 +487,7 @@ void PictureInPictureController::UpdateContentSize(int32_t width, int32_t height
 
 void PictureInPictureController::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "UpdatePiPControlStatus %{public}u : %{public}u", controlType, status);
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, status:%{public}d", controlType, status);
     pipOption_->SetPiPControlStatus(controlType, status);
     if (window_ == nullptr) {
         TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
@@ -498,7 +498,7 @@ void PictureInPictureController::UpdatePiPControlStatus(PiPControlType controlTy
 
 void PictureInPictureController::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "SetPiPControlEnabled %{public}u : %{public}u", controlType, enabled);
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
     pipOption_->SetPiPControlEnabled(controlType, enabled);
     if (window_ == nullptr) {
         TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
@@ -573,7 +573,7 @@ void PictureInPictureController::PreRestorePictureInPicture()
 
 void PictureInPictureController::DoControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGD(WmsLogTag::WMS_PIP, "controlType: %{public}u", controlType);
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
     if (pipControlObserver_ == nullptr) {
         TLOGE(WmsLogTag::WMS_PIP, "pipControlObserver is not registered");
         return;

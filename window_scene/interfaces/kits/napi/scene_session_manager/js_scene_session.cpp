@@ -81,7 +81,7 @@ napi_value CreateJsPiPControlStatusObject(napi_env env, PiPControlStatusInfo con
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
     if (objValue == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlStatusObject is called objValue == nullptr");
+        TLOGE(WmsLogTag::WMS_PIP, "objValue is nullptr");
         return NapiGetUndefined(env);
     }
     uint32_t controlType = static_cast<uint32_t>(controlStatusInfo.controlType);
@@ -97,7 +97,7 @@ napi_value CreateJsPiPControlEnableObject(napi_env env, PiPControlEnableInfo con
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
     if (objValue == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "CreateJsPiPControlEnableObject is called objValue == nullptr");
+        TLOGE(WmsLogTag::WMS_PIP, "objValue is nullptr");
         return NapiGetUndefined(env);
     }
     uint32_t controlType = static_cast<uint32_t>(controlEnableInfo.controlType);
@@ -682,7 +682,7 @@ void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
-        WLOGFE("session is nullptr");
+        TLOGE(WmsLogTag::WMS_PIP, "session is nullptr");
         return;
     }
     session->SetSessionPiPControlStatusChangeCallback(func);
@@ -696,7 +696,7 @@ void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
     };
     auto session = weakSession_.promote();
     if (session == nullptr) {
-        WLOGFE("session is nullptr");
+        TLOGE(WmsLogTag::WMS_PIP, "session is nullptr");
         return;
     }
     session->SetSessionPiPControlEnableChangeCallback(func);
@@ -1213,7 +1213,7 @@ napi_value JsSceneSession::SetPipActionEvent(napi_env env, napi_callback_info in
 
 napi_value JsSceneSession::SetPiPControlEvent(napi_env env, napi_callback_info info)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "[NAPI]SetPiPControlEvent");
+    TLOGI(WmsLogTag::WMS_PIP, "[NAPI]");
     JsSceneSession *me = CheckParamsAndGetThis<JsSceneSession>(env, info);
     return (me != nullptr) ? me->OnSetPiPControlEvent(env, info) : nullptr;
 }
@@ -1699,7 +1699,7 @@ void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType,
 
     auto task = [controlType, status, jsCallBack, env = env_]() {
         if (!jsCallBack) {
-            WLOGFE("[NAPI]jsCallBack is nullptr");
+            TLOGE(WmsLogTag::WMS_PIP, "[NAPI]jsCallBack is nullptr");
             return;
         }
         napi_value statusChangeType = CreateJsValue(env, controlType);
@@ -1721,7 +1721,7 @@ void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType,
 
     auto task = [controlType, enabled, jsCallBack, env = env_]() {
         if (!jsCallBack) {
-            WLOGFE("[NAPI]jsCallBack is nullptr");
+            TLOGE(WmsLogTag::WMS_PIP, "[NAPI]jsCallBack is nullptr");
             return;
         }
         napi_value enableChangeType = CreateJsValue(env, controlType);
@@ -2870,7 +2870,7 @@ napi_value JsSceneSession::OnSetPiPControlEvent(napi_env env, napi_callback_info
     if (argc < 1) {
         TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Argc count is invalid: %{public}zu", argc);
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
-                                      "Input parameter is missing or invalid"));
+            "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;

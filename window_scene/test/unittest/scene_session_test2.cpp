@@ -866,7 +866,7 @@ HWTEST_F(SceneSessionTest2, SetPiPControlEnabled, Function | SmallTest | Level2)
     info.bundleName_ = "SetPiPControlEnabled";
     sptr<Rosen::ISession> session_;
     sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-            new (std::nothrow) SceneSession::SpecificSessionCallback();
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
     EXPECT_NE(specificCallback_, nullptr);
     sptr<SceneSession> sceneSession;
     sceneSession = new (std::nothrow) SceneSession(info, nullptr);

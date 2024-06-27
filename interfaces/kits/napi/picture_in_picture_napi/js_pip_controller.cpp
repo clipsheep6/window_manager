@@ -425,7 +425,6 @@ void JsPipController::ProcessControlEventRegister()
     sptr<IPiPControlObserver> controlObserver =
         new JsPipController::PiPControlObserverImpl(env_, jsCbMap_[CONTROL_EVENT_CB]);
     pipController_->SetPictureInPictureControlObserver(controlObserver);
-
     TLOGI(WmsLogTag::WMS_PIP, "Register control event success");
 }
 
@@ -454,7 +453,6 @@ void JsPipController::ProcessControlEventUnRegister()
         return;
     }
     pipController_->SetPictureInPictureControlObserver(nullptr);
-
     TLOGE(WmsLogTag::WMS_PIP, "UnRegister control event success");
 }
 
@@ -577,15 +575,14 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
         engine_, std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
-void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode)
+void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnControlEvent is called, controlType: %{public}u, statusCode:%{public}u",
-        controlType, statusCode);
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
     std::lock_guard<std::mutex> lock(mtx_);
     auto jsCallback = jsCallBack_;
     std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [jsCallback, controlType, statusCode] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[2] = {CreateJsValue(env, controlType), CreateJsValue(env, statusCode)};
+        [jsCallback, controlType, status] (napi_env env, NapiAsyncTask &task, int32_t status) {
+            napi_value argv[2] = {CreateJsValue(env, controlType), CreateJsValue(env, status)};
             CallJsMethod(env, jsCallback->GetNapiValue(), argv, ArraySize(argv));
         }
     );

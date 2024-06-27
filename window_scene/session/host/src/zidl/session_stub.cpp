@@ -650,21 +650,30 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
 int SessionStub::HandleUpdatePiPControlStatus(MessageParcel& data, MessageParcel& reply)
 {
     TLOGI(WmsLogTag::WMS_PIP, "HandleUpdatePiPControlStatus is called");
-    auto controlType =  static_cast<PiPControlType>(data.ReadUint32());
-    auto status =  static_cast<PiPControlStatus>(data.ReadInt32());
-    WSError errCode = UpdatePiPControlStatus(controlType, status);
-    reply.WriteUint32(static_cast<uint32_t>(errCode));
-    return ERR_NONE;
+    uint32_t controlType = 0;
+    int32_t status = 0;
+    if (parcel.ReadUint32(controlType) && parcel.ReadInt32(status)) {
+        WSError errCode = UpdatePiPControlStatus(static_cast<PiPControlType>(controlType),
+            static_cast<PiPControlStatus>(status));
+        reply.WriteUint32(static_cast<uint32_t>(errCode));
+        return ERR_NONE;
+    } else {
+        return ERR_INVALID_DATA;
+    }
 }
 
 int SessionStub::HandleSetPiPControlEnabled(MessageParcel& data, MessageParcel& reply)
 {
     TLOGI(WmsLogTag::WMS_PIP, "HandleSetPiPControlEnabled is called");
-    auto controlType =  static_cast<PiPControlType>(data.ReadUint32());
-    bool enabled =  data.ReadBool();
-    WSError errCode = SetPiPControlEnabled(controlType, enabled);
-    reply.WriteUint32(static_cast<uint32_t>(errCode));
-    return ERR_NONE;
+    uint32_t controlType = 0;
+    bool enabled = 0;
+    if (parcel.ReadUint32(controlType) && parcel.ReadBool(enabled)) {
+        WSError errCode = SetPiPControlEnabled(static_cast<PiPControlType>(controlType), enabled);
+        reply.WriteUint32(static_cast<uint32_t>(errCode));
+        return ERR_NONE;
+    } else {
+        return ERR_INVALID_DATA;
+    }
 }
 
 int SessionStub::HandleProcessPointDownSession(MessageParcel& data, MessageParcel& reply)

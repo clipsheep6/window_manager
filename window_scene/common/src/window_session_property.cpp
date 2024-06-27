@@ -23,6 +23,7 @@ namespace Rosen {
 namespace {
     constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 50;
     constexpr uint32_t MAX_SIZE_PIP_CONTROL_GROUP = 8;
+    constexpr uint32_t MAX_SIZE_PIP_CONTROL = 9;
 }
 
 const std::map<uint32_t, HandlWritePropertyFunc> WindowSessionProperty::writeFuncMap_ {
@@ -708,6 +709,9 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
         }
     }
     auto controlStatusSize = pipTemplateInfo_.pipControlStatusInfoList.size();
+    if (controlStatusSize > MAX_SIZE_PIP_CONTROL) {
+        return false;
+    }
     if (!parcel.WriteUint32(static_cast<uint32_t>(controlStatusSize))) {
         return false;
     }
@@ -720,6 +724,9 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
         }
     }
     auto controlEnableSize = pipTemplateInfo_.pipControlEnableInfoList.size();
+    if (controlEnableSize > MAX_SIZE_PIP_CONTROL) {
+        return false;
+    }
     if (!parcel.WriteUint32(static_cast<uint32_t>(controlEnableSize))) {
         return false;
     }
@@ -755,18 +762,36 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
         }
     }
     auto controlStatusSize = parcel.ReadUint32();
+    if (controlStatusSize > MAX_SIZE_PIP_CONTROL) {
+        return;
+    }
     for (uint32_t i = 0; i < controlStatusSize; i++) {
         PiPControlStatusInfo pipControlStatusInfo;
-        pipControlStatusInfo.controlType = static_cast<PiPControlType>(parcel.ReadUint32());
-        pipControlStatusInfo.status = static_cast<PiPControlStatus>(parcel.ReadInt32());
-        pipTemplateInfo.pipControlStatusInfoList.push_back(pipControlStatusInfo);
+        uint32_t controlType = 0;
+        int32_t status = 0;
+        if (parcel.ReadUint32(controlType) && parcel.ReadInt32(status)) {
+            pipControlStatusInfo.controlType = static_cast<PiPControlType>(controlType);
+            pipControlStatusInfo.status = static_cast<PiPControlStatus>(status);
+            pipTemplateInfo.pipControlStatusInfoList.push_back(pipControlStatusInfo);
+        } else {
+            return;
+        }
     }
     auto controlEnableSize = parcel.ReadUint32();
+    if (controlEnableSize > MAX_SIZE_PIP_CONTROL) {
+        return;
+    }
     for (uint32_t i = 0; i < controlEnableSize; i++) {
         PiPControlEnableInfo pipControlEnableInfo;
-        pipControlEnableInfo.controlType = static_cast<PiPControlType>(parcel.ReadUint32());
-        pipControlEnableInfo.enabled = parcel.ReadBool();
-        pipTemplateInfo.pipControlEnableInfoList.push_back(pipControlEnableInfo);
+        uint32_t controlType = 0;
+        bool enabled = 0;
+        if (parcel.ReadUint32(controlType) && parcel.ReadBool(enabled)) {
+            pipControlEnableInfo.controlType = static_cast<PiPControlType>(controlType);
+            pipControlEnableInfo.enabled = enabled;
+            pipTemplateInfo.pipControlEnableInfoList.push_back(pipControlEnableInfo);
+        } else {
+            return;
+        }
     }
     property->SetPiPTemplateInfo(pipTemplateInfo);
 }
