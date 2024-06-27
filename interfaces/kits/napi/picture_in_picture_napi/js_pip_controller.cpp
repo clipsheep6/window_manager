@@ -577,8 +577,6 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
 
 void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnControlEvent is called, controlType: %{public}u, statusCode:%{public}u",
-          controlType, statusCode);
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, statusCode:%{public}d", controlType, statusCode);
     std::lock_guard<std::mutex> lock(mtx_);
     auto jsCallback = jsCallBack_;
