@@ -183,6 +183,7 @@ int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParc
                 return this->HandleLayoutFullScreenChange(data, reply);
             } break;
     }
+    WLOGFE("Failed to find function handler!");
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
