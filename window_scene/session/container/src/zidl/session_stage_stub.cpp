@@ -26,70 +26,6 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionStageStub"};
 }
 
-const std::map<uint32_t, SessionStageStubFunc> SessionStageStub::stubFuncMap_{
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_ACTIVE),
-        &SessionStageStub::HandleSetActive),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SIZE_CHANGE),
-        &SessionStageStub::HandleUpdateRect),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_CHANGE),
-        &SessionStageStub::HandleUpdateDensity),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_ORIENTATION_CHANGE),
-        &SessionStageStub::HandleUpdateOrientation),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_HANDLE_BACK_EVENT),
-        &SessionStageStub::HandleBackEventInner),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DESTROY),
-        &SessionStageStub::HandleNotifyDestroy),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOCUS_CHANGE),
-        &SessionStageStub::HandleUpdateFocus),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA),
-        &SessionStageStub::HandleNotifyTransferComponentData),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA_SYNC),
-        &SessionStageStub::HandleNotifyTransferComponentDataSync),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_OCCUPIED_AREA_CHANGE_INFO),
-        &SessionStageStub::HandleNotifyOccupiedAreaChange),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_UPDATE_AVOID_AREA),
-        &SessionStageStub::HandleUpdateAvoidArea),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SCREEN_SHOT),
-        &SessionStageStub::HandleNotifyScreenshot),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_DUMP_SESSSION_ELEMENT_INFO),
-        &SessionStageStub::HandleDumpSessionElementInfo),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TOUCH_OUTSIDE),
-        &SessionStageStub::HandleNotifyTouchOutside),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_MODE_CHANGE),
-        &SessionStageStub::HandleUpdateWindowMode),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOREGROUND_INTERACTIVE_STATUS),
-        &SessionStageStub::HandleNotifyForegroundInteractiveStatus),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_MAXIMIZE_MODE_CHANGE),
-        &SessionStageStub::HandleUpdateMaximizeMode),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_CLOSE_EXIST_PIP_WINDOW),
-        &SessionStageStub::HandleNotifyCloseExistPipWindow),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_FOREGROUND),
-        &SessionStageStub::HandleNotifySessionForeground),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_BACKGROUND),
-        &SessionStageStub::HandleNotifySessionBackground),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TITLE_POSITION_CHANGE),
-        &SessionStageStub::HandleUpdateTitleInTargetPos),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_FOLLOW_HOST),
-        &SessionStageStub::HandleNotifyDensityFollowHost),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_VISIBILITY_CHANGE),
-        &SessionStageStub::HandleNotifyWindowVisibilityChange),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFORM_CHANGE),
-        &SessionStageStub::HandleNotifyTransformChange),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DIALOG_STATE_CHANGE),
-        &SessionStageStub::HandleNotifyDialogStateChange),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_PIP_ACTION_EVENT),
-        &SessionStageStub::HandleSetPipActionEvent),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DISPLAYID_CHANGE),
-        &SessionStageStub::HandleUpdateDisplayId),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DISPLAY_MOVE),
-        &SessionStageStub::HandleNotifyDisplayMove),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SWITCH_FREEMULTIWINDOW),
-        &SessionStageStub::HandleSwitchFreeMultiWindow),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_GET_UI_CONTENT_REMOTE_OBJ),
-        &SessionStageStub::HandleGetUIContentRemoteObj),
-    std::make_pair(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_KEYBOARD_INFO_CHANGE),
-        &SessionStageStub::HandleNotifyKeyboardPanelInfoChange),
-};
 
 int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
@@ -98,14 +34,103 @@ int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
         WLOGFE("Failed to check interface token!");
         return ERR_INVALID_STATE;
     }
-
-    const auto func = stubFuncMap_.find(code);
-    if (func == stubFuncMap_.end()) {
-        WLOGFE("Failed to find function handler!");
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    switch(code) {
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_ACTIVE)): {
+            return this->HandleSetActive(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SIZE_CHANGE)): {
+            return this->HandleUpdateRect(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_CHANGE)): {
+            return this->HandleUpdateDensity(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_ORIENTATION_CHANGE)): {
+            return this->HandleUpdateOrientation(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_HANDLE_BACK_EVENT)): {
+            return this->HandleBackEventInner(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DESTROY)): {
+            return this->HandleNotifyDestroy(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOCUS_CHANGE)): {
+            return this->HandleUpdateFocus(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA)): {
+            return this->HandleNotifyTransferComponentData(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA_SYNC)): {
+            return this->HandleNotifyTransferComponentDataSync(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_OCCUPIED_AREA_CHANGE_INFO)): {
+            return this->HandleNotifyOccupiedAreaChange(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_UPDATE_AVOID_AREA)): {
+            return this->HandleUpdateAvoidArea(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SCREEN_SHOT)): {
+            return this->HandleNotifyScreenshot(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_DUMP_SESSSION_ELEMENT_INFO)): {
+            return this->HandleNotifyTouchOutside(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TOUCH_OUTSIDE)): {
+            return this->HandleUpdateRect(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_MODE_CHANGE)): {
+            return this->HandleNotifyForegroundInteractiveStatus(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOREGROUND_INTERACTIVE_STATUS)): {
+            return this->HandleUpdateRect(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_MAXIMIZE_MODE_CHANGE)): {
+            return this->HandleUpdateMaximizeMode(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_CLOSE_EXIST_PIP_WINDOW)): {
+            return this->HandleNotifyCloseExistPipWindow(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_FOREGROUND)): {
+            return this->HandleNotifySessionForeground(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_BACKGROUND)): {
+            return this->HandleNotifySessionBackground(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TITLE_POSITION_CHANGE)): {
+            return this->HandleUpdateTitleInTargetPos(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_FOLLOW_HOST)): {
+            return this->HandleNotifyDensityFollowHost(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_VISIBILITY_CHANGE)): {
+            return this->HandleNotifyWindowVisibilityChange(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFORM_CHANGE)): {
+            return this->HandleNotifyTransformChange(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DIALOG_STATE_CHANGE)): {
+            return this->HandleNotifyDialogStateChange(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DISPLAYID_CHANGE)): {
+            return this->HandleUpdateDisplayId(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_PIP_ACTION_EVENT)): {
+            return this->HandleSetPipActionEvent(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DISPLAY_MOVE)): {
+            return this->HandleNotifyDisplayMove(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SWITCH_FREEMULTIWINDOW)): {
+            return this->HandleSwitchFreeMultiWindow(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_GET_UI_CONTENT_REMOTE_OBJ)): {
+            return this->HandleGetUIContentRemoteObj(data, reply);
+        } break;
+        case(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_KEYBOARD_INFO_CHANGE)): {
+            return this->HandleNotifyKeyboardPanelInfoChange(data, reply);
+        } break;
     }
 
-    return (this->*(func->second))(data, reply);
+    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int SessionStageStub::HandleSetActive(MessageParcel& data, MessageParcel& reply)
