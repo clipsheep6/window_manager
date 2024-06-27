@@ -575,14 +575,16 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
         engine_, std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
-void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus status)
+void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
+    TLOGI(WmsLogTag::WMS_PIP, "OnControlEvent is called, controlType: %{public}u, statusCode:%{public}u",
+          controlType, statusCode);
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, statusCode:%{public}d", controlType, statusCode);
     std::lock_guard<std::mutex> lock(mtx_);
     auto jsCallback = jsCallBack_;
     std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [jsCallback, controlType, status] (napi_env env, NapiAsyncTask &task, int32_t status) {
-            napi_value argv[2] = {CreateJsValue(env, controlType), CreateJsValue(env, status)};
+        [jsCallback, controlType, statusCode] (napi_env env, NapiAsyncTask &task, int32_t status) {
+            napi_value argv[2] = {CreateJsValue(env, controlType), CreateJsValue(env, statusCode)};
             CallJsMethod(env, jsCallback->GetNapiValue(), argv, ArraySize(argv));
         }
     );

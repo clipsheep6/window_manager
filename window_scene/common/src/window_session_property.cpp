@@ -755,11 +755,10 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     }
     for (uint32_t i = 0; i < size; i++) {
         uint32_t controlGroupId = 0;
-        if (parcel.ReadUint32(controlGroupId)) {
-            pipTemplateInfo.controlGroup.push_back(controlGroupId);
-        } else {
+        if (!parcel.ReadUint32(controlGroupId)) {
             return;
         }
+        pipTemplateInfo.controlGroup.push_back(controlGroupId);
     }
     auto controlStatusSize = parcel.ReadUint32();
     if (controlStatusSize > MAX_SIZE_PIP_CONTROL) {
@@ -769,13 +768,12 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
         PiPControlStatusInfo pipControlStatusInfo;
         uint32_t controlType = 0;
         int32_t status = 0;
-        if (parcel.ReadUint32(controlType) && parcel.ReadInt32(status)) {
-            pipControlStatusInfo.controlType = static_cast<PiPControlType>(controlType);
-            pipControlStatusInfo.status = static_cast<PiPControlStatus>(status);
-            pipTemplateInfo.pipControlStatusInfoList.push_back(pipControlStatusInfo);
-        } else {
+        if (!parcel.ReadUint32(controlType) || !parcel.ReadInt32(status)) {
             return;
         }
+        pipControlStatusInfo.controlType = static_cast<PiPControlType>(controlType);
+        pipControlStatusInfo.status = static_cast<PiPControlStatus>(status);
+        pipTemplateInfo.pipControlStatusInfoList.push_back(pipControlStatusInfo);
     }
     auto controlEnableSize = parcel.ReadUint32();
     if (controlEnableSize > MAX_SIZE_PIP_CONTROL) {
@@ -785,13 +783,12 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
         PiPControlEnableInfo pipControlEnableInfo;
         uint32_t controlType = 0;
         bool enabled = 0;
-        if (parcel.ReadUint32(controlType) && parcel.ReadBool(enabled)) {
-            pipControlEnableInfo.controlType = static_cast<PiPControlType>(controlType);
-            pipControlEnableInfo.enabled = enabled;
-            pipTemplateInfo.pipControlEnableInfoList.push_back(pipControlEnableInfo);
-        } else {
+        if (!parcel.ReadUint32(controlType) || !parcel.ReadBool(enabled)) {
             return;
         }
+        pipControlEnableInfo.controlType = static_cast<PiPControlType>(controlType);
+        pipControlEnableInfo.enabled = enabled;
+        pipTemplateInfo.pipControlEnableInfoList.push_back(pipControlEnableInfo);
     }
     property->SetPiPTemplateInfo(pipTemplateInfo);
 }

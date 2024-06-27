@@ -652,7 +652,7 @@ int SessionStub::HandleUpdatePiPControlStatus(MessageParcel& data, MessageParcel
     TLOGI(WmsLogTag::WMS_PIP, "HandleUpdatePiPControlStatus is called");
     uint32_t controlType = 0;
     int32_t status = 0;
-    if (parcel.ReadUint32(controlType) && parcel.ReadInt32(status)) {
+    if (data.ReadUint32(controlType) && data.ReadInt32(status)) {
         WSError errCode = UpdatePiPControlStatus(static_cast<PiPControlType>(controlType),
             static_cast<PiPControlStatus>(status));
         reply.WriteUint32(static_cast<uint32_t>(errCode));
@@ -667,7 +667,7 @@ int SessionStub::HandleSetPiPControlEnabled(MessageParcel& data, MessageParcel& 
     TLOGI(WmsLogTag::WMS_PIP, "HandleSetPiPControlEnabled is called");
     uint32_t controlType = 0;
     bool enabled = 0;
-    if (parcel.ReadUint32(controlType) && parcel.ReadBool(enabled)) {
+    if (data.ReadUint32(controlType) && data.ReadBool(enabled)) {
         WSError errCode = SetPiPControlEnabled(static_cast<PiPControlType>(controlType), enabled);
         reply.WriteUint32(static_cast<uint32_t>(errCode));
         return ERR_NONE;
