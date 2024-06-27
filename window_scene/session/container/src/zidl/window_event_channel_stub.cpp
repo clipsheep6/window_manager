@@ -79,6 +79,7 @@ int WindowEventChannelStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
                 return this->HandleTransferAccessibilityHoverEvent(data, reply);
             } break;
     }
+    WLOGFE("Failed to find function handler!");
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
