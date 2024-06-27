@@ -2739,7 +2739,7 @@ HWTEST_F(WindowSessionImplTest, AvoidAreaChangeListener, Function | SmallTest | 
     sptr<IAvoidAreaChangedListener> nullListener = nullptr;
     ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->UnregisterAvoidAreaChangeListener(nullListener));
 
-    class MockListener : public IAvoidAreaChangedListener
+    class MockListener : public IAvoidAreaChangedListener 
     {
     };
     sptr<IAvoidAreaChangedListener> listener = new (std::nothrow) MockListener();
