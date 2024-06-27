@@ -17,6 +17,8 @@
 
 #include <gtest/gtest.h>
 
+#include "ability_context_impl.h"
+#include "display_info.h"
 #include "mock_session.h"
 #include "mock_uicontent.h"
 #include "mock_window.h"
@@ -218,7 +220,21 @@ HWTEST_F(WindowSessionImplTwoTest, Destroy, Function | SmallTest | Level2)
     window->hostSession_ = nullptr;
     ASSERT_EQ(window->Destroy(true, true), WMError::WM_ERROR_INVALID_WINDOW);
 
-    window->Destroy();
+    // hostSession != nullptr
+    window = GetTestWindowImpl("Destroy");
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> hostSession = new (std::nothrow) SessionMocker(sessionInfo);
+    window->hostSession_ = hostSession;
+    ASSERT_EQ(window->Destroy(true, true), WMError::WM_ERROR_INVALID_WINDOW);
+
+    // IsWindowSessionInvalid()==false
+    window = GetTestWindowImpl("Destroy");
+    window->hostSession_ = hostSession;
+    window->state_ = WindowState::STATE_INITIAL;
+    window->property_->SetPersistentId(1);
+    ASSERT_FALSE(window->IsWindowSessionInvalid());
+    window->context_ = std::make_shared<AbilityRuntime::AbilityContextImpl>();
+    ASSERT_EQ(window->Destroy(true, true), WMError::WM_OK);
 }
 
 /**
@@ -1011,6 +1027,59 @@ HWTEST_F(WindowSessionImplTwoTest, RegisterWindowRectChangeListener, Function | 
     window->Destroy();
 }
 
+/**
+ * @tc.name: GetVirtualPixelRatio
+ * @tc.desc: GetVirtualPixelRatio
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, GetVirtualPixelRatio, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: GetVirtualPixelRatio start";
+    auto window = GetTestWindowImpl("GetVirtualPixelRatio");
+    sptr<DisplayInfo> displayInfo = new (std::nothrow) DisplayInfo();
+    float vpr = window->GetVirtualPixelRatio(displayInfo);
+    ASSERT_EQ(1.0, vpr);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: GetVirtualPixelRatio end";
+}
+
+/**
+ * @tc.name: InitUIContent
+ * @tc.desc: InitUIContent
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, InitUIContent, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: InitUIContent start";
+    // InitUIContent_Default
+    auto window = GetTestWindowImpl("InitUIContent_Default");
+    std::string contentInfo = "contentInfo";
+    napi_env env = nullptr;
+    napi_value storage = nullptr;
+    WindowSetUIContentType type = WindowSetUIContentType::DEFAULT;
+    AppExecFwk::Ability *ability = nullptr;
+    OHOS::Ace::UIContentErrorCode aceRet;
+    BackupAndRestoreType restoreType = BackupAndRestoreType::NONE;
+    // uiContent==nullptr
+    window->uiContent_ = nullptr;
+    EXPECT_EQ(window->InitUIContent(contentInfo, env, storage, type, restoreType, ability, aceRet), WMError::WM_OK);
+
+    // uiContent!=nullptr
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    EXPECT_EQ(window->InitUIContent(contentInfo, env, storage, type, restoreType, ability, aceRet), WMError::WM_OK);
+
+    // InitUIContent_Distribute
+    type = WindowSetUIContentType::RESTORE;
+    EXPECT_EQ(window->InitUIContent(contentInfo, env, storage, type, restoreType, ability, aceRet), WMError::WM_OK);
+
+    // InitUIContent_ByName
+    type = WindowSetUIContentType::BY_NAME;
+    EXPECT_EQ(window->InitUIContent(contentInfo, env, storage, type, restoreType, ability, aceRet), WMError::WM_OK);
+
+    // InitUIContent_ByABC
+    type = WindowSetUIContentType::BY_ABC;
+    EXPECT_EQ(window->InitUIContent(contentInfo, env, storage, type, restoreType, ability, aceRet), WMError::WM_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: InitUIContent end";
+}
 }
 } // namespace Rosen
 } // namespace OHOS
