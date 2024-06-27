@@ -34,7 +34,7 @@ int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
         WLOGFE("Failed to check interface token!");
         return ERR_INVALID_STATE;
     }
-    switch(code) {
+    switch (code) {
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_ACTIVE): {
             return this->HandleSetActive(data, reply);
         } break;
