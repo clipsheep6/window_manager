@@ -2446,10 +2446,10 @@ void WindowSessionImpl::NotifyAvoidAreaChange(const sptr<AvoidArea>& avoidArea, 
 {
     TLOGI(WmsLogTag::WMS_IMMS,
           "NotifyAvoidAreaChange: id:%{public}d, type:%{public}d, "
-          "top %{public}s, down %{public}s, left %{public}s, down %{public}s, ",
+          "top %{public}s, down %{public}s, left %{public}s, down %{public}s",
           GetPersistentId(), type,
-          avoidArea->topRect_.ToString(), avoidArea->bottomRect_.ToString(),
-          avoidArea->leftRect_.ToString(), avoidArea->rightRect_.ToString());
+          avoidArea->topRect_.ToString().c_str(), avoidArea->bottomRect_.ToString().c_str(),
+          avoidArea->leftRect_.ToString().c_str(), avoidArea->rightRect_.ToString().c_str());
     std::lock_guard<std::recursive_mutex> lockListener(avoidAreaChangeListenerMutex_);
     auto avoidAreaChangeListeners = GetListeners<IAvoidAreaChangedListener>();
     for (auto& listener : avoidAreaChangeListeners) {
