@@ -105,7 +105,7 @@ public:
         PiPControlObserverImpl(napi_env env, std::shared_ptr<NativeReference> callback)
             : engine_(env), jsCallBack_(callback) {}
         ~PiPControlObserverImpl() {}
-        napi_value OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode) override;
+        void OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode) override;
     private:
         napi_env engine_ = nullptr;
         std::shared_ptr<NativeReference> jsCallBack_ = nullptr;
