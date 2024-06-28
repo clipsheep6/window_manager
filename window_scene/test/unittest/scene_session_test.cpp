@@ -822,11 +822,9 @@ HWTEST_F(SceneSessionTest, NotifySessionPiPControlStatusChange, Function | Small
     info.bundleName_ = "IsFloatingWindowAppType";
     info.windowType_ = 1;
     sptr<Rosen::ISession> session_;
-    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    auto specificCallback_ = sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
     EXPECT_NE(specificCallback_, nullptr);
-    sptr<SceneSession> sceneSession;
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    auto sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus::PLAY;
@@ -847,8 +845,7 @@ HWTEST_F(SceneSessionTest, NotifySessionPiPControlEnableChange, Function | Small
     sptr<Rosen::ISession> session_;
     auto specificCallback_ = sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
     EXPECT_NE(specificCallback_, nullptr);
-    sptr<SceneSession> sceneSession;
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    auto sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     bool enabled = true;
@@ -867,7 +864,8 @@ HWTEST_F(SceneSessionTest, FixRectByAspectRatio, Function | SmallTest | Level2)
     info.bundleName_ = "IsFloatingWindowAppType";
     info.windowType_ = 1;
     sptr<Rosen::ISession> session_;
-    auto specificCallback_ = sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
     EXPECT_NE(specificCallback_, nullptr);
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
