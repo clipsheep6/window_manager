@@ -1063,20 +1063,20 @@ WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("writeInterfaceToken failed");
+        TLOGE(WmsLogTag::WMS_PIP, "writeInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
-        WLOGFE("Write controlType failed");
+        TLOGE(WmsLogTag::WMS_PIP, "Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteInt32(static_cast<int32_t>(status))) {
-        WLOGFE("write status failed.");
+        TLOGE(WmsLogTag::WMS_PIP, "write status failed.");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_CONTROL_STATUS),
         data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+        TLOGE(WmsLogTag::WMS_PIP, "SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     int32_t ret = reply.ReadInt32();
@@ -1090,20 +1090,20 @@ WSError SessionProxy::SetPiPControlEnabled(PiPControlType controlType, bool enab
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("writeInterfaceToken failed");
+        TLOGE(WmsLogTag::WMS_PIP, "writeInterfaceToken failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
-        WLOGFE("Write controlType failed");
+        TLOGE(WmsLogTag::WMS_PIP, "Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteBool(enabled)) {
-        WLOGFE("write enabled failed.");
+        TLOGE(WmsLogTag::WMS_PIP, "write enabled failed.");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_PIP_CONTROL_ENABLE),
         data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+        TLOGE(WmsLogTag::WMS_PIP, "SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     int32_t ret = reply.ReadInt32();

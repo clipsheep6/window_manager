@@ -578,6 +578,10 @@ void PictureInPictureController::DoControlEvent(PiPControlType controlType, PiPC
         TLOGE(WmsLogTag::WMS_PIP, "pipControlObserver is not registered");
         return;
     }
+    if (pipOption_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "pipOption_ is nullptr");
+        return;
+    }
     SingletonContainer::Get<PiPReporter>().ReportPiPControlEvent(pipOption_->GetPipTemplate(), controlType);
     pipControlObserver_->OnControlEvent(controlType, status);
     pipOption_->SetPiPControlStatus(controlType, status);

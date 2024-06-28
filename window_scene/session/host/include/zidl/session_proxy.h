@@ -21,7 +21,6 @@
 #include "session/host/include/zidl/session_interface.h"
 #include "wm_common.h"
 
-
 namespace OHOS::Rosen {
 class SessionProxy : public IRemoteProxy<ISession> {
 public:

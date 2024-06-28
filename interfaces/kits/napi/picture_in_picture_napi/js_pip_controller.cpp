@@ -422,8 +422,11 @@ void JsPipController::ProcessControlEventRegister()
         TLOGE(WmsLogTag::WMS_PIP, "controller is nullptr");
         return;
     }
-    sptr<IPiPControlObserver> controlObserver =
-        new JsPipController::PiPControlObserverImpl(env_, jsCbMap_[CONTROL_EVENT_CB]);
+    auto controlObserver = new(std::nothrow) JsPipController::PiPControlObserverImpl(env_, jsCbMap_[CONTROL_EVENT_CB]);
+    if (controlObserver == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "controlObserver is nullptr");
+        return;
+    }
     pipController_->SetPictureInPictureControlObserver(controlObserver);
     TLOGI(WmsLogTag::WMS_PIP, "Register control event success");
 }
@@ -575,7 +578,7 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
         engine_, std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
 }
 
-void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode)
+napi_value JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, statusCode:%{public}d", controlType, statusCode);
     std::lock_guard<std::mutex> lock(mtx_);

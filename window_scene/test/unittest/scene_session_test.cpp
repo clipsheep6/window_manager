@@ -819,11 +819,8 @@ HWTEST_F(SceneSessionTest, NotifySessionPiPControlStatusChange, Function | Small
 {
     SessionInfo info;
     info.abilityName_ = "Background01";
-    info.bundleName_ = "IsFloatingWindowAppType";
+    info.bundleName_ = "NotifySessionPiPControlStatusChange";
     info.windowType_ = 1;
-    sptr<Rosen::ISession> session_;
-    auto specificCallback_ = sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
-    EXPECT_NE(specificCallback_, nullptr);
     auto sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
@@ -840,11 +837,8 @@ HWTEST_F(SceneSessionTest, NotifySessionPiPControlEnableChange, Function | Small
 {
     SessionInfo info;
     info.abilityName_ = "Background01";
-    info.bundleName_ = "IsFloatingWindowAppType";
+    info.bundleName_ = "NotifySessionPiPControlEnableChange";
     info.windowType_ = 1;
-    sptr<Rosen::ISession> session_;
-    auto specificCallback_ = sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
-    EXPECT_NE(specificCallback_, nullptr);
     auto sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
     EXPECT_NE(sceneSession, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
