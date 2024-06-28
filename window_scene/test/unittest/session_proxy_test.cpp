@@ -511,8 +511,10 @@ HWTEST_F(SessionProxyTest, TransferAccessibilityEvent, Function | SmallTest | Le
 HWTEST_F(SessionProxyTest, UpdatePiPControlStatus, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "SessionProxyTest: UpdatePiPControlStatus start";
-    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    auto iRemoteObjectMocker = sptr<IRemoteObjectMocker>::MakeSptr();
+    ASSERT_EQ(iRemoteObjectMocker, nullptr);
     SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+    ASSERT_EQ(sProxy, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus::PLAY;
     WSError res = sProxy->UpdatePiPControlStatus(controlType, status);
@@ -528,8 +530,10 @@ HWTEST_F(SessionProxyTest, UpdatePiPControlStatus, Function | SmallTest | Level2
 HWTEST_F(SessionProxyTest, SetPiPControlEnabled, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "SessionProxyTest: SetPiPControlEnabled start";
-    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    auto iRemoteObjectMocker = sptr<IRemoteObjectMocker>::MakeSptr();
+    ASSERT_EQ(iRemoteObjectMocker, nullptr);
     SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+    ASSERT_EQ(sProxy, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     bool enabled = true;
     WSError res = sProxy->SetPiPControlEnabled(controlType, enabled);

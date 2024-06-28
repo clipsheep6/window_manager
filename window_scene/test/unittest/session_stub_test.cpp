@@ -246,6 +246,7 @@ HWTEST_F(SessionStubTest, HandleUpdatePiPRect004, Function | SmallTest | Level2)
  */
 HWTEST_F(SessionStubTest, HandleUpdatePiPControlStatus, Function | SmallTest | Level2)
 {
+    ASSERT_NE(session_, nullptr);
     MessageParcel data;
     MessageParcel reply;
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
@@ -264,6 +265,7 @@ HWTEST_F(SessionStubTest, HandleUpdatePiPControlStatus, Function | SmallTest | L
  */
 HWTEST_F(SessionStubTest, HandleSetPiPControlEnabled, Function | SmallTest | Level2)
 {
+    ASSERT_NE(session_, nullptr);
     MessageParcel data;
     MessageParcel reply;
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;

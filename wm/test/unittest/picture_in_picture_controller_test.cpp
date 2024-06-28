@@ -610,7 +610,9 @@ HWTEST_F(PictureInPictureControllerTest, DoControlEvent, Function | SmallTest | 
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus::PLAY;
     auto mw = sptr<MockWindow>::MakeSptr();
+    ASSERT_NE(nullptr, mw);
     auto option = sptr<PipOption>::MakeSptr();
+    ASSERT_NE(nullptr, option);
     auto pipControl = sptr<PictureInPictureController>::MakeSptr(option, mw, 100, nullptr);
     sptr<IPiPControlObserver> listener = nullptr;
 

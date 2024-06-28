@@ -448,7 +448,7 @@ HWTEST_F(SessionStageStubTest, HandleSetPiPControlEvent, Function | SmallTest | 
     auto status = PiPControlStatus::PLAY;
     data.WriteUint32(static_cast<uint32_t>(controlType));
     data.WriteInt32(static_cast<int32_t>(status));
-    ASSERT_TRUE((sessionStageStub_ != nullptr));
+    ASSERT_TRUE(sessionStageStub_ != nullptr);
     ASSERT_EQ(0, sessionStageStub_->HandleSetPiPControlEvent(data, reply));
 }
 }

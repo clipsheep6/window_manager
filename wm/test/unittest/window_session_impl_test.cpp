@@ -2041,10 +2041,10 @@ HWTEST_F(WindowSessionImplTest, SetPipActionEvent, Function | SmallTest | Level2
 HWTEST_F(WindowSessionImplTest, SetPiPControlEvent, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetPiPControlEvent start";
-    sptr<WindowOption> option = new WindowOption();
+    auto option = sptr<WindowOption>::MakeSptr();
     ASSERT_NE(option, nullptr);
     option->SetWindowName("GetTitleButtonArea");
-    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    auto window = sptr<WindowSessionImpl>::MakeSptr(option);
     ASSERT_NE(window, nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus::PLAY;
