@@ -54,7 +54,7 @@ int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParc
                 return this->HandleBackground(data, reply);
             } break;
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DISCONNECT): {
-                return this->HandleConnect(data, reply);
+                return this->HandleDisconnect(data, reply);
             } break;
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SHOW): {
                 return this->HandleShow(data, reply);
