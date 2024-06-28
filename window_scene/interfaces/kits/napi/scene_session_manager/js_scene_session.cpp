@@ -676,7 +676,6 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
 
 void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
 {
-    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlStatusChangeRegister success");
     NotifySessionPiPControlStatusChangeFunc func = [this](PiPControlType controlType, PiPControlStatus status) {
         this->OnSessionPiPControlStatusChange(controlType, status);
     };
@@ -686,11 +685,11 @@ void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
         return;
     }
     session->SetSessionPiPControlStatusChangeCallback(func);
+    TLOGE(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlStatusChangeRegister success");
 }
 
 void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
 {
-    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlEnableChangeRegister success");
     NotifySessionPiPControlEnableChangeFunc func = [this](PiPControlType controlType, bool enabled) {
         this->OnSessionPiPControlEnableChange(controlType, enabled);
     };
@@ -700,6 +699,7 @@ void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
         return;
     }
     session->SetSessionPiPControlEnableChangeCallback(func);
+    TLOGE(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlEnableChangeRegister success");
 }
 
 void JsSceneSession::ProcessRaiseToTopRegister()
@@ -1691,7 +1691,7 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
 
 void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlStatusChange");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);;
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_STATUS_CHANGE_CB);
     if (jsCallBack == nullptr) {
         return;
@@ -1713,7 +1713,7 @@ void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType,
 
 void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType, bool enabled)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnSessionPiPControlEnableChange is called");
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, enabled);
     std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_ENABLE_CHANGE_CB);
     if (jsCallBack == nullptr) {
         return;

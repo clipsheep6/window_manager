@@ -72,7 +72,7 @@ HWTEST_F(PictureInPictureOptionTest, PipTemplate, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: PipTemplate
+ * @tc.name: PiPControlStatus
  * @tc.desc: SetPiPControlStatus/GetControlStatus
  * @tc.type: FUNC
  */
@@ -86,7 +86,7 @@ HWTEST_F(PictureInPictureOptionTest, PiPControlStatus, Function | SmallTest | Le
 }
 
 /**
- * @tc.name: PipTemplate
+ * @tc.name: PiPControlEnable
  * @tc.desc: SetPiPControlEnabled/GetControlEnable
  * @tc.type: FUNC
  */

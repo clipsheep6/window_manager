@@ -3305,11 +3305,16 @@ WSError SceneSession::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
         return WSError::WS_DO_NOTHING;
     }
-    auto task = [weakThis = wptr(this), controlType, status]() {
+    int32_t callingPid = IPCSkeleton::GetCallingPid();
+    auto task = [weakThis = wptr(this), controlType, status, callingPid]() {
         auto session = weakThis.promote();
         if (!session || session->isTerminating) {
             TLOGE(WmsLogTag::WMS_PIP, "SceneSession::UpdatePiPControlStatus session is null or is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
+        }
+        if (callingPid != session->GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_PIP, "permission denied, not call by the same process");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
         }
         session->NotifySessionPiPControlStatusChange(controlType, status);
         return WSError::WS_OK;
@@ -3324,11 +3329,16 @@ WSError SceneSession::SetPiPControlEnabled(PiPControlType controlType, bool enab
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
         return WSError::WS_DO_NOTHING;
     }
-    auto task = [weakThis = wptr(this), controlType, enabled]() {
+    int32_t callingPid = IPCSkeleton::GetCallingPid();
+    auto task = [weakThis = wptr(this), controlType, enabled, callingPid]() {
         auto session = weakThis.promote();
         if (!session || session->isTerminating) {
             TLOGE(WmsLogTag::WMS_PIP, "SceneSession::SetPiPControlEnabled session is null or is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
+        }
+        if (callingPid != session->GetCallingPid()) {
+            TLOGW(WmsLogTag::WMS_PIP, "permission denied, not call by the same process");
+            return WSError::WS_ERROR_INVALID_PERMISSION;
         }
         session->NotifySessionPiPControlEnableChange(controlType, enabled);
         return WSError::WS_OK;

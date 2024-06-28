@@ -1067,7 +1067,7 @@ WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
-        TLOGE(WmsLogTag::WMS_LIFE, "Write controlType failed");
+        WLOGFE("Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteInt32(static_cast<int32_t>(status))) {
@@ -1094,7 +1094,7 @@ WSError SessionProxy::SetPiPControlEnabled(PiPControlType controlType, bool enab
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
-        TLOGE(WmsLogTag::WMS_LIFE, "Write controlType failed");
+        WLOGFE("Write controlType failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteBool(enabled)) {

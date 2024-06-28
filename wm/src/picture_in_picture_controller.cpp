@@ -490,7 +490,7 @@ void PictureInPictureController::UpdatePiPControlStatus(PiPControlType controlTy
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, status:%{public}d", controlType, status);
     pipOption_->SetPiPControlStatus(controlType, status);
     if (window_ == nullptr) {
-        TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
+        TLOGE(WmsLogTag::WMS_PIP, "pipWindow not exist");
         return;
     }
     window_->UpdatePiPControlStatus(controlType, status);
@@ -501,7 +501,7 @@ void PictureInPictureController::SetPiPControlEnabled(PiPControlType controlType
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
     pipOption_->SetPiPControlEnabled(controlType, enabled);
     if (window_ == nullptr) {
-        TLOGI(WmsLogTag::WMS_PIP, "pipWindow not exist");
+        TLOGE(WmsLogTag::WMS_PIP, "pipWindow not exist");
         return;
     }
     window_->SetPiPControlEnabled(controlType, enabled);
