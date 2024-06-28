@@ -1120,12 +1120,12 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
                 keyboardRect = inputMethod->GetKeyboardPanelSession()->GetSessionRect();
             }
             TLOGI(WmsLogTag::WMS_IMMS, "window rect is %{public}s, keyboard rect is %{public}s",
-                  rect.ToString().c_str(), statusBarRect.ToString().c_str());
+                  rect.ToString().c_str(), keyboardRect.ToString().c_str());
             CalculateAvoidAreaRect(rect, keyboardRect, avoidArea);
         } else {
             WSRect inputMethodRect = inputMethod->GetSessionRect();
             TLOGI(WmsLogTag::WMS_IMMS, "window rect is %{public}s, input method bar rect is %{public}s",
-                  rect.ToString().c_str(), statusBarRect.ToString().c_str());
+                  rect.ToString().c_str(), inputMethodRect.ToString().c_str());
             CalculateAvoidAreaRect(rect, inputMethodRect, avoidArea);
         }
     }
@@ -1158,7 +1158,7 @@ void SceneSession::GetCutoutAvoidArea(WSRect& rect, AvoidArea& avoidArea)
             cutoutArea.height_
         };
         TLOGI(WmsLogTag::WMS_IMMS, "window rect is %{public}s, cutout area rect is %{public}s",
-              rect.ToString().c_str(), statusBarRect.ToString().c_str());
+              rect.ToString().c_str(), cutoutAreaRect.ToString().c_str());
         CalculateAvoidAreaRect(rect, cutoutAreaRect, avoidArea);
     }
 
@@ -1184,7 +1184,7 @@ void SceneSession::GetAINavigationBarArea(WSRect rect, AvoidArea& avoidArea)
         barArea = specificCallback_->onGetAINavigationBarArea_(GetSessionProperty()->GetDisplayId());
     }
     TLOGI(WmsLogTag::WMS_IMMS, "window rect is %{public}s, AI navigation bar rect is %{public}s",
-          rect.ToString().c_str(), statusBarRect.ToString().c_str());
+          rect.ToString().c_str(), barArea.ToString().c_str());
     CalculateAvoidAreaRect(rect, barArea, avoidArea);
 }
 
