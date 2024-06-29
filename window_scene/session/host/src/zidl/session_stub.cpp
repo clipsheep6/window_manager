@@ -26,7 +26,8 @@
 #include "process_options.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "window_manager_hilog.h"
-#include "ws_common.h"
+
+#include "wm_common.h"
 
 namespace OHOS::Accessibility {
 class AccessibilityEventInfo;
