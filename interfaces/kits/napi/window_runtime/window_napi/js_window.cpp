@@ -5155,6 +5155,10 @@ napi_value JsWindow::OnSetHandwritingFlag(napi_env env, napi_callback_info info)
 
 napi_value JsWindow::OnSetAspectRatio(napi_env env, napi_callback_info info)
 {
+    if (windowToken_ == nullptr) {
+        WLOGFE("Window is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
     WMError errCode = WMError::WM_OK;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
@@ -5218,6 +5222,10 @@ napi_value JsWindow::OnSetAspectRatio(napi_env env, napi_callback_info info)
 
 napi_value JsWindow::OnResetAspectRatio(napi_env env, napi_callback_info info)
 {
+    if (windowToken_ == nullptr) {
+        WLOGFE("Window is nullptr");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
+    }
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
