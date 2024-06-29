@@ -1573,6 +1573,186 @@ HWTEST_F(SceneSessionManagerTest, ClearMainSessions001, Function | SmallTest | L
 }
 
 /**
+ * @tc.name: UpdateSessionDisplayId
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UpdateSessionDisplayId, Function | SmallTest | Level3)
+{
+    const int32_t persistentId = 12345;
+    const uint64_t screenId = 54321;
+    ssm_->sceneSessionMap_.clear();
+    WSError result = ssm_->UpdateSessionDisplayId(persistentId, screenId);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_WINDOW);
+}
+
+/**
+ * @tc.name: UpdateSessionDisplayId
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UpdateTitleInTargetPos, Function | SmallTest | Level3)
+{
+    const int32_t persistentId = 12345;
+    const bool isShow = true;
+    const int32_t height = 1;
+    SessionInfo sessionInfo;
+    sessionInfo.abilityName_ = "SceneSessionManagerTest";
+    sessionInfo.bundleName_ = "UpdateTitleInTargetPos";
+    sptr<SceneSession> sceneSession = ssm_->CreateSceneSession(sessionInfo, nullptr);
+    ssm_->sceneSessionMap_.clear();
+    WSError result = ssm_->UpdateTitleInTargetPos(persistentId, isShow, height);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_WINDOW);
+}
+
+/**
+ * @tc.name: UnregisterCreateSubSessionListener
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UnregisterCreateSubSessionListener, Function | SmallTest | Level3)
+{
+    const int32_t persistentId = 0;
+    ssm_->UnregisterCreateSubSessionListener(persistentId);
+    ssm_->sceneSessionMap_.clear();
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: SwitchFreeMultiWindow
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, SwitchFreeMultiWindow, Function | SmallTest | Level3)
+{
+    WSError result = ssm_->SwitchFreeMultiWindow(true);
+    ASSERT_EQ(result, WSError::WS_ERROR_DEVICE_NOT_SUPPORT);
+}
+
+/**
+ * @tc.name: GetWindowModeType
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetWindowModeType, Function | SmallTest | Level3)
+{
+    WindowModeType type = WindowModeType::WINDOW_MODE_OTHER;
+    WMError result = ssm_->GetWindowModeType(type);
+    ASSERT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
+}
+
+/**
+ * @tc.name: GetCallingWindowRect
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetCallingWindowRect, Function | SmallTest | Level3)
+{
+    const int32_t id = 0;
+    Rect rect = {100, 200, 100, 200};
+    WMError result = ssm_->GetCallingWindowRect(id, rect);
+    ASSERT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
+}
+
+/**
+ * @tc.name: GetCallingWindowWindowStatus
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetCallingWindowWindowStatus, Function | SmallTest | Level3)
+{
+    const int32_t id = 0;
+    auto windowStatus = WindowStatus::WINDOW_STATUS_UNDEFINED;
+    WMError result = ssm_->GetCallingWindowWindowStatus(id, windowStatus);
+    ASSERT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
+}
+
+/**
+ * @tc.name: GetHostWindowRect
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetHostWindowRect, Function | SmallTest | Level3)
+{
+    const int32_t id = 32;
+    Rect rect = {100, 200, 100, 200};
+    WSError result = ssm_->GetHostWindowRect(id, rect);
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: AddExtensionWindowStageToSCB
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, AddExtensionWindowStageToSCB, Function | SmallTest | Level3)
+{
+    const int32_t persistentId = 12345;
+    const int32_t parentId = 1234;
+    sptr<ISessionStage> sessionStage;
+    ssm_->AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId);
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    sessionStage = nullptr;
+    ssm_->AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId);
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: FlushWindowInfoToMMI
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, FlushWindowInfoToMMI, Function | SmallTest | Level3)
+{
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    ssm_->FlushWindowInfoToMMI(true);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    ssm_->FlushWindowInfoToMMI(false);
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: RequestInputMethodCloseKeyboard
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, RequestInputMethodCloseKeyboard, Function | SmallTest | Level3)
+{
+    const int32_t persistentId = 12345;
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    ssm_->RequestInputMethodCloseKeyboard(persistentId);
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: DealwithDrawingContentChange
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, DealwithDrawingContentChange, Function | SmallTest | Level3)
+{
+    std::vector<std::pair<uint64_t, bool>> drawingContentChangeInfo;
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    ssm_->DealwithDrawingContentChange(drawingContentChangeInfo);
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: GetSurfaceNodeIdsFromMissionIds
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetSurfaceNodeIdsFromMissionIds, Function | SmallTest | Level3)
+{
+    std::vector<uint64_t> missionIds;
+    std::vector<uint64_t> surfaceNodeIds;
+    WMError result = ssm_->GetSurfaceNodeIdsFromMissionIds(missionIds, surfaceNodeIds);
+    ASSERT_NE(result, WMError::WM_OK);
+}
  * @tc.name: ClearMainSessions002
  * @tc.desc: SceneSessionManager clear main session by persistentid.
  * @tc.type: FUNC
