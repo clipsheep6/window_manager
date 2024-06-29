@@ -730,7 +730,7 @@ bool WindowSessionProperty::MarshallingPiPTemplateInfo(Parcel& parcel) const
     }
     for (uint32_t i = 0; i < controlEnableSize; i++) {
         if (!parcel.WriteUint32(static_cast<uint32_t>(pipTemplateInfo_.pipControlEnableInfoList[i].controlType))  ||
-            !parcel.WriteBool(pipTemplateInfo_.pipControlEnableInfoList[i].enabled)) {
+            !parcel.WriteInt32(static_cast<int32_t>(pipTemplateInfo_.pipControlEnableInfoList[i].status))) {
             return false;
         }
     }
@@ -778,12 +778,12 @@ void WindowSessionProperty::UnmarshallingPiPTemplateInfo(Parcel& parcel, WindowS
     for (uint32_t i = 0; i < controlEnableSize; i++) {
         PiPControlEnableInfo pipControlEnableInfo;
         uint32_t controlType = 0;
-        bool enabled = 0;
-        if (!parcel.ReadUint32(controlType) || !parcel.ReadBool(enabled)) {
+        int32_t enabled = 0;
+        if (!parcel.ReadUint32(controlType) || !parcel.ReadInt32(enabled)) {
             return;
         }
         pipControlEnableInfo.controlType = static_cast<PiPControlType>(controlType);
-        pipControlEnableInfo.enabled = enabled;
+        pipControlEnableInfo.enabled = static_cast<PiPControlStatus>(enabled);
         pipTemplateInfo.pipControlEnableInfoList.push_back(pipControlEnableInfo);
     }
     property->SetPiPTemplateInfo(pipTemplateInfo);

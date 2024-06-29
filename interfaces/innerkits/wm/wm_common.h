@@ -874,6 +874,8 @@ enum class PiPControlStatus : int32_t {
     PAUSE = 0,
     OPEN = 1,
     CLOSE = 0,
+    ENABLED = -2,
+    DISABLED = -3,
 };
 
 /**
@@ -899,7 +901,7 @@ struct PiPControlStatusInfo {
 
 struct PiPControlEnableInfo {
     PiPControlType controlType;
-    bool enabled;
+    PiPControlStatus enabled;
 };
 
 struct PiPTemplateInfo {

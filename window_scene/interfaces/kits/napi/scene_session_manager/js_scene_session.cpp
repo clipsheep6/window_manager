@@ -100,7 +100,7 @@ napi_value CreateJsPiPControlEnableObject(napi_env env, PiPControlEnableInfo con
         return NapiGetUndefined(env);
     }
     uint32_t controlType = static_cast<uint32_t>(controlEnableInfo.controlType);
-    bool enabled = controlEnableInfo.enabled;
+    int32_t enabled = static_cast<int32_t>(controlEnableInfo.enabled);
     napi_set_named_property(env, objValue, "controlType", CreateJsValue(env, controlType));
     napi_set_named_property(env, objValue, "enabled", CreateJsValue(env, enabled));
     return objValue;

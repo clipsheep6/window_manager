@@ -23,7 +23,7 @@
 #include "common/include/window_session_property.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
-#include "ws_common.h"
+#include "wm_common.h"
 
 namespace OHOS::Accessibility {
 class AccessibilityEventInfo;

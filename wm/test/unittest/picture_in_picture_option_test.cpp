@@ -96,7 +96,7 @@ HWTEST_F(PictureInPictureOptionTest, PiPControlEnable, Function | SmallTest | Le
     auto option = sptr<PipOption>::MakeSptr();
     ASSERT_NE(nullptr, option);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    bool enabled = true;
+    auto enabled = PiPControlStatus::ENABLED;
     option->SetPiPControlEnabled(controlType, enabled);
     ASSERT_NE(0, option->GetControlEnable().size());
 }
