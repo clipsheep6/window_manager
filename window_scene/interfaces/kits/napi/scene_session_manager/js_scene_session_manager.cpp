@@ -60,6 +60,7 @@ const std::string START_UI_ABILITY_ERROR = "startUIAbilityError";
 const std::string ARG_DUMP_HELP = "-h";
 const std::string SHIFT_FOCUS_CB = "shiftFocus";
 const std::string CALLING_WINDOW_ID_CHANGE_CB = "callingWindowIdChange";
+
 } // namespace
 
 napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
@@ -167,7 +168,6 @@ JsSceneSessionManager::JsSceneSessionManager(napi_env env) : env_(env)
         { STATUS_BAR_ENABLED_CHANGE_CB, ListenerFuncionType::STATUS_BAR_ENABLED_CHANGE_CB},
         { OUTSIDE_DOWN_EVENT_CB,        ListenerFuncionType::OUTSIDE_DOWN_EVENT_CB},
         { SHIFT_FOCUS_CB,               ListenerFuncionType::SHIFT_FOCUS_CB},
-        { CALLING_SESSION_ID_CHANGE_CB, ListenerFuncionType::CALLING_SESSION_ID_CHANGE_CB},
         { START_UI_ABILITY_ERROR,       ListenerFuncionType::START_UI_ABILITY_ERROR},
         { GESTURE_NAVIGATION_ENABLED_CHANGE_CB,
             ListenerFuncionType::GESTURE_NAVIGATION_ENABLED_CHANGE_CB},
@@ -886,9 +886,6 @@ napi_value JsSceneSessionManager::OnRegisterCallback(napi_env env, napi_callback
             break;
         case static_cast<int>(ListenerFuncionType::SHIFT_FOCUS_CB):
             ProcessShiftFocus();
-            break;
-        case static_cast<int>(ListenerFuncionType::CALLING_SESSION_ID_CHANGE_CB):
-            ProcessCallingSessionIdChangeRegister();
             break;
         case static_cast<int>(ListenerFuncionType::START_UI_ABILITY_ERROR):
             ProcessStartUIAbilityErrorRegister();
