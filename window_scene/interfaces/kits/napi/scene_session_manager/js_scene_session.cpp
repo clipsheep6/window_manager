@@ -197,49 +197,49 @@ JsSceneSession::~JsSceneSession()
 
 void JsSceneSession::InitListenerFuncs()
 {
-    listenerFunc_ = {
-        { PENDING_SCENE_CB,                      &JsSceneSession::ProcessPendingSceneSessionActivationRegister },
+    listenFuncMap_ = {
+        { PENDING_SCENE_CB,                      ListenerFuncionType::PENDING_SCENE_CB},
         { CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR,
-            &JsSceneSession::ProcessChangeSessionVisibilityWithStatusBarRegister },
-        { SESSION_STATE_CHANGE_CB,               &JsSceneSession::ProcessSessionStateChangeRegister },
-        { BUFFER_AVAILABLE_CHANGE_CB,            &JsSceneSession::ProcessBufferAvailableChangeRegister},
-        { SESSION_EVENT_CB,                      &JsSceneSession::ProcessSessionEventRegister },
-        { SESSION_RECT_CHANGE_CB,                &JsSceneSession::ProcessSessionRectChangeRegister },
-        { CREATE_SUB_SESSION_CB,                 &JsSceneSession::ProcessCreateSubSessionRegister },
-        { BIND_DIALOG_TARGET_CB,                 &JsSceneSession::ProcessBindDialogTargetRegister },
-        { RAISE_TO_TOP_CB,                       &JsSceneSession::ProcessRaiseToTopRegister },
-        { RAISE_TO_TOP_POINT_DOWN_CB,            &JsSceneSession::ProcessRaiseToTopForPointDownRegister },
-        { BACK_PRESSED_CB,                       &JsSceneSession::ProcessBackPressedRegister },
-        { SESSION_FOCUSABLE_CHANGE_CB,           &JsSceneSession::ProcessSessionFocusableChangeRegister },
-        { SESSION_TOUCHABLE_CHANGE_CB,           &JsSceneSession::ProcessSessionTouchableChangeRegister },
-        { SESSION_TOP_MOST_CHANGE_CB,            &JsSceneSession::ProcessSessionTopmostChangeRegister },
-        { CLICK_CB,                              &JsSceneSession::ProcessClickRegister },
-        { TERMINATE_SESSION_CB,                  &JsSceneSession::ProcessTerminateSessionRegister },
-        { TERMINATE_SESSION_CB_NEW,              &JsSceneSession::ProcessTerminateSessionRegisterNew },
-        { TERMINATE_SESSION_CB_TOTAL,            &JsSceneSession::ProcessTerminateSessionRegisterTotal },
-        { SESSION_EXCEPTION_CB,                  &JsSceneSession::ProcessSessionExceptionRegister },
-        { UPDATE_SESSION_LABEL_CB,               &JsSceneSession::ProcessUpdateSessionLabelRegister },
-        { UPDATE_SESSION_ICON_CB,                &JsSceneSession::ProcessUpdateSessionIconRegister },
-        { SYSTEMBAR_PROPERTY_CHANGE_CB,          &JsSceneSession::ProcessSystemBarPropertyChangeRegister },
-        { NEED_AVOID_CB,                         &JsSceneSession::ProcessNeedAvoidRegister },
-        { PENDING_SESSION_TO_FOREGROUND_CB,      &JsSceneSession::ProcessPendingSessionToForegroundRegister },
+            ListenerFuncionType::CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR},
+        { SESSION_STATE_CHANGE_CB,               ListenerFuncionType::SESSION_STATE_CHANGE_CB},
+        { BUFFER_AVAILABLE_CHANGE_CB,            ListenerFuncionType::BUFFER_AVAILABLE_CHANGE_CB},
+        { SESSION_EVENT_CB,                      ListenerFuncionType::SESSION_EVENT_CB},
+        { SESSION_RECT_CHANGE_CB,                ListenerFuncionType::SESSION_RECT_CHANGE_CB},
+        { CREATE_SUB_SESSION_CB,                 ListenerFuncionType::CREATE_SUB_SESSION_CB},
+        { BIND_DIALOG_TARGET_CB,                 ListenerFuncionType::BIND_DIALOG_TARGET_CB},
+        { RAISE_TO_TOP_CB,                       ListenerFuncionType::RAISE_TO_TOP_CB},
+        { RAISE_TO_TOP_POINT_DOWN_CB,            ListenerFuncionType::RAISE_TO_TOP_POINT_DOWN_CB},
+        { BACK_PRESSED_CB,                       ListenerFuncionType::BACK_PRESSED_CB},
+        { SESSION_FOCUSABLE_CHANGE_CB,           ListenerFuncionType::SESSION_FOCUSABLE_CHANGE_CB},
+        { SESSION_TOUCHABLE_CHANGE_CB,           ListenerFuncionType::SESSION_TOUCHABLE_CHANGE_CB},
+        { SESSION_TOP_MOST_CHANGE_CB,            ListenerFuncionType::SESSION_TOP_MOST_CHANGE_CB},
+        { CLICK_CB,                              ListenerFuncionType::CLICK_CB},
+        { TERMINATE_SESSION_CB,                  ListenerFuncionType::TERMINATE_SESSION_CB},
+        { TERMINATE_SESSION_CB_NEW,              ListenerFuncionType::TERMINATE_SESSION_CB_NEW},
+        { TERMINATE_SESSION_CB_TOTAL,            ListenerFuncionType::TERMINATE_SESSION_CB_TOTAL},
+        { SESSION_EXCEPTION_CB,                  ListenerFuncionType::SESSION_EXCEPTION_CB},
+        { UPDATE_SESSION_LABEL_CB,               ListenerFuncionType::UPDATE_SESSION_LABEL_CB},
+        { UPDATE_SESSION_ICON_CB,                ListenerFuncionType::UPDATE_SESSION_ICON_CB},
+        { SYSTEMBAR_PROPERTY_CHANGE_CB,          ListenerFuncionType::SYSTEMBAR_PROPERTY_CHANGE_CB},
+        { NEED_AVOID_CB,                         ListenerFuncionType::NEED_AVOID_CB},
+        { PENDING_SESSION_TO_FOREGROUND_CB,      ListenerFuncionType::PENDING_SESSION_TO_FOREGROUND_CB},
         { PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB,
-            &JsSceneSession::ProcessPendingSessionToBackgroundForDelegatorRegister },
-        { CUSTOM_ANIMATION_PLAYING_CB,           &JsSceneSession::ProcessIsCustomAnimationPlaying },
-        { NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB, &JsSceneSession::ProcessSessionDefaultAnimationFlagChangeRegister },
-        { SHOW_WHEN_LOCKED_CB,                   &JsSceneSession::ProcessShowWhenLockedRegister },
-        { REQUESTED_ORIENTATION_CHANGE_CB,       &JsSceneSession::ProcessRequestedOrientationChange },
-        { RAISE_ABOVE_TARGET_CB,                 &JsSceneSession::ProcessRaiseAboveTargetRegister },
-        { FORCE_HIDE_CHANGE_CB,                  &JsSceneSession::ProcessForceHideChangeRegister },
-        { WINDOW_DRAG_HOT_AREA_CB,               &JsSceneSession::ProcessWindowDragHotAreaRegister },
-        { TOUCH_OUTSIDE_CB,                      &JsSceneSession::ProcessTouchOutsideRegister },
-        { SESSIONINFO_LOCKEDSTATE_CHANGE_CB,     &JsSceneSession::ProcessSessionInfoLockedStateChangeRegister },
-        { PREPARE_CLOSE_PIP_SESSION,             &JsSceneSession::ProcessPrepareClosePiPSessionRegister},
-        { LANDSCAPE_MULTI_WINDOW_CB,             &JsSceneSession::ProcessLandscapeMultiWindowRegister },
-        { CONTEXT_TRANSPARENT_CB,                &JsSceneSession::ProcessContextTransparentRegister },
-        { KEYBOARD_GRAVITY_CHANGE_CB,            &JsSceneSession::ProcessKeyboardGravityChangeRegister },
-        { ADJUST_KEYBOARD_LAYOUT_CB,             &JsSceneSession::ProcessAdjustKeyboardLayoutRegister },
-        { LAYOUT_FULL_SCREEN_CB,                 &JsSceneSession::ProcessLayoutFullScreenChangeRegister },
+            ListenerFuncionType::PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB},
+        { CUSTOM_ANIMATION_PLAYING_CB,           ListenerFuncionType::CUSTOM_ANIMATION_PLAYING_CB},
+        { NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB, ListenerFuncionType::NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB},
+        { SHOW_WHEN_LOCKED_CB,                   ListenerFuncionType::SHOW_WHEN_LOCKED_CB},
+        { REQUESTED_ORIENTATION_CHANGE_CB,       ListenerFuncionType::REQUESTED_ORIENTATION_CHANGE_CB},
+        { RAISE_ABOVE_TARGET_CB,                 ListenerFuncionType::RAISE_ABOVE_TARGET_CB},
+        { FORCE_HIDE_CHANGE_CB,                  ListenerFuncionType::FORCE_HIDE_CHANGE_CB},
+        { WINDOW_DRAG_HOT_AREA_CB,               ListenerFuncionType::WINDOW_DRAG_HOT_AREA_CB},
+        { TOUCH_OUTSIDE_CB,                      ListenerFuncionType::TOUCH_OUTSIDE_CB},
+        { SESSIONINFO_LOCKEDSTATE_CHANGE_CB,     ListenerFuncionType::SESSIONINFO_LOCKEDSTATE_CHANGE_CB},
+        { PREPARE_CLOSE_PIP_SESSION,             ListenerFuncionType::PREPARE_CLOSE_PIP_SESSION},
+        { LANDSCAPE_MULTI_WINDOW_CB,             ListenerFuncionType::LANDSCAPE_MULTI_WINDOW_CB},
+        { CONTEXT_TRANSPARENT_CB,                ListenerFuncionType::CONTEXT_TRANSPARENT_CB},
+        { KEYBOARD_GRAVITY_CHANGE_CB,            ListenerFuncionType::KEYBOARD_GRAVITY_CHANGE_CB},
+        { ADJUST_KEYBOARD_LAYOUT_CB,             ListenerFuncionType::ADJUST_KEYBOARD_LAYOUT_CB},
+        { LAYOUT_FULL_SCREEN_CB,                 ListenerFuncionType::LAYOUT_FULL_SCREEN_CB},
     };
 }
 
@@ -1214,7 +1214,135 @@ napi_value JsSceneSession::OnRegisterCallback(napi_env env, napi_callback_info i
         std::unique_lock<std::shared_mutex> lock(jsCbMapMutex_);
         jsCbMap_[cbType] = callbackRef;
     }
-    (this->*listenerFunc_[cbType])();
+    if (listenFuncMap_.count(cbType) == 0) {
+        WLOGFD("[NAPI]Failed to find callbackfunction, type = %{public}s", cbType.c_str());
+        return NapiGetUndefined(env);
+    }
+    ListenerFuncionType listenerFuncType = listenFuncMap_[cbType];
+    switch (static_cast<int>(listenerFuncType)) {
+        case static_cast<int>(ListenerFuncionType::PENDING_SCENE_CB):
+            ProcessPendingSceneSessionActivationRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR):
+            ProcessChangeSessionVisibilityWithStatusBarRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SESSION_STATE_CHANGE_CB):
+            ProcessSessionStateChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::BUFFER_AVAILABLE_CHANGE_CB):
+            ProcessBufferAvailableChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SESSION_EVENT_CB):
+            ProcessSessionEventRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SESSION_RECT_CHANGE_CB):
+            ProcessSessionRectChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::CREATE_SUB_SESSION_CB):
+            ProcessCreateSubSessionRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::BIND_DIALOG_TARGET_CB):
+            ProcessBindDialogTargetRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::RAISE_TO_TOP_CB):
+            ProcessRaiseToTopRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::RAISE_TO_TOP_POINT_DOWN_CB):
+            ProcessRaiseToTopForPointDownRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::BACK_PRESSED_CB):
+            ProcessBackPressedRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SESSION_FOCUSABLE_CHANGE_CB):
+            ProcessSessionFocusableChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SESSION_TOUCHABLE_CHANGE_CB):
+            ProcessSessionTouchableChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SESSION_TOP_MOST_CHANGE_CB):
+            ProcessSessionTopmostChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::CLICK_CB):
+            ProcessClickRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::TERMINATE_SESSION_CB):
+            ProcessTerminateSessionRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::TERMINATE_SESSION_CB_NEW):
+            ProcessTerminateSessionRegisterNew();
+            break;
+        case static_cast<int>(ListenerFuncionType::TERMINATE_SESSION_CB_TOTAL):
+            ProcessTerminateSessionRegisterTotal();
+            break;
+        case static_cast<int>(ListenerFuncionType::SESSION_EXCEPTION_CB):
+            ProcessSessionExceptionRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::UPDATE_SESSION_LABEL_CB):
+            ProcessUpdateSessionLabelRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::UPDATE_SESSION_ICON_CB):
+            ProcessUpdateSessionIconRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SYSTEMBAR_PROPERTY_CHANGE_CB):
+            ProcessSystemBarPropertyChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::NEED_AVOID_CB):
+            ProcessNeedAvoidRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::PENDING_SESSION_TO_FOREGROUND_CB):
+            ProcessPendingSessionToForegroundRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB):
+            ProcessPendingSessionToBackgroundForDelegatorRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::CUSTOM_ANIMATION_PLAYING_CB):
+            ProcessIsCustomAnimationPlaying();
+            break;
+        case static_cast<int>(ListenerFuncionType::NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB):
+            ProcessSessionDefaultAnimationFlagChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SHOW_WHEN_LOCKED_CB):
+            ProcessShowWhenLockedRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::REQUESTED_ORIENTATION_CHANGE_CB):
+            ProcessRequestedOrientationChange();
+            break;
+        case static_cast<int>(ListenerFuncionType::RAISE_ABOVE_TARGET_CB):
+            ProcessRaiseAboveTargetRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::FORCE_HIDE_CHANGE_CB):
+            ProcessForceHideChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::WINDOW_DRAG_HOT_AREA_CB):
+            ProcessWindowDragHotAreaRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::TOUCH_OUTSIDE_CB):
+            ProcessTouchOutsideRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::SESSIONINFO_LOCKEDSTATE_CHANGE_CB):
+            ProcessSessionInfoLockedStateChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::PREPARE_CLOSE_PIP_SESSION):
+            ProcessPrepareClosePiPSessionRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::LANDSCAPE_MULTI_WINDOW_CB):
+            ProcessLandscapeMultiWindowRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::CONTEXT_TRANSPARENT_CB):
+            ProcessContextTransparentRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::KEYBOARD_GRAVITY_CHANGE_CB):
+            ProcessKeyboardGravityChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::ADJUST_KEYBOARD_LAYOUT_CB):
+            ProcessAdjustKeyboardLayoutRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::LAYOUT_FULL_SCREEN_CB):
+            ProcessLayoutFullScreenChangeRegister();
+            break;
+        default:
+            break;
+    }
     WLOGFD("[NAPI]Register end, type = %{public}s", cbType.c_str());
     return NapiGetUndefined(env);
 }
