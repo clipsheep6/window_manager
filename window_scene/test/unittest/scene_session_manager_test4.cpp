@@ -1344,6 +1344,7 @@ HWTEST_F(SceneSessionManagerTest4, GetAccessibilityWindowInfo, Function | SmallT
     ssm_->sceneSessionMap_.insert(std::make_pair(4, sceneSession04));
     std::vector<sptr<AccessibilityWindowInfo>> accessibilityInfo;
     auto result = ssm_->GetAccessibilityWindowInfo(accessibilityInfo);
+    
     EXPECT_EQ(result, WMError::WM_OK);
 }
 }
