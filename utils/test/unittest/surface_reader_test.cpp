@@ -40,7 +40,7 @@ namespace {
 HWTEST_F(SurfaceReaderTest, Init, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "SurfaceReaderTest: Init start";
-    SurfaceReader* reader = new(std::nothrow) SurfaceReader();
+    SurfaceReader* reader = new (std::nothrow) SurfaceReader();
     bool res = reader->Init();
     ASSERT_EQ(res, true);
     GTEST_LOG_(INFO) << "SurfaceReaderTest: Init end";
@@ -71,7 +71,7 @@ HWTEST_F(SurfaceReaderTest, ProcessBuffer, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer start";
     sptr<SurfaceBuffer> cbuffer = nullptr;
-    sptr<SurfaceReaderHandler> handler = nullptr;
+    sptr<SurfaceReaderHandlerImpl> handler = nullptr;
     surfaceReader.SetHandler(handler);
     ASSERT_FALSE(surfaceReader.ProcessBuffer(cbuffer));
     GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer end";
