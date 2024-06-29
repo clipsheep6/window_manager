@@ -35,6 +35,7 @@ public:
     static napi_value SetAutoStartEnabled(napi_env env, napi_callback_info info);
     static napi_value UpdateContentSize(napi_env env, napi_callback_info info);
     static napi_value UpdatePiPControlStatus(napi_env env, napi_callback_info info);
+    static napi_value SetPiPControlEnabled(napi_env env, napi_callback_info info);
     static napi_value RegisterCallback(napi_env env, napi_callback_info info);
     static napi_value UnregisterCallback(napi_env env, napi_callback_info info);
 private:
@@ -43,6 +44,7 @@ private:
     napi_value OnSetAutoStartEnabled(napi_env env, napi_callback_info info);
     napi_value OnUpdateContentSize(napi_env env, napi_callback_info info);
     napi_value OnUpdatePiPControlStatus(napi_env env, napi_callback_info info);
+    napi_value OnSetPiPControlEnabled(napi_env env, napi_callback_info info);
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnUnregisterCallback(napi_env env, napi_callback_info info);
 

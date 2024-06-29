@@ -683,7 +683,7 @@ void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
         return;
     }
     session->SetSessionPiPControlStatusChangeCallback(func);
-    TLOGE(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlStatusChangeRegister success");
+    TLOGI(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlStatusChangeRegister success");
 }
 
 void JsSceneSession::ProcessRaiseToTopRegister()
