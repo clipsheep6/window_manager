@@ -180,6 +180,10 @@ static napi_value ExportControlStatus(napi_env env)
         static_cast<int32_t>(PiPControlStatus::OPEN));
     (void)SetNamedProperty(env, result, "CLOSE",
         static_cast<int32_t>(PiPControlStatus::CLOSE));
+    (void)SetNamedProperty(env, result, "ENABLED",
+        static_cast<int32_t>(PiPControlStatus::ENABLED));
+    (void)SetNamedProperty(env, result, "DISABLED",
+        static_cast<int32_t>(PiPControlStatus::DISABLED));
     napi_object_freeze(env, result);
     return result;
 }

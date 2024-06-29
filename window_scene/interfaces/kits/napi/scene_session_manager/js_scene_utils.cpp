@@ -938,6 +938,10 @@ napi_value CreateJsSessionPiPControlStatus(napi_env env)
         static_cast<int32_t>(PiPControlStatus::OPEN)));
     napi_set_named_property(env, objValue, "CLOSE", CreateJsValue(env,
         static_cast<int32_t>(PiPControlStatus::CLOSE)));
+    napi_set_named_property(env, objValue, "ENABLED", CreateJsValue(env,
+        static_cast<int32_t>(PiPControlStatus::ENABLED)));
+    napi_set_named_property(env, objValue, "DISABLED", CreateJsValue(env,
+        static_cast<int32_t>(PiPControlStatus::DISABLED)));
     return objValue;
 }
 
