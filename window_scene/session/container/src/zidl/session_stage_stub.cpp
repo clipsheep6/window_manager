@@ -72,16 +72,16 @@ int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
                 return this->HandleNotifyScreenshot(data, reply);
             } break;
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_DUMP_SESSSION_ELEMENT_INFO): {
-                return this->HandleNotifyTouchOutside(data, reply);
+                return this->HandleDumpSessionElementInfo(data, reply);
             } break;
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TOUCH_OUTSIDE): {
-                return this->HandleUpdateRect(data, reply);
+                return this->HandleNotifyTouchOutside(data, reply);
             } break;
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_MODE_CHANGE): {
-                return this->HandleNotifyForegroundInteractiveStatus(data, reply);
+                return this->HandleUpdateWindowMode(data, reply);
             } break;
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOREGROUND_INTERACTIVE_STATUS): {
-                return this->HandleUpdateRect(data, reply);
+                return this->HandleNotifyForegroundInteractiveStatus(data, reply);
             } break;
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_MAXIMIZE_MODE_CHANGE): {
                 return this->HandleUpdateMaximizeMode(data, reply);
