@@ -160,17 +160,17 @@ napi_value JsSceneSessionManager::Init(napi_env env, napi_value exportObj)
 
 JsSceneSessionManager::JsSceneSessionManager(napi_env env) : env_(env)
 {
-    listenerFunc_ = {
-        { CREATE_SYSTEM_SESSION_CB,     &JsSceneSessionManager::ProcessCreateSystemSessionRegister },
-        { CREATE_KEYBOARD_SESSION_CB,   &JsSceneSessionManager::ProcessCreateKeyboardSessionRegister },
-        { RECOVER_SCENE_SESSION_CB,     &JsSceneSessionManager::ProcessRecoverSceneSessionRegister },
-        { STATUS_BAR_ENABLED_CHANGE_CB, &JsSceneSessionManager::ProcessStatusBarEnabledChangeListener},
-        { OUTSIDE_DOWN_EVENT_CB,        &JsSceneSessionManager::ProcessOutsideDownEvent },
-        { SHIFT_FOCUS_CB,               &JsSceneSessionManager::ProcessShiftFocus },
-        { CALLING_WINDOW_ID_CHANGE_CB,  &JsSceneSessionManager::ProcessCallingSessionIdChangeRegister},
-        { START_UI_ABILITY_ERROR,       &JsSceneSessionManager::ProcessStartUIAbilityErrorRegister},
+    listenFuncTypeMap_ = {
+        { CREATE_SYSTEM_SESSION_CB,     ListenerFuncionType::CREATE_SYSTEM_SESSION_CB},
+        { CREATE_KEYBOARD_SESSION_CB,   ListenerFuncionType::CREATE_KEYBOARD_SESSION_CB},
+        { RECOVER_SCENE_SESSION_CB,     ListenerFuncionType::RECOVER_SCENE_SESSION_CB},
+        { STATUS_BAR_ENABLED_CHANGE_CB, ListenerFuncionType::STATUS_BAR_ENABLED_CHANGE_CB},
+        { OUTSIDE_DOWN_EVENT_CB,        ListenerFuncionType::OUTSIDE_DOWN_EVENT_CB},
+        { SHIFT_FOCUS_CB,               ListenerFuncionType::SHIFT_FOCUS_CB},
+        { CALLING_SESSION_ID_CHANGE_CB, ListenerFuncionType::CALLING_SESSION_ID_CHANGE_CB},
+        { START_UI_ABILITY_ERROR,       ListenerFuncionType::START_UI_ABILITY_ERROR},
         { GESTURE_NAVIGATION_ENABLED_CHANGE_CB,
-            &JsSceneSessionManager::ProcessGestureNavigationEnabledChangeListener },
+            ListenerFuncionType::GESTURE_NAVIGATION_ENABLED_CHANGE_CB},
     };
     taskScheduler_ = std::make_shared<MainThreadScheduler>(env);
 }
@@ -864,7 +864,41 @@ napi_value JsSceneSessionManager::OnRegisterCallback(napi_env env, napi_callback
         return NapiGetUndefined(env);
     }
 
-    (this->*listenerFunc_[cbType])();
+    ListenerFuncionType listenerFuncType = ListenerFuncionType::INVALID;
+    if (listenFuncTypeMap_.count(cbType) != 0) {
+        listenerFuncType = listenFuncTypeMap_[cbType];
+    }
+    switch (static_cast<int>(listenerFuncType)) {
+        case static_cast<int>(ListenerFuncionType::CREATE_SYSTEM_SESSION_CB):
+            ProcessCreateSystemSessionRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::CREATE_KEYBOARD_SESSION_CB):
+            ProcessCreateKeyboardSessionRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::RECOVER_SCENE_SESSION_CB):
+            ProcessRecoverSceneSessionRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::STATUS_BAR_ENABLED_CHANGE_CB):
+            ProcessStatusBarEnabledChangeListener();
+            break;
+        case static_cast<int>(ListenerFuncionType::OUTSIDE_DOWN_EVENT_CB):
+            ProcessOutsideDownEvent();
+            break;
+        case static_cast<int>(ListenerFuncionType::SHIFT_FOCUS_CB):
+            ProcessShiftFocus();
+            break;
+        case static_cast<int>(ListenerFuncionType::CALLING_SESSION_ID_CHANGE_CB):
+            ProcessCallingSessionIdChangeRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::START_UI_ABILITY_ERROR):
+            ProcessStartUIAbilityErrorRegister();
+            break;
+        case static_cast<int>(ListenerFuncionType::GESTURE_NAVIGATION_ENABLED_CHANGE_CB):
+            ProcessGestureNavigationEnabledChangeListener();
+            break;
+        default:
+            break;
+    }
     std::shared_ptr<NativeReference> callbackRef;
     napi_ref result = nullptr;
     napi_create_reference(env, value, 1, &result);
