@@ -241,6 +241,39 @@ void WindowNodeContainer::LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool a
     }
 }
 
+void WindowNodeContainer::AddWindowNodeConfig(sptr<WindowNode>& node, bool afterAnimation)
+{
+    MinimizeOldestMainFloatingWindow(node->GetWindowId());
+    AssignZOrder();
+    LayoutWhenAddWindowNode(node, afterAnimation);
+    NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
+    DumpScreenWindowTreeByWinId(node->GetWindowId());
+    UpdateCameraFloatWindowStatus(node, true);
+    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
+        backupWindowIds_.clear();
+    }
+
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
+        isScreenLocked_ = true;
+        SetBelowScreenlockVisible(node, false);
+    }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_WALLPAPER) {
+        RemoteAnimation::NotifyAnimationUpdateWallpaper(node);
+    }
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
+        DisplayManagerServiceInner::GetInstance().SetGravitySensorSubscriptionEnabled();
+    }
+    WLOGI("AddWindowNode Id: %{public}u end", node->GetWindowId());
+    RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
+    // update private window count and notify dms private status changed
+    if (node->GetWindowProperty()->GetPrivacyMode()) {
+        UpdatePrivateStateAndNotify();
+    }
+    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
+        WindowInfoReporter::GetInstance().InsertShowReportInfo(node->abilityInfo_.bundleName_);
+    }
+}
+
 WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode, bool afterAnimation)
 {
     if (!node->startingWindowShown_) { // window except main Window
@@ -275,35 +308,8 @@ WMError WindowNodeContainer::AddWindowNode(sptr<WindowNode>& node, sptr<WindowNo
             ResetAllMainFloatingWindowZOrder(appWindowNode_);
         }
     }
-    MinimizeOldestMainFloatingWindow(node->GetWindowId());
-    AssignZOrder();
-    LayoutWhenAddWindowNode(node, afterAnimation);
-    NotifyIfAvoidAreaChanged(node, AvoidControlType::AVOID_NODE_ADD);
-    DumpScreenWindowTreeByWinId(node->GetWindowId());
-    UpdateCameraFloatWindowStatus(node, true);
-    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
-        backupWindowIds_.clear();
-    }
 
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD) {
-        isScreenLocked_ = true;
-        SetBelowScreenlockVisible(node, false);
-    }
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_WALLPAPER) {
-        RemoteAnimation::NotifyAnimationUpdateWallpaper(node);
-    }
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_DESKTOP) {
-        DisplayManagerServiceInner::GetInstance().SetGravitySensorSubscriptionEnabled();
-    }
-    WLOGI("AddWindowNode Id: %{public}u end", node->GetWindowId());
-    RSInterfaces::GetInstance().SetAppWindowNum(GetAppWindowNum());
-    // update private window count and notify dms private status changed
-    if (node->GetWindowProperty()->GetPrivacyMode()) {
-        UpdatePrivateStateAndNotify();
-    }
-    if (WindowHelper::IsMainWindow(node->GetWindowType())) {
-        WindowInfoReporter::GetInstance().InsertShowReportInfo(node->abilityInfo_.bundleName_);
-    }
+    AddWindowNodeConfig(node, afterAnimation);
     return WMError::WM_OK;
 }
 
@@ -1395,6 +1401,36 @@ void WindowNodeContainer::NotifyIfSystemBarRegionChanged(DisplayId displayId) co
     WindowManagerAgentController::GetInstance().UpdateSystemBarRegionTints(displayId, tints);
 }
 
+void WindowNodeContainer::KeyboardRegionChangedConfigOverlapRect(const sptr<WindowNode>& node,
+    const AvoidControlType avoidType, sptr<WindowNode> callingWindow, Rect keyRect, Rect callingRect) const
+{
+    Rect overlapRect = { 0, 0, 0, 0 };
+    if (avoidType == AvoidControlType::AVOID_NODE_ADD || avoidType == AvoidControlType::AVOID_NODE_UPDATE) {
+        overlapRect = WindowHelper::GetOverlap(keyRect, callingRect, callingRect.posX_, callingRect.posY_);
+    }
+    double textFieldPositionY = 0.0;
+    double textFieldHeight = 0.0;
+    if (node->GetWindowProperty() != nullptr) {
+        textFieldPositionY = node->GetWindowProperty()->GetTextFieldPositionY();
+        textFieldHeight = node->GetWindowProperty()->GetTextFieldHeight();
+    }
+    sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo(OccupiedAreaType::TYPE_INPUT,
+        overlapRect, textFieldPositionY, textFieldHeight);
+    if (isAnimateTransactionEnabled_) {
+        auto syncTransactionController = RSSyncTransactionController::GetInstance();
+        if (syncTransactionController) {
+            callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info,
+                syncTransactionController->GetRSTransaction());
+        }
+    } else {
+        callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info);
+    }
+    WLOGD("keyboard size change callingWindow: [%{public}s, %{public}u], "
+        "overlap rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
+        callingWindow->GetWindowName().c_str(), callingWindow->GetWindowId(),
+        overlapRect.posX_, overlapRect.posY_, overlapRect.width_, overlapRect.height_);
+}
+
 void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& node,
     const AvoidControlType avoidType) const
 {
@@ -1426,32 +1462,8 @@ void WindowNodeContainer::NotifyIfKeyboardRegionChanged(const sptr<WindowNode>& 
             WLOGFD("no overlap between two windows");
             return;
         }
-        Rect overlapRect = { 0, 0, 0, 0 };
-        if (avoidType == AvoidControlType::AVOID_NODE_ADD || avoidType == AvoidControlType::AVOID_NODE_UPDATE) {
-            overlapRect = WindowHelper::GetOverlap(keyRect, callingRect, callingRect.posX_, callingRect.posY_);
-        }
-        double textFieldPositionY = 0.0;
-        double textFieldHeight = 0.0;
-        if (node->GetWindowProperty() != nullptr) {
-            textFieldPositionY = node->GetWindowProperty()->GetTextFieldPositionY();
-            textFieldHeight = node->GetWindowProperty()->GetTextFieldHeight();
-        }
-        sptr<OccupiedAreaChangeInfo> info = new OccupiedAreaChangeInfo(OccupiedAreaType::TYPE_INPUT,
-            overlapRect, textFieldPositionY, textFieldHeight);
-        if (isAnimateTransactionEnabled_) {
-            auto syncTransactionController = RSSyncTransactionController::GetInstance();
-            if (syncTransactionController) {
-                callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info,
-                    syncTransactionController->GetRSTransaction());
-            }
-        } else {
-            callingWindow->GetWindowToken()->UpdateOccupiedAreaChangeInfo(info);
-        }
 
-        WLOGD("keyboard size change callingWindow: [%{public}s, %{public}u], "
-            "overlap rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
-            callingWindow->GetWindowName().c_str(), callingWindow->GetWindowId(),
-            overlapRect.posX_, overlapRect.posY_, overlapRect.width_, overlapRect.height_);
+        KeyboardRegionChangedConfigOverlapRect(node, avoidType, callingWindow, keyRect, callingRect);
         return;
     }
     WLOGFE("does not have correct callingWindowMode for input method window");

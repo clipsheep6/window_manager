@@ -164,7 +164,10 @@ private:
     void ReZOrderShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node);
     void RaiseShowWhenLockedWindowIfNeeded(const sptr<WindowNode>& node);
     void ReZOrderShowWhenLockedWindows(bool up);
-
+    void AddWindowNodeConfig(sptr<WindowNode>& node, bool afterAnimation);
+    
+    void KeyboardRegionChangedConfigOverlapRect(const sptr<WindowNode>& node,
+        const AvoidControlType avoidType, sptr<WindowNode> callingWindow, Rect keyRect, Rect callingRect) const;
     WMError AddWindowNodeOnWindowTree(sptr<WindowNode>& node, const sptr<WindowNode>& parentNode);
     void RemoveWindowNodeFromWindowTree(sptr<WindowNode>& node);
     void UpdateRSTreeWhenShowingDisplaysChange(sptr<WindowNode>& node,

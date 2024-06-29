@@ -103,6 +103,25 @@ bool WindowSystemEffect::IsAppMainOrSubOrFloatingWindow(const sptr<WindowNode>& 
     return false;
 }
 
+void WindowSystemEffect::SetSurfaceNode(const sptr<WindowNode>& node, std::shared_ptr<RSSurfaceNode> surfaceNode,
+    WindowShadowParameters& shadow, uint32_t colorValue)
+{
+    WLOGFI("[WEffect]id: %{public}u focused: %{public}d elevation: %{public}f",
+        node->GetWindowId(), static_cast<int32_t>(node->isFocused_), shadow.elevation_);
+    WLOGFI("[WEffect]color: %{public}s offsetX: %{public}f offsetY: %{public}f alpha: %{public}f radius: %{public}f",
+        shadow.color_.c_str(), shadow.offsetX_, shadow.offsetY_, shadow.alpha_, shadow.radius_);
+    auto vpr = DisplayGroupInfo::GetInstance().GetDisplayVirtualPixelRatio(node->GetDisplayId());
+    if (MathHelper::GreatNotEqual(shadow.elevation_, 0.f)) {
+        surfaceNode->SetShadowElevation(shadow.elevation_ * vpr);
+    } else {
+        surfaceNode->SetShadowRadius(ConvertRadiusToSigma(shadow.radius_ * vpr));
+    }
+    surfaceNode->SetShadowColor(colorValue);
+    surfaceNode->SetShadowOffsetX(shadow.offsetX_ * vpr);
+    surfaceNode->SetShadowOffsetY(shadow.offsetY_ * vpr);
+    surfaceNode->SetShadowAlpha(shadow.alpha_);
+}
+
 WMError WindowSystemEffect::SetWindowShadow(const sptr<WindowNode>& node)
 {
     auto winRoot = windowRoot_.promote();
@@ -149,20 +168,7 @@ WMError WindowSystemEffect::SetWindowShadow(const sptr<WindowNode>& node)
         return WMError::WM_ERROR_INVALID_PARAM;
     }
 
-    WLOGFI("[WEffect]id: %{public}u focused: %{public}d elevation: %{public}f",
-        node->GetWindowId(), static_cast<int32_t>(node->isFocused_), shadow.elevation_);
-    WLOGFI("[WEffect]color: %{public}s offsetX: %{public}f offsetY: %{public}f alpha: %{public}f radius: %{public}f",
-        shadow.color_.c_str(), shadow.offsetX_, shadow.offsetY_, shadow.alpha_, shadow.radius_);
-    auto vpr = DisplayGroupInfo::GetInstance().GetDisplayVirtualPixelRatio(node->GetDisplayId());
-    if (MathHelper::GreatNotEqual(shadow.elevation_, 0.f)) {
-        surfaceNode->SetShadowElevation(shadow.elevation_ * vpr);
-    } else {
-        surfaceNode->SetShadowRadius(ConvertRadiusToSigma(shadow.radius_ * vpr));
-    }
-    surfaceNode->SetShadowColor(colorValue);
-    surfaceNode->SetShadowOffsetX(shadow.offsetX_ * vpr);
-    surfaceNode->SetShadowOffsetY(shadow.offsetY_ * vpr);
-    surfaceNode->SetShadowAlpha(shadow.alpha_);
+    SetSurfaceNode(node, surfaceNode, shadow, colorValue);
     return WMError::WM_OK;
 }
 

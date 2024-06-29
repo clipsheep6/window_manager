@@ -189,6 +189,7 @@ private:
     void ConfigWindowEffect(const WindowManagerConfig::ConfigItem& effectConfig);
     bool ConfigAppWindowCornerRadius(const WindowManagerConfig::ConfigItem& item, float& out);
     bool ConfigAppWindowShadow(const WindowManagerConfig::ConfigItem& shadowConfig, WindowShadowParameters& outShadow);
+    WMError CheckPropertyInvalid(sptr<WindowProperty>& windowProperty, PropertyChangeAction action);
 
     static inline SingletonDelegator<WindowManagerService> delegator;
     std::string name_ = "WindowManagerService";

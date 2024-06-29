@@ -606,6 +606,21 @@ void WindowRoot::DestroyLeakStartingWindow()
     }
 }
 
+void WindowRoot::AddWindowNodeNotifyForeground(sptr<WindowNode>& node, sptr<WindowNodeContainer>& container)
+{
+    if (node->GetWindowType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT) {
+        std::vector<sptr<WindowNode>> windowNodes;
+        container->TraverseContainer(windowNodes);
+        for (auto& winNode : windowNodes) {
+            if (winNode && WindowHelper::IsMainWindow(winNode->GetWindowType()) &&
+                winNode->GetVisibilityState() < WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION &&
+                winNode->GetWindowToken()) {
+                winNode->GetWindowToken()->NotifyForegroundInteractiveStatus(false);
+            }
+        }
+    }
+}
+
 WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<WindowNode>& parentNode,
     sptr<WindowNodeContainer>& container)
 {
@@ -657,18 +672,7 @@ WMError WindowRoot::PostProcessAddWindowNode(sptr<WindowNode>& node, sptr<Window
         }
     }
 
-    if (node->GetWindowType() == WindowType::WINDOW_TYPE_LAUNCHER_RECENT) {
-        std::vector<sptr<WindowNode>> windowNodes;
-        container->TraverseContainer(windowNodes);
-        for (auto& winNode : windowNodes) {
-            if (winNode && WindowHelper::IsMainWindow(winNode->GetWindowType()) &&
-                winNode->GetVisibilityState() < WINDOW_VISIBILITY_STATE_TOTALLY_OCCUSION &&
-                winNode->GetWindowToken()) {
-                winNode->GetWindowToken()->NotifyForegroundInteractiveStatus(false);
-            }
-        }
-    }
-
+    AddWindowNodeNotifyForeground(node, container);
     return WMError::WM_OK;
 }
 
