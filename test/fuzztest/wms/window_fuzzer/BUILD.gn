@@ -49,11 +49,11 @@ ohos_fuzztest("WindowFuzzTest") {
   ]
 
   sources = [ "window_fuzzer.cpp" ]
-  deps = [
+  deps = [ "${window_base_path}/wm:libwm" ]
+  deps += [
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/utils:libwmutil_base",
-    "${window_base_path}/wm:libwm",
   ]
 
   public_deps = [ "//foundation/arkui/napi:ace_napi" ]

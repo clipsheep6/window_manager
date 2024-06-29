@@ -52,6 +52,7 @@ ohos_shared_library("cj_display_ffi") {
       "c_utils:utils",
       "hilog:libhilog",
       "hitrace:hitrace_meter",
+      "image_framework:image_native",
       "napi:ace_napi",
       "napi:cj_bind_ffi",
       "napi:cj_bind_native",

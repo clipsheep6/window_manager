@@ -37,11 +37,12 @@ ohos_shared_library("pip_napi") {
     "../../../../../resources/config/build:coverage_flags",
   ]
 
-  deps = [
+  deps = [ "../../../../../wm:libwm" ]
+
+  deps += [
     "../../../../../dm:libdm",
     "../../../../../utils:libwmutil",
     "../../../../../utils:libwmutil_base",
-    "../../../../../wm:libwm",
   ]
 
   external_deps = [
