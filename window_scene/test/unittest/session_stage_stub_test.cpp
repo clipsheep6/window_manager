@@ -28,7 +28,7 @@
 #include "session_manager/include/zidl/scene_session_manager_interface.h"
 #include "window_manager.h"
 #include "window_manager_agent.h"
-#include "ws_common.h"
+#include "wm_common.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "window_manager_hilog.h"
 
