@@ -829,24 +829,6 @@ HWTEST_F(SceneSessionTest, NotifySessionPiPControlStatusChange, Function | Small
 }
 
 /**
- * @tc.name: NotifySessionPiPControlEnableChange
- * @tc.desc: NotifySessionPiPControlEnableChange
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionTest, NotifySessionPiPControlEnableChange, Function | SmallTest | Level2)
-{
-    SessionInfo info;
-    info.abilityName_ = "Background01";
-    info.bundleName_ = "NotifySessionPiPControlEnableChange";
-    info.windowType_ = 1;
-    auto sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
-    EXPECT_NE(sceneSession, nullptr);
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    bool enabled = true;
-    sceneSession->NotifySessionPiPControlEnableChange(controlType, enabled);
-}
-
-/**
  * @tc.name: FixRectByAspectRatio
  * @tc.desc: FixRectByAspectRatio
  * @tc.type: FUNC

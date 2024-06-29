@@ -851,31 +851,6 @@ HWTEST_F(SceneSessionTest2, UpdatePiPControlStatus, Function | SmallTest | Level
 }
 
 /**
- * @tc.name: SetPiPControlEnabled
- * @tc.desc: SetPiPControlEnabled
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionTest2, SetPiPControlEnabled, Function | SmallTest | Level2)
-{
-    SessionInfo info;
-    info.abilityName_ = "SetPiPControlEnabled";
-    info.bundleName_ = "SetPiPControlEnabled";
-    auto sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
-    EXPECT_NE(sceneSession, nullptr);
-    sceneSession->isActive_ = true;
-
-    auto property = sptr<WindowSessionProperty>::MakeSptr();
-    EXPECT_NE(property, nullptr);
-    property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
-    sceneSession->SetSessionProperty(property);
-
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    bool enabled = true;
-    WSError result = sceneSession->SetPiPControlEnabled(controlType, enabled);
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
  * @tc.name: SetScale
  * @tc.desc: SetScale
  * @tc.type: FUNC
@@ -1664,22 +1639,6 @@ HWTEST_F(SceneSessionTest2, SetSessionPiPControlStatusChangeCallback, Function |
     EXPECT_NE(sceneSession, nullptr);
     NotifySessionPiPControlStatusChangeFunc func;
     sceneSession->SetSessionPiPControlStatusChangeCallback(func);
-}
-
-/**
- * @tc.name: SetSessionPiPControlEnableChangeCallback
- * @tc.desc:  * @tc.name: SetSessionPiPControlEnableChangeCallback
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionTest2, SetSessionPiPControlEnableChangeCallback, Function | SmallTest | Level2)
-{
-    SessionInfo info;
-    info.abilityName_ = "SetSessionPiPControlStatusChangeCallback";
-    info.bundleName_ = "SetSessionPiPControlStatusChangeCallback";
-    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    EXPECT_NE(sceneSession, nullptr);
-    NotifySessionPiPControlEnableChangeFunc func;
-    sceneSession->SetSessionPiPControlEnableChangeCallback(func);
 }
 
 /**

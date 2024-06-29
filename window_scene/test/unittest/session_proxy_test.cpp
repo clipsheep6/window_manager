@@ -521,25 +521,6 @@ HWTEST_F(SessionProxyTest, UpdatePiPControlStatus, Function | SmallTest | Level2
     ASSERT_EQ(res, WSError::WS_OK);
     GTEST_LOG_(INFO) << "SessionProxyTest: UpdatePiPControlStatus end";
 }
-
-/**
- * @tc.name: SetPiPControlEnabled
- * @tc.desc: normal function
- * @tc.type: FUNC
- */
-HWTEST_F(SessionProxyTest, SetPiPControlEnabled, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "SessionProxyTest: SetPiPControlEnabled start";
-    auto iRemoteObjectMocker = sptr<IRemoteObjectMocker>::MakeSptr();
-    ASSERT_EQ(iRemoteObjectMocker, nullptr);
-    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
-    ASSERT_EQ(sProxy, nullptr);
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    bool enabled = true;
-    WSError res = sProxy->SetPiPControlEnabled(controlType, enabled);
-    ASSERT_EQ(res, WSError::WS_OK);
-    GTEST_LOG_(INFO) << "SessionProxyTest: SetPiPControlEnabled end";
-}
 } // namespace
 } // namespace Rosen
 } // namespace OHOS

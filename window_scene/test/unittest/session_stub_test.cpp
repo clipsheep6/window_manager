@@ -258,25 +258,6 @@ HWTEST_F(SessionStubTest, HandleUpdatePiPControlStatus, Function | SmallTest | L
 }
 
 /**
- * @tc.name: HandleSetPiPControlEnabled
- * @tc.desc: sessionStub HandleSetPiPControlEnabled
- * @tc.type: FUNC
- * @tc.require: #I6JLSI
- */
-HWTEST_F(SessionStubTest, HandleSetPiPControlEnabled, Function | SmallTest | Level2)
-{
-    ASSERT_NE(session_, nullptr);
-    MessageParcel data;
-    MessageParcel reply;
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    bool enabled = true;
-    data.WriteUint32(static_cast<uint32_t>(controlType));
-    data.WriteBool(enabled);
-    auto res = session_->HandleSetPiPControlEnabled(data, reply);
-    ASSERT_EQ(0, res);
-}
-
-/**
  * @tc.name: HandleProcessPointDownSession006
  * @tc.desc: sessionStub sessionStubTest
  * @tc.type: FUNC

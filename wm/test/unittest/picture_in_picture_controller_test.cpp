@@ -470,23 +470,6 @@ HWTEST_F(PictureInPictureControllerTest, UpdatePiPControlStatus, Function | Smal
 }
 
 /**
- * @tc.name: SetPiPControlEnabled
- * @tc.desc: SetPiPControlEnabled
- * @tc.type: FUNC
- */
-HWTEST_F(PictureInPictureControllerTest, SetPiPControlEnabled, Function | SmallTest | Level2)
-{
-    auto mw = sptr<MockWindow>::MakeSptr();
-    ASSERT_NE(nullptr, mw);
-    auto option = sptr<PipOption>::MakeSptr();
-    ASSERT_NE(nullptr, option);
-    auto pipControl = sptr<PictureInPictureController>::MakeSptr(option, mw, 100, nullptr);
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    bool enabled = true;
-    pipControl->SetPiPControlEnabled(controlType, enabled);
-}
-
-/**
  * @tc.name: IsContentSizeChanged
  * @tc.desc: IsContentSizeChanged
  * @tc.type: FUNC
