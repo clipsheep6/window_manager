@@ -23,7 +23,6 @@
 
 namespace OHOS::Rosen {
 class SceneSessionManagerLiteStub;
-using SceneSessionManagerLiteStubFunc = int (SceneSessionManagerLiteStub::*)(MessageParcel& data, MessageParcel& reply);
 
 class SceneSessionManagerLiteStub : public IRemoteStub<ISceneSessionManagerLite> {
 public:
@@ -33,8 +32,6 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
 
 private:
-    static const std::map<uint32_t, SceneSessionManagerLiteStubFunc> stubFuncMap_;
-
     int HandleSetSessionLabel(MessageParcel& data, MessageParcel& reply);
     int HandleSetSessionIcon(MessageParcel& data, MessageParcel& reply);
     int HandleIsValidSessionIds(MessageParcel& data, MessageParcel& reply);
