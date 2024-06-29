@@ -29,14 +29,14 @@ const std::string WINDOW_EVENT_CB = "windowEvent";
 JsExtensionWindowRegisterManager::JsExtensionWindowRegisterManager()
 {
     // white register list for window
-    listenerProcess_[CaseType::CASE_WINDOW] = {
-            { WINDOW_SIZE_CHANGE_CB, &JsExtensionWindowRegisterManager::ProcessWindowChangeRegister },
-            { AVOID_AREA_CHANGE_CB, &JsExtensionWindowRegisterManager::ProcessAvoidAreaChangeRegister },
-            { WINDOW_EVENT_CB, &JsExtensionWindowRegisterManager::ProcessLifeCycleEventRegister },
+    listenerCodeMap_[CaseType::CASE_WINDOW] = {
+        {WINDOW_SIZE_CHANGE_CB, ListenerType::WINDOW_SIZE_CHANGE_CB},
+        {AVOID_AREA_CHANGE_CB, ListenerType::AVOID_AREA_CHANGE_CB},
+        {WINDOW_EVENT_CB, ListenerType::WINDOW_EVENT_CB},
     };
     // white register list for window stage
-    listenerProcess_[CaseType::CASE_STAGE] = {
-            {WINDOW_STAGE_EVENT_CB, &JsExtensionWindowRegisterManager::ProcessLifeCycleEventRegister }
+    listenerCodeMap_[CaseType::CASE_STAGE] = {
+        {WINDOW_STAGE_EVENT_CB, ListenerType::WINDOW_STAGE_EVENT_CB }
     };
 }
 
@@ -120,7 +120,7 @@ WmErrorCode JsExtensionWindowRegisterManager::RegisterListener(sptr<Window> wind
     if (IsCallbackRegistered(env, type, value)) {
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
-    if (listenerProcess_[caseType].count(type) == 0) {
+    if (listenerCodeMap_[caseType].count(type) == 0) {
         TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Type %{public}s is not supported", type.c_str());
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
@@ -134,7 +134,7 @@ WmErrorCode JsExtensionWindowRegisterManager::RegisterListener(sptr<Window> wind
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     extensionWindowListener->SetMainEventHandler();
-    WmErrorCode ret = (this->*listenerProcess_[caseType][type])(extensionWindowListener, window, true);
+    WmErrorCode ret = ProcessRegister(caseType, extensionWindowListener, window, true, type);
     if (ret != WmErrorCode::WM_OK) {
         TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Register type %{public}s failed", type.c_str());
         return ret;
@@ -153,13 +153,13 @@ WmErrorCode JsExtensionWindowRegisterManager::UnregisterListener(sptr<Window> wi
         TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Type %{public}s was not registered", type.c_str());
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
-    if (listenerProcess_[caseType].count(type) == 0) {
+    if (listenerCodeMap_[caseType].count(type) == 0) {
         TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Type %{public}s is not supported", type.c_str());
         return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
     }
     if (value == nullptr) {
         for (auto it = jsCbMap_[type].begin(); it != jsCbMap_[type].end();) {
-            WmErrorCode ret = (this->*listenerProcess_[caseType][type])(it->second, window, false);
+            WmErrorCode ret = ProcessRegister(caseType, it->second, window, false, type);
             if (ret != WmErrorCode::WM_OK) {
                 TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Unregister type %{public}s failed, no value", type.c_str());
                 return ret;
@@ -175,7 +175,7 @@ WmErrorCode JsExtensionWindowRegisterManager::UnregisterListener(sptr<Window> wi
                 continue;
             }
             findFlag = true;
-            WmErrorCode ret = (this->*listenerProcess_[caseType][type])(it->second, window, false);
+            WmErrorCode ret = ProcessRegister(caseType, it->second, window, false, type);
             if (ret != WmErrorCode::WM_OK) {
                 TLOGE(WmsLogTag::WMS_UIEXT, "[NAPI]Unregister type %{public}s failed", type.c_str());
                 return ret;
@@ -197,5 +197,32 @@ WmErrorCode JsExtensionWindowRegisterManager::UnregisterListener(sptr<Window> wi
     }
     return WmErrorCode::WM_OK;
 }
+
+WmErrorCode JsExtensionWindowRegisterManager::ProcessRegister(CaseType caseType,
+    sptr<JsExtensionWindowListener> listener, sptr<Window> window, bool isRegister, std::string type)
+{
+    WmErrorCode ret = WmErrorCode::WM_OK;
+    if (CaseType::CASE_WINDOW == caseType) {
+        switch (static_cast<uint32_t>(listenerCodeMap_[caseType][type])) {
+            case static_cast<uint32_t>(ListenerType::WINDOW_SIZE_CHANGE_CB):
+                ret = ProcessWindowChangeRegister(listener, window, isRegister);
+                break;
+            case static_cast<uint32_t>(ListenerType::AVOID_AREA_CHANGE_CB):
+                ret = ProcessAvoidAreaChangeRegister(listener, window, isRegister);
+                break;
+            case static_cast<uint32_t>(ListenerType::WINDOW_EVENT_CB):
+                ret = ProcessLifeCycleEventRegister(listener, window, isRegister);
+                break;
+            default:
+                break;
+        }
+    } else if (CaseType::CASE_STAGE == caseType) {
+        if (WINDOW_STAGE_EVENT_CB == type) {
+            ret = ProcessLifeCycleEventRegister(listener, window, isRegister);
+        }
+    }
+    return ret;
+}
+
 } // namespace Rosen
 } // namespace OHOS
