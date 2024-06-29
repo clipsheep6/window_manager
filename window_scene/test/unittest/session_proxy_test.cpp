@@ -16,7 +16,7 @@
 #include "iremote_object_mocker.h"
 #include <gtest/gtest.h>
 #include "accessibility_event_info.h"
-#include "wm_common.h"
+#include "ws_common.h"
 
 // using namespace FRAME_TRACE;
 using namespace testing;

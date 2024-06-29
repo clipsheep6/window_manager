@@ -23,7 +23,7 @@
 #include "parcel/accessibility_event_info_parcel.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "want.h"
-#include "wm_common.h"
+#include "ws_common.h"
 
 using namespace testing;
 using namespace testing::ext;
