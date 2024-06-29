@@ -39,30 +39,26 @@ void PipOption::SetPipTemplate(uint32_t templateType)
 
 void PipOption::SetPiPControlStatus(PiPControlType controlType, PiPControlStatus status)
 {
-    PiPControlStatusInfo newPipControlStatusInfo;
-    newPipControlStatusInfo.controlType = controlType;
-    newPipControlStatusInfo.status = status;
     for (auto& controlStatusInfo : pipControlStatusInfoList_) {
         if (controlType == controlStatusInfo.controlType) {
-            controlStatusInfo = newPipControlStatusInfo;
+            controlStatusInfo.status = status;
             return;
         }
     }
-    pipControlStatusInfoList_.push_back(newPipControlStatusInfo);
+    PiPControlEnableInfo newPiPControlStatusInfo {controlType, status};
+    pipControlStatusInfoList_.push_back(newPiPControlStatusInfo);
 }
 
 void PipOption::SetPiPControlEnabled(PiPControlType controlType, PiPControlStatus enabled)
 {
-    PiPControlEnableInfo newPipControlEnableInfo;
-    newPipControlEnableInfo.controlType = controlType;
-    newPipControlEnableInfo.enabled = enabled;
     for (auto& controlEnableInfo : pipControlEnableInfoList_) {
         if (controlType == controlEnableInfo.controlType) {
-            controlEnableInfo = newPipControlEnableInfo;
+            controlEnableInfo.enabled = enabled;
             return;
         }
     }
-    pipControlEnableInfoList_.push_back(newPipControlEnableInfo);
+    PiPControlEnableInfo newPiPControlEnableInfo {controlType, enabled};
+    pipControlEnableInfoList_.push_back(newPiPControlEnableInfo);
 }
 
 void PipOption::SetContentSize(uint32_t width, uint32_t height)
