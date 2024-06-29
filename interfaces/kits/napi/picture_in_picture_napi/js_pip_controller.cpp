@@ -284,7 +284,7 @@ napi_value JsPipController::SetPiPControlEnabled(napi_env env, napi_callback_inf
 
 napi_value JsPipController::OnSetPiPControlEnabled(napi_env env, napi_callback_info info)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnSetPiPControlEnabled is called");
+    TLOGI(WmsLogTag::WMS_PIP, "called");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
