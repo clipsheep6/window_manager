@@ -59,6 +59,11 @@ void MoveDragController::NotifyWindowInputPidChange(bool isServerPid)
     }
 }
 
+bool MoveDragController::HasPointDown()
+{
+    return hasPointDown_;
+}
+
 void MoveDragController::SetStartMoveFlag(bool flag)
 {
     if (flag && (!hasPointDown_ || isStartDrag_)) {
@@ -70,11 +75,6 @@ void MoveDragController::SetStartMoveFlag(bool flag)
     isStartMove_ = flag;
     PerfRequest(PERF_MOVE_WINDOW_CMDID, flag);
     WLOGFI("SetStartMoveFlag, isStartMove_: %{public}d id:%{public}d", isStartMove_, persistentId_);
-}
-
-bool MoveDragController::HasPointDown()
-{
-    return hasPointDown_;
 }
 
 void MoveDragController::SetNotifyWindowPidChangeCallback(const NotifyWindowPidChangeCallback& callback)
