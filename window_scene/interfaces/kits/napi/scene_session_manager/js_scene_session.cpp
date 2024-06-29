@@ -31,7 +31,6 @@ const std::string BUFFER_AVAILABLE_CHANGE_CB = "bufferAvailableChange";
 const std::string SESSION_EVENT_CB = "sessionEvent";
 const std::string SESSION_RECT_CHANGE_CB = "sessionRectChange";
 const std::string SESSION_PIP_CONTROL_STATUS_CHANGE_CB = "sessionPiPControlStatusChange";
-const std::string SESSION_PIP_CONTROL_ENABLE_CHANGE_CB = "sessionPiPControlEnableChange";
 const std::string CREATE_SUB_SESSION_CB = "createSpecificSession";
 const std::string BIND_DIALOG_TARGET_CB = "bindDialogTarget";
 const std::string RAISE_TO_TOP_CB = "raiseToTop";
@@ -260,7 +259,6 @@ void JsSceneSession::InitListenerFuncs()
         { SESSION_EVENT_CB,                      &JsSceneSession::ProcessSessionEventRegister },
         { SESSION_RECT_CHANGE_CB,                &JsSceneSession::ProcessSessionRectChangeRegister },
         { SESSION_PIP_CONTROL_STATUS_CHANGE_CB,  &JsSceneSession::ProcessSessionPiPControlStatusChangeRegister },
-        { SESSION_PIP_CONTROL_ENABLE_CHANGE_CB,  &JsSceneSession::ProcessSessionPiPControlEnableChangeRegister },
         { CREATE_SUB_SESSION_CB,                 &JsSceneSession::ProcessCreateSubSessionRegister },
         { BIND_DIALOG_TARGET_CB,                 &JsSceneSession::ProcessBindDialogTargetRegister },
         { RAISE_TO_TOP_CB,                       &JsSceneSession::ProcessRaiseToTopRegister },
@@ -686,20 +684,6 @@ void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
     }
     session->SetSessionPiPControlStatusChangeCallback(func);
     TLOGE(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlStatusChangeRegister success");
-}
-
-void JsSceneSession::ProcessSessionPiPControlEnableChangeRegister()
-{
-    NotifySessionPiPControlEnableChangeFunc func = [this](PiPControlType controlType, bool enabled) {
-        this->OnSessionPiPControlEnableChange(controlType, enabled);
-    };
-    auto session = weakSession_.promote();
-    if (session == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "session is nullptr");
-        return;
-    }
-    session->SetSessionPiPControlEnableChangeCallback(func);
-    TLOGE(WmsLogTag::WMS_PIP, "ProcessSessionPiPControlEnableChangeRegister success");
 }
 
 void JsSceneSession::ProcessRaiseToTopRegister()
@@ -1709,28 +1693,6 @@ void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType,
     };
     std::string statusChangeInfo = "OnSessionPiPControlStatusChange";
     taskScheduler_->PostMainThreadTask(task, statusChangeInfo);
-}
-
-void JsSceneSession::OnSessionPiPControlEnableChange(PiPControlType controlType, bool enabled)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, enabled);
-    std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_ENABLE_CHANGE_CB);
-    if (jsCallBack == nullptr) {
-        return;
-    }
-
-    auto task = [controlType, enabled, jsCallBack, env = env_]() {
-        if (!jsCallBack) {
-            TLOGE(WmsLogTag::WMS_PIP, "[NAPI]jsCallBack is nullptr");
-            return;
-        }
-        napi_value enableChangeType = CreateJsValue(env, controlType);
-        napi_value enableChangeValue = CreateJsValue(env, enabled);
-        napi_value argv[] = {enableChangeType, enableChangeValue};
-        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
-    };
-    std::string enableChangeInfo = "OnSessionPiPControlEnableChange";
-    taskScheduler_->PostMainThreadTask(task, enableChangeInfo);
 }
 
 void JsSceneSession::OnRaiseToTop()

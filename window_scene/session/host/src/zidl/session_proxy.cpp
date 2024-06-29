@@ -1083,33 +1083,6 @@ WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
     return static_cast<WSError>(ret);
 }
 
-WSError SessionProxy::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_PIP, "writeInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
-        TLOGE(WmsLogTag::WMS_PIP, "Write controlType failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteBool(enabled)) {
-        TLOGE(WmsLogTag::WMS_PIP, "write enabled failed.");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_PIP_CONTROL_ENABLE),
-        data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_PIP, "SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WSError>(ret);
-}
-
 WSError SessionProxy::ProcessPointDownSession(int32_t posX, int32_t posY)
 {
     MessageParcel data;

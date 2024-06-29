@@ -51,7 +51,7 @@ void PipOption::SetPiPControlStatus(PiPControlType controlType, PiPControlStatus
     pipControlStatusInfoList_.push_back(newPipControlStatusInfo);
 }
 
-void PipOption::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
+void PipOption::SetPiPControlEnabled(PiPControlType controlType, PiPControlStatus enabled)
 {
     PiPControlEnableInfo newPipControlEnableInfo;
     newPipControlEnableInfo.controlType = controlType;

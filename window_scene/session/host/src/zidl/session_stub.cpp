@@ -130,8 +130,6 @@ const std::map<uint32_t, SessionStubFunc> SessionStub::stubFuncMap_ {
         &SessionStub::HandleUpdatePiPRect),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_CONTROL_STATUS),
         &SessionStub::HandleUpdatePiPControlStatus),
-    std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_PIP_CONTROL_ENABLE),
-        &SessionStub::HandleSetPiPControlEnabled),
     std::make_pair(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_LAYOUT_FULL_SCREEN_CHANGE),
         &SessionStub::HandleLayoutFullScreenChange),
 };
@@ -654,20 +652,6 @@ int SessionStub::HandleUpdatePiPControlStatus(MessageParcel& data, MessageParcel
     if (data.ReadUint32(controlType) && data.ReadInt32(status)) {
         WSError errCode = UpdatePiPControlStatus(static_cast<PiPControlType>(controlType),
             static_cast<PiPControlStatus>(status));
-        reply.WriteUint32(static_cast<uint32_t>(errCode));
-        return ERR_NONE;
-    } else {
-        return ERR_INVALID_DATA;
-    }
-}
-
-int SessionStub::HandleSetPiPControlEnabled(MessageParcel& data, MessageParcel& reply)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "HandleSetPiPControlEnabled is called");
-    uint32_t controlType = 0;
-    bool enabled = 0;
-    if (data.ReadUint32(controlType) && data.ReadBool(enabled)) {
-        WSError errCode = SetPiPControlEnabled(static_cast<PiPControlType>(controlType), enabled);
         reply.WriteUint32(static_cast<uint32_t>(errCode));
         return ERR_NONE;
     } else {

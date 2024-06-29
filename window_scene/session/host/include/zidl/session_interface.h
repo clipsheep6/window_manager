@@ -23,7 +23,7 @@
 #include "common/include/window_session_property.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
-#include "wm_common.h"
+#include "ws_common.h"
 
 namespace OHOS::Accessibility {
 class AccessibilityEventInfo;
@@ -92,10 +92,6 @@ public:
     virtual WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
         { return WSError::WS_OK; }
     virtual WSError UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
-    {
-        return WSError::WS_OK;
-    }
-    virtual WSError SetPiPControlEnabled(PiPControlType controlType, bool enabled)
     {
         return WSError::WS_OK;
     }

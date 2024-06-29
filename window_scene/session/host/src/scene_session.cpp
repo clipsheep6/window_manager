@@ -797,20 +797,6 @@ void SceneSession::SetSessionPiPControlStatusChangeCallback(const NotifySessionP
     PostTask(task, "SetSessionPiPControlStatusChangeCallback");
 }
 
-void SceneSession::SetSessionPiPControlEnableChangeCallback(const NotifySessionPiPControlEnableChangeFunc& func)
-{
-    auto task = [weakThis = wptr(this), func]() {
-        auto session = weakThis.promote();
-        if (!session) {
-            TLOGE(WmsLogTag::WMS_PIP, "session is null");
-            return WSError::WS_ERROR_DESTROYED_OBJECT;
-        }
-        session->sessionPiPControlEnableChangeFunc_ = func;
-        return WSError::WS_OK;
-    };
-    PostTask(task, "SetSessionPiPControlEnableChangeCallback");
-}
-
 void SceneSession::UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason)
 {
     auto newWinRect = winRect_;
@@ -1652,23 +1638,6 @@ void SceneSession::NotifySessionPiPControlStatusChange(PiPControlType controlTyp
         }
     };
     PostTask(task, "NotifySessionPiPControlStatusChange");
-}
-
-void SceneSession::NotifySessionPiPControlEnableChange(PiPControlType controlType, bool enabled)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
-    auto task = [weakThis = wptr(this), controlType, enabled]() {
-        auto session = weakThis.promote();
-        if (!session) {
-            TLOGE(WmsLogTag::WMS_PIP, "session is null");
-            return;
-        }
-        if (session->sessionPiPControlEnableChangeFunc_) {
-            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionPiPControlEnableChange");
-            session->sessionPiPControlEnableChangeFunc_(controlType, enabled);
-        }
-    };
-    PostTask(task, "NotifySessionPiPControlEnableChange");
 }
 
 bool SceneSession::IsDecorEnable() const
@@ -3320,30 +3289,6 @@ WSError SceneSession::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
         return WSError::WS_OK;
     };
     PostTask(task, "UpdatePiPControlStatus");
-    return WSError::WS_OK;
-}
-
-WSError SceneSession::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
-    if (!WindowHelper::IsPipWindow(GetWindowType())) {
-        return WSError::WS_DO_NOTHING;
-    }
-    int32_t callingPid = IPCSkeleton::GetCallingPid();
-    auto task = [weakThis = wptr(this), controlType, enabled, callingPid]() {
-        auto session = weakThis.promote();
-        if (!session || session->isTerminating) {
-            TLOGE(WmsLogTag::WMS_PIP, "SceneSession::SetPiPControlEnabled session is null or is terminating");
-            return WSError::WS_ERROR_INVALID_OPERATION;
-        }
-        if (callingPid != session->GetCallingPid()) {
-            TLOGW(WmsLogTag::WMS_PIP, "permission denied, not call by the same process");
-            return WSError::WS_ERROR_INVALID_PERMISSION;
-        }
-        session->NotifySessionPiPControlEnableChange(controlType, enabled);
-        return WSError::WS_OK;
-    };
-    PostTask(task, "SetPiPControlEnabled");
     return WSError::WS_OK;
 }
 

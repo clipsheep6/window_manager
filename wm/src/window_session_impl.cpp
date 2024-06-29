@@ -3173,16 +3173,6 @@ void WindowSessionImpl::UpdatePiPControlStatus(PiPControlType controlType, PiPCo
     hostSession_->UpdatePiPControlStatus(controlType, status);
 }
 
-void WindowSessionImpl::SetPiPControlEnabled(PiPControlType controlType, bool enabled)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}u", controlType, enabled);
-    if (IsWindowSessionInvalid()) {
-        TLOGI(WmsLogTag::WMS_PIP, "HostSession is invalid");
-        return;
-    }
-    hostSession_->SetPiPControlEnabled(controlType, enabled);
-}
-
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)
 {
     WLOGFD("NotifyWindowStatusChange");

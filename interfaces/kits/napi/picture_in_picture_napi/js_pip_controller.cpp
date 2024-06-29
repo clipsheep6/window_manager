@@ -43,7 +43,7 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "updateContentSize", moduleName, JsPipController::UpdateContentSize);
     BindNativeFunction(env, object, "updatePiPControlStatus", moduleName, JsPipController::UpdatePiPControlStatus);
     BindNativeFunction(env, object, "setAutoStartEnabled", moduleName, JsPipController::SetAutoStartEnabled);
-    BindNativeFunction(env, object, "setPiPControlEnabled", moduleName, JsPipController::SetPiPControlEnabled);
+    BindNativeFunction(env, object, "setPiPControlEnabled", moduleName, JsPipController::UpdatePiPControlStatus);
     BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
     BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
 }
@@ -273,45 +273,6 @@ napi_value JsPipController::OnUpdatePiPControlStatus(napi_env env, napi_callback
     }
     std::lock_guard<std::mutex> lock(mtx_);
     pipController_->UpdatePiPControlStatus(controlType, status);
-    return NapiGetUndefined(env);
-}
-
-napi_value JsPipController::SetPiPControlEnabled(napi_env env, napi_callback_info info)
-{
-    JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
-    return (me != nullptr) ? me->OnSetPiPControlEnabled(env, info) : nullptr;
-}
-
-napi_value JsPipController::OnSetPiPControlEnabled(napi_env env, napi_callback_info info)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "OnSetPiPControlEnabled is called");
-    size_t argc = 4;
-    napi_value argv[4] = {nullptr};
-    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc != NUMBER_TWO) {
-        TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
-        return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
-    }
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    std::string errMsg = "";
-    if (!ConvertFromJsValue(env, argv[0], controlType)) {
-        errMsg = "Failed to convert parameter to int";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    bool enabled = true;
-    if (!ConvertFromJsValue(env, argv[1], enabled)) {
-        errMsg = "Failed to convert parameter to int";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    if (pipController_ == nullptr) {
-        errMsg = "OnSetPiPControlEnabled error, controller is nullptr";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    std::lock_guard<std::mutex> lock(mtx_);
-    pipController_->SetPiPControlEnabled(controlType, enabled);
     return NapiGetUndefined(env);
 }
 

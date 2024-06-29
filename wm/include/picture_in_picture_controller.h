@@ -77,7 +77,6 @@ public:
     void IsAutoStartEnabled(bool& enable) const;
     void UpdateContentSize(int32_t width, int32_t height);
     void UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status);
-    void SetPiPControlEnabled(PiPControlType controlType, bool enabled);
     bool IsContentSizeChanged(float width, float height, float posX, float posY);
     void DoActionEvent(const std::string& actionName, int32_t status);
     void DoControlEvent(PiPControlType controlType, PiPControlStatus status);
