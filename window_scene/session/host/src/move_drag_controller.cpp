@@ -72,6 +72,11 @@ void MoveDragController::SetStartMoveFlag(bool flag)
     WLOGFI("SetStartMoveFlag, isStartMove_: %{public}d id:%{public}d", isStartMove_, persistentId_);
 }
 
+bool MoveDragController::HasPointDown()
+{
+    return hasPointDown_;
+}
+
 void MoveDragController::SetNotifyWindowPidChangeCallback(const NotifyWindowPidChangeCallback& callback)
 {
     pidChangeCallback_ = callback;
