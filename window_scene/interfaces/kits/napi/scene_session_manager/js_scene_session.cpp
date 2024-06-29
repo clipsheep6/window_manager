@@ -1167,7 +1167,7 @@ bool JsSceneSession::IsCallbackRegistered(napi_env env, const std::string& type,
 
 bool JsSceneSession::IsCallbackTypeSupported(const std::string& type)
 {
-    if (listenerFunc_.find(type) != listenerFunc_.end()) {
+    if (listenFuncMap_.find(type) != listenFuncMap_.end()) {
         return true;
     }
     return false;
