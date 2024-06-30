@@ -865,7 +865,7 @@ Rect WindowExtensionSessionImpl::GetHostWindowRect(int32_t hostWindowId)
 void WindowExtensionSessionImpl::ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     if (pointerEvent == nullptr) {
-        WLOGFE("PointerEvent is nullptr, windowId: %{public}d", GetWindowId());
+        TLOGE(WmsLogTag::WMS_EVENT, PointerEvent is nullptr, windowId: %{public}d", GetWindowId());
         return;
     }
     if (hostSession_ == nullptr) {
@@ -888,7 +888,7 @@ void WindowExtensionSessionImpl::ConsumePointerEvent(const std::shared_ptr<MMI::
             pointerEvent->GetId(), GetWindowId(),
             pointerEvent->GetPointerId(), pointerEvent->GetSourceType(),
             pointerItem.GetDisplayX(), pointerItem.GetDisplayY(),
-            pointerItem.GetWindowX(), pointerItem.GetWindowY()) ;
+            pointerItem.GetWindowX(), pointerItem.GetWindowY());
     }
     NotifyPointerEvent(pointerEvent);
 }

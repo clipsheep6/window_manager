@@ -331,6 +331,7 @@ void SceneSessionDirtyManager::NotifyWindowInfoChange(const sptr<SceneSession>& 
 void SceneSessionDirtyManager::UpdateModalInfo(const sptr<SceneSession> sceneSession, MMI::WindowInfo& windowInfo)
 {
     if (sceneSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "sceneSession is nullptr");
         return;
     }
     auto extensionInfo = sceneSession->GetModalUIExtension();
@@ -353,6 +354,7 @@ void SceneSessionDirtyManager::UpdateModalExtensionWindowInfo(std::vector<MMI::W
     MMI::WindowInfo windowInfo, const sptr<SceneSession> sceneSession)
 {
     if (sceneSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "sceneSession is nullptr");
         return;
     }
 

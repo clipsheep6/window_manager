@@ -1212,47 +1212,58 @@ void SceneSession::AddModalUIExtension(const ExtensionWindowEventInfo& extension
 {
     TLOGD(WmsLogTag::WMS_UIEXT, "parentId=%{public}d, persistentId=%{public}d, pid=%{public}d", GetPersistentId(),
         extensionInfo.persistentId, extensionInfo.pid);
-    modalUIExtensionInfoList_.push_back(extensionInfo);
+    {
+        std::unique_lock<std::shared_mutex> lock(modalUIExtensionInfoListMutex_);
+        modalUIExtensionInfoList_.push_back(extensionInfo);
+    }
     NotifySessionInfoChange();
 }
 
 void SceneSession::UpdateModalUIExtension(int32_t persistentId, int32_t pid, const Rect& windowRect)
 {
-    auto iter = std::find_if(modalUIExtensionInfoList_.begin(), modalUIExtensionInfoList_.end(),
-        [persistentId, pid](const ExtensionWindowEventInfo& extensionInfo) {
-        return extensionInfo.persistentId == persistentId && extensionInfo.pid == pid;
-    });
-    if (iter == modalUIExtensionInfoList_.end()) {
-        return;
-    }
-    iter->windowRect = windowRect;
     TLOGD(WmsLogTag::WMS_UIEXT, "persistentId=%{public}d,pid=%{public}d,"
         "Rect:[%{public}d %{public}d %{public}d %{public}d]",
         persistentId, pid, windowRect.posX_, windowRect.posY_, windowRect.width_, windowRect.height_);
+    {
+        std::unique_lock<std::shared_mutex> lock(modalUIExtensionInfoListMutex_);
+        auto iter = std::find_if(modalUIExtensionInfoList_.begin(), modalUIExtensionInfoList_.end(),
+            [persistentId, pid](const ExtensionWindowEventInfo& extensionInfo) {
+            return extensionInfo.persistentId == persistentId && extensionInfo.pid == pid;
+        });
+        if (iter == modalUIExtensionInfoList_.end()) {
+            return;
+        }
+        iter->windowRect = windowRect;
+    } 
     NotifySessionInfoChange();
 }
 
 void SceneSession::RemoveModalUIExtension(int32_t persistentId)
 {
     TLOGI(WmsLogTag::WMS_UIEXT, "parentId=%{public}d, persistentId=%{public}d", GetPersistentId(), persistentId);
-    auto iter = std::find_if(modalUIExtensionInfoList_.begin(), modalUIExtensionInfoList_.end(),
-        [persistentId](const ExtensionWindowEventInfo& extensionInfo) {
-        return extensionInfo.persistentId == persistentId;
-    });
-    if (iter == modalUIExtensionInfoList_.end()) {
-        return;
+    {
+        std::unique_lock<std::shared_mutex> lock(modalUIExtensionInfoListMutex_);
+        auto iter = std::find_if(modalUIExtensionInfoList_.begin(), modalUIExtensionInfoList_.end(),
+            [persistentId](const ExtensionWindowEventInfo& extensionInfo) {
+            return extensionInfo.persistentId == persistentId;
+        });
+        if (iter == modalUIExtensionInfoList_.end()) {
+            return;
+        }
+        modalUIExtensionInfoList_.erase(iter, modalUIExtensionInfoList_.end());
     }
-    modalUIExtensionInfoList_.erase(iter, modalUIExtensionInfoList_.end());
     NotifySessionInfoChange();
 }
 
 bool SceneSession::HasModalUIExtension() const
 {
+    std::shared_lock<std::shared_mutex> lock(modalUIExtensionInfoListMutex_);
     return !modalUIExtensionInfoList_.empty();
 }
 
 ExtensionWindowEventInfo SceneSession::GetModalUIExtension() const
 {
+    std::shared_lock<std::shared_mutex> lock(modalUIExtensionInfoListMutex_);
     return modalUIExtensionInfoList_.back();
 }
 
