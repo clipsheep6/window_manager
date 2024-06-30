@@ -1234,7 +1234,7 @@ void SceneSession::UpdateModalUIExtension(int32_t persistentId, int32_t pid, con
             return;
         }
         iter->windowRect = windowRect;
-    } 
+    }
     NotifySessionInfoChange();
 }
 
