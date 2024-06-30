@@ -323,9 +323,9 @@ public:
     bool CheckGetAvoidAreaAvailable(AvoidAreaType type) override;
     void AddModalUIExtension(const ExtensionWindowEventInfo& extensionInfo);
     void RemoveModalUIExtension(int32_t persistentId);
-    bool HasModalUIExtension() const;
+    bool HasModalUIExtension();
     void UpdateModalUIExtension(int32_t persistentId, int32_t pid, const Rect& windowRect);
-    ExtensionWindowEventInfo GetModalUIExtension() const;
+    ExtensionWindowEventInfo GetModalUIExtension();
     Vector2f GetTranslateXY(bool useUIExtension);
 
 protected:

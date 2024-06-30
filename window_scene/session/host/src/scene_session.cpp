@@ -1255,13 +1255,13 @@ void SceneSession::RemoveModalUIExtension(int32_t persistentId)
     NotifySessionInfoChange();
 }
 
-bool SceneSession::HasModalUIExtension() const
+bool SceneSession::HasModalUIExtension()
 {
     std::shared_lock<std::shared_mutex> lock(modalUIExtensionInfoListMutex_);
     return !modalUIExtensionInfoList_.empty();
 }
 
-ExtensionWindowEventInfo SceneSession::GetModalUIExtension() const
+ExtensionWindowEventInfo SceneSession::GetModalUIExtension()
 {
     std::shared_lock<std::shared_mutex> lock(modalUIExtensionInfoListMutex_);
     return modalUIExtensionInfoList_.back();
