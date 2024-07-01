@@ -87,6 +87,48 @@ public:
     void HasPrivateWindow(DisplayId id, bool& hasPrivateWindow) override {};
 };
 
+class DisplayManagerAgentTest : public IRemoteObject {
+    int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+    {
+        return 0;
+    }
+
+    bool IsProxyObject() const
+    {
+        return true;
+    }
+
+    bool CheckObjectLegality() const
+    {
+        return true;
+    }
+
+    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient)
+    {
+        return true;
+    }
+
+    bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient)
+    {
+        return true;
+    }
+
+    sptr<IRemoteBroker> AsInterface()
+    {
+        return nullptr;
+    }
+
+    int Dump(int fd, const std::vector<std::u16string> &args)
+    {
+        return 0;
+    }
+
+    int32_t GetObjectRefCount()
+    {
+        return 0;
+    }
+};
+
 namespace {
 /**
  * @tc.name: OnStart
@@ -162,6 +204,9 @@ HWTEST_F(DisplayManagerServiceTest, DisplayChange, Function | SmallTest | Level3
 
     sptr<DisplayChangeListenerTest> displayChangeListener = new DisplayChangeListenerTest();
     ASSERT_NE(nullptr, displayChangeListener);
+
+    dms_->RegisterDisplayChangeListener(nullptr);
+    dms_->NotifyDisplayStateChange(0, nullptr, displayInfoMap, DisplayStateChangeType::SIZE_CHANGE);
 }
 
 /**
@@ -180,6 +225,10 @@ HWTEST_F(DisplayManagerServiceTest, HasPrivateWindow, Function | SmallTest | Lev
 
     dms_->RegisterWindowInfoQueriedListener(nullptr);
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms_->HasPrivateWindow(1, hasPrivateWindow));
+
+    const sptr<IWindowInfoQueriedListener>& listener = new WindowInfoQueriedListenerTest();
+    dms_->RegisterWindowInfoQueriedListener(listener);
+    ASSERT_EQ(DMError::DM_OK, dms_->HasPrivateWindow(1, hasPrivateWindow));
 }
 
 /**
@@ -240,6 +289,8 @@ HWTEST_F(DisplayManagerServiceTest, VirtualScreen, Function | SmallTest | Level3
     VirtualScreenOption option;
     ASSERT_EQ(-1, dms_->CreateVirtualScreen(option, nullptr));
 
+    const sptr<IRemoteObject>& displayManagerAgent = new DisplayManagerAgentTest();
+    ASSERT_NE(-1, dms_->CreateVirtualScreen(option, displayManagerAgent));
     ASSERT_EQ(DMError::DM_ERROR_INVALID_PARAM, dms_->SetVirtualScreenSurface(-1, nullptr));
     ASSERT_EQ(DMError::DM_ERROR_RENDER_SERVICE_FAILED, dms_->SetVirtualScreenSurface(0, nullptr));
 
@@ -261,6 +312,10 @@ HWTEST_F(DisplayManagerServiceTest, GetDisplaySnapshot, Function | SmallTest | L
     DmErrorCode* errorCode = nullptr;
     std::shared_ptr<Media::PixelMap> result = dms_->GetDisplaySnapshot(displayId, errorCode);
     EXPECT_EQ(result, nullptr);
+
+    *errorCode = DmErrorCode::DM_ERROR_NO_PERMISSION;
+    result = dms_->GetDisplaySnapshot(displayId, errorCode);
+    EXPECT_EQ(result, nullptr);
 }
 
 /**
@@ -275,6 +330,11 @@ HWTEST_F(DisplayManagerServiceTest, OrientationAndRotation, Function | SmallTest
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms_->SetOrientationFromWindow(0, orientation, true));
     Rotation rotation = Rotation::ROTATION_0;
     ASSERT_EQ(false, dms_->SetRotationFromWindow(0, rotation, true));
+
+    orientation = Orientation::VERTICAL;
+    ASSERT_TRUE(DMError::DM_OK != dms_->SetOrientation(0, orientation));
+    orientation = Orientation::SENSOR_VERTICAL;
+    ASSERT_EQ(DMError::DM_ERROR_INVALID_PARAM, dms_->SetOrientation(0, orientation));
 }
 
 /**
