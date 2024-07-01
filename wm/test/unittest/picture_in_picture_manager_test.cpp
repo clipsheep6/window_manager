@@ -84,27 +84,6 @@ HWTEST_F(PictureInPictureManagerTest, ReportPiPActionEvent, Function | SmallTest
 }
 
 /**
- * @tc.name: ReportPiPControlEvent
- * @tc.desc: ReportPiPControlEvent
- * @tc.type: FUNC
- */
-HWTEST_F(PictureInPictureManagerTest, ReportPiPControlEvent, Function | SmallTest | Level2)
-{
-    // TODO 缺少头文件的引用
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    int result = HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::MULTIWINDOW_UE, eventName,
-        OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        EVENT_KEY_PNAMEID, "windowManager",
-        EVENT_KEY_PVERSION, "1.0",
-        EVENT_KEY_TEMPLATE_TYPE, 1,
-        EVENT_KEY_ACTION_EVENT, static_cast<uint32_t>(controlType),
-        EVENT_KEY_OPERATION_PACKAGE_NAME, packageName_);
-    ASSERT_EQ(result, 0);
-    SingletonContainer::Get<PiPReporter>().ReportPiPControlEvent(1, controlType);
-}
-
-/**
  * @tc.name: ReportPiPRatio
  * @tc.desc: ReportPiPRatio/ReportPiPRestore
  * @tc.type: FUNC

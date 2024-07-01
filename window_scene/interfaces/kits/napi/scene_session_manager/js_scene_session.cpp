@@ -1682,12 +1682,12 @@ void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType,
             TLOGE(WmsLogTag::WMS_PIP, "[NAPI]jsCallBack is nullptr");
             return;
         }
-        napi_value controlType = CreateJsValue(env, controlType);
-        napi_value controlStatus = CreateJsValue(env, status);
-        napi_value argv[] = {controlType, controlStatus};
+        napi_value controlTypeValue = CreateJsValue(env, controlType);
+        napi_value controlStatusValue = CreateJsValue(env, status);
+        napi_value argv[] = {controlTypeValue, controlStatusValue};
         napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
     };
-    taskScheduler_->PostMainThreadTask(task, __func_);
+    taskScheduler_->PostMainThreadTask(task, __func__);
 }
 
 void JsSceneSession::OnRaiseToTop()

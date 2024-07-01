@@ -423,7 +423,7 @@ void JsPipController::ProcessControlEventRegister()
         TLOGE(WmsLogTag::WMS_PIP, "controller is nullptr");
         return;
     }
-    auto controlObserver = new(std::nothrow) JsPipController::PiPControlObserverImpl(env_, jsCbMap_[CONTROL_EVENT_CB]);
+    auto controlObserver = sptr<JsPipController::PiPControlObserverImpl>::MakeSptr(env_, jsCbMap_[CONTROL_EVENT_CB]);
     if (controlObserver == nullptr) {
         TLOGE(WmsLogTag::WMS_PIP, "controlObserver is nullptr");
         return;
