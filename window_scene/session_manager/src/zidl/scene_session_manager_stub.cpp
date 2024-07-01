@@ -47,8 +47,7 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
             return HandleRecoverAndReconnectSceneSession(data, reply);
         case SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION:
             return HandleDestroyAndDisconnectSpcificSession(data, reply);
-        case (static_cast<uint32_t>(
-            SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION_WITH_DETACH_CALLBACK:
+        case SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION_WITH_DETACH_CALLBACK:
             return HandleDestroyAndDisconnectSpcificSessionWithDetachCallback(data, reply);
         case SceneSessionManagerMessage::TRANS_ID_REQUEST_FOCUS:
             return HandleRequestFocusStatus(data, reply);
