@@ -1315,7 +1315,7 @@ public:
      */
     virtual std::string GetContentInfo(BackupAndRestoreType type = BackupAndRestoreType::CONTINUATION)
     {
-        return {};
+        return std::string();
     }
     /**
      * @brief Set uiability restored router stack.
