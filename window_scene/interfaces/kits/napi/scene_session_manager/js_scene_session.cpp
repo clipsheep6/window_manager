@@ -1673,7 +1673,7 @@ void JsSceneSession::OnSessionRectChange(const WSRect& rect, const SizeChangeRea
     taskScheduler_->PostMainThreadTask(task, rectInfo);
 }
 
-void JsSceneSession::OnSessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status)
+void JsSceneSession::OnSessionPiPControlStatusChange(WsPiPControlType controlType, WsPiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, status:%{public}d", controlType, status);
     auto task = [controlType, status, jsCallBack = GetJSCallback(SESSION_PIP_CONTROL_STATUS_CHANGE_CB),
@@ -2830,14 +2830,14 @@ napi_value JsSceneSession::OnSetPiPControlEvent(napi_env env, napi_callback_info
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
     if (!ConvertFromJsValue(env, argv[0], controlType)) {
         TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WSErrorCode::WS_ERROR_INVALID_PARAM),
             "Input parameter is missing or invalid"));
         return NapiGetUndefined(env);
     }
-    auto status = PiPControlStatus::PLAY;
+    auto status = WsPiPControlStatus::PLAY;
     if (argc > 1) {
         if (!ConvertFromJsValue(env, argv[1], status)) {
             TLOGE(WmsLogTag::WMS_PIP, "[NAPI]Failed to convert parameter to int");
