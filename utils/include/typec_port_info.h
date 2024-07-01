@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,11 +13,15 @@
  * limitations under the License.
  */
 
-#include "session_listener_proxy.h"
+#ifndef OHOS_ROSEN_TYPEC_PORT_INFO_H
+#define OHOS_ROSEN_TYPEC_PORT_INFO_H
+
+#include <cstdint>
 
 namespace OHOS::Rosen {
-
-void SessionListenerProxy::OnSessionLabelChange(int32_t persistentId, const std::string &label) {}
-void SessionListenerProxy::OnSessionIconChange(int32_t persistentId, const std::shared_ptr<Media::PixelMap> &icon) {}
-
-} // namespace OHOS::Rosen
+class TypeCPortInfo {
+public:
+    static bool GetTypeCThermal(int32_t& thermal);
+};
+}
+#endif // OHOS_ROSEN_TYPEC_PORT_INFO_H

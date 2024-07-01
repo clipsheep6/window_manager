@@ -804,6 +804,12 @@ public:
         return WMError::WM_OK;
     }
     /**
+     * @brief notify window first frame drawing completed.
+     *
+     * @return WMError
+     */
+    virtual WMError NotifyDrawingCompleted() { return WMError::WM_OK; }
+    /**
      * @brief move the window to (x, y)
      *
      * @param x
@@ -1051,8 +1057,10 @@ public:
      * @brief flush frame rate of linker.
      *
      * @param rate frame rate.
+     * @param isAnimatorStopped animator status.
+     * @param rateType frame rate type.
      */
-    virtual void FlushFrameRate(uint32_t rate, bool isAnimatorStopped) {}
+    virtual void FlushFrameRate(uint32_t rate, bool isAnimatorStopped, uint32_t rateType) {}
     /**
      * @brief Update Configuration.
      *
@@ -1307,14 +1315,14 @@ public:
      */
     virtual std::string GetContentInfo(BackupAndRestoreType type = BackupAndRestoreType::CONTINUATION)
     {
-        return std::string();
+        return {};
     }
     /**
      * @brief Set uiability restored router stack.
      *
      * @return WMError.
      */
-    virtual WMError SetRestoredRouterStack(std::string& routerStack)
+    virtual WMError SetRestoredRouterStack(const std::string& routerStack)
     {
         return WMError::WM_OK;
     }
@@ -1751,7 +1759,7 @@ public:
     {
         return WMError::WM_OK;
     }
-    
+
     /**
      * @brief Get System Bar(include status bar and nav bar) Properties
      *
@@ -1938,7 +1946,7 @@ public:
      * @return WM_OK means register success, others means register failed.
      */
     virtual WMError RegisterSubWindowCloseListeners(
-        const sptr<ISubWindowCloseListener>& listener) { return WMError::WM_OK; }
+        const sptr<ISubWindowCloseListener>& listener) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
 
     /**
      * @brief Unregister subwindow close listener.
@@ -1947,7 +1955,7 @@ public:
      * @return WM_OK means unregister success, others means unregister failed.
      */
     virtual WMError UnregisterSubWindowCloseListeners(
-        const sptr<ISubWindowCloseListener>& listener) { return WMError::WM_OK; }
+        const sptr<ISubWindowCloseListener>& listener) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
 
     /**
      * @brief Get the rect of host window.

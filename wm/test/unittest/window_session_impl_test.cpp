@@ -138,9 +138,9 @@ HWTEST_F(WindowSessionImplTest, Connect01, Function | SmallTest | Level2)
     sptr<SessionMocker> session = new(std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
-    EXPECT_CALL(*(session), Connect(_, _, _, _, _, _, _, _, _)).WillOnce(Return(WSError::WS_ERROR_NULLPTR));
+    EXPECT_CALL(*(session), Connect(_, _, _, _, _, _, _)).WillOnce(Return(WSError::WS_ERROR_NULLPTR));
     ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->Connect());
-    EXPECT_CALL(*(session), Connect(_, _, _, _, _, _, _, _, _)).WillOnce(Return(WSError::WS_OK));
+    EXPECT_CALL(*(session), Connect(_, _, _, _, _, _, _)).WillOnce(Return(WSError::WS_OK));
     ASSERT_EQ(WMError::WM_OK, window->Connect());
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
@@ -652,10 +652,10 @@ HWTEST_F(WindowSessionImplTest, GetFloatingWindowParentId, Function | SmallTest 
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     ASSERT_NE(nullptr, session);
     window->hostSession_ = session;
-    EXPECT_CALL(*(session), Connect(_, _, _, _, _, _, _, _, _))
+    EXPECT_CALL(*(session), Connect(_, _, _, _, _, _, _))
         .WillOnce(Return(WSError::WS_ERROR_NULLPTR));
     ASSERT_EQ(WMError::WM_ERROR_NULLPTR, window->Connect());
-    EXPECT_CALL(*(session), Connect(_, _, _, _, _, _, _, _, _))
+    EXPECT_CALL(*(session), Connect(_, _, _, _, _, _, _))
         .WillOnce(Return(WSError::WS_OK));
     ASSERT_EQ(WMError::WM_OK, window->Connect());
 
@@ -1286,6 +1286,13 @@ HWTEST_F(WindowSessionImplTest, NotifyAfterUnfocused, Function | SmallTest | Lev
     window->NotifyAfterUnfocused(true);
     window->NotifyAfterUnfocused(false);
     ASSERT_EQ(res, 0);
+
+    // GetUIContentSharedPtr!=nullptr
+    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
+    window->InitUIContent("NotifyAfterUnfocused", nullptr, nullptr, WindowSetUIContentType::DEFAULT,
+                          BackupAndRestoreType::NONE, nullptr, aceRet);
+    window->NotifyAfterUnfocused(true);
+    ASSERT_NE(window->GetUIContentSharedPtr(), nullptr);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyAfterUnfocused end";
 }
@@ -1337,6 +1344,24 @@ HWTEST_F(WindowSessionImplTest, NotifyBeforeDestroy, Function | SmallTest | Leve
     window->handler_ = nullptr;
     window->NotifyBeforeDestroy(windowName);
     ASSERT_EQ(res, 0);
+
+    // uiContent!=nullptr
+    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
+    window->InitUIContent("NotifyAfterUnfocused", nullptr, nullptr, WindowSetUIContentType::DEFAULT,
+                          BackupAndRestoreType::NONE, nullptr, aceRet);
+    ASSERT_NE(window->uiContent_, nullptr);
+    window->NotifyBeforeDestroy(windowName);
+    ASSERT_EQ(window->uiContent_, nullptr);
+
+    // notifyNativeFunc_!=nullptr
+    NotifyNativeWinDestroyFunc func = [&](std::string name)
+    {
+        GTEST_LOG_(INFO) << "NotifyNativeWinDestroyFunc";
+        ASSERT_EQ(windowName, name);
+    };
+    window->RegisterWindowDestroyedListener(func);
+    window->NotifyBeforeDestroy(windowName);
+
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyBeforeDestroy end";
 }
@@ -1360,6 +1385,9 @@ HWTEST_F(WindowSessionImplTest, MarkProcessed, Function | SmallTest | Level2)
     ASSERT_EQ(WMError::WM_OK, window->Create(nullptr, session));
 
     int32_t eventId = 1;
+    window->state_ = WindowState::STATE_DESTROYED;
+    ASSERT_EQ(window->GetPersistentId(), INVALID_SESSION_ID);
+    ASSERT_EQ(window->state_, WindowState::STATE_DESTROYED);
     WSError res = window->MarkProcessed(eventId);
     ASSERT_EQ(res, WSError::WS_DO_NOTHING);
     window->hostSession_ = nullptr;
@@ -1894,6 +1922,7 @@ HWTEST_F(WindowSessionImplTest, SetTopmost, Function | SmallTest | Level2)
  * @tc.type: FUNC
  */
 HWTEST_F(WindowSessionImplTest, IsTopmost, Function | SmallTest | Level2)
+
 {
     sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("IsTopmost");
@@ -2191,8 +2220,10 @@ HWTEST_F(WindowSessionImplTest, GetParentId, Function | SmallTest | Level2)
  */
 HWTEST_F(WindowSessionImplTest, PreNotifyKeyEvent, Function | SmallTest | Level2)
 {
-    sptr<WindowOption> option = new WindowOption();
-    sptr<WindowSessionImpl> window = new WindowSessionImpl(option);
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(nullptr, option);
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(nullptr, window);
     std::shared_ptr<MMI::PointerEvent> pointerEvent;
     window->ConsumePointerEvent(pointerEvent);
 
@@ -2260,7 +2291,6 @@ HWTEST_F(WindowSessionImplTest, NotifyRotationAnimationEnd, Function | SmallTest
     ASSERT_NE(window, nullptr);
     window->NotifyRotationAnimationEnd();
 
-    // uiContent!=nullptr
     std::string url = "";
     OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
     window->InitUIContent(url, nullptr, nullptr, WindowSetUIContentType::BY_ABC, BackupAndRestoreType::NONE,
@@ -2310,7 +2340,6 @@ HWTEST_F(WindowSessionImplTest, IsFocused, Function | SmallTest | Level2)
 
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->RequestFocus());
 
-    // IsWindowSessionInvalid==false
     SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule",
                                "CreateTestAbility"};
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
@@ -2629,6 +2658,37 @@ HWTEST_F(WindowSessionImplTest, GetTitleButtonVisible03, Function | SmallTest | 
     ASSERT_EQ(hideSplitButton, true);
 }
 
+/**
+ * @tc.name: SetUiDvsyncSwitchSucc
+ * @tc.desc: SetUiDvsyncSwitch Test Succ
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSessionImplTest, SetUiDvsyncSwitchSucc, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("SetUiDvsyncSwitchSucc");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    window->SetUiDvsyncSwitch(true);
+    window->SetUiDvsyncSwitch(false);
+}
+
+/**
+ * @tc.name: SetUiDvsyncSwitchErr
+ * @tc.desc: SetUiDvsyncSwitch Test Err
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSessionImplTest, SetUiDvsyncSwitchErr, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("SetUiDvsyncSwitchErr");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    window->vsyncStation_ = nullptr;
+    window->SetUiDvsyncSwitch(true);
+    window->SetUiDvsyncSwitch(false);
+}
+
 /*
  * @tc.name: SetRestoredRouterStack_0100
  * @tc.desc: basic function test of set or get restored router stack.
@@ -2664,25 +2724,6 @@ HWTEST_F(WindowSessionImplTest, SetRestoredRouterStack_0200, Function | SmallTes
     std::string gettedStack = window->GetRestoredRouterStack();
     EXPECT_EQ(gettedStack, routerStack);
     EXPECT_TRUE(window->GetRestoredRouterStack().empty());
-}
-
-/**
- * @tc.name: GetAceContentInfoType_0100
- * @tc.desc: basic function test of get ace content info type.
- * @tc.type: FUNC
- * @tc.require: issue
- */
-HWTEST_F(WindowSessionImplTest, GetAceContentInfoType_0100, Function | SmallTest | Level3)
-{
-    sptr<WindowOption> option = sptr<WindowOption>::MakeSptr();
-    ASSERT_NE(option, nullptr);
-    sptr<WindowSessionImpl> window = sptr<WindowSessionImpl>::MakeSptr(option);
-    ASSERT_NE(window, nullptr);
-    EXPECT_EQ(window->GetAceContentInfoType(BackupAndRestoreType::CONTINUATION), Ace::ContentInfoType::CONTINUATION);
-    EXPECT_EQ(window->GetAceContentInfoType(BackupAndRestoreType::APP_RECOVERY), Ace::ContentInfoType::APP_RECOVERY);
-    EXPECT_EQ(window->GetAceContentInfoType(BackupAndRestoreType::RESOURCESCHEDULE_RECOVERY),
-        Ace::ContentInfoType::RESOURCESCHEDULE_RECOVERY);
-    EXPECT_EQ(window->GetAceContentInfoType(BackupAndRestoreType::NONE), Ace::ContentInfoType::NONE);
 }
 }
 } // namespace Rosen

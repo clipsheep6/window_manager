@@ -170,8 +170,8 @@ bool IsJsWindowInputTypeUndefind(napi_env env, napi_value jsWindowInputType, Ses
 
 bool IsJsSessionTypeUndefind(napi_env env, napi_value jsSessionType, SessionInfo& sessionInfo)
 {
+    uint32_t windowType = 0;
     if (GetType(env, jsSessionType) != napi_undefined) {
-        uint32_t windowType = 0;
         if (!ConvertFromJsValue(env, jsSessionType, windowType)) {
             WLOGFE("[NAPI]Failed to convert parameter to windowType");
             return false;
@@ -180,6 +180,9 @@ bool IsJsSessionTypeUndefind(napi_env env, napi_value jsSessionType, SessionInfo
             sessionInfo.windowType_ = static_cast<uint32_t>(
                 JS_SESSION_TO_WINDOW_TYPE_MAP.at(static_cast<JsSessionType>(windowType)));
         }
+    }
+    if (windowType == 0 && sessionInfo.isSystem_) {
+        sessionInfo.windowType_ = static_cast<uint32_t>(WindowType::WINDOW_TYPE_SCB_DEFAULT);
     }
     return true;
 }
@@ -980,7 +983,6 @@ napi_value CreateJsKeyboardLayoutParams(napi_env env, const KeyboardLayoutParams
         CreateJsSessionRect(env, params.LandscapePanelRect_));
     napi_set_named_property(env, objValue, "portraitPanelRect",
         CreateJsSessionRect(env, params.PortraitPanelRect_));
-    
     return objValue;
 }
 

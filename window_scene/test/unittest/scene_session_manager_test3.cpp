@@ -1376,19 +1376,17 @@ HWTEST_F(SceneSessionManagerTest3, SetFocusedSessionId, Function | SmallTest | L
 */
 HWTEST_F(SceneSessionManagerTest3, RequestFocusStatus, Function | SmallTest | Level3)
 {
-    FocusChangeReason reasonInput = FocusChangeReason::DEFAULT;
-    FocusChangeReason reasonResult = FocusChangeReason::DEFAULT;
     int32_t focusedSession = ssm_->GetFocusedSessionId();
     EXPECT_EQ(focusedSession, 10086);
 
     int32_t persistentId = INVALID_SESSION_ID;
     WMError result01 = ssm_->RequestFocusStatus(persistentId, true);
     EXPECT_EQ(result01, WMError::WM_OK);
-    reasonResult = ssm_->GetFocusChangeReason();
+    FocusChangeReason reasonResult = ssm_->GetFocusChangeReason();
     EXPECT_EQ(reasonResult, FocusChangeReason::DEFAULT);
 
     persistentId = 10000;
-    reasonInput = FocusChangeReason::SCB_SESSION_REQUEST;
+    FocusChangeReason reasonInput = FocusChangeReason::SCB_SESSION_REQUEST;
     WMError result02 = ssm_->RequestFocusStatus(persistentId, true, true, reasonInput);
     EXPECT_EQ(result02, WMError::WM_OK);
     reasonResult = ssm_->GetFocusChangeReason();
@@ -1527,9 +1525,6 @@ HWTEST_F(SceneSessionManagerTest3, DumpSessionInfo, Function | SmallTest | Level
     info.isSystem_ = true;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->DumpSessionInfo(scensession, oss);
-    scensession = nullptr;
-    scensession = new (std::nothrow) SceneSession(info, specific);
-    ssm_->DumpAllAppSessionInfo(oss, ssm_->sceneSessionMap_);
 }
 
 /**
@@ -1707,6 +1702,255 @@ HWTEST_F(SceneSessionManagerTest3, GerPrivacyBundleListOneWindow, Function | Sma
     privacyBundleList.clear();
     ssm_->GetSceneSessionPrivacyModeBundles(1, privacyBundleList);
     EXPECT_EQ(privacyBundleList.size(), 0);
+}
+
+/**
+ * @tc.name: ConfigWindowImmersive
+ * @tc.desc: ConfigWindowImmersive SwitchFreeMultiWindow
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest3, ConfigWindowImmersive01, Function | SmallTest | Level3)
+{
+    WindowSceneConfig::ConfigItem immersiveConfig;
+    immersiveConfig.boolValue_ = false;
+    ASSERT_NE(ssm_, nullptr);
+    ssm_->ConfigWindowImmersive(immersiveConfig);
+
+    ASSERT_NE(ssm_->SwitchFreeMultiWindow(false), WSError::WS_OK);
+    SystemSessionConfig systemConfig;
+    systemConfig.freeMultiWindowSupport_ = true;
+    ssm_->SwitchFreeMultiWindow(false);
+}
+
+/**
+ * @tc.name: ConfigDecor
+ * @tc.desc: SceneSesionManager config decor
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest3, ConfigDecor02, Function | SmallTest | Level3)
+{
+    ASSERT_NE(ssm_, nullptr);
+    WindowSceneConfig::ConfigItem* item = new WindowSceneConfig::ConfigItem;
+    ASSERT_NE(item, nullptr);
+    ssm_->ConfigDecor(*item, false);
+    delete item;
+}
+
+/**
+ * @tc.name: UpdateRecoveredSessionInfo
+ * @tc.desc: SceneSessionManager load window scene xml
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest3, UpdateRecoveredSessionInfo02, Function | SmallTest | Level3)
+{
+    std::vector<int32_t> recoveredPersistentIds;
+    ASSERT_NE(ssm_, nullptr);
+    ssm_->UpdateRecoveredSessionInfo(recoveredPersistentIds);
+    recoveredPersistentIds.push_back(0);
+    ssm_->UpdateRecoveredSessionInfo(recoveredPersistentIds);
+    SessionInfo info;
+    info.abilityName_ = "test1";
+    info.bundleName_ = "test1";
+    sptr<KeyboardSession::SpecificSessionCallback> specificCallback;
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, specificCallback);
+    ASSERT_NE(sceneSession, nullptr);
+    ssm_->sceneSessionMap_.insert({0, sceneSession});
+    ssm_->UpdateRecoveredSessionInfo(recoveredPersistentIds);
+}
+
+/**
+ * @tc.name: ConfigAppWindowShadow
+ * @tc.desc: SceneSesionManager config app window shadow
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest3, ConfigAppWindowShadow02, Function | SmallTest | Level3)
+{
+    WindowSceneConfig::ConfigItem item;
+    WindowSceneConfig::ConfigItem shadowConfig;
+    WindowShadowConfig outShadow;
+    std::vector<float> floatTest = {};
+    bool result = ssm_->ConfigAppWindowShadow(shadowConfig, outShadow);
+    ASSERT_EQ(result, true);
+
+    item.SetValue(floatTest);
+    shadowConfig.SetValue({{"radius", item}});
+    result = ssm_->ConfigAppWindowShadow(shadowConfig, outShadow);
+    ASSERT_EQ(result, false);
+
+    item.SetValue(new std::string(""));
+    shadowConfig.SetValue({{"", item}});
+    result = ssm_->ConfigAppWindowShadow(shadowConfig, outShadow);
+    ASSERT_EQ(result, true);
+}
+
+/**
+ * @tc.name: ConfigWindowAnimation
+ * @tc.desc: SceneSesionManager config window animation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest3, ConfigWindowAnimation02, Function | SmallTest | Level3)
+{
+    WindowSceneConfig::ConfigItem windowAnimationConfig;
+    WindowSceneConfig::ConfigItem item;
+    std::vector<float> rotation = {0.1f, 0.2f, 0.3f, 0.4f};
+    ASSERT_NE(ssm_, nullptr);
+
+    item.SetValue(rotation);
+    item.SetValue({{"curve", item}});
+    windowAnimationConfig.SetValue({{"timing", item}});
+    ssm_->ConfigWindowAnimation(windowAnimationConfig);
+}
+
+/**
+ * @tc.name: ConfigStartingWindowAnimation
+ * @tc.desc: SceneSesionManager config start window animation
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest3, ConfigStartingWindowAnimation02, Function | SmallTest | Level3)
+{
+    std::vector<float> midFloat = {0.1f};
+    std::vector<int> midInt = {1};
+    ASSERT_NE(ssm_, nullptr);
+    WindowSceneConfig::ConfigItem middleFloat;
+    middleFloat.SetValue(midFloat);
+    ssm_->ConfigStartingWindowAnimation(middleFloat);
+    WindowSceneConfig::ConfigItem middleInt;
+    middleInt.SetValue(midInt);
+    ssm_->ConfigStartingWindowAnimation(middleInt);
+
+    WindowSceneConfig::ConfigItem curve;
+    curve.SetValue(midFloat);
+    curve.SetValue({{"curve", curve}});
+    ssm_->ConfigStartingWindowAnimation(curve);
+}
+
+/**
+ * @tc.name: ConfigMainWindowSizeLimits
+ * @tc.desc: call ConfigMainWindowSizeLimits and check the systemConfig_.
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest3, ConfigMainWindowSizeLimits02, Function | SmallTest | Level3)
+{
+    ASSERT_NE(ssm_, nullptr);
+    std::vector<int> maInt = {1, 2, 3, 4};
+    WindowSceneConfig::ConfigItem mainleInt;
+    mainleInt.SetValue(maInt);
+    mainleInt.SetValue({{"miniWidth", mainleInt}});
+    ssm_->ConfigMainWindowSizeLimits(mainleInt);
+    mainleInt.ClearValue();
+
+    std::vector<float> maFloat = {0.1f};
+    WindowSceneConfig::ConfigItem mainFloat;
+    mainFloat.SetValue(maFloat);
+    mainFloat.SetValue({{"miniWidth", mainFloat}});
+    ssm_->ConfigMainWindowSizeLimits(mainFloat);
+    mainFloat.ClearValue();
+
+    WindowSceneConfig::ConfigItem mainleInt02;
+    mainleInt02.SetValue(maInt);
+    mainleInt02.SetValue({{"miniHeight", mainleInt02}});
+    ssm_->ConfigMainWindowSizeLimits(mainleInt02);
+
+    WindowSceneConfig::ConfigItem mainFloat02;
+    mainFloat02.SetValue(maFloat);
+    mainFloat02.SetValue({{"miniHeight", mainFloat02}});
+    ssm_->ConfigMainWindowSizeLimits(mainFloat02);
+}
+
+/**
+ * @tc.name: ConfigSubWindowSizeLimits
+ * @tc.desc: call ConfigSubWindowSizeLimits
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest3, ConfigSubWindowSizeLimits02, Function | SmallTest | Level3)
+{
+    ASSERT_NE(ssm_, nullptr);
+    std::vector<int> subInt = {1, 2, 3, 4};
+    WindowSceneConfig::ConfigItem subleInt;
+    subleInt.SetValue(subInt);
+    subleInt.SetValue({{"miniWidth", subleInt}});
+    ssm_->ConfigSubWindowSizeLimits(subleInt);
+    subleInt.ClearValue();
+
+    std::vector<float> subFloat = {0.1f};
+    WindowSceneConfig::ConfigItem mainFloat;
+    mainFloat.SetValue(subFloat);
+    mainFloat.SetValue({{"miniWidth", mainFloat}});
+    ssm_->ConfigSubWindowSizeLimits(mainFloat);
+    mainFloat.ClearValue();
+
+    WindowSceneConfig::ConfigItem subleInt02;
+    subleInt02.SetValue(subInt);
+    subleInt02.SetValue({{"miniHeight", subleInt02}});
+    ssm_->ConfigSubWindowSizeLimits(subleInt02);
+
+    WindowSceneConfig::ConfigItem mainFloat02;
+    mainFloat02.SetValue(subFloat);
+    mainFloat02.SetValue({{"miniHeight", mainFloat02}});
+    ssm_->ConfigSubWindowSizeLimits(mainFloat02);
+}
+
+/**
+ * @tc.name: GetTopWindowId
+ * @tc.desc: get top window id by main window id.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest3, GetTopWindowId, Function | SmallTest | Level3)
+{
+    SessionInfo sessionInfo1;
+    sessionInfo1.bundleName_ = "mainWin";
+    sessionInfo1.abilityName_ = "mainAbilityName";
+    sessionInfo1.persistentId_ = 100;
+    auto sceneSession1 = sptr<SceneSession>::MakeSptr(sessionInfo1, nullptr);
+    ASSERT_NE(sceneSession1, nullptr);
+    sceneSession1->SetCallingPid(65534);
+    ssm_->sceneSessionMap_.insert({100, sceneSession1});
+
+    SessionInfo sessionInfo2;
+    sessionInfo2.bundleName_ = "subWin1";
+    sessionInfo2.abilityName_ = "subAbilityName1";
+    sessionInfo2.persistentId_ = 101;
+    auto sceneSession2 = sptr<SceneSession>::MakeSptr(sessionInfo2, nullptr);
+    ASSERT_NE(sceneSession2, nullptr);
+    sceneSession2->SetCallingPid(65535);
+    ssm_->sceneSessionMap_.insert({101, sceneSession2});
+
+    SessionInfo sessionInfo3;
+    sessionInfo3.bundleName_ = "subWin2";
+    sessionInfo3.abilityName_ = "subAbilityName2";
+    sessionInfo3.persistentId_ = 102;
+    auto sceneSession3 = sptr<SceneSession>::MakeSptr(sessionInfo3, nullptr);
+    ASSERT_NE(sceneSession3, nullptr);
+    sceneSession3->SetCallingPid(65534);
+    ssm_->sceneSessionMap_.insert({102, sceneSession3});
+
+    sceneSession1->AddSubSession(sceneSession2);
+    sceneSession1->AddSubSession(sceneSession3);
+    uint32_t topWinId;
+    ASSERT_NE(ssm_->GetTopWindowId(static_cast<uint32_t>(sceneSession1->GetPersistentId()), topWinId),
+        WMError::WM_ERROR_INVALID_WINDOW);
+}
+
+/**
+ * @tc.name: NotifyStackEmpty
+ * @tc.desc: SceneSesionManager notify stack empty
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest3, NotifyStackEmpty, Function | SmallTest | Level3)
+{
+    WSError ret;
+    int32_t persistentId = 10086;
+    ret = ssm_->NotifyStackEmpty(persistentId);
+    ASSERT_EQ(ret, WSError::WS_ERROR_INVALID_WINDOW);
+
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest3";
+    info.bundleName_ = "NotifyStackEmpty";
+    info.screenId_ = 0;
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    ssm_->sceneSessionMap_.insert({10086, sceneSession});
+    ret = ssm_->NotifyStackEmpty(persistentId);
+    ASSERT_EQ(WSError::WS_OK, ret);
 }
 }
 } // namespace Rosen

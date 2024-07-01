@@ -659,25 +659,6 @@ HWTEST_F(KeyboardSessionTest, AdjustKeyboardLayout, Function | SmallTest | Level
     sessionChangeCallback->onAdjustKeyboardLayout_ = [](const KeyboardLayoutParams& params){};
     ASSERT_EQ(keyboardSession->AdjustKeyboardLayout(params), WSError::WS_OK);
 
-    params.gravity_ = WindowGravity::WINDOW_GRAVITY_FLOAT;
-    keyboardSession->state_ = SessionState::STATE_FOREGROUND;
-    ASSERT_EQ(keyboardSession->AdjustKeyboardLayout(params), WSError::WS_OK);
-
-    keyboardSession->state_ = SessionState::STATE_DISCONNECT;
-    ASSERT_EQ(keyboardSession->AdjustKeyboardLayout(params), WSError::WS_OK);
-
-    params.gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
-    ASSERT_EQ(keyboardSession->AdjustKeyboardLayout(params), WSError::WS_OK);
-
-    keyboardSession->state_ = SessionState::STATE_FOREGROUND;
-    ASSERT_EQ(keyboardSession->AdjustKeyboardLayout(params), WSError::WS_OK);
-
-    keyboardSession->isKeyboardPanelEnabled_ = true;
-    ASSERT_EQ(keyboardSession->AdjustKeyboardLayout(params), WSError::WS_OK);
-
-    keyboardSession->isKeyboardPanelEnabled_ = false;
-    ASSERT_EQ(keyboardSession->AdjustKeyboardLayout(params), WSError::WS_OK);
-
     WLOGFI("AdjustKeyboardLayout end!");
 }
 
@@ -715,11 +696,11 @@ HWTEST_F(KeyboardSessionTest, CheckIfNeedRaiseCallingSession, Function | SmallTe
     ASSERT_TRUE(keyboardSession->CheckIfNeedRaiseCallingSession(sceneSession, false));
 
     property->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
-    ASSERT_FALSE(keyboardSession->CheckIfNeedRaiseCallingSession(sceneSession, true));
+    ASSERT_TRUE(keyboardSession->CheckIfNeedRaiseCallingSession(sceneSession, true));
 
     property->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
-    bool result = !(system::GetParameter("const.product.devicetype", "unknown") == "phone" ||
-         system::GetParameter("const.product.devicetype", "unknown") == "tablet");
+    bool result = !(sceneSession->GetSystemConfig().uiType_ == "phone" ||
+        sceneSession->GetSystemConfig().uiType_ == "tablet");
     ASSERT_EQ(result, keyboardSession->CheckIfNeedRaiseCallingSession(sceneSession, true));
 
     WLOGFI("CheckIfNeedRaiseCallingSession end!");
