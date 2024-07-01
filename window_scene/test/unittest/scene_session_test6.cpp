@@ -41,8 +41,6 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Rosen {
 
-
-
 class SceneSessionTest6 : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -95,15 +93,46 @@ HWTEST_F(SceneSessionTest6, CheckKeyEventDispatch, Function | SmallTest | Level2
     sysSession->SetVisible(false);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);
+
     sysSession->SetVisible(true);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);
+
     sysSession->winRect_.width_ = 1;
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);
+
     sysSession->winRect_.height_ = 1;
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);
+}
+
+/**
+ * @tc.name: CheckKeyEventDispatch2
+ * @tc.desc: CheckKeyEventDispatch2
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest6, CheckKeyEventDispatch2, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "Background01";
+    info.bundleName_ = "UpdateCameraWindowStatus";
+    info.windowType_ = 1;
+    sptr<Rosen::ISession> session_;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback_ =
+        new (std::nothrow) SceneSession::SpecificSessionCallback();
+    EXPECT_NE(specificCallback_, nullptr);
+    sptr<SystemSession> sysSession;
+    sysSession = new (std::nothrow) SystemSession(info, specificCallback_);
+    EXPECT_NE(sysSession, nullptr);
+    int ret = false;
+    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
+    ASSERT_NE(keyEvent, nullptr);
+    WSRect rect({0, 0, 0, 0});
+    sysSession->winRect_ = rect;
+    sysSession->SetVisible(true);
+    sysSession->winRect_.width_ = 1;
+    sysSession->winRect_.height_ = 1;
     SessionInfo info2;
     info2.abilityName_ = "dialogAbilityName";
     info2.moduleName_ = "dialogModuleName";
@@ -112,16 +141,20 @@ HWTEST_F(SceneSessionTest6, CheckKeyEventDispatch, Function | SmallTest | Level2
     sysSession->parentSession_  = parentSession;
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);
+
     parentSession->SetSessionState(SessionState::STATE_DISCONNECT);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);
+
     parentSession->SetSessionState(SessionState::STATE_ACTIVE);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);
+
     parentSession->SetSessionState(SessionState::STATE_DISCONNECT);
     sysSession->SetSessionState(SessionState::STATE_ACTIVE);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);
+    
     parentSession->SetSessionState(SessionState::STATE_ACTIVE);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret, true);

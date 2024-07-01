@@ -23,12 +23,11 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Rosen {
 class SurfaceReaderTest : public testing::Test {
-  public:
-    SurfaceReader surfaceReader;
-    SurfaceReaderTest() {
-      surfaceReader.Init();
-    }
-    ~SurfaceReaderTest() {}
+public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    virtual void SetUp() override;
+    virtual void TearDown() override;
 };
 
 namespace {
@@ -69,6 +68,8 @@ HWTEST_F(SurfaceReaderTest, OnVsync, Function | SmallTest | Level2)
  */
 HWTEST_F(SurfaceReaderTest, ProcessBuffer, Function | SmallTest | Level2)
 {
+    SurfaceReader surfaceReader;
+    surfaceReader.Init();
     GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer start";
     sptr<SurfaceBuffer> cbuffer = nullptr;
     sptr<SurfaceReaderHandlerImpl> handler = nullptr;
