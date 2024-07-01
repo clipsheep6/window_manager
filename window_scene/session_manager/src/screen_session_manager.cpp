@@ -61,6 +61,7 @@ const std::string SCREEN_SESSION_MANAGER_SCREEN_POWER_THREAD = "OS_ScreenSession
 const std::string SCREEN_CAPTURE_PERMISSION = "ohos.permission.CAPTURE_SCREEN";
 const std::string BOOTEVENT_BOOT_COMPLETED = "bootevent.boot.completed";
 const int32_t SLEEP_10_MS = 10 * 1000; // 10ms
+const int32_t SLEEP_50_MS = 50 * 1000; // 50ms
 const int32_t CV_WAIT_SCREENON_MS = 300;
 const int32_t CV_WAIT_SCREENOFF_MS = 1500;
 const int32_t CV_WAIT_SCREENOFF_MS_MAX = 3000;
@@ -225,6 +226,9 @@ void ScreenSessionManager::Init()
         ScreenSceneConfig::SetCutoutSvgPath(GetDefaultScreenId(), defaultDisplayCutoutPath);
     }
 
+    registerScreenChangeListenerTask_ = [this](ScreenId screenId, ScreenEvent screenEvent) {
+        OnScreenChange(screenId, screenEvent);
+    };
     RegisterScreenChangeListener();
     if (!ScreenSceneConfig::IsSupportRotateWithSensor()) {
         TLOGI(WmsLogTag::DMS, "Current device type not support SetSensorSubscriptionEnabled.");
@@ -422,15 +426,18 @@ void ScreenSessionManager::ConfigureScreenSnapshotParams()
 void ScreenSessionManager::RegisterScreenChangeListener()
 {
     TLOGI(WmsLogTag::DMS, "Register screen change listener.");
-    auto res = rsInterface_.SetScreenChangeCallback(
-        [this](ScreenId screenId, ScreenEvent screenEvent) { OnScreenChange(screenId, screenEvent); });
-    if (res != StatusCode::SUCCESS) {
-        auto task = [this]() { RegisterScreenChangeListener(); };
-        taskScheduler_->PostAsyncTask(task, "RegisterScreenChangeListener", 50); // Retry after 50 ms.
-        screenEventTracker_.RecordEvent("Dms OnScreenChange register failed.");
-    } else {
-        screenEventTracker_.RecordEvent("Dms OnScreenChange register success.");
-    }
+    auto task = [this]() {
+        auto res = rsInterface_.SetScreenChangeCallback(registerScreenChangeListenerTask_);
+        if (res == StatusCode::SUCCESS) {
+            screenEventTracker_.RecordEvent("Dms OnScreenChange register success.");
+            isRegisterScreenChangeListenerSuccess_ = true;
+            TLOGI(WmsLogTag::DMS, "Register screen change listener success.");
+        } else {
+            screenEventTracker_.RecordEvent("Dms OnScreenChange register failed.");
+            TLOGI(WmsLogTag::DMS, "Register screen change listener failed.");
+        }
+    };
+    taskScheduler_->PostAsyncTask(task, "RegisterScreenChangeListener");
 }
 
 void ScreenSessionManager::RegisterRefreshRateChangeListener()
@@ -631,6 +638,10 @@ sptr<ScreenSession> ScreenSessionManager::GetDefaultScreenSession()
 
 sptr<DisplayInfo> ScreenSessionManager::GetDefaultDisplayInfo()
 {
+    while (!isRegisterScreenChangeListenerSuccess_) {
+        RegisterScreenChangeListener();
+        usleep(SLEEP_50_MS);
+    }
     GetDefaultScreenId();
     sptr<ScreenSession> screenSession = GetScreenSession(defaultScreenId_);
     std::lock_guard<std::recursive_mutex> lock_info(displayInfoMutex_);

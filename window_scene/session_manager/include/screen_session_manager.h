@@ -394,6 +394,8 @@ private:
     bool needScreenOnWhenKeyguardNotify_ = false;
     bool gotScreenOffNotify_ = false;
     bool needScreenOffNotify_ = false;
+    std::function<void(ScreenId, ScreenEvent)> registerScreenChangeListenerTask_ = nullptr;
+    std::atomic<bool> isRegisterScreenChangeListenerSuccess_ = false;
 
     std::mutex screenOnMutex_;
     std::condition_variable screenOnCV_;
