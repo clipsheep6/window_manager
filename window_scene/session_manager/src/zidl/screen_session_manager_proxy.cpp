@@ -302,11 +302,11 @@ DMError ScreenSessionManagerProxy::SetScreenColorTransform(ScreenId screenId)
     return static_cast<DMError>(reply.ReadInt32());
 }
 
-DMError ScreenSessionManagerProxy::GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat)
+DMError ScreenSessionManagerProxy::SetScreenColorTransformTest(ScreenId screenId)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        WLOGFW("GetPixelFormat: remote is nullptr");
+        WLOGFW("DisplayManagerProxy::SetScreenColorTransform: remote is nullptr");
         return DMError::DM_ERROR_NULLPTR;
     }
 
@@ -314,24 +314,19 @@ DMError ScreenSessionManagerProxy::GetPixelFormat(ScreenId screenId, GraphicPixe
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFW("GetPixelFormat: WriteInterfaceToken failed");
+        WLOGFW("DisplayManagerProxy::SetScreenColorTransform: WriteInterfaceToken failed");
         return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
     }
     if (!data.WriteUint64(static_cast<uint64_t>(screenId))) {
-        WLOGFW("GetPixelFormat: WriteUint64 uint64_t failed");
+        WLOGFW("DisplayManagerProxy::SetScreenColorTransform: WriteUint64 screenId failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
-    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_GET_PIXEL_FORMAT),
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_SET_COLOR_TRANSFORM),
         data, reply, option) != ERR_NONE) {
-        WLOGFW("GetPixelFormat: SendRequest failed");
+        WLOGFW("DisplayManagerProxy::SetScreenColorTransform: SendRequest failed");
         return DMError::DM_ERROR_IPC_FAILED;
     }
-    DMError ret = static_cast<DMError>(reply.ReadInt32());
-    if (ret != DMError::DM_OK) {
-        return ret;
-    }
-    pixelFormat = static_cast<GraphicPixelFormat>(reply.ReadUint32());
-    return ret;
+    return static_cast<DMError>(reply.ReadInt32());
 }
 
 DMError ScreenSessionManagerProxy::SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat)

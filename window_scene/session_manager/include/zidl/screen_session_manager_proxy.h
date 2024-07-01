@@ -41,8 +41,8 @@ public:
     virtual DMError GetScreenGamutMap(ScreenId screenId, ScreenGamutMap& gamutMap) override;
     virtual DMError SetScreenGamutMap(ScreenId screenId, ScreenGamutMap gamutMap) override;
     virtual DMError SetScreenColorTransform(ScreenId screenId) override;
+    virtual DMError SetScreenColorTransformTest(ScreenId screenId) override;
 
-    DMError GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat) override;
     DMError SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat) override;
     DMError GetSupportedHDRFormats(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats) override;
     DMError GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat) override;
