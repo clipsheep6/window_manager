@@ -868,29 +868,29 @@ napi_value JsSceneSessionManager::OnRegisterCallback(napi_env env, napi_callback
     if (listenFuncTypeMap_.count(cbType) != 0) {
         listenerFuncType = listenFuncTypeMap_[cbType];
     }
-    switch (static_cast<int>(listenerFuncType)) {
-        case static_cast<int>(ListenerFuncionType::CREATE_SYSTEM_SESSION_CB):
+    switch (static_cast<uint32_t>(listenerFuncType)) {
+        case static_cast<uint32_t>(ListenerFuncionType::CREATE_SYSTEM_SESSION_CB):
             ProcessCreateSystemSessionRegister();
             break;
-        case static_cast<int>(ListenerFuncionType::CREATE_KEYBOARD_SESSION_CB):
+        case static_cast<uint32_t>(ListenerFuncionType::CREATE_KEYBOARD_SESSION_CB):
             ProcessCreateKeyboardSessionRegister();
             break;
-        case static_cast<int>(ListenerFuncionType::RECOVER_SCENE_SESSION_CB):
+        case static_cast<uint32_t>(ListenerFuncionType::RECOVER_SCENE_SESSION_CB):
             ProcessRecoverSceneSessionRegister();
             break;
-        case static_cast<int>(ListenerFuncionType::STATUS_BAR_ENABLED_CHANGE_CB):
+        case static_cast<uint32_t>(ListenerFuncionType::STATUS_BAR_ENABLED_CHANGE_CB):
             ProcessStatusBarEnabledChangeListener();
             break;
-        case static_cast<int>(ListenerFuncionType::OUTSIDE_DOWN_EVENT_CB):
+        case static_cast<uint32_t>(ListenerFuncionType::OUTSIDE_DOWN_EVENT_CB):
             ProcessOutsideDownEvent();
             break;
-        case static_cast<int>(ListenerFuncionType::SHIFT_FOCUS_CB):
+        case static_cast<uint32_t>(ListenerFuncionType::SHIFT_FOCUS_CB):
             ProcessShiftFocus();
             break;
-        case static_cast<int>(ListenerFuncionType::START_UI_ABILITY_ERROR):
+        case static_cast<uint32_t>(ListenerFuncionType::START_UI_ABILITY_ERROR):
             ProcessStartUIAbilityErrorRegister();
             break;
-        case static_cast<int>(ListenerFuncionType::GESTURE_NAVIGATION_ENABLED_CHANGE_CB):
+        case static_cast<uint32_t>(ListenerFuncionType::GESTURE_NAVIGATION_ENABLED_CHANGE_CB):
             ProcessGestureNavigationEnabledChangeListener();
             break;
         default:
