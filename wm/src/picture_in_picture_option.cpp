@@ -45,7 +45,7 @@ void PipOption::SetPiPControlStatus(PiPControlType controlType, PiPControlStatus
             return;
         }
     }
-    PiPControlEnableInfo newPiPControlStatusInfo {controlType, status};
+    PiPControlStatusInfo newPiPControlStatusInfo {controlType, status};
     pipControlStatusInfoList_.push_back(newPiPControlStatusInfo);
 }
 
