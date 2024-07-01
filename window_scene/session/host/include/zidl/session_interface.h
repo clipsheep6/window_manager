@@ -89,8 +89,7 @@ public:
 
     // PictureInPicture
     virtual void NotifyPiPWindowPrepareClose() {}
-    virtual WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
-        { return WSError::WS_OK; }
+    virtual WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason) { return WSError::WS_OK; }
     virtual WSError UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
     {
         return WSError::WS_OK;

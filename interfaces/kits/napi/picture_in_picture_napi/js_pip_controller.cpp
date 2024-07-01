@@ -65,14 +65,14 @@ JsPipController::JsPipController(const sptr<PictureInPictureController>& pipCont
     : pipController_(pipController), env_(env)
 {
     registerFunc_ = {
-        { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeRegister},
-        { CONTROL_PANEL_ACTION_EVENT_CB, &JsPipController::ProcessActionEventRegister},
-        { CONTROL_EVENT_CB, &JsPipController::ProcessControlEventRegister},
+        { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeRegister },
+        { CONTROL_PANEL_ACTION_EVENT_CB, &JsPipController::ProcessActionEventRegister },
+        { CONTROL_EVENT_CB, &JsPipController::ProcessControlEventRegister },
     };
     unRegisterFunc_ = {
-        { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeUnRegister},
-        { CONTROL_PANEL_ACTION_EVENT_CB, &JsPipController::ProcessActionEventUnRegister},
-        { CONTROL_EVENT_CB, &JsPipController::ProcessControlEventUnRegister},
+        { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeUnRegister },
+        { CONTROL_PANEL_ACTION_EVENT_CB, &JsPipController::ProcessActionEventUnRegister },
+        { CONTROL_EVENT_CB, &JsPipController::ProcessControlEventUnRegister },
     };
 }
 
@@ -245,7 +245,7 @@ napi_value JsPipController::UpdatePiPControlStatus(napi_env env, napi_callback_i
 
 napi_value JsPipController::OnUpdatePiPControlStatus(napi_env env, napi_callback_info info)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "OnUpdatePiPControlStatus is called");
+    TLOGI(WmsLogTag::WMS_PIP, "called");
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
@@ -254,7 +254,7 @@ napi_value JsPipController::OnUpdatePiPControlStatus(napi_env env, napi_callback
         return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
     }
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    std::string errMsg = "";
+    std::string errMsg;
     if (!ConvertFromJsValue(env, argv[0], controlType)) {
         errMsg = "Failed to convert parameter to int or controlType < 0";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
@@ -266,12 +266,12 @@ napi_value JsPipController::OnUpdatePiPControlStatus(napi_env env, napi_callback
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     if (pipController_ == nullptr) {
         errMsg = "OnUpdatePiPControlStatus error, controller is nullptr";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
-    std::lock_guard<std::mutex> lock(mtx_);
     pipController_->UpdatePiPControlStatus(controlType, status);
     return NapiGetUndefined(env);
 }
@@ -293,7 +293,7 @@ napi_value JsPipController::OnSetPiPControlEnabled(napi_env env, napi_callback_i
         return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
     }
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    std::string errMsg = "";
+    std::string errMsg;
     if (!ConvertFromJsValue(env, argv[0], controlType)) {
         errMsg = "Failed to convert parameter to int";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
@@ -305,12 +305,12 @@ napi_value JsPipController::OnSetPiPControlEnabled(napi_env env, napi_callback_i
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     if (pipController_ == nullptr) {
         errMsg = "OnSetPiPControlEnabled error, controller is nullptr";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
-    std::lock_guard<std::mutex> lock(mtx_);
     pipController_->UpdatePiPControlStatus(controlType, enabled ?
         PiPControlStatus::ENABLED : PiPControlStatus::DISABLED);
     return NapiGetUndefined(env);
@@ -457,7 +457,7 @@ void JsPipController::ProcessControlEventUnRegister()
         return;
     }
     pipController_->SetPictureInPictureControlObserver(nullptr);
-    TLOGE(WmsLogTag::WMS_PIP, "UnRegister control event success");
+    TLOGI(WmsLogTag::WMS_PIP, "UnRegister control event success");
 }
 
 napi_value JsPipController::UnregisterCallback(napi_env env, napi_callback_info info)
@@ -582,10 +582,9 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
 void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, statusCode:%{public}d", controlType, statusCode);
-    std::lock_guard<std::mutex> lock(mtx_);
     auto jsCallback = jsCallBack_;
     std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [jsCallback, controlType, statusCode] (napi_env env, NapiAsyncTask &task, int32_t status) {
+        [jsCallback, controlType, statusCode](napi_env env, NapiAsyncTask& task, int32_t status) {
             napi_value argv[2] = {CreateJsValue(env, controlType), CreateJsValue(env, statusCode)};
             CallJsMethod(env, jsCallback->GetNapiValue(), argv, ArraySize(argv));
         }

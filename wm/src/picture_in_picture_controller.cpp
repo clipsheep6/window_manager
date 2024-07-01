@@ -552,7 +552,9 @@ void PictureInPictureController::DoActionEvent(const std::string& actionName, in
     }
     SingletonContainer::Get<PiPReporter>().ReportPiPActionEvent(pipOption_->GetPipTemplate(), actionName);
     pipActionObserver_->OnActionEvent(actionName, status);
-    pipOption_->SetPiPControlStatus(CONTROL_TYPE_MAP[actionName], static_cast<PiPControlStatus>(status));
+    if (CONTROL_TYPE_MAP.find() != CONTROL_TYPE_MAP.end()) {
+        pipOption_->SetPiPControlStatus(CONTROL_TYPE_MAP[actionName], static_cast<PiPControlStatus>(status));
+    }
 }
 
 void PictureInPictureController::PreRestorePictureInPicture()

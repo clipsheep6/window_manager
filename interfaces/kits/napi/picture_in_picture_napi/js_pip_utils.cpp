@@ -172,6 +172,10 @@ static napi_value ExportControlStatus(napi_env env)
 {
     napi_value result = nullptr;
     napi_create_object(env, &result);
+    if (result == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "Failed to get object");
+        return nullptr;
+    }
     (void)SetNamedProperty(env, result, "PLAY",
         static_cast<int32_t>(PiPControlStatus::PLAY));
     (void)SetNamedProperty(env, result, "PAUSE",
@@ -192,6 +196,10 @@ static napi_value ExportControlType(napi_env env)
 {
     napi_value result = nullptr;
     napi_create_object(env, &result);
+    if (result == nullptr) {
+        TLOGE(WmsLogTag::WMS_PIP, "Failed to get object");
+        return nullptr;
+    }
     (void)SetNamedProperty(env, result, "VIDEO_PLAY_PAUSE",
         static_cast<uint32_t>(PiPControlType::VIDEO_PLAY_PAUSE));
     (void)SetNamedProperty(env, result, "VIDEO_PREVIOUS",

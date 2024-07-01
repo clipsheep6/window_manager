@@ -794,7 +794,7 @@ void SceneSession::SetSessionPiPControlStatusChangeCallback(const NotifySessionP
         session->sessionPiPControlStatusChangeFunc_ = func;
         return WSError::WS_OK;
     };
-    PostTask(task, "SetSessionPiPControlStatusChangeCallback");
+    PostTask(task, __func__);
 }
 
 void SceneSession::UpdateSessionRectInner(const WSRect& rect, const SizeChangeReason& reason)
@@ -3278,14 +3278,17 @@ WSError SceneSession::UpdatePiPControlStatus(PiPControlType controlType, PiPCont
     auto task = [weakThis = wptr(this), controlType, status, callingPid]() {
         auto session = weakThis.promote();
         if (!session || session->isTerminating) {
-            TLOGE(WmsLogTag::WMS_PIP, "SceneSession::UpdatePiPControlStatus session is null or is terminating");
+            TLOGE(WmsLogTag::WMS_PIP, "session is null or is terminating");
             return WSError::WS_ERROR_INVALID_OPERATION;
         }
         if (callingPid != session->GetCallingPid()) {
             TLOGW(WmsLogTag::WMS_PIP, "permission denied, not call by the same process");
             return WSError::WS_ERROR_INVALID_PERMISSION;
         }
-        session->NotifySessionPiPControlStatusChange(controlType, status);
+        if (session->sessionPiPControlStatusChangeFunc_) {
+            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::UpdatePiPControlStatus");
+            session->sessionPiPControlStatusChangeFunc_(controlType, status);
+        }
         return WSError::WS_OK;
     };
     PostTask(task, "UpdatePiPControlStatus");
