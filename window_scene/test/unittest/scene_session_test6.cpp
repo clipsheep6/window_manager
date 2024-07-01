@@ -92,19 +92,19 @@ HWTEST_F(SceneSessionTest6, CheckKeyEventDispatch, Function | SmallTest | Level2
     sysSession->winRect_ = rect;
     sysSession->SetVisible(false);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
-    ASSERT_EQ(ret,false);
+    ASSERT_EQ(ret, false);
 
     sysSession->SetVisible(true);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
-    ASSERT_EQ(ret,false);
+    ASSERT_EQ(ret, false);
 
     sysSession->winRect_.width_ = 1;
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
-    ASSERT_EQ(ret,false);
+    ASSERT_EQ(ret, false);
 
     sysSession->winRect_.height_ = 1;
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
-    ASSERT_EQ(ret,false);
+    ASSERT_EQ(ret, false);
 }
 
 /**
@@ -142,16 +142,16 @@ HWTEST_F(SceneSessionTest6, CheckKeyEventDispatch2, Function | SmallTest | Level
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     parentSession->SetSessionState(SessionState::STATE_DISCONNECT);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
-    ASSERT_EQ(ret,false);
+    ASSERT_EQ(ret, false);
 
     parentSession->SetSessionState(SessionState::STATE_ACTIVE);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
-    ASSERT_EQ(ret,false);
+    ASSERT_EQ(ret, false);
 
     parentSession->SetSessionState(SessionState::STATE_DISCONNECT);
     sysSession->SetSessionState(SessionState::STATE_ACTIVE);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
-    ASSERT_EQ(ret,false);
+    ASSERT_EQ(ret, false);
     
     parentSession->SetSessionState(SessionState::STATE_ACTIVE);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
