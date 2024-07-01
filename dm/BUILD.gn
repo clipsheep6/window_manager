@@ -132,12 +132,13 @@ ohos_shared_library("libdm") {
   external_deps = [
     "ability_runtime:ability_manager",
     "c_utils:utils",
-    "graphic_2d:librender_service_client",
     "hilog:libhilog",
     "image_framework:image_native",
     "ipc:ipc_single",
     "samgr:samgr_proxy",
   ]
+
+  public_external_deps += [ "graphic_2d:librender_service_client" ]
 
   innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"
