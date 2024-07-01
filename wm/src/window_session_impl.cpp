@@ -3170,7 +3170,9 @@ void WindowSessionImpl::UpdatePiPControlStatus(PiPControlType controlType, PiPCo
         TLOGE(WmsLogTag::WMS_PIP, "HostSession is invalid");
         return;
     }
-    hostSession_->UpdatePiPControlStatus(controlType, status);
+    auto hostSession = GetHostSession();
+    CHECK_HOST_SESSION_RETURN_IF_NULL(hostSession);
+    hostSession->UpdatePiPControlStatus(controlType, status);
 }
 
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)

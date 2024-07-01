@@ -1317,7 +1317,6 @@ HWTEST_F(SceneSessionTest2, SetPiPControlEvent, Function | SmallTest | Level2)
     auto sessionStage_ = sptr<SessionStageMocker>::MakeSptr();
     ASSERT_NE(sessionStage_, nullptr);
 
-    property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     property->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
     sceneSession->SetSessionProperty(property);

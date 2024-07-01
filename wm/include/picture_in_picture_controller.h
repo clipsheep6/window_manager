@@ -85,7 +85,7 @@ public:
     void LocateSource();
     void SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener);
     void SetPictureInPictureActionObserver(sptr<IPiPActionObserver> listener);
-    void SetPictureInPictureControlObserver(sptr<IPiPControlObserver> listener);
+    void SetPictureInPictureControlObserver(const IPiPControlObserver& listener);
     sptr<IPiPLifeCycle> GetPictureInPictureLifecycle() const;
     sptr<IPiPActionObserver> GetPictureInPictureActionObserver() const;
     sptr<IPiPControlObserver> GetPictureInPictureControlObserver() const;

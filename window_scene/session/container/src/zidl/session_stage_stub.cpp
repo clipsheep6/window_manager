@@ -394,7 +394,7 @@ int SessionStageStub::HandleSetPipActionEvent(MessageParcel& data, MessageParcel
 
 int SessionStageStub::HandleSetPiPControlEvent(MessageParcel& data, MessageParcel& reply)
 {
-    TLOGD(WmsLogTag::WMS_PIP, "HandleSetPiPControlEvent is called");
+    TLOGD(WmsLogTag::WMS_PIP, "called");
     uint32_t controlType;
     if (!data.ReadUint32(controlType)) {
         return ERR_INVALID_VALUE;

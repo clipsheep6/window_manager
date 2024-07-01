@@ -50,10 +50,10 @@ public:
  *
  * @brief Pip control observer.
  */
-    class IPiPControlObserver : virtual public RefBase {
-    public:
-        virtual void OnControlEvent(PiPControlType controlType, PiPControlStatus status) {}
-    };
+class IPiPControlObserver : virtual public RefBase {
+public:
+    virtual void OnControlEvent(PiPControlType controlType, PiPControlStatus status) {}
+};
 } // namespace Rosen
 } // namespace OHOS
 #endif //OHOS_PICTURE_IN_PICTURE_INTERFACE_H

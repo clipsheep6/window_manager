@@ -321,7 +321,7 @@ HWTEST_F(SessionStageProxyTest, SetPipActionEvent, Function | SmallTest | Level1
  */
 HWTEST_F(SessionStageProxyTest, SetPiPControlEvent, Function | SmallTest | Level1)
 {
-    ASSERT_TRUE((sessionStage_ != nullptr));
+    ASSERT_TRUE(sessionStage_ != nullptr);
     auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
     auto status = PiPControlStatus::PLAY;
     sessionStage_->SetPiPControlEvent(controlType, status);

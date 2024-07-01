@@ -646,13 +646,13 @@ int SessionStub::HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply)
 
 int SessionStub::HandleUpdatePiPControlStatus(MessageParcel& data, MessageParcel& reply)
 {
-    TLOGI(WmsLogTag::WMS_PIP, "HandleUpdatePiPControlStatus is called");
+    TLOGI(WmsLogTag::WMS_PIP, "called");
     uint32_t controlType = 0;
     int32_t status = 0;
     if (data.ReadUint32(controlType) && data.ReadInt32(status)) {
         WSError errCode = UpdatePiPControlStatus(static_cast<PiPControlType>(controlType),
             static_cast<PiPControlStatus>(status));
-        reply.WriteUint32(static_cast<uint32_t>(errCode));
+        reply.WriteInt32(static_cast<int32_t>(errCode));
         return ERR_NONE;
     } else {
         return ERR_INVALID_DATA;
