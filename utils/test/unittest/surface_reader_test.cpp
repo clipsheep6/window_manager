@@ -16,13 +16,14 @@
 #include "surface_reader.h"
 #include <gtest/gtest.h>
 #include <unistd.h>
+#include "surface_reader_handler_impl.h"
 
 using namespace testing;
 using namespace testing::ext;
 namespace OHOS {
 namespace Rosen {
 class SurfaceReaderTest : public testing::Test {
-  public:
+public:
     SurfaceReaderTest() {}
     ~SurfaceReaderTest() {}
 };
@@ -36,11 +37,46 @@ namespace {
 HWTEST_F(SurfaceReaderTest, Init, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "SurfaceReaderTest: Init start";
-    SurfaceReader* reader = new(std::nothrow) SurfaceReader();
+    SurfaceReader* reader = new (std::nothrow) SurfaceReader();
     bool res = reader->Init();
     ASSERT_EQ(res, true);
     GTEST_LOG_(INFO) << "SurfaceReaderTest: Init end";
 }
+
+
+/**
+ * @tc.name: OnVsync
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SurfaceReaderTest, OnVsync, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: OnVsync start";
+    SurfaceReader* reader = new(std::nothrow) SurfaceReader();
+    bool res = reader->Init();
+    ASSERT_EQ(res, true);
+    reader->OnVsync();
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: OnVsync end";
+}
+
+/**
+ * @tc.name: ProcessBuffer
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SurfaceReaderTest, ProcessBuffer, Function | SmallTest | Level2)
+{
+    SurfaceReader surfaceReader;
+    surfaceReader.Init();
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer start";
+    sptr<SurfaceBuffer> cbuffer = nullptr;
+    sptr<SurfaceReaderHandlerImpl> handler = nullptr;
+    surfaceReader.SetHandler(handler);
+    ASSERT_FALSE(surfaceReader.ProcessBuffer(cbuffer));
+    GTEST_LOG_(INFO) << "SurfaceReaderTest: ProcessBuffer end";
+}
+
+
 } // namespace
 }
 }
