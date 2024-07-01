@@ -742,7 +742,7 @@ WSError SessionStageProxy::SetPipActionEvent(const std::string& action, int32_t 
     return WSError::WS_OK;
 }
 
-WSError SessionStageProxy::SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status)
+WSError SessionStageProxy::SetPiPControlEvent(WsPiPControlType controlType, WsPiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
     MessageParcel data;

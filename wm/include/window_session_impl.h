@@ -29,6 +29,7 @@
 #include "singleton_container.h"
 
 #include "common/include/window_session_property.h"
+#include "interfaces/include/ws_common.h"
 #include "interfaces/include/ws_common_inner.h"
 #include "session/container/include/zidl/session_stage_stub.h"
 #include "session/host/include/zidl/session_interface.h"
@@ -209,7 +210,7 @@ public:
     WSError SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status) override;
 
     void UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason) override;
-    void UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status) override;
+    void UpdatePiPControlStatus(WsPiPControlType controlType, WsPiPControlStatus status) override;
     void SetDrawingContentState(bool drawingContentState);
     WMError RegisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;
     WMError UnregisterWindowStatusChangeListener(const sptr<IWindowStatusChangeListener>& listener) override;

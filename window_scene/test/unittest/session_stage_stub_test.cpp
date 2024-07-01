@@ -28,7 +28,7 @@
 #include "session_manager/include/zidl/scene_session_manager_interface.h"
 #include "window_manager.h"
 #include "window_manager_agent.h"
-#include "wm_common.h"
+#include "ws_common.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "window_manager_hilog.h"
 
@@ -444,8 +444,8 @@ HWTEST_F(SessionStageStubTest, HandleSetPiPControlEvent, Function | SmallTest | 
 {
     MessageParcel data;
     MessageParcel reply;
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus::PLAY;
+    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = WsPiPControlStatus::PLAY;
     data.WriteUint32(static_cast<uint32_t>(controlType));
     data.WriteInt32(static_cast<int32_t>(status));
     ASSERT_TRUE(sessionStageStub_ != nullptr);

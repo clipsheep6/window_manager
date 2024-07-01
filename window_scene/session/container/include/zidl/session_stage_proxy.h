@@ -21,8 +21,7 @@
 
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
-#include "wm_common.h"
-
+#include "ws_common.h"
 namespace OHOS::Rosen {
 class SessionStageProxy : public IRemoteProxy<ISessionStage> {
 public:
@@ -60,7 +59,7 @@ public:
     void NotifyTransformChange(const Transform& transform) override;
     WSError NotifyDialogStateChange(bool isForeground) override;
     WSError SetPipActionEvent(const std::string& action, int32_t status) override;
-    WSError SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status) override;
+    WSError SetPiPControlEvent(WsPiPControlType controlType, WsPiPControlStatus status) override;
     WSError UpdateDisplayId(uint64_t displayId) override;
     void NotifyDisplayMove(DisplayId from, DisplayId to) override;
     WSError SwitchFreeMultiWindow(bool enable) override;

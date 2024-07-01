@@ -650,8 +650,8 @@ int SessionStub::HandleUpdatePiPControlStatus(MessageParcel& data, MessageParcel
     uint32_t controlType = 0;
     int32_t status = 0;
     if (data.ReadUint32(controlType) && data.ReadInt32(status)) {
-        WSError errCode = UpdatePiPControlStatus(static_cast<PiPControlType>(controlType),
-            static_cast<PiPControlStatus>(status));
+        WSError errCode = UpdatePiPControlStatus(static_cast<WsPiPControlType>(controlType),
+            static_cast<WsPiPControlStatus>(status));
         reply.WriteInt32(static_cast<int32_t>(errCode));
         return ERR_NONE;
     } else {

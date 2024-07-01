@@ -50,8 +50,8 @@ using GetAINavigationBarArea = std::function<WSRect(uint64_t displayId)>;
 using RecoveryCallback = std::function<void(int32_t persistentId, Rect rect)>;
 using NotifyBindDialogSessionFunc = std::function<void(const sptr<SceneSession>& session)>;
 using NotifySessionRectChangeFunc = std::function<void(const WSRect& rect, const SizeChangeReason& reason)>;
-using NotifySessionPiPControlStatusChangeFunc = std::function<void(PiPControlType controlType,
-    PiPControlStatus status)>;
+using NotifySessionPiPControlStatusChangeFunc = std::function<void(WsPiPControlType controlType,
+    WsPiPControlStatus status)>;
 using NotifySessionEventFunc = std::function<void(int32_t eventId, SessionEventParam param)>;
 using NotifySessionTopmostChangeFunc = std::function<void(const bool topmost)>;
 using NotifyRaiseToTopFunc = std::function<void()>;
@@ -192,7 +192,7 @@ public:
     void SetFloatingScale(float floatingScale) override;
     WSError RaiseAboveTarget(int32_t subWindowId) override;
     WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason) override;
-    WSError UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status) override;
+    WSError UpdatePiPControlStatus(WsPiPControlType controlType, WsPiPControlStatus status) override;
     void NotifyPiPWindowPrepareClose() override;
     void SetScale(float scaleX, float scaleY, float pivotX, float pivotY) override;
     void RequestHideKeyboard(bool isAppColdStart = false);
@@ -286,7 +286,7 @@ public:
     void SetIsSystemSpecificSession(bool isSystemSpecificSession);
     void SetShouldHideNonSecureWindows(bool shouldHide);
     WSError SetPipActionEvent(const std::string& action, int32_t status);
-    WSError SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status);
+    WSError SetPiPControlEvent(WsPiPControlType controlType, WsPiPControlStatus status);
     void UpdateExtWindowFlags(int32_t extPersistentId, const ExtensionWindowFlags& extWindowFlags,
         const ExtensionWindowFlags& extWindowActions);
     ExtensionWindowFlags GetCombinedExtWindowFlags();
@@ -362,7 +362,6 @@ private:
     void RotateDragWindow(std::shared_ptr<RSTransaction> rsTransaction);
 #endif // DEVICE_STATUS_ENABLE
     void NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
-    void NotifySessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status);
     void OnMoveDragCallback(const SizeChangeReason& reason);
     void FixRectByLimits(WindowLimits limits, WSRect& rect, float ratio, bool isDecor, float vpr);
     bool FixRectByAspectRatio(WSRect& rect);

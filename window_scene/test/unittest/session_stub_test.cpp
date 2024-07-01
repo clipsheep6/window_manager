@@ -23,7 +23,7 @@
 #include "parcel/accessibility_event_info_parcel.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "want.h"
-#include "wm_common.h"
+#include "ws_common.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -249,8 +249,8 @@ HWTEST_F(SessionStubTest, HandleUpdatePiPControlStatus, Function | SmallTest | L
     ASSERT_NE(session_, nullptr);
     MessageParcel data;
     MessageParcel reply;
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus::PLAY;
+    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = WsPiPControlStatus::PLAY;
     data.WriteUint32(static_cast<uint32_t>(controlType));
     data.WriteInt32(static_cast<int32_t>(status));
     auto res = session_->HandleUpdatePiPControlStatus(data, reply);

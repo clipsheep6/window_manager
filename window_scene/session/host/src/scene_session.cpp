@@ -1286,7 +1286,7 @@ WSError SceneSession::SetPipActionEvent(const std::string& action, int32_t statu
     return sessionStage_->SetPipActionEvent(action, status);
 }
 
-WSError SceneSession::SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status)
+WSError SceneSession::SetPiPControlEvent(WsPiPControlType controlType, WsPiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType: %{public}u, status: %{public}u", controlType, status);
     if (GetWindowType() != WindowType::WINDOW_TYPE_PIP || GetWindowMode() != WindowMode::WINDOW_MODE_PIP) {
@@ -1621,23 +1621,6 @@ void SceneSession::NotifySessionRectChange(const WSRect& rect, const SizeChangeR
         }
     };
     PostTask(task, "NotifySessionRectChange" + GetRectInfo(rect));
-}
-
-void SceneSession::NotifySessionPiPControlStatusChange(PiPControlType controlType, PiPControlStatus status)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
-    auto task = [weakThis = wptr(this), controlType, status]() {
-        auto session = weakThis.promote();
-        if (!session) {
-            TLOGE(WmsLogTag::WMS_PIP, "session is null");
-            return;
-        }
-        if (session->sessionPiPControlStatusChangeFunc_) {
-            HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "SceneSession::NotifySessionPiPControlStatusChange");
-            session->sessionPiPControlStatusChangeFunc_(controlType, status);
-        }
-    };
-    PostTask(task, "NotifySessionPiPControlStatusChange");
 }
 
 bool SceneSession::IsDecorEnable() const
@@ -3268,7 +3251,7 @@ WSError SceneSession::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
     return WSError::WS_OK;
 }
 
-WSError SceneSession::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
+WSError SceneSession::UpdatePiPControlStatus(WsPiPControlType controlType, WsPiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, status:%{public}d", controlType, status);
     if (!WindowHelper::IsPipWindow(GetWindowType())) {
