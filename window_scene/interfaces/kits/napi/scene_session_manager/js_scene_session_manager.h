@@ -87,7 +87,7 @@ public:
     static napi_value UpdateDisplayHookInfo(napi_env env, napi_callback_info info);
 
 private:
-    enum class ListenerFuncionType : uint32_t {
+    enum class ListenerFuncionType {
         CREATE_SYSTEM_SESSION_CB,
         CREATE_KEYBOARD_SESSION_CB,
         RECOVER_SCENE_SESSION_CB,
