@@ -37,7 +37,7 @@ public:
         CaseType caseType, napi_env env, napi_value value);
 
 private:
-    enum class ListenerType {
+    enum class ListenerType : uint32_t {
         WINDOW_SIZE_CHANGE_CB,
         AVOID_AREA_CHANGE_CB,
         WINDOW_EVENT_CB,

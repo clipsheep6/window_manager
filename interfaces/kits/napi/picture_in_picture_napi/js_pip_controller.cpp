@@ -275,11 +275,11 @@ WmErrorCode JsPipController::RegisterListenerWithType(napi_env env, const std::s
     callbackRef.reset(reinterpret_cast<NativeReference*>(result));
     jsCbMap_[type] = callbackRef;
     
-    switch (static_cast<uint32_t>(listenerCodeMap_[type])) {
-        case static_cast<uint32_t>(ListenerType::STATE_CHANGE_CB):
+    switch (listenerCodeMap_[type]) {
+        case ListenerType::STATE_CHANGE_CB:
             ProcessStateChangeRegister();
             break;
-        case static_cast<uint32_t>(ListenerType::CONTROL_PANEL_ACTION_EVENT_CB):
+        case ListenerType::CONTROL_PANEL_ACTION_EVENT_CB:
             ProcessActionEventRegister();
             break;
         default:
@@ -390,11 +390,11 @@ WmErrorCode JsPipController::UnRegisterListenerWithType(napi_env env, const std:
     }
     jsCbMap_.erase(type);
     
-    switch (static_cast<uint32_t>(listenerCodeMap_[type])) {
-        case static_cast<uint32_t>(ListenerType::STATE_CHANGE_CB):
+    switch (listenerCodeMap_[type]) {
+        case ListenerType::STATE_CHANGE_CB:
             ProcessStateChangeUnRegister();
             break;
-        case static_cast<uint32_t>(ListenerType::CONTROL_PANEL_ACTION_EVENT_CB):
+        case ListenerType::CONTROL_PANEL_ACTION_EVENT_CB:
             ProcessActionEventUnRegister();
             break;
         default:

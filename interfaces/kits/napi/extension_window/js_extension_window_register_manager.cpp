@@ -203,14 +203,14 @@ WmErrorCode JsExtensionWindowRegisterManager::ProcessRegister(CaseType caseType,
 {
     WmErrorCode ret = WmErrorCode::WM_OK;
     if (CaseType::CASE_WINDOW == caseType) {
-        switch (static_cast<uint32_t>(listenerCodeMap_[caseType][type])) {
-            case static_cast<uint32_t>(ListenerType::WINDOW_SIZE_CHANGE_CB):
+        switch (listenerCodeMap_[caseType][type]) {
+            case ListenerType::WINDOW_SIZE_CHANGE_CB:
                 ret = ProcessWindowChangeRegister(listener, window, isRegister);
                 break;
-            case static_cast<uint32_t>(ListenerType::AVOID_AREA_CHANGE_CB):
+            case ListenerType::AVOID_AREA_CHANGE_CB:
                 ret = ProcessAvoidAreaChangeRegister(listener, window, isRegister);
                 break;
-            case static_cast<uint32_t>(ListenerType::WINDOW_EVENT_CB):
+            case ListenerType::WINDOW_EVENT_CB:
                 ret = ProcessLifeCycleEventRegister(listener, window, isRegister);
                 break;
             default:
