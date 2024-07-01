@@ -403,7 +403,7 @@ int SessionStageStub::HandleSetPiPControlEvent(MessageParcel& data, MessageParce
     if (!data.ReadInt32(status)) {
         return ERR_INVALID_VALUE;
     }
-    SetPiPControlEvent(static_cast<PiPControlType>(controlType), static_cast<PiPControlStatus>(status));
+    SetPiPControlEvent(static_cast<WsPiPControlType>(controlType), static_cast<WsPiPControlStatus>(status));
     return ERR_NONE;
 }
 

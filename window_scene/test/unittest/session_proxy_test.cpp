@@ -16,7 +16,7 @@
 #include "iremote_object_mocker.h"
 #include <gtest/gtest.h>
 #include "accessibility_event_info.h"
-#include "wm_common.h"
+#include "ws_common.h"
 
 // using namespace FRAME_TRACE;
 using namespace testing;
@@ -515,8 +515,8 @@ HWTEST_F(SessionProxyTest, UpdatePiPControlStatus, Function | SmallTest | Level2
     ASSERT_EQ(iRemoteObjectMocker, nullptr);
     auto sProxy = sptr<SessionProxy>::MakeSptr(iRemoteObjectMocker);
     ASSERT_EQ(sProxy, nullptr);
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus::PLAY;
+    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = WsPiPControlStatus::PLAY;
     WSError res = sProxy->UpdatePiPControlStatus(controlType, status);
     ASSERT_EQ(res, WSError::WS_OK);
     GTEST_LOG_(INFO) << "SessionProxyTest: UpdatePiPControlStatus end";

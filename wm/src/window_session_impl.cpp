@@ -35,7 +35,6 @@
 #include "display_info.h"
 #include "display_manager.h"
 #include "hitrace_meter.h"
-#include "interfaces/include/ws_common.h"
 #include "session_permission.h"
 #include "key_event.h"
 #include "session/container/include/window_event_channel.h"
@@ -2486,11 +2485,11 @@ WSError WindowSessionImpl::SetPipActionEvent(const std::string& action, int32_t 
     return WSError::WS_OK;
 }
 
-WSError WindowSessionImpl::SetPiPControlEvent(PiPControlType controlType, PiPControlStatus status)
+WSError WindowSessionImpl::SetPiPControlEvent(WsPiPControlType controlType, WsPiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
     auto task = [controlType, status]() {
-        PictureInPictureManager::DoControlEvent(controlType, status);
+        PictureInPictureManager::DoControlEvent(static_cast<PiPControlType>(controlType), static_cast<PiPControlStatus>(status));
     };
     handler_->PostTask(task, "WMS_WindowSessionImpl_SetPiPControlEvent");
     return WSError::WS_OK;
@@ -3172,7 +3171,8 @@ void WindowSessionImpl::UpdatePiPControlStatus(PiPControlType controlType, PiPCo
     }
     auto hostSession = GetHostSession();
     CHECK_HOST_SESSION_RETURN_IF_NULL(hostSession);
-    hostSession->UpdatePiPControlStatus(controlType, status);
+    hostSession->UpdatePiPControlStatus(static_cast<WsPiPControlType>(controlType),
+        static_cast<WsPiPControlStatus>(status));
 }
 
 void WindowSessionImpl::NotifyWindowStatusChange(WindowMode mode)

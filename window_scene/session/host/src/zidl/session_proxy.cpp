@@ -1056,7 +1056,7 @@ WSError SessionProxy::UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
     return static_cast<WSError>(ret);
 }
 
-WSError SessionProxy::UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
+WSError SessionProxy::UpdatePiPControlStatus(WsPiPControlType controlType, WsPiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, status:%{public}d", controlType, status);
     MessageParcel data;

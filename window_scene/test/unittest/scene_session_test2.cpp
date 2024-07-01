@@ -844,8 +844,8 @@ HWTEST_F(SceneSessionTest2, UpdatePiPControlStatus, Function | SmallTest | Level
     property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     sceneSession->SetSessionProperty(property);
 
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus::PLAY;
+    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = WsPiPControlStatus::PLAY;
     WSError result = sceneSession->UpdatePiPControlStatus(controlType, status);
     ASSERT_EQ(result, WSError::WS_OK);
 }
@@ -1309,8 +1309,8 @@ HWTEST_F(SceneSessionTest2, SetPiPControlEvent, Function | SmallTest | Level2)
     EXPECT_NE(property, nullptr);
     property->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
     sceneSession->SetSessionProperty(property);
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus::PLAY;
+    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = WsPiPControlStatus::PLAY;
     WSError res = sceneSession->SetPiPControlEvent(controlType, status);
     ASSERT_EQ(res, WSError::WS_ERROR_INVALID_TYPE);
 
