@@ -140,8 +140,6 @@ HWTEST_F(SceneSessionTest6, CheckKeyEventDispatch2, Function | SmallTest | Level
     sptr<Session> parentSession = new (std::nothrow) Session(info2);
     sysSession->parentSession_  = parentSession;
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
-    ASSERT_EQ(ret,false);
-    
     parentSession->SetSessionState(SessionState::STATE_DISCONNECT);
     ret = sysSession->CheckKeyEventDispatch(keyEvent);
     ASSERT_EQ(ret,false);

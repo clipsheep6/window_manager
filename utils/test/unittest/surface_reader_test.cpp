@@ -24,10 +24,8 @@ namespace OHOS {
 namespace Rosen {
 class SurfaceReaderTest : public testing::Test {
 public:
-    static void SetUpTestCase();
-    static void TearDownTestCase();
-    void SetUp() override;
-    void TearDown() override;
+    SurfaceReaderTest() {}
+    ~SurfaceReaderTest() {}
 };
 
 namespace {
