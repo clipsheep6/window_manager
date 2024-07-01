@@ -23,7 +23,6 @@
 #include "common/include/window_session_property.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
-#include "wm_common.h"
 
 namespace OHOS::Accessibility {
 class AccessibilityEventInfo;
@@ -90,7 +89,7 @@ public:
     // PictureInPicture
     virtual void NotifyPiPWindowPrepareClose() {}
     virtual WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason) { return WSError::WS_OK; }
-    virtual WSError UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status)
+    virtual WSError UpdatePiPControlStatus(WsPiPControlType controlType, WsPiPControlStatus status)
     {
         return WSError::WS_OK;
     }
