@@ -171,6 +171,7 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
     return (this->*(func->second))(data, reply);
 }
 
+
 int SceneSessionManagerStub::HandleCreateAndConnectSpecificSession(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleCreateAndConnectSpecificSession!");

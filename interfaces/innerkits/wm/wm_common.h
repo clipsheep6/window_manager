@@ -257,8 +257,8 @@ const std::map<WMError, WmErrorCode> WM_JS_TO_ERROR_CODE_MAP {
     {WMError::WM_ERROR_INVALID_PARAM,                  WmErrorCode::WM_ERROR_INVALID_PARAM          },
     {WMError::WM_ERROR_INVALID_PERMISSION,             WmErrorCode::WM_ERROR_NO_PERMISSION          },
     {WMError::WM_ERROR_NOT_SYSTEM_APP,                 WmErrorCode::WM_ERROR_NOT_SYSTEM_APP         },
-    {WMError::WM_ERROR_INVALID_TYPE,                   WmErrorCode::WM_ERROR_STATE_ABNORMALLY       },
-    {WMError::WM_ERROR_INVALID_WINDOW,                 WmErrorCode::WM_ERROR_STATE_ABNORMALLY       },
+    {WMError::WM_ERROR_INVALID_TYPE,                   WmErrorCode::WM_ERROR_NOT_SYSTEM_APP       },
+    {WMError::WM_ERROR_INVALID_WINDOW,                 WmErrorCode::WM_ERROR_NOT_SYSTEM_APP       },
     {WMError::WM_ERROR_INVALID_WINDOW_MODE_OR_SIZE,    WmErrorCode::WM_ERROR_STATE_ABNORMALLY       },
     {WMError::WM_ERROR_IPC_FAILED,                     WmErrorCode::WM_ERROR_SYSTEM_ABNORMALLY      },
     {WMError::WM_ERROR_NO_MEM,                         WmErrorCode::WM_ERROR_SYSTEM_ABNORMALLY      },
@@ -477,6 +477,11 @@ namespace {
 }
 
 inline int32_t GetUserIdByUid(int32_t uid)
+{
+    return uid / BASE_USER_RANGE;
+}
+
+inline int32_t GetUserIdByUid2(int32_t uid)
 {
     return uid / BASE_USER_RANGE;
 }
