@@ -15,7 +15,7 @@
 
 // gtest
 #include <gtest/gtest.h>
-#include <ability_context.h>
+#include <ability_contxt.h>
 #include "window.h"
 #include "window_option.h"
 #include "window_scene.h"
