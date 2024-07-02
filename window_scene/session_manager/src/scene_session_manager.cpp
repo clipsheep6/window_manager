@@ -7003,11 +7003,11 @@ void SceneSessionManager::ClearDisplayStatusBarTemporarilyFlags()
 WSError SceneSessionManager::GetFocusSessionToken(sptr<IRemoteObject>& token)
 {
     if (!SessionPermission::IsSACalling()) {
-        WLOGFE("GetFocusSessionToken permission denied!");
+        WLOGFE("SACalling permission denied!");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     auto task = [this, &token]() {
-        WLOGFD("GetFocusSessionToken with focusedSessionId: %{public}d", focusedSessionId_);
+        WLOGFD("with focusedSessionId: %{public}d", focusedSessionId_);
         auto sceneSession = GetSceneSession(focusedSessionId_);
         if (sceneSession) {
             token = sceneSession->GetAbilityToken();
@@ -7025,11 +7025,11 @@ WSError SceneSessionManager::GetFocusSessionToken(sptr<IRemoteObject>& token)
 WSError SceneSessionManager::GetFocusSessionElement(AppExecFwk::ElementName& element)
 {
     if (!SessionPermission::IsSystemCalling()) {
-        WLOGFE("GetFocusSessionElement permission denied!");
+        WLOGFE("SystemCalling permission denied!");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     auto task = [this, &element]() {
-        WLOGFD("GetFocusSessionElement with focusedSessionId: %{public}d", focusedSessionId_);
+        WLOGFD("with focusedSessionId: %{public}d", focusedSessionId_);
         auto sceneSession = GetSceneSession(focusedSessionId_);
         if (sceneSession) {
             auto sessionInfo = sceneSession->GetSessionInfo();
