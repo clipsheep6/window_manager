@@ -2046,8 +2046,8 @@ HWTEST_F(WindowSessionImplTest, SetPiPControlEvent, Function | SmallTest | Level
     option->SetWindowName("GetTitleButtonArea");
     auto window = sptr<WindowSessionImpl>::MakeSptr(option);
     ASSERT_NE(window, nullptr);
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = PiPControlStatus::PLAY;
+    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = WsPiPControlStatus::PLAY;
     WSError res = window->SetPiPControlEvent(controlType, status);
     ASSERT_EQ(res, WSError::WS_OK);
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetPiPControlEvent end";
