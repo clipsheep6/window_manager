@@ -22,6 +22,7 @@
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "ws_common.h"
+
 namespace OHOS::Rosen {
 class SessionStageProxy : public IRemoteProxy<ISessionStage> {
 public:

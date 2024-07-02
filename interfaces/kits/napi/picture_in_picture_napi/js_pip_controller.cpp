@@ -582,18 +582,19 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
 void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, statusCode:%{public}d", controlType, statusCode);
-    auto jsCallback = jsCallBack_;
-    std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
-        [jsCallback, controlType, statusCode](napi_env env, NapiAsyncTask& task, int32_t status) {
-            napi_value argv[2] = {CreateJsValue(env, controlType), CreateJsValue(env, statusCode)};
-            CallJsMethod(env, jsCallback->GetNapiValue(), argv, ArraySize(argv));
-        }
-    );
-
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsPipController::PiPControlObserverImpl::OnControlEvent",
-        engine_, std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
+    napi_value result = nullptr;
+    std::unique_sptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(engine_, nullptr, &result);
+    auto asyncTask = [jsCallback = jsCallBack_, controlType, statusCode, env = engine_, task = napiAsyncTask.get()]() {
+        napi_value argv[2] = {CreateJsValue(env, controlType), CreateJsValue(env, statusCode)};
+        size_t size = ArraySize(argv);
+        CallJsMethod(env, jsCallback->GetNapiValue(), argv, size);
+        delete task;
+    };
+    if (napi_status::napi_ok != napi_send_event(engine_, asyncTask, napi_eprio_high)) {
+        napiAsyncTask->Reject(engine_, CreateJsError(engine_, 1, "send event failed"));
+    } else {
+        napiAsyncTask.release();
+    }
 }
 } // namespace Rosen
 } // namespace OHOS
