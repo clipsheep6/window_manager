@@ -34,7 +34,8 @@ namespace {
 WindowCommonEvent::WindowCommonEvent()
 {
     eventCodeMap_ = {
-        {COMMON_EVENT_USER_SWITCHED, EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED},
+        {WindowCommonEvent::CommonEventAction::COMMON_EVENT_USER_SWITCHED,
+            EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED},
     };
     auto runner = AppExecFwk::EventRunner::Create(THREAD_ID);
     eventHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
