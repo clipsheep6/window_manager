@@ -265,7 +265,7 @@ void PictureInPictureManager::DoControlEvent(PiPControlType controlType, PiPCont
     if (!HasActiveController()) {
         return;
     }
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     activeController_->DoControlEvent(controlType, status);
 }
 

@@ -1314,8 +1314,8 @@ HWTEST_F(SceneSessionTest2, SetPiPControlEvent, Function | SmallTest | Level2)
     WSError res = sceneSession->SetPiPControlEvent(controlType, status);
     ASSERT_EQ(res, WSError::WS_ERROR_INVALID_TYPE);
 
-    auto sessionStage_ = sptr<SessionStageMocker>::MakeSptr();
-    ASSERT_NE(sessionStage_, nullptr);
+    auto sessionStage = sptr<SessionStageMocker>::MakeSptr();
+    ASSERT_NE(sessionStage, nullptr);
 
     property->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     property->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
