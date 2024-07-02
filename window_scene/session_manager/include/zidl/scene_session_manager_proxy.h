@@ -45,6 +45,7 @@ public:
     WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true,
         FocusChangeReason reason = FocusChangeReason::DEFAULT) override;
     WSError RaiseWindowToTop(int32_t persistentId) override;
+    virtual WSError RaiseWindowToTopTest(int32_t persistentId);
 
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
