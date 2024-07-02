@@ -7029,7 +7029,7 @@ WSError SceneSessionManager::GetFocusSessionElement(AppExecFwk::ElementName& ele
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
     auto task = [this, &element]() {
-        WLOGFD("GetFocusSessionToken with focusedSessionId: %{public}d", focusedSessionId_);
+        WLOGFD("GetFocusSessionElement with focusedSessionId: %{public}d", focusedSessionId_);
         auto sceneSession = GetSceneSession(focusedSessionId_);
         if (sceneSession) {
             auto sessionInfo = sceneSession->GetSessionInfo();
