@@ -80,8 +80,8 @@ void WindowCommonEvent::OnReceiveEvent(const EventFwk::CommonEventData& data)
     auto task = [this, data] {
         std::string action = data.GetWant().GetAction();
         WLOGI("called action = %{public}s", action.c_str());
-        switch (action) {
-            case EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED:
+        switch (static_cast<int>(action)) {
+            case static_cast<int>(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED):
                 HandleAccountSwitched(data);
                 break;
             default:
