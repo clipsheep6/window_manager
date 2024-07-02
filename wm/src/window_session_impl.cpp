@@ -2489,7 +2489,8 @@ WSError WindowSessionImpl::SetPiPControlEvent(WsPiPControlType controlType, WsPi
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
     auto task = [controlType, status]() {
-        PictureInPictureManager::DoControlEvent(static_cast<PiPControlType>(controlType), static_cast<PiPControlStatus>(status));
+        PictureInPictureManager::DoControlEvent(static_cast<PiPControlType>(controlType),
+            static_cast<PiPControlStatus>(status));
     };
     handler_->PostTask(task, "WMS_WindowSessionImpl_SetPiPControlEvent");
     return WSError::WS_OK;

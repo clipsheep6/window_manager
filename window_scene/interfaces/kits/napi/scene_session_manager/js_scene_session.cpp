@@ -674,7 +674,7 @@ void JsSceneSession::ProcessSessionRectChangeRegister()
 
 void JsSceneSession::ProcessSessionPiPControlStatusChangeRegister()
 {
-    NotifySessionPiPControlStatusChangeFunc func = [this](PiPControlType controlType, PiPControlStatus status) {
+    NotifySessionPiPControlStatusChangeFunc func = [this](WsPiPControlType controlType, WsPiPControlStatus status) {
         this->OnSessionPiPControlStatusChange(controlType, status);
     };
     auto session = weakSession_.promote();
