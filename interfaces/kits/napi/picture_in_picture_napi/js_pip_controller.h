@@ -62,8 +62,6 @@ private:
     napi_env env_;
     std::map<std::string, ListenerType> listenerCodeMap_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
-    std::mutex mtx_;
-    static std::mutex pipMutex_;
 
 public:
     class PiPLifeCycleImpl : public IPiPLifeCycle {
@@ -82,7 +80,6 @@ public:
         void OnPipListenerCallback(PiPState state, int32_t errorCode);
         napi_env engine_ = nullptr;
         std::shared_ptr<NativeReference> jsCallBack_ = nullptr;
-        std::mutex mtx_;
     };
 
     class PiPActionObserverImpl : public IPiPActionObserver {
@@ -94,7 +91,6 @@ public:
     private:
         napi_env engine_ = nullptr;
         std::shared_ptr<NativeReference> jsCallBack_ = nullptr;
-        std::mutex mtx_;
     };
 };
 } // namespace Rosen

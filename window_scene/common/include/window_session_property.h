@@ -88,8 +88,11 @@ public:
     void SetCallingSessionId(uint32_t sessionId);
     void SetPiPTemplateInfo(const PiPTemplateInfo& pipTemplateInfo);
     void SetExtensionFlag(bool isExtensionFlag);
+    void SetUIExtensionUsage(UIExtensionUsage uiExtensionUsage);
     void SetWindowMask(const std::shared_ptr<Media::PixelMap>& windowMask);
     void SetIsShaped(bool isShaped);
+    void SetCompatibleModeInPc(bool compatibleModeInPc);
+    void SetIsSupportDragInPcCompatibleMode(bool isSupportDragInPcCompatibleMode);
 
     bool GetIsNeedUpdateWindowMode() const;
     const std::string& GetWindowName() const;
@@ -136,9 +139,12 @@ public:
     uint32_t GetCallingSessionId() const;
     PiPTemplateInfo GetPiPTemplateInfo() const;
     bool GetExtensionFlag() const;
+    UIExtensionUsage GetUIExtensionUsage() const;
     std::shared_ptr<Media::PixelMap> GetWindowMask() const;
     bool GetIsShaped() const;
     KeyboardLayoutParams GetKeyboardLayoutParams() const;
+    bool GetCompatibleModeInPc() const;
+    bool GetIsSupportDragInPcCompatibleMode() const;
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
     static void UnmarshallingWindowLimits(Parcel& parcel, WindowSessionProperty* property);
@@ -274,12 +280,15 @@ private:
     std::function<void()> touchHotAreasChangeCallback_;
     bool isLayoutFullScreen_ = false;
     bool isExtensionFlag_ = false;
+    UIExtensionUsage uiExtensionUsage_ { UIExtensionUsage::MODAL };
 
     bool isShaped_ = false;
     std::shared_ptr<Media::PixelMap> windowMask_ = nullptr;
     int32_t collaboratorType_ = CollaboratorType::DEFAULT_TYPE;
     static const std::map<uint32_t, HandlWritePropertyFunc> writeFuncMap_;
     static const std::map<uint32_t, HandlReadPropertyFunc> readFuncMap_;
+    bool compatibleModeInPc_ = false;
+    bool isSupportDragInPcCompatibleMode_ = false;
 };
 
 struct FreeMultiWindowConfig : public Parcelable {

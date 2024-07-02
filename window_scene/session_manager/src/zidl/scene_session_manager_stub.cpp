@@ -861,7 +861,31 @@ int SceneSessionManagerStub::HandleAddExtensionWindowStageToSCB(MessageParcel& d
     }
     int32_t persistentId = data.ReadInt32();
     int32_t parentId = data.ReadInt32();
-    AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId);
+    UIExtensionUsage usage = static_cast<UIExtensionUsage>(data.ReadUint32());
+    AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId, usage);
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleUpdateModalExtensionRect(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t persistentId = data.ReadInt32();
+    int32_t parentId = data.ReadInt32();
+    int32_t rectX = data.ReadInt32();
+    int32_t rectY = data.ReadInt32();
+    int32_t rectWidth = data.ReadInt32();
+    int32_t rectHeight = data.ReadInt32();
+    Rect windowRect{rectX, rectY, rectWidth, rectHeight};
+    UpdateModalExtensionRect(persistentId, parentId, windowRect);
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleProcessModalExtensionPointDown(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t persistentId = data.ReadInt32();
+    int32_t parentId = data.ReadInt32();
+    int32_t posX = data.ReadInt32();
+    int32_t posY = data.ReadInt32();
+    ProcessModalExtensionPointDown(persistentId, parentId, posX, posY);
     return ERR_NONE;
 }
 

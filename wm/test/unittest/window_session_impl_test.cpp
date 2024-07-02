@@ -1243,6 +1243,13 @@ HWTEST_F(WindowSessionImplTest, NotifyAfterUnfocused, Function | SmallTest | Lev
     window->NotifyAfterUnfocused(true);
     window->NotifyAfterUnfocused(false);
     ASSERT_EQ(res, 0);
+
+    // GetUIContentSharedPtr!=nullptr
+    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
+    window->InitUIContent("NotifyAfterUnfocused", nullptr, nullptr, WindowSetUIContentType::DEFAULT,
+                          BackupAndRestoreType::NONE, nullptr, aceRet);
+    window->NotifyAfterUnfocused(true);
+    ASSERT_NE(window->GetUIContentSharedPtr(), nullptr);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyAfterUnfocused end";
 }
@@ -1294,6 +1301,24 @@ HWTEST_F(WindowSessionImplTest, NotifyBeforeDestroy, Function | SmallTest | Leve
     window->handler_ = nullptr;
     window->NotifyBeforeDestroy(windowName);
     ASSERT_EQ(res, 0);
+
+    // uiContent!=nullptr
+    OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
+    window->InitUIContent("NotifyAfterUnfocused", nullptr, nullptr, WindowSetUIContentType::DEFAULT,
+                          BackupAndRestoreType::NONE, nullptr, aceRet);
+    ASSERT_NE(window->uiContent_, nullptr);
+    window->NotifyBeforeDestroy(windowName);
+    ASSERT_EQ(window->uiContent_, nullptr);
+
+    // notifyNativeFunc_!=nullptr
+    NotifyNativeWinDestroyFunc func = [&](std::string name)
+    {
+        GTEST_LOG_(INFO) << "NotifyNativeWinDestroyFunc";
+        ASSERT_EQ(windowName, name);
+    };
+    window->RegisterWindowDestroyedListener(func);
+    window->NotifyBeforeDestroy(windowName);
+
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: NotifyBeforeDestroy end";
 }
@@ -1317,6 +1342,9 @@ HWTEST_F(WindowSessionImplTest, MarkProcessed, Function | SmallTest | Level2)
     ASSERT_EQ(WMError::WM_OK, window->Create(nullptr, session));
 
     int32_t eventId = 1;
+    window->state_ = WindowState::STATE_DESTROYED;
+    ASSERT_EQ(window->GetPersistentId(), INVALID_SESSION_ID);
+    ASSERT_EQ(window->state_, WindowState::STATE_DESTROYED);
     WSError res = window->MarkProcessed(eventId);
     ASSERT_EQ(res, WSError::WS_DO_NOTHING);
     window->hostSession_ = nullptr;
@@ -2627,25 +2655,6 @@ HWTEST_F(WindowSessionImplTest, SetRestoredRouterStack_0200, Function | SmallTes
     std::string gettedStack = window->GetRestoredRouterStack();
     EXPECT_EQ(gettedStack, routerStack);
     EXPECT_TRUE(window->GetRestoredRouterStack().empty());
-}
-
-/**
- * @tc.name: GetAceContentInfoType_0100
- * @tc.desc: basic function test of get ace content info type.
- * @tc.type: FUNC
- * @tc.require: issue
- */
-HWTEST_F(WindowSessionImplTest, GetAceContentInfoType_0100, Function | SmallTest | Level3)
-{
-    sptr<WindowOption> option = sptr<WindowOption>::MakeSptr();
-    ASSERT_NE(option, nullptr);
-    sptr<WindowSessionImpl> window = sptr<WindowSessionImpl>::MakeSptr(option);
-    ASSERT_NE(window, nullptr);
-    EXPECT_EQ(window->GetAceContentInfoType(BackupAndRestoreType::CONTINUATION), Ace::ContentInfoType::CONTINUATION);
-    EXPECT_EQ(window->GetAceContentInfoType(BackupAndRestoreType::APP_RECOVERY), Ace::ContentInfoType::APP_RECOVERY);
-    EXPECT_EQ(window->GetAceContentInfoType(BackupAndRestoreType::RESOURCESCHEDULE_RECOVERY),
-        Ace::ContentInfoType::RESOURCESCHEDULE_RECOVERY);
-    EXPECT_EQ(window->GetAceContentInfoType(BackupAndRestoreType::NONE), Ace::ContentInfoType::NONE);
 }
 }
 } // namespace Rosen

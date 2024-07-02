@@ -392,7 +392,7 @@ enum class WindowGravity : uint32_t {
 /**
  * @brief Enumerates window setuicontent type.
  */
-enum class WindowSetUIContentType: uint32_t {
+enum class WindowSetUIContentType : uint32_t {
     DEFAULT,
     RESTORE,
     BY_NAME,
@@ -402,7 +402,7 @@ enum class WindowSetUIContentType: uint32_t {
 /**
  * @brief Enumerates restore type.
  */
-enum class BackupAndRestoreType: int32_t {
+enum class BackupAndRestoreType : int32_t {
     NONE = 0,                       // no backup and restore
     CONTINUATION = 1,               // distribute
     APP_RECOVERY = 2,               // app recovery
@@ -641,6 +641,25 @@ struct Rect {
         ss << "[" << posX_ << " " << posY_ << " " << width_ << " " << height_ << "]";
         return ss.str();
     }
+};
+
+/**
+ * @brief UIExtension usage
+ */
+enum class UIExtensionUsage : uint32_t {
+    MODAL = 0,
+    EMBEDDED,
+    CONSTRAINED_EMBEDDED,
+    UIEXTENSION_USAGE_END
+};
+
+/**
+ * @brief UIExtension info for event
+ */
+struct ExtensionWindowEventInfo {
+    int32_t persistentId  = 0;
+    int32_t pid = -1;
+    Rect windowRect {0, 0, 0, 0};
 };
 
 /**

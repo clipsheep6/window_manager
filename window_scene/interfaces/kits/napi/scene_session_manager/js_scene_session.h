@@ -104,6 +104,7 @@ private:
     static napi_value RequestHideKeyboard(napi_env env, napi_callback_info info);
     static napi_value SetSCBKeepKeyboard(napi_env env, napi_callback_info info);
     static napi_value SetOffset(napi_env env, napi_callback_info info);
+    static napi_value SetExitSplitOnBackground(napi_env env, napi_callback_info info);
     static napi_value SetWaterMarkFlag(napi_env env, napi_callback_info info);
     static napi_value SetPipActionEvent(napi_env env, napi_callback_info info);
     static napi_value NotifyDisplayStatusBarTemporarily(napi_env env, napi_callback_info info);
@@ -111,6 +112,7 @@ private:
     static napi_value SetSkipDraw(napi_env env, napi_callback_info info);
     static void BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName);
     static napi_value SetSkipSelfWhenShowOnVirtualScreen(napi_env env, napi_callback_info info);
+    static napi_value SetCompatibleModeInPc(napi_env env, napi_callback_info info);
 
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnUpdateNativeVisibility(napi_env env, napi_callback_info info);
@@ -131,12 +133,14 @@ private:
     napi_value OnRequestHideKeyboard(napi_env env, napi_callback_info info);
     napi_value OnSetSCBKeepKeyboard(napi_env env, napi_callback_info info);
     napi_value OnSetOffset(napi_env env, napi_callback_info info);
+    napi_value OnSetExitSplitOnBackground(napi_env env, napi_callback_info info);
     napi_value OnSetWaterMarkFlag(napi_env env, napi_callback_info info);
     napi_value OnSetPipActionEvent(napi_env env, napi_callback_info info);
     napi_value OnNotifyDisplayStatusBarTemporarily(napi_env env, napi_callback_info info);
     napi_value OnSetTemporarilyShowWhenLocked(napi_env env, napi_callback_info info);
     napi_value OnSetSkipDraw(napi_env env, napi_callback_info info);
     napi_value OnSetSkipSelfWhenShowOnVirtualScreen(napi_env env, napi_callback_info info);
+    napi_value OnSetCompatibleModeInPc(napi_env env, napi_callback_info info);
 
     bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     void ProcessChangeSessionVisibilityWithStatusBarRegister();

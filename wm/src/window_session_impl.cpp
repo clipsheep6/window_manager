@@ -60,6 +60,27 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "WindowS
 constexpr int32_t ANIMATION_TIME = 400;
 constexpr int32_t FULL_CIRCLE_DEGREE = 360;
 constexpr int32_t ONE_FOURTH_FULL_CIRCLE_DEGREE = 90;
+
+Ace::ContentInfoType GetAceContentInfoType(BackupAndRestoreType type)
+{
+    auto contentInfoType = Ace::ContentInfoType::NONE;
+    switch (type) {
+        case BackupAndRestoreType::CONTINUATION:
+            contentInfoType = Ace::ContentInfoType::CONTINUATION;
+            break;
+        case BackupAndRestoreType::APP_RECOVERY:
+            contentInfoType = Ace::ContentInfoType::APP_RECOVERY;
+            break;
+        case BackupAndRestoreType::RESOURCESCHEDULE_RECOVERY:
+            contentInfoType = Ace::ContentInfoType::RESOURCESCHEDULE_RECOVERY;
+            break;
+        case BackupAndRestoreType::NONE:
+            [[fallthrough]];
+        default:
+            break;
+    }
+    return contentInfoType;
+}
 }
 
 std::map<int32_t, std::vector<sptr<IWindowLifeCycle>>> WindowSessionImpl::lifecycleListeners_;
@@ -166,6 +187,7 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
     property_->SetCallingSessionId(option->GetCallingWindow());
     property_->SetExtensionFlag(option->GetExtensionTag());
     property_->SetTopmost(option->GetWindowTopmost());
+    property_->SetUIExtensionUsage(static_cast<UIExtensionUsage>(option->GetUIExtensionUsage()));
     isMainHandlerAvailable_ = option->GetMainHandlerAvailable();
     isIgnoreSafeArea_ = WindowHelper::IsSubWindow(optionWindowType);
     windowOption_ = option;
@@ -724,8 +746,8 @@ void WindowSessionImpl::UpdateViewportConfig(const Rect& rect, WindowSizeChangeR
     int32_t orientation = static_cast<int32_t>(displayInfo->GetDisplayOrientation());
 
     virtualPixelRatio_ = density;
-    TLOGI(WmsLogTag::WMS_LAYOUT, "[rotation, deviceRotation, transformHint]: [%{public}u, %{public}u, %{public}u]",
-        rotation, deviceRotation, transformHint);
+    TLOGI(WmsLogTag::WMS_LAYOUT, "[rotation, deviceRotation, transformHint, virtualPixelRatio]: [%{public}u, "
+        "%{public}u, %{public}u, %{public}f]", rotation, deviceRotation, transformHint, virtualPixelRatio_);
     Ace::ViewportConfig config;
     config.SetSize(rect.width_, rect.height_);
     config.SetPosition(rect.posX_, rect.posY_);
@@ -802,7 +824,11 @@ void WindowSessionImpl::UpdateTitleButtonVisibility()
     GetTitleButtonVisible(isPC, hideMaximizeButton, hideMinimizeButton, hideSplitButton);
     TLOGI(WmsLogTag::WMS_LAYOUT, "[hideSplit, hideMaximize, hideMinimizeButton]: [%{public}d, %{public}d, %{public}d]",
         hideSplitButton, hideMaximizeButton, hideMinimizeButton);
-    uiContent->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, hideMinimizeButton);
+    if (property_->GetCompatibleModeInPc()) {
+        uiContent->HideWindowTitleButton(hideSplitButton, true, hideMinimizeButton);
+    } else {
+        uiContent->HideWindowTitleButton(hideSplitButton, hideMaximizeButton, hideMinimizeButton);
+    }
 }
 
 WMError WindowSessionImpl::NapiSetUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
@@ -862,7 +888,7 @@ WMError WindowSessionImpl::InitUIContent(const std::string& contentInfo, napi_en
                 auto type = GetAceContentInfoType(BackupAndRestoreType::RESOURCESCHEDULE_RECOVERY);
                 if (!routerStack.empty() &&
                     uiContent->Restore(this, routerStack, storage, type) == Ace::UIContentErrorCode::NO_ERRORS) {
-                    WLOGFD("Restore router stack succeed.");
+                    TLOGI(WmsLogTag::WMS_LIFE, "Restore router stack succeed.");
                     break;
                 }
             }
@@ -941,7 +967,7 @@ WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, nap
         if (!isSystembarPropertiesSet_) {
             SetSystemBarProperty(WindowType::WINDOW_TYPE_STATUS_BAR, SystemBarProperty());
         }
-    } else if (isIgnoreSafeAreaNeedNotify_) {
+    } else if (isIgnoreSafeAreaNeedNotify_ || isSubWindow) {
         SetLayoutFullScreenByApiVersion(isIgnoreSafeArea_);
     }
 
@@ -1268,10 +1294,7 @@ WMError WindowSessionImpl::SetBrightness(float brightness)
         return WMError::WM_ERROR_NULLPTR;
     }
     property_->SetBrightness(brightness);
-    if (state_ == WindowState::STATE_SHOWN) {
-        return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS);
-    }
-    return WMError::WM_OK;
+    return UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_SET_BRIGHTNESS);
 }
 
 float WindowSessionImpl::GetBrightness() const
@@ -1311,43 +1334,20 @@ std::string WindowSessionImpl::GetContentInfo(BackupAndRestoreType type)
         WLOGFE("fail to GetContentInfo id: %{public}d", GetPersistentId());
         return "";
     }
-    return uiContent_->GetContentInfo(GetAceContentInfoType(type));
+    return uiContent->GetContentInfo(GetAceContentInfoType(type));
 }
 
-WMError WindowSessionImpl::SetRestoredRouterStack(std::string& routerStack)
+WMError WindowSessionImpl::SetRestoredRouterStack(const std::string& routerStack)
 {
-    WLOGFD("Set restored router stack");
-    std::lock_guard<std::recursive_mutex> lock(routerStackMutex_);
+    TLOGD(WmsLogTag::WMS_LIFE, "Set restored router stack.");
     restoredRouterStack_ = routerStack;
     return WMError::WM_OK;
 }
 
 std::string WindowSessionImpl::GetRestoredRouterStack()
 {
-    WLOGFD("Get restored router stack");
-    std::lock_guard<std::recursive_mutex> lock(routerStackMutex_);
+    TLOGD(WmsLogTag::WMS_LIFE, "Get restored router stack.");
     return std::move(restoredRouterStack_);
-}
-
-Ace::ContentInfoType WindowSessionImpl::GetAceContentInfoType(BackupAndRestoreType type)
-{
-    auto contentInfoType = Ace::ContentInfoType::NONE;
-    switch (type) {
-        case BackupAndRestoreType::CONTINUATION:
-            contentInfoType = Ace::ContentInfoType::CONTINUATION;
-            break;
-        case BackupAndRestoreType::APP_RECOVERY:
-            contentInfoType = Ace::ContentInfoType::APP_RECOVERY;
-            break;
-        case BackupAndRestoreType::RESOURCESCHEDULE_RECOVERY:
-            contentInfoType = Ace::ContentInfoType::RESOURCESCHEDULE_RECOVERY;
-            break;
-        case BackupAndRestoreType::NONE:
-            [[fallthrough]];
-        default:
-            break;
-    }
-    return contentInfoType;
 }
 
 Ace::UIContent* WindowSessionImpl::GetUIContent() const
@@ -2708,17 +2708,17 @@ void WindowSessionImpl::NotifyPointerEvent(const std::shared_ptr<MMI::PointerEve
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent != nullptr) {
         if (pointerEvent->GetPointerAction() != MMI::PointerEvent::POINTER_ACTION_MOVE) {
-            WLOGFI("InputTracking id:%{public}d, WindowSessionImpl::NotifyPointerEvent",
+            TLOGI(WmsLogTag::WMS_EVENT, "InputTracking id:%{public}d",
                 pointerEvent->GetId());
         }
         HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "WindowSessionImpl:pointerEvent Send id:%d action:%d",
             pointerEvent->GetId(), pointerEvent->GetPointerAction());
         if (!(uiContent->ProcessPointerEvent(pointerEvent))) {
-            WLOGFI("UI content dose not consume this pointer event");
+            TLOGI(WmsLogTag::WMS_EVENT, "UI content dose not consume this pointer event");
             pointerEvent->MarkProcessed();
         }
     } else {
-        WLOGFW("pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
+        TLOGW(WmsLogTag::WMS_EVENT, "pointerEvent is not consumed, windowId: %{public}u", GetWindowId());
         pointerEvent->MarkProcessed();
     }
 }

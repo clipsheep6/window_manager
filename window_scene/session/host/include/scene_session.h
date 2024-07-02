@@ -173,7 +173,7 @@ public:
     WSError NotifySessionException(
         const sptr<AAFwk::SessionInfo> info, bool needRemoveSession = false) override;
     WSError NotifySessionExceptionInner(
-        const sptr<AAFwk::SessionInfo> info, bool needRemoveSession = false);
+        const sptr<AAFwk::SessionInfo> info, bool needRemoveSession = false, bool isFromClient = false);
     WSError NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rsTransaction) override;
     WSError OnNeedAvoid(bool status) override;
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
@@ -321,6 +321,12 @@ public:
     void SetSessionChangeByActionNotifyManagerListener(const SessionChangeByActionNotifyManagerFunc& func);
 
     bool CheckGetAvoidAreaAvailable(AvoidAreaType type) override;
+    void AddModalUIExtension(const ExtensionWindowEventInfo& extensionInfo);
+    void RemoveModalUIExtension(int32_t persistentId);
+    bool HasModalUIExtension();
+    void UpdateModalUIExtension(const ExtensionWindowEventInfo& extensionInfo);
+    ExtensionWindowEventInfo GetLastModalUIExtensionEventInfo();
+    Vector2f GetPosition(bool useUIExtension);
 
 protected:
     void NotifyIsCustomAnimationPlaying(bool isPlaying);
@@ -358,6 +364,8 @@ private:
 #endif // DEVICE_STATUS_ENABLE
     void NotifySessionRectChange(const WSRect& rect, const SizeChangeReason& reason = SizeChangeReason::UNDEFINED);
     void OnMoveDragCallback(const SizeChangeReason& reason);
+    void HandleCompatibleModeMoveDrag(WSRect& rect, const SizeChangeReason& reason,
+        bool isSupportDragInPcCompatibleMode);
     void FixRectByLimits(WindowLimits limits, WSRect& rect, float ratio, bool isDecor, float vpr);
     bool FixRectByAspectRatio(WSRect& rect);
     bool SaveAspectRatio(float ratio);
@@ -455,6 +463,8 @@ private:
     static std::shared_mutex windowDragHotAreaMutex_;
     static std::map<uint32_t, WSRect> windowDragHotAreaMap_;
     std::atomic_bool isTemporarilyShowWhenLocked_ { false };
+    std::shared_mutex modalUIExtensionInfoListMutex_;
+    std::vector<ExtensionWindowEventInfo> modalUIExtensionInfoList_;
     std::string clientIdentityToken_ = { "" };
     static const std::map<uint32_t, HandleUpdatePropertyFunc> sessionFuncMap_;
     SessionChangeByActionNotifyManagerFunc sessionChangeByActionNotifyManagerFunc_;
