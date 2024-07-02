@@ -37,7 +37,7 @@ WindowCommonEvent::WindowCommonEvent()
     eventHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
     eventCodeMap_ = {
         { EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED, CommonEventAction::COMMON_EVENT_USER_SWITCHED },
-    }
+    };
 }
 
 WindowCommonEvent::~WindowCommonEvent()
