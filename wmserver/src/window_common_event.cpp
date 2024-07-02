@@ -86,6 +86,10 @@ void WindowCommonEvent::OnReceiveEvent(const EventFwk::CommonEventData& data)
         std::string action = data.GetWant().GetAction();
         WLOGI("called action = %{public}s", action.c_str());
         CommonEventAction eventAction = eventCodeMap_[action];
+        if (eventCodeMap_.count(action) == 0) {
+            TLOGE("action %{public}s is not supported", action.c_str());
+            return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
+        }
         switch (static_cast<int>(eventAction)) {
             case static_cast<int>(CommonEventAction::COMMON_EVENT_USER_SWITCHED):
                 HandleAccountSwitched(data);
