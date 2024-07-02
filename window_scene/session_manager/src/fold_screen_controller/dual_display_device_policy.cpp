@@ -19,6 +19,7 @@
 #include "fold_screen_controller/dual_display_device_policy.h"
 #include "session/screen/include/screen_session.h"
 #include "screen_session_manager.h"
+#include "fold_screen_state_internel.h"
 
 #include "window_manager_hilog.h"
 
@@ -258,7 +259,7 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayModeToMain(sptr<ScreenSession> 
             ChangeScreenDisplayModePower(ScreenPowerStatus::POWER_STATUS_OFF);
         };
         screenPowerTaskScheduler_->PostAsyncTask(taskScreenOnMainOff, "screenOnMainOffTask");
-        SendPropertyChangeResult(screenSession, SCREEN_ID_MAIN, ScreenPropertyChangeReason::FOLD_SCREEN_FOLDING);
+        SendMainDisplayModeResult(screenSession);
         // on main screen
         auto taskScreenOnMainOn = [=] {
             TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayModeToMain: IsFoldScreenOn is true, screenIdMain ON.");
@@ -276,7 +277,7 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayModeToMain(sptr<ScreenSession> 
             ChangeScreenDisplayModePower(ScreenPowerStatus::POWER_STATUS_OFF);
         };
         screenPowerTaskScheduler_->PostAsyncTask(taskScreenOffMainOff, "screenOffMainOffTask");
-        SendPropertyChangeResult(screenSession, SCREEN_ID_MAIN, ScreenPropertyChangeReason::FOLD_SCREEN_FOLDING);
+        SendMainDisplayModeResult(screenSession);
         auto taskScreenOnMainChangeScreenId = [=] {
             TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayModeToMain: IsFoldScreenOn is false, Change ScreenId to Main.");
             screenId_ = SCREEN_ID_MAIN;
@@ -285,6 +286,21 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayModeToMain(sptr<ScreenSession> 
             #endif
         };
         screenPowerTaskScheduler_->PostAsyncTask(taskScreenOnMainChangeScreenId, "taskScreenOnMainChangeScreenId");
+    }
+}
+
+void DualDisplayDevicePolicy::SendMainDisplayModeResult(sptr<ScreenSession> screenSession)
+{
+    if(FoldScreenStateInternel::IsSingleDisplayPocketFoldDevice()) {
+        // will be delete after desktop layout adaptation
+        SendPropertyChangeResult(screenSession, SCREEN_ID_MAIN, ScreenPropertyChangeReason::CHANGE_MODE);
+        auto taskChangeScreen = [=] {
+            TLOGI(WmsLogTag::DMS, "SetDisplayNodeScreenId SCREEN_ID_MAIN.");
+            ScreenSessionManager::GetInstance().SetDisplayNodeScreenId(SCREEN_ID_FULL, SCREEN_ID_MAIN);
+        };
+        screenPowerTaskScheduler_->PostAsyncTask(taskChangeScreen, "taskChangeScreen");
+    } else {
+        SendPropertyChangeResult(screenSession, SCREEN_ID_MAIN, ScreenPropertyChangeReason::FOLD_SCREEN_FOLDING);
     }
 }
 
@@ -307,7 +323,7 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayModeToFull(sptr<ScreenSession> 
             ChangeScreenDisplayModePower(ScreenPowerStatus::POWER_STATUS_OFF);
         };
         screenPowerTaskScheduler_->PostAsyncTask(taskScreenOnFullOff, "screenOnFullOffTask");
-        SendPropertyChangeResult(screenSession, SCREEN_ID_FULL, ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
+        SendFullDisplayModeResult(screenSession);
         // on full screen
         auto taskScreenOnFullOn = [=] {
             TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayModeToFull: IsFoldScreenOn is true, screenIdFull ON.");
@@ -325,7 +341,7 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayModeToFull(sptr<ScreenSession> 
             ChangeScreenDisplayModePower(ScreenPowerStatus::POWER_STATUS_OFF);
         };
         screenPowerTaskScheduler_->PostAsyncTask(taskScreenOffFullOff, "screenOffFullOffTask");
-        SendPropertyChangeResult(screenSession, SCREEN_ID_FULL, ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
+        SendFullDisplayModeResult(screenSession);
         // on full screen
         auto taskScreenOnFullOn = [=] {
             TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayModeToFull: IsFoldScreenOn is false, screenIdFull ON.");
@@ -333,6 +349,22 @@ void DualDisplayDevicePolicy::ChangeScreenDisplayModeToFull(sptr<ScreenSession> 
             PowerMgr::PowerMgrClient::GetInstance().WakeupDevice();
         };
         screenPowerTaskScheduler_->PostAsyncTask(taskScreenOnFullOn, "screenOnFullOnTask");
+    }
+}
+
+
+void DualDisplayDevicePolicy::SendFullDisplayModeResult(sptr<ScreenSession> screenSession)
+{
+    if(FoldScreenStateInternel::IsSingleDisplayPocketFoldDevice()) {
+        // will be delete after desktop layout adaptation
+        SendPropertyChangeResult(screenSession, SCREEN_ID_FULL, ScreenPropertyChangeReason::CHANGE_MODE);
+        auto taskChangeScreen = [=] {
+            TLOGI(WmsLogTag::DMS, "SetDisplayNodeScreenId SCREEN_ID_FULL.");
+            ScreenSessionManager::GetInstance().SetDisplayNodeScreenId(SCREEN_ID_FULL, SCREEN_ID_FULL);
+        };
+        screenPowerTaskScheduler_->PostAsyncTask(taskChangeScreen, "taskChangeScreen");
+    } else {
+        SendPropertyChangeResult(screenSession, SCREEN_ID_FULL, ScreenPropertyChangeReason::FOLD_SCREEN_EXPAND);
     }
 }
 
