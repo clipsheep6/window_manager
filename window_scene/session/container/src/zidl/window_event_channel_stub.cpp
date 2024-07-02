@@ -42,34 +42,33 @@ int WindowEventChannelStub::OnRemoteRequest(uint32_t code, MessageParcel &data,
 
     switch (code) {
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_KEY_EVENT):
-            return this->HandleTransferKeyEvent(data, reply);
+            return HandleTransferKeyEvent(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_KEY_EVENT_ASYNC):
-            return this->HandleTransferKeyEventAsync(data, reply);
+            return HandleTransferKeyEventAsync(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_POINTER_EVENT):
-            return this->HandleTransferPointerEvent(data, reply);
+            return HandleTransferPointerEvent(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_ACTIVE_EVENT):
-            return this->HandleTransferFocusActiveEvent(data, reply);
+            return HandleTransferFocusActiveEvent(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_STATE_EVENT):
-            return this->HandleTransferFocusStateEvent(data, reply);
+            return HandleTransferFocusStateEvent(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_BACKPRESSED_EVENT):
-            return this->HandleTransferBackpressedEvent(data, reply);
+            return HandleTransferBackpressedEvent(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_SEARCH_ELEMENT_INFO):
-            return this->HandleTransferSearchElementInfo(data, reply);
+            return HandleTransferSearchElementInfo(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_SEARCH_ELEMENT_INFO_BY_TEXT):
-            return this->HandleTransferSearchElementInfosByText(data, reply);
+            return HandleTransferSearchElementInfosByText(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FIND_FOCUSED_ELEMENT_INFO):
-            return this->HandleTransferFindFocusedElementInfo(data, reply);
+            return HandleTransferFindFocusedElementInfo(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_FOCUS_MOVE_SEARCH):
-            return this->HandleTransferFocusMoveSearch(data, reply);
+            return HandleTransferFocusMoveSearch(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_EXECUTE_ACTION):
-            return this->HandleTransferExecuteAction(data, reply);
+            return HandleTransferExecuteAction(data, reply);
         case static_cast<uint32_t>(WindowEventInterfaceCode::TRANS_ID_TRANSFER_ACCESSIBILITY_HOVER_EVENT):
-            return this->HandleTransferAccessibilityHoverEvent(data, reply);
+            return HandleTransferAccessibilityHoverEvent(data, reply);
         default:
-            break;
+            WLOGFE("Failed to find function handler!");
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    WLOGFE("Failed to find function handler!");
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int WindowEventChannelStub::HandleTransferBackpressedEvent(MessageParcel& data, MessageParcel& reply)

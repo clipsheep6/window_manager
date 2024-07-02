@@ -197,49 +197,49 @@ JsSceneSession::~JsSceneSession()
 
 void JsSceneSession::InitListenerFuncs()
 {
-    listenFuncMap_ = {
-        { PENDING_SCENE_CB,                      ListenerFuncionType::PENDING_SCENE_CB},
-        { CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR,
+    listenerFuncMap_ = {
+        {PENDING_SCENE_CB,                      ListenerFuncionType::PENDING_SCENE_CB},
+        {CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR,
             ListenerFuncionType::CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR},
-        { SESSION_STATE_CHANGE_CB,               ListenerFuncionType::SESSION_STATE_CHANGE_CB},
-        { BUFFER_AVAILABLE_CHANGE_CB,            ListenerFuncionType::BUFFER_AVAILABLE_CHANGE_CB},
-        { SESSION_EVENT_CB,                      ListenerFuncionType::SESSION_EVENT_CB},
-        { SESSION_RECT_CHANGE_CB,                ListenerFuncionType::SESSION_RECT_CHANGE_CB},
-        { CREATE_SUB_SESSION_CB,                 ListenerFuncionType::CREATE_SUB_SESSION_CB},
-        { BIND_DIALOG_TARGET_CB,                 ListenerFuncionType::BIND_DIALOG_TARGET_CB},
-        { RAISE_TO_TOP_CB,                       ListenerFuncionType::RAISE_TO_TOP_CB},
-        { RAISE_TO_TOP_POINT_DOWN_CB,            ListenerFuncionType::RAISE_TO_TOP_POINT_DOWN_CB},
-        { BACK_PRESSED_CB,                       ListenerFuncionType::BACK_PRESSED_CB},
-        { SESSION_FOCUSABLE_CHANGE_CB,           ListenerFuncionType::SESSION_FOCUSABLE_CHANGE_CB},
-        { SESSION_TOUCHABLE_CHANGE_CB,           ListenerFuncionType::SESSION_TOUCHABLE_CHANGE_CB},
-        { SESSION_TOP_MOST_CHANGE_CB,            ListenerFuncionType::SESSION_TOP_MOST_CHANGE_CB},
-        { CLICK_CB,                              ListenerFuncionType::CLICK_CB},
-        { TERMINATE_SESSION_CB,                  ListenerFuncionType::TERMINATE_SESSION_CB},
-        { TERMINATE_SESSION_CB_NEW,              ListenerFuncionType::TERMINATE_SESSION_CB_NEW},
-        { TERMINATE_SESSION_CB_TOTAL,            ListenerFuncionType::TERMINATE_SESSION_CB_TOTAL},
-        { SESSION_EXCEPTION_CB,                  ListenerFuncionType::SESSION_EXCEPTION_CB},
-        { UPDATE_SESSION_LABEL_CB,               ListenerFuncionType::UPDATE_SESSION_LABEL_CB},
-        { UPDATE_SESSION_ICON_CB,                ListenerFuncionType::UPDATE_SESSION_ICON_CB},
-        { SYSTEMBAR_PROPERTY_CHANGE_CB,          ListenerFuncionType::SYSTEMBAR_PROPERTY_CHANGE_CB},
-        { NEED_AVOID_CB,                         ListenerFuncionType::NEED_AVOID_CB},
-        { PENDING_SESSION_TO_FOREGROUND_CB,      ListenerFuncionType::PENDING_SESSION_TO_FOREGROUND_CB},
-        { PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB,
+        {SESSION_STATE_CHANGE_CB,               ListenerFuncionType::SESSION_STATE_CHANGE_CB},
+        {BUFFER_AVAILABLE_CHANGE_CB,            ListenerFuncionType::BUFFER_AVAILABLE_CHANGE_CB},
+        {SESSION_EVENT_CB,                      ListenerFuncionType::SESSION_EVENT_CB},
+        {SESSION_RECT_CHANGE_CB,                ListenerFuncionType::SESSION_RECT_CHANGE_CB},
+        {CREATE_SUB_SESSION_CB,                 ListenerFuncionType::CREATE_SUB_SESSION_CB},
+        {BIND_DIALOG_TARGET_CB,                 ListenerFuncionType::BIND_DIALOG_TARGET_CB},
+        {RAISE_TO_TOP_CB,                       ListenerFuncionType::RAISE_TO_TOP_CB},
+        {RAISE_TO_TOP_POINT_DOWN_CB,            ListenerFuncionType::RAISE_TO_TOP_POINT_DOWN_CB},
+        {BACK_PRESSED_CB,                       ListenerFuncionType::BACK_PRESSED_CB},
+        {SESSION_FOCUSABLE_CHANGE_CB,           ListenerFuncionType::SESSION_FOCUSABLE_CHANGE_CB},
+        {SESSION_TOUCHABLE_CHANGE_CB,           ListenerFuncionType::SESSION_TOUCHABLE_CHANGE_CB},
+        {SESSION_TOP_MOST_CHANGE_CB,            ListenerFuncionType::SESSION_TOP_MOST_CHANGE_CB},
+        {CLICK_CB,                              ListenerFuncionType::CLICK_CB},
+        {TERMINATE_SESSION_CB,                  ListenerFuncionType::TERMINATE_SESSION_CB},
+        {TERMINATE_SESSION_CB_NEW,              ListenerFuncionType::TERMINATE_SESSION_CB_NEW},
+        {TERMINATE_SESSION_CB_TOTAL,            ListenerFuncionType::TERMINATE_SESSION_CB_TOTAL},
+        {SESSION_EXCEPTION_CB,                  ListenerFuncionType::SESSION_EXCEPTION_CB},
+        {UPDATE_SESSION_LABEL_CB,               ListenerFuncionType::UPDATE_SESSION_LABEL_CB},
+        {UPDATE_SESSION_ICON_CB,                ListenerFuncionType::UPDATE_SESSION_ICON_CB},
+        {SYSTEMBAR_PROPERTY_CHANGE_CB,          ListenerFuncionType::SYSTEMBAR_PROPERTY_CHANGE_CB},
+        {NEED_AVOID_CB,                         ListenerFuncionType::NEED_AVOID_CB},
+        {PENDING_SESSION_TO_FOREGROUND_CB,      ListenerFuncionType::PENDING_SESSION_TO_FOREGROUND_CB},
+        {PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB,
             ListenerFuncionType::PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR_CB},
-        { CUSTOM_ANIMATION_PLAYING_CB,           ListenerFuncionType::CUSTOM_ANIMATION_PLAYING_CB},
-        { NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB, ListenerFuncionType::NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB},
-        { SHOW_WHEN_LOCKED_CB,                   ListenerFuncionType::SHOW_WHEN_LOCKED_CB},
-        { REQUESTED_ORIENTATION_CHANGE_CB,       ListenerFuncionType::REQUESTED_ORIENTATION_CHANGE_CB},
-        { RAISE_ABOVE_TARGET_CB,                 ListenerFuncionType::RAISE_ABOVE_TARGET_CB},
-        { FORCE_HIDE_CHANGE_CB,                  ListenerFuncionType::FORCE_HIDE_CHANGE_CB},
-        { WINDOW_DRAG_HOT_AREA_CB,               ListenerFuncionType::WINDOW_DRAG_HOT_AREA_CB},
-        { TOUCH_OUTSIDE_CB,                      ListenerFuncionType::TOUCH_OUTSIDE_CB},
-        { SESSIONINFO_LOCKEDSTATE_CHANGE_CB,     ListenerFuncionType::SESSIONINFO_LOCKEDSTATE_CHANGE_CB},
-        { PREPARE_CLOSE_PIP_SESSION,             ListenerFuncionType::PREPARE_CLOSE_PIP_SESSION},
-        { LANDSCAPE_MULTI_WINDOW_CB,             ListenerFuncionType::LANDSCAPE_MULTI_WINDOW_CB},
-        { CONTEXT_TRANSPARENT_CB,                ListenerFuncionType::CONTEXT_TRANSPARENT_CB},
-        { KEYBOARD_GRAVITY_CHANGE_CB,            ListenerFuncionType::KEYBOARD_GRAVITY_CHANGE_CB},
-        { ADJUST_KEYBOARD_LAYOUT_CB,             ListenerFuncionType::ADJUST_KEYBOARD_LAYOUT_CB},
-        { LAYOUT_FULL_SCREEN_CB,                 ListenerFuncionType::LAYOUT_FULL_SCREEN_CB},
+        {CUSTOM_ANIMATION_PLAYING_CB,           ListenerFuncionType::CUSTOM_ANIMATION_PLAYING_CB},
+        {NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB, ListenerFuncionType::NEED_DEFAULT_ANIMATION_FLAG_CHANGE_CB},
+        {SHOW_WHEN_LOCKED_CB,                   ListenerFuncionType::SHOW_WHEN_LOCKED_CB},
+        {REQUESTED_ORIENTATION_CHANGE_CB,       ListenerFuncionType::REQUESTED_ORIENTATION_CHANGE_CB},
+        {RAISE_ABOVE_TARGET_CB,                 ListenerFuncionType::RAISE_ABOVE_TARGET_CB},
+        {FORCE_HIDE_CHANGE_CB,                  ListenerFuncionType::FORCE_HIDE_CHANGE_CB},
+        {WINDOW_DRAG_HOT_AREA_CB,               ListenerFuncionType::WINDOW_DRAG_HOT_AREA_CB},
+        {TOUCH_OUTSIDE_CB,                      ListenerFuncionType::TOUCH_OUTSIDE_CB},
+        {SESSIONINFO_LOCKEDSTATE_CHANGE_CB,     ListenerFuncionType::SESSIONINFO_LOCKEDSTATE_CHANGE_CB},
+        {PREPARE_CLOSE_PIP_SESSION,             ListenerFuncionType::PREPARE_CLOSE_PIP_SESSION},
+        {LANDSCAPE_MULTI_WINDOW_CB,             ListenerFuncionType::LANDSCAPE_MULTI_WINDOW_CB},
+        {CONTEXT_TRANSPARENT_CB,                ListenerFuncionType::CONTEXT_TRANSPARENT_CB},
+        {KEYBOARD_GRAVITY_CHANGE_CB,            ListenerFuncionType::KEYBOARD_GRAVITY_CHANGE_CB},
+        {ADJUST_KEYBOARD_LAYOUT_CB,             ListenerFuncionType::ADJUST_KEYBOARD_LAYOUT_CB},
+        {LAYOUT_FULL_SCREEN_CB,                 ListenerFuncionType::LAYOUT_FULL_SCREEN_CB},
     };
 }
 
@@ -1167,7 +1167,7 @@ bool JsSceneSession::IsCallbackRegistered(napi_env env, const std::string& type,
 
 bool JsSceneSession::IsCallbackTypeSupported(const std::string& type)
 {
-    if (listenFuncMap_.find(type) != listenFuncMap_.end()) {
+    if (listenerFuncMap_.find(type) != listenerFuncMap_.end()) {
         return true;
     }
     return false;
@@ -1214,11 +1214,11 @@ napi_value JsSceneSession::OnRegisterCallback(napi_env env, napi_callback_info i
         std::unique_lock<std::shared_mutex> lock(jsCbMapMutex_);
         jsCbMap_[cbType] = callbackRef;
     }
-    if (listenFuncMap_.count(cbType) == 0) {
+    if (listenerFuncMap_.count(cbType) == 0) {
         WLOGFD("[NAPI]Failed to find callbackfunction, type = %{public}s", cbType.c_str());
         return NapiGetUndefined(env);
     }
-    ListenerFuncionType listenerFuncType = listenFuncMap_[cbType];
+    ListenerFuncionType listenerFuncType = listenerFuncMap_[cbType];
     switch (listenerFuncType) {
         case ListenerFuncionType::PENDING_SCENE_CB:
             ProcessPendingSceneSessionActivationRegister();

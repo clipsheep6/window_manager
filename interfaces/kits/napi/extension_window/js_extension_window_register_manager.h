@@ -43,6 +43,7 @@ private:
         WINDOW_EVENT_CB,
         WINDOW_STAGE_EVENT_CB,
     };
+    
     bool IsCallbackRegistered(napi_env env, std::string type, napi_value jsListenerObject);
     WmErrorCode ProcessWindowChangeRegister(sptr<JsExtensionWindowListener> listener,
         sptr<Window> window, bool isRegister);
@@ -50,7 +51,7 @@ private:
         sptr<Window> window, bool isRegister);
     WmErrorCode ProcessLifeCycleEventRegister(sptr<JsExtensionWindowListener> listener,
         sptr<Window> window, bool isRegister);
-    WmErrorCode ProcessRegister(CaseType caseType, sptr<JsExtensionWindowListener> listener,
+    WmErrorCode ProcessRegister(CaseType caseType, const sptr<JsExtensionWindowListener>& listener,
         sptr<Window> window, bool isRegister, std::string type);
     std::map<std::string, std::map<std::shared_ptr<NativeReference>, sptr<JsExtensionWindowListener>>> jsCbMap_;
     std::mutex mtx_;

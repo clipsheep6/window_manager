@@ -181,10 +181,10 @@ private:
     napi_env env_;
     std::shared_mutex jsCbMapMutex_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
+    std::map<std::string, ListenerFuncionType> listenerFuncTypeMap_;
 
     sptr<RootScene> rootScene_;
     std::shared_ptr<MainThreadScheduler> taskScheduler_;
-    std::map<std::string, ListenerFuncionType> listenFuncTypeMap_;
 };
 } // namespace OHOS::Rosen
 

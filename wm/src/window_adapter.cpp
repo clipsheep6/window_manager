@@ -418,7 +418,7 @@ bool WindowAdapter::InitSSMProxy()
         }
         if (!recoverInitialized) {
             SessionManager::GetInstance().RegisterWindowManagerRecoverCallbackFunc(
-                [this]() { this->WindowManagerAndSessionRecover(); });
+                [this] { this->WindowManagerAndSessionRecover(); });
             recoverInitialized = true;
         }
         // U0 system user needs to subscribe OnUserSwitch event

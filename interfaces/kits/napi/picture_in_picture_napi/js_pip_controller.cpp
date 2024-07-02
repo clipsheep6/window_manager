@@ -62,8 +62,8 @@ JsPipController::JsPipController(const sptr<PictureInPictureController>& pipCont
     : pipController_(pipController), env_(env)
 {
     listenerCodeMap_ = {
-        { STATE_CHANGE_CB, ListenerType::STATE_CHANGE_CB},
-        { CONTROL_PANEL_ACTION_EVENT_CB, ListenerType::CONTROL_PANEL_ACTION_EVENT_CB},
+        {STATE_CHANGE_CB, ListenerType::STATE_CHANGE_CB},
+        {CONTROL_PANEL_ACTION_EVENT_CB, ListenerType::CONTROL_PANEL_ACTION_EVENT_CB},
     };
 }
 

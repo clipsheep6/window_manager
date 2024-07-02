@@ -82,7 +82,7 @@ private:
         .callbackWithId_ = OnVsync,
     };
     std::shared_ptr<AppExecFwk::EventHandler> vsyncHandler_ = nullptr;
-    AppExecFwk::EventHandler::Callback vsyncTimeoutCallback_ = std::bind([this]() { this->OnVsyncTimeOut(); });
+    AppExecFwk::EventHandler::Callback vsyncTimeoutCallback_ = [] { OnVsyncTimeOut(); };
 };
 } // namespace Rosen
 } // namespace OHOS

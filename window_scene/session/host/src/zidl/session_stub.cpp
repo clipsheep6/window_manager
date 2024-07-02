@@ -45,101 +45,101 @@ int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParc
 
     switch (code) {
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CONNECT):
-            return this->HandleConnect(data, reply);
+            return HandleConnect(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_FOREGROUND):
-            return this->HandleForeground(data, reply);
+            return HandleForeground(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_BACKGROUND):
-            return this->HandleBackground(data, reply);
+            return HandleBackground(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DISCONNECT):
-            return this->HandleDisconnect(data, reply);
+            return HandleDisconnect(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SHOW):
-            return this->HandleShow(data, reply);
+            return HandleShow(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_HIDE):
-            return this->HandleHide(data, reply);
+            return HandleHide(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DRAWING_COMPLETED):
-            return this->HandleDrawingCompleted(data, reply);
+            return HandleDrawingCompleted(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_RECTCHANGE_LISTENER_REGISTERED):
-            return this->HandleUpdateRectChangeListenerRegistered(data, reply);
+            return HandleUpdateRectChangeListenerRegistered(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_ACTIVE_STATUS):
-            return this->HandleUpdateActivateStatus(data, reply);
+            return HandleUpdateActivateStatus(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SESSION_EVENT):
-            return this->HandleSessionEvent(data, reply);
+            return HandleSessionEvent(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_SESSION_RECT):
-            return this->HandleUpdateSessionRect(data, reply);
+            return HandleUpdateSessionRect(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_TO_APP_TOP):
-            return this->HandleRaiseToAppTop(data, reply);
+            return HandleRaiseToAppTop(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_BACKPRESSED):
-            return this->HandleBackPressed(data, reply);
+            return HandleBackPressed(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_MARK_PROCESSED):
-            return this->HandleMarkProcessed(data, reply);
+            return HandleMarkProcessed(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_MAXIMIZE_MODE):
-            return this->HandleSetGlobalMaximizeMode(data, reply);
+            return HandleSetGlobalMaximizeMode(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_MAXIMIZE_MODE):
-            return this->HandleGetGlobalMaximizeMode(data, reply);
+            return HandleGetGlobalMaximizeMode(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NEED_AVOID):
-            return this->HandleNeedAvoid(data, reply);
+            return HandleNeedAvoid(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_AVOID_AREA):
-            return this->HandleGetAvoidAreaByType(data, reply);
+            return HandleGetAvoidAreaByType(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_ASPECT_RATIO):
-            return this->HandleSetAspectRatio(data, reply);
+            return HandleSetAspectRatio(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG):
-            return this->HandleSetWindowAnimationFlag(data, reply);
+            return HandleSetWindowAnimationFlag(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_CUSTOM_ANIMATION):
-            return this->HandleUpdateWindowSceneAfterCustomAnimation(data, reply);
+            return HandleUpdateWindowSceneAfterCustomAnimation(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_LANDSCAPE_MULTI_WINDOW):
-            return this->HandleSetLandscapeMultiWindow(data, reply);
+            return HandleSetLandscapeMultiWindow(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_ABOVE_TARGET):
-            return this->HandleRaiseAboveTarget(data, reply);
+            return HandleRaiseAboveTarget(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_APP_MAIN_WINDOW):
-            return this->HandleRaiseAppMainWindowToTop(data, reply);
+            return HandleRaiseAppMainWindowToTop(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR):
-            return this->HandleChangeSessionVisibilityWithStatusBar(data, reply);
+            return HandleChangeSessionVisibilityWithStatusBar(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_ACTIVE_PENDING_SESSION):
-            return this->HandlePendingSessionActivation(data, reply);
+            return HandlePendingSessionActivation(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TERMINATE):
-            return this->HandleTerminateSession(data, reply);
+            return HandleTerminateSession(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_EXCEPTION):
-            return this->HandleSessionException(data, reply);
+            return HandleSessionException(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_PROCESS_POINT_DOWN_SESSION):
-            return this->HandleProcessPointDownSession(data, reply);
+            return HandleProcessPointDownSession(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SEND_POINTEREVENT_FOR_MOVE_DRAG):
-            return this->HandleSendPointerEvenForMoveDrag(data, reply);
+            return HandleSendPointerEvenForMoveDrag(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_KEYBOARD_SESSION_GRAVITY):
-            return this->HandleSetKeyboardSessionGravity(data, reply);
+            return HandleSetKeyboardSessionGravity(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CALLING_SESSION_ID):
-            return this->HandleSetCallingSessionId(data, reply);
+            return HandleSetCallingSessionId(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CUSTOM_DECOR_HEIGHT):
-            return this->HandleSetCustomDecorHeight(data, reply);
+            return HandleSetCustomDecorHeight(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_SESSION_PROPERTY):
-            return this->HandleUpdatePropertyByAction(data, reply);
+            return HandleUpdatePropertyByAction(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_ADJUST_KEYBOARD_LAYOUT):
-            return this->HandleAdjustKeyboardLayout(data, reply);
+            return HandleAdjustKeyboardLayout(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_ABILITY_RESULT):
-            return this->HandleTransferAbilityResult(data, reply);
+            return HandleTransferAbilityResult(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_EXTENSION_DATA):
-            return this->HandleTransferExtensionData(data, reply);
+            return HandleTransferExtensionData(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_ASYNC_ON):
-            return this->HandleNotifyAsyncOn(data, reply);
+            return HandleNotifyAsyncOn(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_SYNC_ON):
-            return this->HandleNotifySyncOn(data, reply);
+            return HandleNotifySyncOn(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_DIED):
-            return this->HandleNotifyExtensionDied(data, reply);
+            return HandleNotifyExtensionDied(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_TIMEOUT):
-            return this->HandleNotifyExtensionTimeout(data, reply);
+            return HandleNotifyExtensionTimeout(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRIGGER_BIND_MODAL_UI_EXTENSION):
-            return this->HandleTriggerBindModalUIExtension(data, reply);
+            return HandleTriggerBindModalUIExtension(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_REPORT_ACCESSIBILITY_EVENT):
-            return this->HandleTransferAccessibilityEvent(data, reply);
+            return HandleTransferAccessibilityEvent(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_PIP_WINDOW_PREPARE_CLOSE):
-            return this->HandleNotifyPiPWindowPrepareClose(data, reply);
+            return HandleNotifyPiPWindowPrepareClose(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_RECT):
-            return this->HandleUpdatePiPRect(data, reply);
+            return HandleUpdatePiPRect(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_LAYOUT_FULL_SCREEN_CHANGE):
-            return this->HandleLayoutFullScreenChange(data, reply);
+            return HandleLayoutFullScreenChange(data, reply);
+        default:
+            WLOGFE("Failed to find function handler!");
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
- 
-    WLOGFE("Failed to find function handler!");
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int SessionStub::HandleSetWindowAnimationFlag(MessageParcel& data, MessageParcel& reply)

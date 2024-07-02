@@ -234,9 +234,9 @@ private:
     wptr<SceneSession::SessionChangeCallback> sessionchangeCallback_ = nullptr;
     std::shared_mutex jsCbMapMutex_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
+    std::map<std::string, ListenerFuncionType> listenerFuncMap_;
     std::shared_ptr<MainThreadScheduler> taskScheduler_;
     static std::map<int32_t, napi_ref> jsSceneSessionMap_;
-    std::map<std::string, ListenerFuncionType> listenFuncMap_;
 };
 } // namespace OHOS::Rosen
 

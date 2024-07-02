@@ -36,72 +36,71 @@ int SessionStageStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
 
     switch (code) {
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_ACTIVE):
-            return this->HandleSetActive(data, reply);
+            return HandleSetActive(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SIZE_CHANGE):
-            return this->HandleUpdateRect(data, reply);
+            return HandleUpdateRect(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_CHANGE):
-            return this->HandleUpdateDensity(data, reply);
+            return HandleUpdateDensity(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_ORIENTATION_CHANGE):
-            return this->HandleUpdateOrientation(data, reply);
+            return HandleUpdateOrientation(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_HANDLE_BACK_EVENT):
-            return this->HandleBackEventInner(data, reply);
+            return HandleBackEventInner(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DESTROY):
-            return this->HandleNotifyDestroy(data, reply);
+            return HandleNotifyDestroy(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOCUS_CHANGE):
-            return this->HandleUpdateFocus(data, reply);
+            return HandleUpdateFocus(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA):
-            return this->HandleNotifyTransferComponentData(data, reply);
+            return HandleNotifyTransferComponentData(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFER_COMPONENT_DATA_SYNC):
-            return this->HandleNotifyTransferComponentDataSync(data, reply);
+            return HandleNotifyTransferComponentDataSync(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_OCCUPIED_AREA_CHANGE_INFO):
-            return this->HandleNotifyOccupiedAreaChange(data, reply);
+            return HandleNotifyOccupiedAreaChange(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_UPDATE_AVOID_AREA):
-            return this->HandleUpdateAvoidArea(data, reply);
+            return HandleUpdateAvoidArea(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SCREEN_SHOT):
-            return this->HandleNotifyScreenshot(data, reply);
+            return HandleNotifyScreenshot(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_DUMP_SESSSION_ELEMENT_INFO):
-            return this->HandleDumpSessionElementInfo(data, reply);
+            return HandleDumpSessionElementInfo(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TOUCH_OUTSIDE):
-            return this->HandleNotifyTouchOutside(data, reply);
+            return HandleNotifyTouchOutside(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_MODE_CHANGE):
-            return this->HandleUpdateWindowMode(data, reply);
+            return HandleUpdateWindowMode(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_FOREGROUND_INTERACTIVE_STATUS):
-            return this->HandleNotifyForegroundInteractiveStatus(data, reply);
+            return HandleNotifyForegroundInteractiveStatus(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_MAXIMIZE_MODE_CHANGE):
-            return this->HandleUpdateMaximizeMode(data, reply);
+            return HandleUpdateMaximizeMode(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_CLOSE_EXIST_PIP_WINDOW):
-            return this->HandleNotifyCloseExistPipWindow(data, reply);
+            return HandleNotifyCloseExistPipWindow(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_FOREGROUND):
-            return this->HandleNotifySessionForeground(data, reply);
+            return HandleNotifySessionForeground(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SESSION_BACKGROUND):
-            return this->HandleNotifySessionBackground(data, reply);
+            return HandleNotifySessionBackground(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TITLE_POSITION_CHANGE):
-            return this->HandleUpdateTitleInTargetPos(data, reply);
+            return HandleUpdateTitleInTargetPos(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DENSITY_FOLLOW_HOST):
-            return this->HandleNotifyDensityFollowHost(data, reply);
+            return HandleNotifyDensityFollowHost(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_WINDOW_VISIBILITY_CHANGE):
-            return this->HandleNotifyWindowVisibilityChange(data, reply);
+            return HandleNotifyWindowVisibilityChange(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFORM_CHANGE):
-            return this->HandleNotifyTransformChange(data, reply);
+            return HandleNotifyTransformChange(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DIALOG_STATE_CHANGE):
-            return this->HandleNotifyDialogStateChange(data, reply);
+            return HandleNotifyDialogStateChange(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DISPLAYID_CHANGE):
-            return this->HandleUpdateDisplayId(data, reply);
+            return HandleUpdateDisplayId(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_PIP_ACTION_EVENT):
-            return this->HandleSetPipActionEvent(data, reply);
+            return HandleSetPipActionEvent(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_DISPLAY_MOVE):
-            return this->HandleNotifyDisplayMove(data, reply);
+            return HandleNotifyDisplayMove(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SWITCH_FREEMULTIWINDOW):
-            return this->HandleSwitchFreeMultiWindow(data, reply);
+            return HandleSwitchFreeMultiWindow(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_GET_UI_CONTENT_REMOTE_OBJ):
-            return this->HandleGetUIContentRemoteObj(data, reply);
+            return HandleGetUIContentRemoteObj(data, reply);
         case static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_KEYBOARD_INFO_CHANGE):
-            return this->HandleNotifyKeyboardPanelInfoChange(data, reply);
+            return HandleNotifyKeyboardPanelInfoChange(data, reply);
         default:
-            break;
+            WLOGFE("Failed to find function handler!");
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    WLOGFE("Failed to find function handler!");
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int SessionStageStub::HandleSetActive(MessageParcel& data, MessageParcel& reply)

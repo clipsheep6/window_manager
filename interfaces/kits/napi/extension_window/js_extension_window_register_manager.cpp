@@ -36,7 +36,7 @@ JsExtensionWindowRegisterManager::JsExtensionWindowRegisterManager()
     };
     // white register list for window stage
     listenerCodeMap_[CaseType::CASE_STAGE] = {
-        {WINDOW_STAGE_EVENT_CB, ListenerType::WINDOW_STAGE_EVENT_CB }
+        {WINDOW_STAGE_EVENT_CB, ListenerType::WINDOW_STAGE_EVENT_CB}
     };
 }
 
@@ -202,7 +202,7 @@ WmErrorCode JsExtensionWindowRegisterManager::ProcessRegister(CaseType caseType,
     sptr<JsExtensionWindowListener> listener, sptr<Window> window, bool isRegister, std::string type)
 {
     WmErrorCode ret = WmErrorCode::WM_OK;
-    if (CaseType::CASE_WINDOW == caseType) {
+    if (caseType == CaseType::CASE_WINDOW) {
         switch (listenerCodeMap_[caseType][type]) {
             case ListenerType::WINDOW_SIZE_CHANGE_CB:
                 ret = ProcessWindowChangeRegister(listener, window, isRegister);
@@ -216,7 +216,7 @@ WmErrorCode JsExtensionWindowRegisterManager::ProcessRegister(CaseType caseType,
             default:
                 break;
         }
-    } else if (CaseType::CASE_STAGE == caseType) {
+    } else if (caseType == CaseType::CASE_STAGE) {
         if (WINDOW_STAGE_EVENT_CB == type) {
             ret = ProcessLifeCycleEventRegister(listener, window, isRegister);
         }

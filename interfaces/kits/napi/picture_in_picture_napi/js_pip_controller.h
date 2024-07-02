@@ -41,6 +41,7 @@ private:
         STATE_CHANGE_CB,
         CONTROL_PANEL_ACTION_EVENT_CB,
     };
+    
     napi_value OnStartPictureInPicture(napi_env env, napi_callback_info info);
     napi_value OnStopPictureInPicture(napi_env env, napi_callback_info info);
     napi_value OnSetAutoStartEnabled(napi_env env, napi_callback_info info);

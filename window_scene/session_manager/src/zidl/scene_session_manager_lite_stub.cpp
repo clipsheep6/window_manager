@@ -44,8 +44,8 @@ int SceneSessionManagerLiteStub::OnRemoteRequest(uint32_t code,
             return HandleIsValidSessionIds(data, reply);
         case static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_PENDING_SESSION_TO_FOREGROUND):
             return HandlePendingSessionToForeground(data, reply);
-        case (static_cast<uint32_t>
-            (SceneSessionManagerLiteMessage::TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR)):
+        case static_cast<uint32_t>(
+            SceneSessionManagerLiteMessage::TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR):
             return HandlePendingSessionToBackgroundForDelegator(data, reply);
         case static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_FOCUS_SESSION_TOKEN):
             return HandleGetFocusSessionToken(data, reply);

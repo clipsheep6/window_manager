@@ -124,7 +124,7 @@ bool WindowAdapterLite::InitSSMProxy()
         int32_t clientUserId = GetUserIdByUid(getuid());
         if (clientUserId == SYSTEM_USERID && !isRegisteredUserSwitchListener_) {
             SessionManagerLite::GetInstance().RegisterUserSwitchListener(
-                [this]() { this->OnUserSwitch(); });
+                [this] { this->OnUserSwitch(); });
             isRegisteredUserSwitchListener_ = true;
         }
         isProxyValid_ = true;
