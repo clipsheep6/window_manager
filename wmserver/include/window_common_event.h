@@ -46,6 +46,9 @@ private:
     private:
         std::shared_ptr<WindowCommonEvent> eventHandler_;
     };
+    enum class CommonEventAction {
+        COMMON_EVENT_USER_SWITCHED,
+    };
     void SubscriberEventInner(int retry);
     void HandleAccountSwitched(const EventFwk::CommonEventData& data) const;
 
@@ -54,6 +57,7 @@ private:
     std::map<std::string, HandleCommonEventFunc> handleCommonEventFuncs_;
     std::shared_ptr<EventSubscriber> subscriber_;
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
+    std::map<CommonEventAction, std::string> eventCodeMap_;
 };
 } // Rosen
 } // OHOS
