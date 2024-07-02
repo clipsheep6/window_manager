@@ -94,7 +94,7 @@ private:
     WmErrorCode ProcessSubWindowCloseRegister(sptr<JsWindowListener> listener, sptr<Window> window,
         bool isRegister, napi_env env, napi_value parameter = nullptr);
     std::map<std::string, std::map<std::shared_ptr<NativeReference>, sptr<JsWindowListener>>> jsCbMap_;
-    std::map<std::string, RegisterListernerType> listernerCodeMap_;
+    std::map<std::string, RegisterListenerType> listenerCodeMap_;
     std::mutex mtx_;
 };
 } // namespace Rosen
