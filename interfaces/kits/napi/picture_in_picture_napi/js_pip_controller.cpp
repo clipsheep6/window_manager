@@ -266,7 +266,6 @@ napi_value JsPipController::OnUpdatePiPControlStatus(napi_env env, napi_callback
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
-    std::lock_guard<std::mutex> lock(mtx_);
     if (pipController_ == nullptr) {
         errMsg = "OnUpdatePiPControlStatus error, controller is nullptr";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
@@ -305,7 +304,6 @@ napi_value JsPipController::OnSetPiPControlEnabled(napi_env env, napi_callback_i
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
         return NapiThrowInvalidParam(env, errMsg);
     }
-    std::lock_guard<std::mutex> lock(mtx_);
     if (pipController_ == nullptr) {
         errMsg = "OnSetPiPControlEnabled error, controller is nullptr";
         TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());

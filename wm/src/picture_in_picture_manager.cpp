@@ -262,10 +262,10 @@ void PictureInPictureManager::DoActionEvent(const std::string& actionName, int32
 void PictureInPictureManager::DoControlEvent(PiPControlType controlType, PiPControlStatus status)
 {
     TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!HasActiveController()) {
         return;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
     activeController_->DoControlEvent(controlType, status);
 }
 
