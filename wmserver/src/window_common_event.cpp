@@ -33,7 +33,7 @@ namespace {
 
 WindowCommonEvent::WindowCommonEvent()
 {
-    std::map<CommonEventAction, EventFwk::CommonEventSupport> eventCodeMap_;
+    std::map<CommonEventAction, std::string> eventCodeMap_;
     eventCodeMap_ = {
         {WindowCommonEvent::CommonEventAction::COMMON_EVENT_USER_SWITCHED,
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED},
