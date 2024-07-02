@@ -33,6 +33,9 @@ namespace {
 
 WindowCommonEvent::WindowCommonEvent()
 {
+    eventCodeMap_ = {
+        {COMMON_EVENT_USER_SWITCHED, EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED},
+    };
     auto runner = AppExecFwk::EventRunner::Create(THREAD_ID);
     eventHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
 }
@@ -80,8 +83,9 @@ void WindowCommonEvent::OnReceiveEvent(const EventFwk::CommonEventData& data)
     auto task = [this, data] {
         std::string action = data.GetWant().GetAction();
         WLOGI("called action = %{public}s", action.c_str());
-        switch (static_cast<int>(action)) {
-            case static_cast<int>(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED):
+        CommonEventAction eventAction = eventCodeMap_[action]
+        switch (static_cast<int>(eventAction)) {
+            case static_cast<int>(CommonEventAction::COMMON_EVENT_USER_SWITCHED):
                 HandleAccountSwitched(data);
                 break;
             default:
