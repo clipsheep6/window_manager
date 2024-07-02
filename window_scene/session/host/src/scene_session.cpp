@@ -225,9 +225,10 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property, bool isFr
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
 
-        if (property && session->GetSessionProperty()) {
-            session->GetSessionProperty()->SetWindowMode(property->GetWindowMode());
-            session->GetSessionProperty()->SetDecorEnable(property->IsDecorEnable());
+        auto sessionProperty = GetSessionProperty();
+        if (property && sessionProperty) {
+            sessionProperty->SetWindowMode(property->GetWindowMode());
+            sessionProperty->SetDecorEnable(property->IsDecorEnable());
         }
         int32_t persistentId = session->GetPersistentId();
         auto ret = session->Session::Foreground(property);
@@ -236,7 +237,6 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property, bool isFr
                 ret, persistentId);
             return ret;
         }
-        auto sessionProperty = session->GetSessionProperty();
         auto leashWinSurfaceNode = session->GetLeashWinSurfaceNode();
         if (leashWinSurfaceNode && sessionProperty) {
             bool lastPrivacyMode = sessionProperty->GetPrivacyMode() || sessionProperty->GetSystemPrivacyMode();
@@ -526,7 +526,11 @@ static WSError CheckAspectRatioValid(const sptr<SceneSession>& session, float ra
     if (MathHelper::NearZero(ratio)) {
         return WSError::WS_OK;
     }
-    auto limits = session->GetSessionProperty()->GetWindowLimits();
+    auto sessionProperty = GetSessionProperty();
+    if (sessionProperty) {
+        auto limits = sessionProperty->GetWindowLimits();
+    }
+
     if (session->IsDecorEnable()) {
         if (limits.minWidth_ && limits.maxHeight_ &&
             MathHelper::LessNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.minWidth_, vpr) /
@@ -650,7 +654,8 @@ void SceneSession::FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSe
     if (gravity == SessionGravity::SESSION_GRAVITY_FLOAT) {
         keyboardSession->winRect_.posX_ = panelSession->winRect_.posX_;
     } else {
-        if (keyboardSession->GetSessionProperty() == nullptr) {
+        auto sessionProperty = keyboardSession->GetSessionProperty();
+        if (sessionProperty == nullptr) {
             TLOGE(WmsLogTag::WMS_LAYOUT, "keyboard property is null");
             return;
         }
@@ -658,7 +663,7 @@ void SceneSession::FixKeyboardPositionByKeyboardPanel(sptr<SceneSession> panelSe
         static bool isFoldable = ScreenSessionManagerClient::GetInstance().IsFoldable();
         bool isFolded = ScreenSessionManagerClient::GetInstance().GetFoldStatus() == OHOS::Rosen::FoldStatus::FOLDED;
         const auto& screenSession = ScreenSessionManagerClient::GetInstance().GetScreenSession(
-            keyboardSession->GetSessionProperty()->GetDisplayId());
+            sessionProperty->GetDisplayId());
         Rotation rotation = (screenSession != nullptr) ? screenSession->GetRotation() : Rotation::ROTATION_0;
         bool isKeyboardNeedLeftOffset = (isPhone && (!isFoldable || (isFolded)) &&
             (rotation == Rotation::ROTATION_90 || rotation == Rotation::ROTATION_270));
@@ -758,7 +763,10 @@ bool SceneSession::UpdateInputMethodSessionRect(const WSRect&rect, WSRect& newWi
 {
     SessionGravity gravity;
     uint32_t percent = 0;
-    GetSessionProperty()->GetSessionGravity(gravity, percent);
+    auto sessionProperty = GetSessionProperty();
+    if (sessionProperty) {
+        sessionProperty->GetSessionGravity(gravity, percent);
+    }
     if (GetWindowType() == WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT &&
         (gravity == SessionGravity::SESSION_GRAVITY_BOTTOM || gravity == SessionGravity::SESSION_GRAVITY_DEFAULT)) {
         auto defaultDisplayInfo = DisplayManager::GetInstance().GetDefaultDisplay();
@@ -1057,10 +1065,11 @@ void SceneSession::CalculateAvoidAreaRect(WSRect& rect, WSRect& avoidRect, Avoid
 
 void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
-    if (GetSessionProperty()->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID)) {
+    auto sessionProperty = GetSessionProperty();
+    if (sessionProperty->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID)) {
         return;
     }
-    uint64_t displayId = GetSessionProperty()->GetDisplayId();
+    uint64_t displayId = sessionProperty->GetDisplayId();
     auto screenSession = ScreenSessionManagerClient::GetInstance().GetScreenSession(displayId);
     if ((Session::GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING ||
         Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
@@ -1095,7 +1104,7 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
     std::vector<sptr<SceneSession>> statusBarVector;
     if (specificCallback_ != nullptr && specificCallback_->onGetSceneSessionVectorByType_) {
         statusBarVector = specificCallback_->onGetSceneSessionVectorByType_(
-            WindowType::WINDOW_TYPE_STATUS_BAR, GetSessionProperty()->GetDisplayId());
+            WindowType::WINDOW_TYPE_STATUS_BAR, sessionProperty->GetDisplayId());
     }
     for (auto& statusBar : statusBarVector) {
         if (!(statusBar->isVisible_)) {
@@ -1117,14 +1126,15 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
         (systemConfig_.uiType_ == "phone" || systemConfig_.uiType_ == "pad")) {
         return;
     }
-    if (!GetSessionProperty()) {
+    auto sessionProperty = GetSessionProperty();
+    if (!sessionProperty) {
         TLOGE(WmsLogTag::WMS_IMMS, "Failed to get session property");
         return;
     }
     std::vector<sptr<SceneSession>> inputMethodVector;
     if (specificCallback_ != nullptr && specificCallback_->onGetSceneSessionVectorByType_) {
         inputMethodVector = specificCallback_->onGetSceneSessionVectorByType_(
-            WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT, GetSessionProperty()->GetDisplayId());
+            WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT, sessionProperty->GetDisplayId());
     }
     for (auto& inputMethod : inputMethodVector) {
         if (inputMethod->GetSessionState() != SessionState::STATE_FOREGROUND &&
@@ -1152,7 +1162,11 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 
 void SceneSession::GetCutoutAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
-    auto display = DisplayManager::GetInstance().GetDisplayById(GetSessionProperty()->GetDisplayId());
+    auto sessionProperty = GetSessionProperty();
+    if (sessionProperty == nullptr) {
+        return;
+    }
+    auto display = DisplayManager::GetInstance().GetDisplayById(sessionProperty->GetDisplayId());
     if (display == nullptr) {
         TLOGE(WmsLogTag::WMS_IMMS, "Failed to get display");
         return;
@@ -1190,13 +1204,14 @@ void SceneSession::GetAINavigationBarArea(WSRect rect, AvoidArea& avoidArea)
         TLOGI(WmsLogTag::WMS_IMMS, "window mode pip return");
         return;
     }
-    if (!GetSessionProperty()) {
+    auto sessionProperty = GetSessionProperty();
+    if (!sessionProperty) {
         TLOGE(WmsLogTag::WMS_IMMS, "Failed to get session property");
         return;
     }
     WSRect barArea;
     if (specificCallback_ != nullptr && specificCallback_->onGetAINavigationBarArea_) {
-        barArea = specificCallback_->onGetAINavigationBarArea_(GetSessionProperty()->GetDisplayId());
+        barArea = specificCallback_->onGetAINavigationBarArea_(sessionProperty->GetDisplayId());
     }
     CalculateAvoidAreaRect(rect, barArea, avoidArea);
 }
@@ -1912,7 +1927,8 @@ void SceneSession::UpdateWinRectForSystemBar(WSRect& rect)
         WLOGFE("specificCallback_ is null!");
         return;
     }
-    if (!GetSessionProperty()) {
+    auto sessionProperty = GetSessionProperty();
+    if (!sessionProperty) {
         WLOGFE("get session property is null!");
         return;
     }
@@ -1920,7 +1936,7 @@ void SceneSession::UpdateWinRectForSystemBar(WSRect& rect)
     std::vector<sptr<SceneSession>> statusBarVector;
     if (specificCallback_->onGetSceneSessionVectorByType_) {
         statusBarVector = specificCallback_->onGetSceneSessionVectorByType_(
-            WindowType::WINDOW_TYPE_STATUS_BAR, GetSessionProperty()->GetDisplayId());
+            WindowType::WINDOW_TYPE_STATUS_BAR, sessionProperty->GetDisplayId());
     }
     for (auto& statusBar : statusBarVector) {
         if (!(statusBar->isVisible_)) {
@@ -2029,7 +2045,10 @@ std::string SceneSession::GetWindowNameAllType() const
 
 WSError SceneSession::SetTurnScreenOn(bool turnScreenOn)
 {
-    GetSessionProperty()->SetTurnScreenOn(turnScreenOn);
+    auto sessionProperty = GetSessionProperty();
+    if (sessionProperty) {
+        sessionProperty->SetTurnScreenOn(turnScreenOn);
+    }
     return WSError::WS_OK;
 }
 
@@ -2040,7 +2059,10 @@ bool SceneSession::IsTurnScreenOn() const
 
 WSError SceneSession::SetKeepScreenOn(bool keepScreenOn)
 {
-    GetSessionProperty()->SetKeepScreenOn(keepScreenOn);
+    auto sessionProperty = GetSessionProperty();
+    if (sessionProperty) {
+        sessionProperty->SetKeepScreenOn(keepScreenOn);
+    }
     return WSError::WS_OK;
 }
 
@@ -2830,9 +2852,10 @@ WMError SceneSession::HandleActionUpdateSnapshotSkip(const sptr<WindowSessionPro
 WMError SceneSession::HandleActionUpdateMaximizeState(const sptr<WindowSessionProperty>& property,
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetMaximizeMode(property->GetMaximizeMode());
-        sceneSession->GetSessionProperty()->SetIsLayoutFullScreen(property->IsLayoutFullScreen());
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetMaximizeMode(property->GetMaximizeMode());
+        sessionProperty->SetIsLayoutFullScreen(property->IsLayoutFullScreen());
     }
     return WMError::WM_OK;
 }
@@ -2883,8 +2906,9 @@ WMError SceneSession::HandleActionUpdateFlags(const sptr<WindowSessionProperty>&
 WMError SceneSession::HandleActionUpdateMode(const sptr<WindowSessionProperty>& property,
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetWindowMode(property->GetWindowMode());
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetWindowMode(property->GetWindowMode());
     }
     sceneSession->NotifySessionChangeByActionNotifyManager(sceneSession, property, action);
     return WMError::WM_OK;
@@ -2893,8 +2917,9 @@ WMError SceneSession::HandleActionUpdateMode(const sptr<WindowSessionProperty>& 
 WMError SceneSession::HandleActionUpdateAnimationFlag(const sptr<WindowSessionProperty>& property,
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetAnimationFlag(property->GetAnimationFlag());
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetAnimationFlag(property->GetAnimationFlag());
     }
     return WMError::WM_OK;
 }
@@ -2902,10 +2927,11 @@ WMError SceneSession::HandleActionUpdateAnimationFlag(const sptr<WindowSessionPr
 WMError SceneSession::HandleActionUpdateTouchHotArea(const sptr<WindowSessionProperty>& property,
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
-    if (sceneSession->GetSessionProperty() != nullptr) {
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
         std::vector<Rect> touchHotAreas;
         property->GetTouchHotAreas(touchHotAreas);
-        sceneSession->GetSessionProperty()->SetTouchHotAreas(touchHotAreas);
+        sessionProperty->SetTouchHotAreas(touchHotAreas);
     }
     return WMError::WM_OK;
 }
@@ -2917,8 +2943,9 @@ WMError SceneSession::HandleActionUpdateDecorEnable(const sptr<WindowSessionProp
         TLOGE(WmsLogTag::DEFAULT, "update decor enable permission denied!");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetDecorEnable(property->IsDecorEnable());
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetDecorEnable(property->IsDecorEnable());
     }
     return WMError::WM_OK;
 }
@@ -2926,9 +2953,10 @@ WMError SceneSession::HandleActionUpdateDecorEnable(const sptr<WindowSessionProp
 WMError SceneSession::HandleActionUpdateWindowLimits(const sptr<WindowSessionProperty>& property,
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetWindowLimits(property->GetWindowLimits());
-        WindowLimits windowLimits = sceneSession->GetSessionProperty()->GetWindowLimits();
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetWindowLimits(property->GetWindowLimits());
+        WindowLimits windowLimits = sessionProperty->GetWindowLimits();
         TLOGI(WmsLogTag::WMS_LAYOUT, "UpdateWindowLimits minWidth:%{public}u, minHeight:%{public}u, "
             "maxWidth:%{public}u, maxHeight:%{public}u, vpRatio:%{public}f", windowLimits.minWidth_,
             windowLimits.minHeight_, windowLimits.maxWidth_, windowLimits.maxHeight_, windowLimits.vpRatio_);
@@ -2944,8 +2972,9 @@ WMError SceneSession::HandleActionUpdateDragenabled(const sptr<WindowSessionProp
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
 
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetDragEnabled(property->GetDragEnabled());
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetDragEnabled(property->GetDragEnabled());
     }
     return WMError::WM_OK;
 }
@@ -2958,8 +2987,9 @@ WMError SceneSession::HandleActionUpdateRaiseenabled(const sptr<WindowSessionPro
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
 
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetRaiseEnabled(property->GetRaiseEnabled());
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetRaiseEnabled(property->GetRaiseEnabled());
     }
     return WMError::WM_OK;
 }
@@ -2982,9 +3012,10 @@ WMError SceneSession::HandleActionUpdateHideNonSystemFloatingWindows(const sptr<
 WMError SceneSession::HandleActionUpdateTextfieldAvoidInfo(const sptr<WindowSessionProperty>& property,
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetTextFieldPositionY(property->GetTextFieldPositionY());
-        sceneSession->GetSessionProperty()->SetTextFieldHeight(property->GetTextFieldHeight());
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetTextFieldPositionY(property->GetTextFieldPositionY());
+        sessionProperty->SetTextFieldHeight(property->GetTextFieldHeight());
     }
     return WMError::WM_OK;
 }
@@ -2992,9 +3023,10 @@ WMError SceneSession::HandleActionUpdateTextfieldAvoidInfo(const sptr<WindowSess
 WMError SceneSession::HandleActionUpdateWindowMask(const sptr<WindowSessionProperty>& property,
     const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action)
 {
-    if (sceneSession->GetSessionProperty() != nullptr) {
-        sceneSession->GetSessionProperty()->SetWindowMask(property->GetWindowMask());
-        sceneSession->GetSessionProperty()->SetIsShaped(property->GetIsShaped());
+    auto sessionProperty = sceneSession->GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        sessionProperty->SetWindowMask(property->GetWindowMask());
+        sessionProperty->SetIsShaped(property->GetIsShaped());
         sceneSession->NotifySessionChangeByActionNotifyManager(sceneSession, property, action);
     }
     return WMError::WM_OK;
