@@ -367,7 +367,8 @@ WmErrorCode JsWindowRegisterManager::RegisterListener(sptr<Window> window, std::
                 ret = ProcessSystemBarChangeRegister(windowManagerListener, window, true, env, parameter);
                 break;
             case static_cast<int>(RegisterListenerType::GESTURE_NAVIGATION_ENABLED_CHANGE_CB):
-                ret = ProcessGestureNavigationEnabledChangeRegister(windowManagerListener, window, true, env, parameter);
+                ret = 
+                ProcessGestureNavigationEnabledChangeRegister(windowManagerListener, window, true, env, parameter);
                 break;
             case static_cast<int>(RegisterListenerType::WATER_MARK_FLAG_CHANGE_CB):
                 ret = ProcessWaterMarkFlagChangeRegister(windowManagerListener, window, true, env, parameter);
