@@ -33,13 +33,11 @@ namespace {
 
 WindowCommonEvent::WindowCommonEvent()
 {
-    std::map<CommonEventAction, std::string> eventCodeMap_;
-    eventCodeMap_ = {
-        {EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED,
-            WindowCommonEvent::CommonEventAction::COMMON_EVENT_USER_SWITCHED},
-    };
     auto runner = AppExecFwk::EventRunner::Create(THREAD_ID);
     eventHandler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+    eventCodeMap_ = {
+        { EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED, CommonEventAction::COMMON_EVENT_USER_SWITCHED },
+    };
 }
 
 WindowCommonEvent::~WindowCommonEvent()
@@ -85,17 +83,15 @@ void WindowCommonEvent::OnReceiveEvent(const EventFwk::CommonEventData& data)
     auto task = [this, data] {
         std::string action = data.GetWant().GetAction();
         WLOGI("called action = %{public}s", action.c_str());
-        CommonEventAction eventAction = eventCodeMap_[action];
-        if (eventCodeMap_.count(action) == 0) {
-            TLOGE("action %{public}s is not supported", action.c_str());
-            return WmErrorCode::WM_ERROR_STATE_ABNORMALLY;
-        }
-        switch (static_cast<int>(eventAction)) {
-            case static_cast<int>(CommonEventAction::COMMON_EVENT_USER_SWITCHED):
-                HandleAccountSwitched(data);
-                break;
-            default:
-                break;
+        if (eventCodeMap_.count(action)) {
+            CommonEventAction eventAction = eventCodeMap_[action];
+            switch (eventAction) {
+                case CommonEventAction::COMMON_EVENT_USER_SWITCHED:
+                    HandleAccountSwitched(data);
+                    break;
+                default:
+                    break;
+            }
         }
     };
     eventHandler_->PostTask(task, "wms:OnReceiveEvent", 0, AppExecFwk::EventQueue::Priority::HIGH);
