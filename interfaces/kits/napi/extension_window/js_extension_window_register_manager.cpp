@@ -218,7 +218,7 @@ WmErrorCode JsExtensionWindowRegisterManager::ProcessRegister(CaseType caseType,
                 break;
         }
     } else if (caseType == CaseType::CASE_STAGE) {
-        if (WINDOW_STAGE_EVENT_CB == type) {
+        if (type == WINDOW_STAGE_EVENT_CB) {
             ret = ProcessLifeCycleEventRegister(listener, window, isRegister);
         }
     }
