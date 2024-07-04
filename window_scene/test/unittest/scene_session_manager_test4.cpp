@@ -1538,6 +1538,16 @@ HWTEST_F(SceneSessionManagerTest4, GetSessionSnapshotPixelMap, Function | SmallT
     result = ssm_->GetSessionSnapshotPixelMap(persistentId, scaleParam);
     EXPECT_EQ(result, nullptr);
 }
+
+/**
+ * @tc.name: 
+ * @tc.desc: 
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest4, , Function | SmallTest | Level3)
+{
+
+}
 }
 } // namespace Rosen
 } // namespace OHOS
