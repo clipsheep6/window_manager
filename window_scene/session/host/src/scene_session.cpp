@@ -225,7 +225,7 @@ WSError SceneSession::Foreground(sptr<WindowSessionProperty> property, bool isFr
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
 
-        auto sessionProperty = GetSessionProperty();
+        auto sessionProperty = session->GetSessionProperty();
         if (property && sessionProperty) {
             sessionProperty->SetWindowMode(property->GetWindowMode());
             sessionProperty->SetDecorEnable(property->IsDecorEnable());
@@ -526,11 +526,11 @@ static WSError CheckAspectRatioValid(const sptr<SceneSession>& session, float ra
     if (MathHelper::NearZero(ratio)) {
         return WSError::WS_OK;
     }
-    auto sessionProperty = GetSessionProperty();
+    auto sessionProperty = session->GetSessionProperty();
     if (sessionProperty) {
-        auto limits = sessionProperty->GetWindowLimits();
+        return WSError::WS_ERROR_NULLPTR;
     }
-
+    auto limits = sessionProperty->GetWindowLimits();
     if (session->IsDecorEnable()) {
         if (limits.minWidth_ && limits.maxHeight_ &&
             MathHelper::LessNotEqual(ratio, SessionUtils::ToLayoutWidth(limits.minWidth_, vpr) /
@@ -1066,7 +1066,8 @@ void SceneSession::CalculateAvoidAreaRect(WSRect& rect, WSRect& avoidRect, Avoid
 void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
     auto sessionProperty = GetSessionProperty();
-    if (sessionProperty->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID)) {
+    if ((sessionProperty && sessionProperty->GetWindowFlags()) &
+        static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_NEED_AVOID)) {
         return;
     }
     uint64_t displayId = sessionProperty->GetDisplayId();
