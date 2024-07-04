@@ -441,7 +441,7 @@ HWTEST_F(WindowSessionTest2, Snapshot01, Function | SmallTest | Level2)
 {
     ASSERT_NE(session_, nullptr);
 
-    session_->surfaceNode_ = nullptr;
+    session_->leashWinSurfaceNode_ = nullptr;
 
     ASSERT_EQ(nullptr, session_->Snapshot());
 }
