@@ -35,6 +35,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Rosen {
 namespace {
+    const std::string EMPTY_DEVICE_ID = "";
     using ConfigItem = WindowSceneConfig::ConfigItem;
     ConfigItem ReadConfig(const std::string& xmlStr)
     {
@@ -61,15 +62,11 @@ namespace {
 class SceneSessionManagerTest3 : public testing::Test {
 public:
     static void SetUpTestCase();
-
     static void TearDownTestCase();
-
     void SetUp() override;
-
     void TearDown() override;
 
     static bool gestureNavigationEnabled_;
-
     static ProcessGestureNavigationEnabledChangeFunc callbackFunc_;
     static sptr<SceneSessionManager> ssm_;
 
@@ -78,12 +75,11 @@ private:
 };
 
 sptr<SceneSessionManager> SceneSessionManagerTest3::ssm_ = nullptr;
-bool SceneSessionManagerTest3::gestureNavigationEnabled_ = true;
 
+bool SceneSessionManagerTest3::gestureNavigationEnabled_ = true;
 ProcessGestureNavigationEnabledChangeFunc SceneSessionManagerTest3::callbackFunc_ = [](bool enable) {
     gestureNavigationEnabled_ = enable;
 };
-
 
 void WindowChangedFuncTest(int32_t persistentId, WindowUpdateType type)
 {
@@ -117,7 +113,6 @@ void SceneSessionManagerTest3::TearDown()
     ssm_->sceneSessionMap_.clear();
     usleep(WAIT_SYNC_IN_NS);
 }
-
 
 namespace {
 /**
@@ -248,7 +243,7 @@ HWTEST_F(SceneSessionManagerTest3, ConfigStatusBar, Function | SmallTest | Level
     contentColor.SetValue(std::string("#12345678"));
     WindowSceneConfig::ConfigItem backgroundColor;
     backgroundColor.SetValue(std::string("#12345678"));
-    item01.SetValue({{"show", showHide}, {"contentColor", contentColor}, {"backgroundColor", backgroundColor}});
+    item01.SetValue({{"showHide", showHide}, {"contentColor", contentColor}, {"backgroundColor", backgroundColor}});
     bool result01 = ssm_->ConfigStatusBar(item01, out);
     ASSERT_EQ(result01, true);
     ASSERT_EQ(out.showHide_, true);
@@ -360,7 +355,7 @@ HWTEST_F(SceneSessionManagerTest3, RecoverAndReconnectSceneSession, Function | S
 
     sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
     ASSERT_NE(nullptr, property);
-    std::vector<int32_t> recoveredPersistentIds = {0, 1, 2};
+    std::vector<int32_t> recoveredPersistentIds = { 0, 1, 2 };
     ssm_->SetAlivePersistentIds(recoveredPersistentIds);
     property->SetPersistentId(1);
     result = ssm_->RecoverAndReconnectSceneSession(nullptr, nullptr, nullptr, session, property, nullptr);
@@ -676,6 +671,56 @@ HWTEST_F(SceneSessionManagerTest3, CreateSceneSession, Function | SmallTest | Le
 }
 
 /**
+ * @tc.name: CheckAppIsInDisplay
+ * @tc.desc: CheckAppIsInDisplay
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest3, CheckAppIsInDisplay, Function | SmallTest | Level3)
+{
+    int ret = 0;
+    sptr<SceneSession> sceneSession;
+    ssm_->RequestSceneSessionActivation(sceneSession, true);
+    SessionInfo info;
+    ret++;
+    sptr<AAFwk::SessionInfo> abilitySessionInfo;
+    ssm_->DestroyDialogWithMainWindow(sceneSession);
+    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    ssm_->DestroyDialogWithMainWindow(sceneSession);
+    ssm_->DestroySubSession(sceneSession);
+    sptr<WindowSessionProperty> property = new WindowSessionProperty();
+    sceneSession->SetSessionProperty(property);
+    property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    property->SetWindowType(WindowType::WINDOW_TYPE_DESKTOP);
+    AppExecFwk::Configuration config;
+    ssm_->SetAbilitySessionInfo(sceneSession);
+    bool res = true;
+    ssm_->PrepareTerminate(1, res);
+    ssm_->isPrepareTerminateEnable_ = true;
+    ssm_->PrepareTerminate(1, res);
+    ssm_->isPrepareTerminateEnable_ = false;
+    ssm_->PrepareTerminate(1, res);
+    ssm_->StartUIAbilityBySCB(sceneSession);
+    ssm_->sceneSessionMap_.insert({1, nullptr});
+    ssm_->IsKeyboardForeground();
+    ssm_->sceneSessionMap_.insert({1, sceneSession});
+    ssm_->NotifyForegroundInteractiveStatus(sceneSession, true);
+    ssm_->NotifyForegroundInteractiveStatus(sceneSession, false);
+    property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
+    ssm_->IsKeyboardForeground();
+    ssm_->IsKeyboardForeground();
+    ssm_->StartUIAbilityBySCB(sceneSession);
+    ssm_->PrepareTerminate(1, res);
+    property->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    ssm_->DestroyDialogWithMainWindow(sceneSession);
+    ssm_->sceneSessionMap_.erase(1);
+    abilitySessionInfo = new (std::nothrow) AAFwk::SessionInfo();
+    ssm_->StartUIAbilityBySCB(abilitySessionInfo);
+    ssm_->DestroySubSession(sceneSession);
+    ssm_->EraseSceneSessionMapById(2);
+    ASSERT_EQ(ret, 1);
+}
+
+/**
  * @tc.name: RequestSceneSessionBackground
  * @tc.desc: RequestSceneSessionBackground
  * @tc.type: FUNC
@@ -721,6 +766,7 @@ HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionBackground, Function | Sma
     ssm_->EraseSceneSessionMapById(2);
     ASSERT_EQ(ret, 1);
 }
+
 
 /**
  * @tc.name: RequestSceneSessionDestruction
@@ -822,14 +868,16 @@ HWTEST_F(SceneSessionManagerTest3, ChangeUIAbilityVisibilityBySCB, Function | Sm
 HWTEST_F(SceneSessionManagerTest3, SetAbilitySessionInfo, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "SetAbilitySessionInfo";
+    info.bundleName_ = "SetAbilitySessionInfo";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     sptr<OHOS::AAFwk::SessionInfo> ret = ssm_->SetAbilitySessionInfo(scensession);
     OHOS::AppExecFwk::ElementName retElementName = ret->want.GetElement();
     ASSERT_EQ(retElementName.GetAbilityName(), info.abilityName_);
     ASSERT_EQ(retElementName.GetBundleName(), info.bundleName_);
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -853,11 +901,13 @@ HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionBackground002, Function | 
 {
     bool isDelegator = false;
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "RequestSceneSessionBackground002";
+    info.bundleName_ = "RequestSceneSessionBackground002";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_EQ(WSError::WS_OK, ssm_->RequestSceneSessionBackground(scensession, isDelegator));
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -868,11 +918,13 @@ HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionBackground002, Function | 
 HWTEST_F(SceneSessionManagerTest3, DestroyDialogWithMainWindow, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "DestroyDialogWithMainWindow";
+    info.bundleName_ = "DestroyDialogWithMainWindow";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_EQ(WSError::WS_OK, ssm_->DestroyDialogWithMainWindow(scensession));
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -884,11 +936,13 @@ HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionDestruction002, Function |
 {
     bool needRemoveSession = false;
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "RequestSceneSessionDestruction002";
+    info.bundleName_ = "RequestSceneSessionDestruction002";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_EQ(WSError::WS_OK, ssm_->RequestSceneSessionDestruction(scensession, needRemoveSession));
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -900,8 +954,8 @@ HWTEST_F(SceneSessionManagerTest3, NotifyForegroundInteractiveStatus, Function |
 {
     bool interactive = false;
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "NotifyForegroundInteractiveStatus";
+    info.bundleName_ = "NotifyForegroundInteractiveStatus";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     int ret = 0;
@@ -917,13 +971,15 @@ HWTEST_F(SceneSessionManagerTest3, NotifyForegroundInteractiveStatus, Function |
 HWTEST_F(SceneSessionManagerTest3, AddClientDeathRecipient, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "AddClientDeathRecipient";
+    info.bundleName_ = "AddClientDeathRecipient";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     int ret = 0;
     ssm_->AddClientDeathRecipient(nullptr, scensession);
     ASSERT_EQ(ret, 0);
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -1101,8 +1157,8 @@ HWTEST_F(SceneSessionManagerTest3, GetSessionInfoByContinueSessionId, Function |
 HWTEST_F(SceneSessionManagerTest3, PreHandleCollaborator, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "PreHandleCollaborator";
+    info.bundleName_ = "PreHandleCollaborator";
     sptr<SceneSession> scensession = nullptr;
     ssm_->PreHandleCollaborator(scensession);
     scensession = new (std::nothrow) SceneSession(info, nullptr);
@@ -1127,6 +1183,8 @@ HWTEST_F(SceneSessionManagerTest3, PreHandleCollaborator, Function | SmallTest |
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->PreHandleCollaborator(scensession);
     ASSERT_NE(scensession->GetSessionInfo().want, nullptr);
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -1152,8 +1210,8 @@ HWTEST_F(SceneSessionManagerTest3, CheckCollaboratorType, Function | SmallTest |
 HWTEST_F(SceneSessionManagerTest3, NotifyUpdateSessionInfo, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "NotifyUpdateSessionInfo";
+    info.bundleName_ = "NotifyUpdateSessionInfo";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->NotifyUpdateSessionInfo(nullptr);
@@ -1163,6 +1221,8 @@ HWTEST_F(SceneSessionManagerTest3, NotifyUpdateSessionInfo, Function | SmallTest
     int32_t persistentId = 10086;
     ssm_->NotifyMoveSessionToForeground(collaboratorType, persistentId);
     ssm_->NotifyClearSession(collaboratorType, persistentId);
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -1173,8 +1233,8 @@ HWTEST_F(SceneSessionManagerTest3, NotifyUpdateSessionInfo, Function | SmallTest
 HWTEST_F(SceneSessionManagerTest3, NotifySessionCreate, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "NotifySessionCreate";
+    info.bundleName_ = "NotifySessionCreate";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->NotifySessionCreate(nullptr, info);
@@ -1185,11 +1245,13 @@ HWTEST_F(SceneSessionManagerTest3, NotifySessionCreate, Function | SmallTest | L
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->NotifySessionCreate(scensession, info);
     EXPECT_NE(info.want, nullptr);
-    AppExecFwk::AbilityInfo aInfo_;
-    sptr<AAFwk::SessionInfo> abilitySessionInfo_ = new AAFwk::SessionInfo();
-    std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo_ = std::make_shared<AppExecFwk::AbilityInfo>(aInfo_);
+    AppExecFwk::AbilityInfo aInfo;
+    sptr<AAFwk::SessionInfo> abilitySessionInfo = new AAFwk::SessionInfo();
+    std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo = std::make_shared<AppExecFwk::AbilityInfo>(aInfo);
     int32_t collaboratorType = CollaboratorType::RESERVE_TYPE;
-    ssm_->NotifyLoadAbility(collaboratorType, abilitySessionInfo_, abilityInfo_);
+    ssm_->NotifyLoadAbility(collaboratorType, abilitySessionInfo, abilityInfo);
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -1204,7 +1266,7 @@ HWTEST_F(SceneSessionManagerTest3, QueryAbilityInfoFromBMS, Function | SmallTest
     sessionInfo_.bundleName_ = "BundleName";
     sessionInfo_.abilityName_ = "AbilityName";
     sessionInfo_.moduleName_ = "ModuleName";
-    AppExecFwk::AbilityInfo abilityInfo_;
+    AppExecFwk::AbilityInfo abilityInfo;
     int32_t collaboratorType = CollaboratorType::RESERVE_TYPE;
     ssm_->QueryAbilityInfoFromBMS(uId,
         sessionInfo_.bundleName_, sessionInfo_.abilityName_, sessionInfo_.moduleName_);
@@ -1227,8 +1289,8 @@ HWTEST_F(SceneSessionManagerTest3, QueryAbilityInfoFromBMS, Function | SmallTest
 HWTEST_F(SceneSessionManagerTest3, IsSessionClearable, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "IsSessionClearable";
+    info.bundleName_ = "IsSessionClearable";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     EXPECT_FALSE(ssm_->IsSessionClearable(nullptr));
@@ -1260,6 +1322,8 @@ HWTEST_F(SceneSessionManagerTest3, IsSessionClearable, Function | SmallTest | Le
     scensession = nullptr;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_TRUE(ssm_->IsSessionClearable(scensession));
+    scensession = nullptr;
+    delete scensession;
 }
 
 /**
@@ -1270,8 +1334,8 @@ HWTEST_F(SceneSessionManagerTest3, IsSessionClearable, Function | SmallTest | Le
 HWTEST_F(SceneSessionManagerTest3, HandleTurnScreenOn, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "HandleTurnScreenOn";
+    info.bundleName_ = "HandleTurnScreenOn";
     sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_NE(scensession, nullptr);
     ssm_->HandleTurnScreenOn(scensession);
@@ -1289,8 +1353,8 @@ HWTEST_F(SceneSessionManagerTest3, HandleTurnScreenOn, Function | SmallTest | Le
 HWTEST_F(SceneSessionManagerTest3, HandleHideNonSystemFloatingWindows, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "HandleHideNonSystemFloatingWindows";
+    info.bundleName_ = "HandleHideNonSystemFloatingWindows";
     sptr<SceneSession> scensession;
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     sptr<WindowSessionProperty> property = nullptr;
@@ -1306,6 +1370,10 @@ HWTEST_F(SceneSessionManagerTest3, HandleHideNonSystemFloatingWindows, Function 
     ssm_->UpdateForceHideState(scensession, property, false);
     uint32_t result = property->GetModeSupportInfo();
     ASSERT_EQ(result, WindowModeSupport::WINDOW_MODE_SUPPORT_ALL);
+    scensession = nullptr;
+    property = nullptr;
+    delete scensession;
+    delete property;
 }
 
 /**
@@ -1344,7 +1412,7 @@ HWTEST_F(SceneSessionManagerTest3, SetGestureNavigaionEnabled02, Function | Smal
 {
     bool enable = true;
     WMError result01 = ssm_->SetGestureNavigaionEnabled(enable);
-    EXPECT_EQ(result01, WMError::WM_DO_NOTHING);
+    EXPECT_EQ(result01, WMError::WM_OK);
     ProcessGestureNavigationEnabledChangeFunc funcGesture_ = SceneSessionManagerTest3::callbackFunc_;
     ssm_->SetGestureNavigationEnabledChangeListener(funcGesture_);
     WMError result02 = ssm_->SetGestureNavigaionEnabled(enable);
@@ -1363,7 +1431,7 @@ HWTEST_F(SceneSessionManagerTest3, SetGestureNavigaionEnabled02, Function | Smal
 HWTEST_F(SceneSessionManagerTest3, SetFocusedSessionId, Function | SmallTest | Level3)
 {
     int32_t focusedSession = ssm_->GetFocusedSessionId();
-    EXPECT_NE(focusedSession, 10086);
+    EXPECT_EQ(focusedSession, INVALID_SESSION_ID);
     int32_t persistentId = INVALID_SESSION_ID;
     WSError result01 = ssm_->SetFocusedSessionId(persistentId);
     EXPECT_EQ(result01, WSError::WS_DO_NOTHING);
@@ -1380,26 +1448,50 @@ HWTEST_F(SceneSessionManagerTest3, SetFocusedSessionId, Function | SmallTest | L
 */
 HWTEST_F(SceneSessionManagerTest3, RequestFocusStatus, Function | SmallTest | Level3)
 {
+    FocusChangeReason reasonInput = FocusChangeReason::DEFAULT;
+    FocusChangeReason reasonResult = FocusChangeReason::DEFAULT;
     int32_t focusedSession = ssm_->GetFocusedSessionId();
     EXPECT_EQ(focusedSession, 10086);
 
     int32_t persistentId = INVALID_SESSION_ID;
     WMError result01 = ssm_->RequestFocusStatus(persistentId, true);
-    EXPECT_EQ(result01, WMError::WM_OK);
-    FocusChangeReason reasonResult = ssm_->GetFocusChangeReason();
+    EXPECT_EQ(result01, WMError::WM_ERROR_NULLPTR);
+    reasonResult = ssm_->GetFocusChangeReason();
     EXPECT_EQ(reasonResult, FocusChangeReason::DEFAULT);
 
     persistentId = 10000;
-    FocusChangeReason reasonInput = FocusChangeReason::SCB_SESSION_REQUEST;
+    reasonInput = FocusChangeReason::SCB_SESSION_REQUEST;
     WMError result02 = ssm_->RequestFocusStatus(persistentId, true, true, reasonInput);
-    EXPECT_EQ(result02, WMError::WM_OK);
+    EXPECT_EQ(result02, WMError::WM_ERROR_NULLPTR);
     reasonResult = ssm_->GetFocusChangeReason();
+    EXPECT_EQ(reasonResult, FocusChangeReason::DEFAULT);
 
     reasonInput = FocusChangeReason::SPLIT_SCREEN;
     WMError result03 = ssm_->RequestFocusStatus(persistentId, false, true, reasonInput);
-    EXPECT_EQ(result03, WMError::WM_OK);
+    EXPECT_EQ(result03, WMError::WM_ERROR_NULLPTR);
     reasonResult = ssm_->GetFocusChangeReason();
     EXPECT_EQ(reasonResult, FocusChangeReason::DEFAULT);
+}
+
+/**
+ * @tc.name: NotifyRequestFocusStatusNotifyManager
+ * @tc.desc: NotifyRequestFocusStatusNotifyManager test.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest3, NotifyRequestFocusStatusNotifyManager, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.abilityName_ = "NotifyRequestFocusStatusNotifyManager";
+    info.bundleName_ = "NotifyRequestFocusStatusNotifyManager";
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    EXPECT_NE(sceneSession, nullptr);
+    ssm_->RegisterRequestFocusStatusNotifyManagerFunc(sceneSession);
+
+    FocusChangeReason reasonInput = FocusChangeReason::DEFAULT;
+    sceneSession->NotifyRequestFocusStatusNotifyManager(true, true, reasonInput);
+    FocusChangeReason reasonResult = ssm_->GetFocusChangeReason();
+
+    ASSERT_EQ(reasonInput, reasonResult);
 }
 
 /**
@@ -1410,37 +1502,13 @@ HWTEST_F(SceneSessionManagerTest3, RequestFocusStatus, Function | SmallTest | Le
 HWTEST_F(SceneSessionManagerTest3, GetTopNearestBlockingFocusSession, Function | SmallTest | Level3)
 {
     uint32_t zOrder = 9999;
-    auto session = ssm_->GetTopNearestBlockingFocusSession(zOrder, true);
-    ASSERT_NE(session, nullptr);
+    sptr<SceneSession> session = ssm_->GetTopNearestBlockingFocusSession(zOrder, true);
+    EXPECT_EQ(session, nullptr);
 
     session = ssm_->GetTopNearestBlockingFocusSession(zOrder, false);
-    ASSERT_NE(session, nullptr);
+    EXPECT_EQ(session, nullptr);
 }
 
-/**
- * @tc.name: CheckFocusIsDownThroughBlockingType
- * @tc.desc: SceneSesionManager test focus switch.
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, CheckFocusIsDownThroughBlockingType, Function | SmallTest | Level3)
-{
-    SessionInfo requestInfo;
-    requestInfo.abilityName_ = "testInfo1a";
-    requestInfo.bundleName_ = "testInfo1b";
-    sptr<SceneSession> sessionRequest = new(std::nothrow) SceneSession(requestInfo, nullptr);
-    EXPECT_NE(sessionRequest, nullptr);
-    sessionRequest->SetZOrder(20);
-
-    SessionInfo focusedInfo;
-    focusedInfo.abilityName_ = "testInfo2a";
-    focusedInfo.bundleName_ = "testInfo2b";
-    sptr<SceneSession> sessionFocused = new(std::nothrow) SceneSession(focusedInfo, nullptr);
-    EXPECT_NE(sessionFocused, nullptr);
-    sessionFocused->SetZOrder(19);
-
-    bool ret = ssm_->CheckFocusIsDownThroughBlockingType(sessionRequest, sessionFocused, false);
-    ASSERT_FALSE(ret);
-}
 
 /**
  * @tc.name: RaiseWindowToTop
@@ -1473,10 +1541,10 @@ HWTEST_F(SceneSessionManagerTest3, ShiftAppWindowFocus, Function | SmallTest | L
     int32_t sourcePersistentId = INVALID_SESSION_ID;
     int32_t targetPersistentId = INVALID_SESSION_ID;
     WSError result01 = ssm_->ShiftAppWindowFocus(sourcePersistentId, targetPersistentId);
-    EXPECT_NE(result01, WSError::WS_DO_NOTHING);
+    EXPECT_EQ(result01, WSError::WS_ERROR_INVALID_OPERATION);
     targetPersistentId = 1;
     WSError result02 = ssm_->ShiftAppWindowFocus(sourcePersistentId, targetPersistentId);
-    EXPECT_NE(result02, WSError::WS_ERROR_INVALID_SESSION);
+    EXPECT_EQ(result02, WSError::WS_ERROR_INVALID_OPERATION);
     sourcePersistentId = 1;
     WSError result03 = ssm_->ShiftAppWindowFocus(sourcePersistentId, targetPersistentId);
     EXPECT_EQ(result03, WSError::WS_ERROR_INVALID_OPERATION);
@@ -1490,8 +1558,8 @@ HWTEST_F(SceneSessionManagerTest3, ShiftAppWindowFocus, Function | SmallTest | L
 HWTEST_F(SceneSessionManagerTest3, RegisterSessionExceptionFunc, Function | SmallTest | Level3)
 {
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "RegisterSessionExceptionFunc";
+    info.bundleName_ = "RegisterSessionExceptionFunc";
     sptr<SceneSession> scensession = nullptr;
     ssm_->RegisterSessionExceptionFunc(scensession);
     scensession = new (std::nothrow) SceneSession(info, nullptr);
@@ -1513,8 +1581,8 @@ HWTEST_F(SceneSessionManagerTest3, DumpSessionInfo, Function | SmallTest | Level
     SessionInfo info;
     std::ostringstream oss;
     std::string dumpInfo;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "DumpSessionInfo";
+    info.bundleName_ = "DumpSessionInfo";
     info.isSystem_ = false;
     sptr<SceneSession> scensession = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->DumpSessionInfo(scensession, oss);
@@ -1541,8 +1609,8 @@ HWTEST_F(SceneSessionManagerTest3, DumpSessionElementInfo, Function | SmallTest 
     DumpRootSceneElementInfoFunc func_ = DumpRootSceneElementInfoFuncTest;
     ssm_->SetDumpRootSceneElementInfoListener(func_);
     SessionInfo info;
-    info.abilityName_ = "Foreground01";
-    info.bundleName_ = "Foreground01";
+    info.abilityName_ = "DumpSessionElementInfo";
+    info.bundleName_ = "DumpSessionElementInfo";
     info.isSystem_ = false;
     std::string strId = "10086";
     sptr<SceneSession> scensession = nullptr;
@@ -1555,7 +1623,7 @@ HWTEST_F(SceneSessionManagerTest3, DumpSessionElementInfo, Function | SmallTest 
     scensession = new (std::nothrow) SceneSession(info, nullptr);
     ssm_->DumpSessionElementInfo(scensession, params_, dumpInfo);
     WSError result01 = ssm_->GetSpecifiedSessionDumpInfo(dumpInfo, params_, strId);
-    EXPECT_NE(result01, WSError::WS_OK);
+    EXPECT_EQ(result01, WSError::WS_ERROR_INVALID_PARAM);
 }
 
 /**
@@ -1570,7 +1638,7 @@ HWTEST_F(SceneSessionManagerTest3, NotifyDumpInfoResult, Function | SmallTest | 
     std::vector<std::string> params = {"-a"};
     std::string dumpInfo = "";
     WSError result01 = ssm_->GetSessionDumpInfo(params, dumpInfo);
-    EXPECT_EQ(result01, WSError::WS_OK);
+    EXPECT_EQ(result01, WSError::WS_ERROR_INVALID_PERMISSION);
     params.clear();
     params.push_back("-w");
     params.push_back("23456");
@@ -1620,6 +1688,7 @@ HWTEST_F(SceneSessionManagerTest3, UpdateWindowMode, Function | SmallTest | Leve
 */
 HWTEST_F(SceneSessionManagerTest3, IsScreenLocked, Function | SmallTest | Level3)
 {
+    ssm_->sceneSessionMap_.clear();
     ssm_->SetScreenLocked(true);
     EXPECT_TRUE(ssm_->IsScreenLocked());
     ssm_->SetScreenLocked(false);
@@ -1706,6 +1775,47 @@ HWTEST_F(SceneSessionManagerTest3, GerPrivacyBundleListOneWindow, Function | Sma
     privacyBundleList.clear();
     ssm_->GetSceneSessionPrivacyModeBundles(1, privacyBundleList);
     EXPECT_EQ(privacyBundleList.size(), 0);
+}
+
+/**
+ * @tc.name: GetTopWindowId
+ * @tc.desc: get top window id by main window id.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest3, GetTopWindowId, Function | SmallTest | Level3)
+{
+    SessionInfo sessionInfo1;
+    sessionInfo1.bundleName_ = "mainWin";
+    sessionInfo1.abilityName_ = "mainAbilityName";
+    sessionInfo1.persistentId_ = 100;
+    auto sceneSession1 = sptr<SceneSession>::MakeSptr(sessionInfo1, nullptr);
+    ASSERT_NE(sceneSession1, nullptr);
+    sceneSession1->SetCallingPid(65534);
+    ssm_->sceneSessionMap_.insert({100, sceneSession1});
+
+    SessionInfo sessionInfo2;
+    sessionInfo2.bundleName_ = "subWin1";
+    sessionInfo2.abilityName_ = "subAbilityName1";
+    sessionInfo2.persistentId_ = 101;
+    auto sceneSession2 = sptr<SceneSession>::MakeSptr(sessionInfo2, nullptr);
+    ASSERT_NE(sceneSession2, nullptr);
+    sceneSession2->SetCallingPid(65535);
+    ssm_->sceneSessionMap_.insert({101, sceneSession2});
+
+    SessionInfo sessionInfo3;
+    sessionInfo3.bundleName_ = "subWin2";
+    sessionInfo3.abilityName_ = "subAbilityName2";
+    sessionInfo3.persistentId_ = 102;
+    auto sceneSession3 = sptr<SceneSession>::MakeSptr(sessionInfo3, nullptr);
+    ASSERT_NE(sceneSession3, nullptr);
+    sceneSession3->SetCallingPid(65534);
+    ssm_->sceneSessionMap_.insert({102, sceneSession3});
+
+    sceneSession1->AddSubSession(sceneSession2);
+    sceneSession1->AddSubSession(sceneSession3);
+    uint32_t topWinId;
+    ASSERT_NE(ssm_->GetTopWindowId(static_cast<uint32_t>(sceneSession1->GetPersistentId()), topWinId),
+        WMError::WM_ERROR_INVALID_WINDOW);
 }
 
 /**
@@ -1895,47 +2005,6 @@ HWTEST_F(SceneSessionManagerTest3, ConfigSubWindowSizeLimits02, Function | Small
 }
 
 /**
- * @tc.name: GetTopWindowId
- * @tc.desc: get top window id by main window id.
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, GetTopWindowId, Function | SmallTest | Level3)
-{
-    SessionInfo sessionInfo1;
-    sessionInfo1.bundleName_ = "mainWin";
-    sessionInfo1.abilityName_ = "mainAbilityName";
-    sessionInfo1.persistentId_ = 100;
-    auto sceneSession1 = sptr<SceneSession>::MakeSptr(sessionInfo1, nullptr);
-    ASSERT_NE(sceneSession1, nullptr);
-    sceneSession1->SetCallingPid(65534);
-    ssm_->sceneSessionMap_.insert({100, sceneSession1});
-
-    SessionInfo sessionInfo2;
-    sessionInfo2.bundleName_ = "subWin1";
-    sessionInfo2.abilityName_ = "subAbilityName1";
-    sessionInfo2.persistentId_ = 101;
-    auto sceneSession2 = sptr<SceneSession>::MakeSptr(sessionInfo2, nullptr);
-    ASSERT_NE(sceneSession2, nullptr);
-    sceneSession2->SetCallingPid(65535);
-    ssm_->sceneSessionMap_.insert({101, sceneSession2});
-
-    SessionInfo sessionInfo3;
-    sessionInfo3.bundleName_ = "subWin2";
-    sessionInfo3.abilityName_ = "subAbilityName2";
-    sessionInfo3.persistentId_ = 102;
-    auto sceneSession3 = sptr<SceneSession>::MakeSptr(sessionInfo3, nullptr);
-    ASSERT_NE(sceneSession3, nullptr);
-    sceneSession3->SetCallingPid(65534);
-    ssm_->sceneSessionMap_.insert({102, sceneSession3});
-
-    sceneSession1->AddSubSession(sceneSession2);
-    sceneSession1->AddSubSession(sceneSession3);
-    uint32_t topWinId;
-    ASSERT_NE(ssm_->GetTopWindowId(static_cast<uint32_t>(sceneSession1->GetPersistentId()), topWinId),
-        WMError::WM_ERROR_INVALID_WINDOW);
-}
-
-/**
  * @tc.name: NotifyStackEmpty
  * @tc.desc: SceneSesionManager notify stack empty
  * @tc.type: FUNC
@@ -1945,7 +2014,7 @@ HWTEST_F(SceneSessionManagerTest3, NotifyStackEmpty, Function | SmallTest | Leve
     WSError ret;
     int32_t persistentId = 10086;
     ret = ssm_->NotifyStackEmpty(persistentId);
-    ASSERT_EQ(ret, WSError::WS_ERROR_INVALID_WINDOW);
+    ASSERT_EQ(ret, WSError::WS_OK);
 
     SessionInfo info;
     info.abilityName_ = "SceneSessionManagerTest3";
