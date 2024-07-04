@@ -57,7 +57,7 @@ SessionGravity KeyboardSession::GetKeyboardGravity() const
 {
     SessionGravity gravity = SessionGravity::SESSION_GRAVITY_DEFAULT;
     uint32_t percent = 0;
-    auto sessionProperty = GetSessionProperty();
+    auto sessionProperty = session->GetSessionProperty();
     if (sessionProperty) {
         sessionProperty->GetSessionGravity(gravity, percent);
     }
@@ -105,7 +105,7 @@ WSError KeyboardSession::Hide()
         session->NotifyKeyboardPanelInfoChange(rect, false);
         if (session->systemConfig_.uiType_ == "pc") {
             session->RestoreCallingSession();
-            auto sessionProperty = GetSessionProperty();
+            auto sessionProperty = session->GetSessionProperty();
             if (sessionProperty) {
                 sessionProperty->SetCallingSessionId(INVALID_WINDOW_ID);
             }
@@ -130,7 +130,7 @@ WSError KeyboardSession::Disconnect(bool isFromClient)
         WSRect rect = {0, 0, 0, 0};
         session->NotifyKeyboardPanelInfoChange(rect, false);
         session->RestoreCallingSession();
-        auto sessionProperty = GetSessionProperty();
+        auto sessionProperty = session->GetSessionProperty();
         if (sessionProperty) {
             sessionProperty->SetCallingSessionId(INVALID_WINDOW_ID);
         }
@@ -202,7 +202,7 @@ WSError KeyboardSession::SetKeyboardSessionGravity(SessionGravity gravity, uint3
         if (session->sessionChangeCallback_ && session->sessionChangeCallback_->onKeyboardGravityChange_) {
             session->sessionChangeCallback_->onKeyboardGravityChange_(gravity);
         }
-        auto sessionProperty = GetSessionProperty();
+        auto sessionProperty = session->GetSessionProperty();
         if (sessionProperty) {
             sessionProperty->SetKeyboardSessionGravity(gravity, percent);
         }
@@ -314,7 +314,7 @@ WSError KeyboardSession::AdjustKeyboardLayout(const KeyboardLayoutParams& params
             "PortraitPanelRect: %{public}s", session->GetPersistentId(), static_cast<uint32_t>(params.gravity_),
             params.LandscapeKeyboardRect_.ToString().c_str(), params.PortraitKeyboardRect_.ToString().c_str(),
             params.LandscapePanelRect_.ToString().c_str(), params.PortraitPanelRect_.ToString().c_str());
-        auto sessionProperty = GetSessionProperty();
+        auto sessionProperty = session->GetSessionProperty();
         if (sessionProperty) {
             sessionProperty->SetKeyboardLayoutParams(params);
         }
@@ -624,7 +624,7 @@ void KeyboardSession::CloseKeyboardSyncTransaction(const WSRect& keyboardPanelRe
             }
         } else {
             session->RestoreCallingSession(rsTransaction);
-            auto sessionProperty = GetSessionProperty();
+            auto sessionProperty = session->GetSessionProperty();
             if (sessionProperty) {
                 sessionProperty->SetCallingSessionId(INVALID_WINDOW_ID);
             }
