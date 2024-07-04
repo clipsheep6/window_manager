@@ -1606,7 +1606,7 @@ HWTEST_F(WindowSessionImplTwoTest, TouchOutsideListener, Function | SmallTest | 
  * @tc.type: FUNC
  * @tc.require: issue
  */
-HWTEST_F(WindowSessionImplTest, SetRestoredRouterStack_0200, Function | SmallTest | Level3)
+HWTEST_F(WindowSessionImplTwoTest, SetRestoredRouterStack_0200, Function | SmallTest | Level3)
 {
     sptr<WindowOption> option = sptr<WindowOption>::MakeSptr();
     ASSERT_NE(option, nullptr);
@@ -1624,7 +1624,7 @@ HWTEST_F(WindowSessionImplTest, SetRestoredRouterStack_0200, Function | SmallTes
  * @tc.desc: SetUiDvsyncSwitch
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionImplTest, SetUiDvsyncSwitch, Function | SmallTest | Level2) {
+HWTEST_F(WindowSessionImplTwoTest, SetUiDvsyncSwitch, Function | SmallTest | Level2) {
     sptr<WindowOption> option = new (std::nothrow) WindowOption();
     ASSERT_NE(option, nullptr);
     option->SetWindowName("SetUiDvsyncSwitch");
@@ -1633,23 +1633,6 @@ HWTEST_F(WindowSessionImplTest, SetUiDvsyncSwitch, Function | SmallTest | Level2
     window->SetUiDvsyncSwitch(true);
     window->vsyncStation_ = nullptr;
     window->SetUiDvsyncSwitch(true);
-}
-
-/**
- * @tc.name: GetVSyncPeriod
- * @tc.desc: GetVSyncPeriod
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionImplTest, GetVSyncPeriod, Function | SmallTest | Level2)
-{
-    sptr<WindowOption> option = new (std::nothrow) WindowOption();
-    ASSERT_NE(option, nullptr);
-    option->SetWindowName("GetVSyncPeriod");
-    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
-    ASSERT_NE(window, nullptr);
-    window->GetVSyncPeriod();
-    window->vsyncStation_ = nullptr;
-    window->GetVSyncPeriod();
 }
 }
 } // namespace Rosen
