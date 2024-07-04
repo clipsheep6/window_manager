@@ -1304,10 +1304,15 @@ HWTEST_F(SceneSessionManagerTest, GetMainWindowInfos, Function | SmallTest | Lev
 */
 HWTEST_F(SceneSessionManagerTest, GetAllWindowVisibilityInfos, Function | SmallTest | Level3)
 {
+    ASSERT_NE(_ssm, nullptr);
+    ssm_->sceneSessionMap_.clear();
+    SessionInfo info;
+    sptr<SceneSession> sceneSession = ssm_->CreateSceneSession(info, nullptr);
+    ASSERT_NE(nullptr, sceneSession);
+    ssm_->sceneSessionMap_.insert({sceneSession->GetPersistentId(), sceneSession});
     std::vector<std::pair<int32_t, uint32_t>> windowVisibilityInfos;
-    ASSERT_NE(ssm_, nullptr);
     ssm_->GetAllWindowVisibilityInfos(windowVisibilityInfos);
-    EXPECT_EQ(windowVisibilityInfos.size(), 0);
+    EXPECT_NE(windowVisibilityInfos.size(), 0);
 }
 
 /**
