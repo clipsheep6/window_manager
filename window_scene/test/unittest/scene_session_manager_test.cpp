@@ -1608,6 +1608,108 @@ HWTEST_F(SceneSessionManagerTest, ClearMainSessions001, Function | SmallTest | L
 }
 
 /**
+ * @tc.name: UpdateMaximizeMode
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UpdateMaximizeMode, Function | SmallTest | Level3)
+{
+    int32_t persistentId = 12345;
+    bool isMaximize = true;
+    WSError result00 = ssm_->UpdateMaximizeMode(persistentId, isMaximize);
+    ASSERT_EQ(result00, WSError::WS_OK);
+
+    isMaximize = false;
+    WSError result01 = ssm_->UpdateMaximizeMode(persistentId, isMaximize);
+    ASSERT_EQ(result01, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: PreloadInLakeApp
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, PreloadInLakeApp, Function | SmallTest | Level3)
+{
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest";
+    info.bundleName_ = "PreloadInLakeApp";
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    ssm_->PreloadInLakeApp(info.bundleName_);
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: GetSceneSessionPrivacyModeBundles
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, GetSceneSessionPrivacyModeBundles, Function | SmallTest | Level3)
+{
+    std::vector<std::string> privacyBundles = {"SceneSessionManagerTest"};
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest1";
+    info.bundleName_ = "GetSceneSessionPrivacyModeBundles";
+    info.persistentId_ = 100;
+    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    DisplayId displayId = sceneSession->GetSessionProperty()->GetDisplayId();
+    ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    ssm_->sceneSessionMap_.insert({100, sceneSession});
+    ssm_->GetSceneSessionPrivacyModeBundles(displayId, privacyBundles);
+    ssm_->sceneSessionMap_.clear();
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
+
+/**
+ * @tc.name: UnregisterIAbilityManagerCollaborator
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, UnregisterIAbilityManagerCollaborator, Function | SmallTest | Level3)
+{
+    int32_t type = 1;
+    WSError result = ssm_->UnregisterIAbilityManagerCollaborator(type);
+    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PERMISSION);
+}
+
+/**
+ * @tc.name: ProcessUpdateRotationChange
+ * @tc.desc: normal function.
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, ProcessUpdateRotationChange, Function | SmallTest | Level3)
+{
+    sptr<SceneSessionManager> sceneSessionManager = new (std::nothrow) SceneSessionManager();
+    sptr<DisplayInfo> displayInfo = nullptr;
+    SessionInfo info;
+    info.abilityName_ = "SceneSessionManagerTest";
+    info.bundleName_ = "ProcessUpdateRotationChange";
+    info.persistentId_ = 100;
+    sptr<SceneSession::SpecificSessionCallback> specific = new SceneSession::SpecificSessionCallback();
+    sptr<SceneSession> sceneSession1 = new (std::nothrow) SceneSession(info, specific);
+    DisplayId displayId = sceneSession1->GetSessionProperty()->GetDisplayId();
+    std::map<DisplayId, sptr<DisplayInfo>> displayInfoMap;
+    DisplayStateChangeType type = DisplayStateChangeType::UPDATE_ROTATION;
+    ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    ssm_->sceneSessionMap_.insert({100, sceneSession1});
+    ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
+    ASSERT_NE(nullptr, sceneSessionManager);
+
+    ssm_->sceneSessionMap_.clear();
+    sptr<SceneSession> sceneSession2 = new (std::nothrow) SceneSession(info, nullptr);
+    ssm_->sceneSessionMap_.insert({100, sceneSession2});
+    displayInfo->GetWidth();
+    displayInfo->GetHeight();
+    displayInfo->GetRotation();
+    ssm_->ProcessUpdateRotationChange(displayId, displayInfo, displayInfoMap, type);
+    ssm_->sceneSessionMap_.clear();
+    ASSERT_NE(nullptr, sceneSessionManager);
+}
  * @tc.name: ClearMainSessions002
  * @tc.desc: SceneSessionManager clear main session by persistentid.
  * @tc.type: FUNC
