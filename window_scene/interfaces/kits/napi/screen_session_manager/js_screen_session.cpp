@@ -556,6 +556,7 @@ void JsScreenSession::OnPowerStatusChange(DisplayPowerEvent event, EventStatus e
     std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
     NapiAsyncTask::Schedule("JsScreenSession::" + callbackType, env_,
         std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
+    WLOGFI("[UL_POWER]Throwing Tasks Sucess!");
 }
 
 void JsScreenSession::OnScreenRotationLockedChange(bool isLocked, ScreenId screenId)
