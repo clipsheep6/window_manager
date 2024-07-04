@@ -18,6 +18,7 @@
 
 #include "ability_context_impl.h"
 #include "accessibility_event_info.h"
+#include "color_parser.h"
 #include "mock_session.h"
 #include "window_helper.h"
 #include "window_session_impl.h"
@@ -686,8 +687,11 @@ HWTEST_F(WindowSessionImplTest, RequestVsyncSucc, Function | SmallTest | Level2)
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
     std::shared_ptr<VsyncCallback> vsyncCallback = std::make_shared<VsyncCallback>();
-    window->state_ = WindowState::STATE_DESTROYED;
-    ASSERT_EQ(WindowState::STATE_DESTROYED, window->GetWindowState());
+    window->state_ = WindowState::STATE_SHOWN;
+    ASSERT_EQ(WindowState::STATE_SHOWN, window->GetWindowState());
+    ASSERT_NE(window->vsyncStation_, nullptr);
+    window->RequestVsync(vsyncCallback);
+    window->vsyncStation_ = nullptr;
     window->RequestVsync(vsyncCallback);
 }
 
@@ -1538,7 +1542,22 @@ HWTEST_F(WindowSessionImplTest, SetBackgroundColor01, Function | SmallTest | Lev
     ASSERT_EQ(WMError::WM_OK, window->Create(abilityContext_, nullptr));
     res = window->SetBackgroundColor(color);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
+
+    color = "Blue";
+    window->property_->SetPersistentId(1);
+    window->state_ = WindowState::STATE_SHOWN;
+    window->hostSession_ = session;
+    ASSERT_FALSE(window->IsWindowSessionInvalid());
+    uint32_t colorValue;
+    ASSERT_FALSE(ColorParser::Parse(color, colorValue));
+    res = window->SetBackgroundColor(color);
+    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_PARAM);
+
+    color = "#FFFFFF00";
+    ASSERT_TRUE(ColorParser::Parse(color, colorValue));
+    res = window->SetBackgroundColor(color);
+    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_OPERATION);
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetBackgroundColor01 end";
 }
 
@@ -1564,6 +1583,19 @@ HWTEST_F(WindowSessionImplTest, SetBackgroundColor02, Function | SmallTest | Lev
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_OPERATION);
     uint32_t ret = window->GetBackgroundColor();
     ASSERT_EQ(ret, 0xffffffff);
+
+    ASSERT_EQ(window->aceAbilityHandler_, nullptr);
+    sptr<IAceAbilityHandler> handler = new (std::nothrow) MockIAceAbilityHandler();
+    window->SetAceAbilityHandler(handler);
+    res = window->SetBackgroundColor(0xffffffff);
+    ASSERT_NE(window->aceAbilityHandler_, nullptr);
+    ASSERT_EQ(res, WMError::WM_OK);
+
+    ASSERT_TRUE(!(0xff0000 & 0xff000000));
+    ASSERT_TRUE(WindowHelper::IsMainWindow(window->GetType()));
+    window->uiContent_ = std::make_unique<Ace::UIContentMocker>();
+    res = window->SetBackgroundColor(0xff0000);
+    ASSERT_EQ(res, WMError::WM_OK);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetBackgroundColor02 end";
 }
@@ -2503,9 +2535,14 @@ HWTEST_F(WindowSessionImplTest, Filter, Function | SmallTest | Level2)
     option->SetWindowName("Filter");
     sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(window, nullptr);
-    KeyEventFilterFunc filter;
-    window->SetKeyEventFilter(filter);
-    std::shared_ptr<MMI::KeyEvent> keyEvent = nullptr;
+    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
+    window->FilterKeyEvent(keyEvent);
+    ASSERT_EQ(window->keyEventFilter_, nullptr);
+    window->SetKeyEventFilter([](MMI::KeyEvent& keyEvent) {
+        GTEST_LOG_(INFO) << "WindowSessionImplTest: SetKeyEventFilter";
+        return true;
+    });
+    ASSERT_NE(window->keyEventFilter_, nullptr);
     window->FilterKeyEvent(keyEvent);
     auto ret = window->ClearKeyEventFilter();
     ASSERT_EQ(ret, WMError::WM_OK);

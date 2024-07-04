@@ -686,13 +686,15 @@ HWTEST_F(WindowSessionImplTwoTest, RefreshNoInteractionTimeoutMonitor, Function 
 {
     auto window = GetTestWindowImpl("RefreshNoInteractionTimeoutMonitor");
     ASSERT_NE(window, nullptr);
-
     window->RefreshNoInteractionTimeoutMonitor();
-
-    auto listeners = GetListenerList<IWindowStatusChangeListener, MockWindowStatusChangeListener>();
-    ASSERT_NE(listeners.size(), 0);
-    window->windowStatusChangeListeners_.insert({window->GetPersistentId(), listeners});
+    ASSERT_TRUE(window->windowNoInteractionListeners_[window->GetPersistentId()].empty());
+    ASSERT_NE(window->property_, nullptr);
+    window->property_->SetPersistentId(1);
+    sptr<IWindowNoInteractionListener> listener = new (std::nothrow) MockWindowNoInteractionListener();
+    ASSERT_EQ(window->RegisterWindowNoInteractionListener(listener), WMError::WM_OK);
     window->RefreshNoInteractionTimeoutMonitor();
+    ASSERT_EQ(window->GetPersistentId(), 1);
+    ASSERT_FALSE(window->windowNoInteractionListeners_[window->GetPersistentId()].empty());
     window->Destroy();
 }
 
@@ -1583,6 +1585,141 @@ HWTEST_F(WindowSessionImplTwoTest, TouchOutsideListener, Function | SmallTest | 
 
     window->UnregisterTouchOutsideListener(listener);
     window->UnregisterTouchOutsideListener(listener1);
+}
+
+/**
+ * @tc.name: NotifyDialogStateChange
+ * @tc.desc: NotifyDialogStateChange
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, NotifyDialogStateChange, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: NotifyDialogStateChange start";
+    window_ = GetTestWindowImpl("NotifyDialogStateChange");
+    ASSERT_NE(window_, nullptr);
+    ASSERT_EQ(window_->NotifyDialogStateChange(true), WSError::WS_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: NotifyDialogStateChange end";
+}
+
+/**
+ * @tc.name: SwitchFreeMultiWindow
+ * @tc.desc: SwitchFreeMultiWindow
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, SwitchFreeMultiWindow, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: SwitchFreeMultiWindow start";
+    window_ = GetTestWindowImpl("SwitchFreeMultiWindow");
+    ASSERT_NE(window_, nullptr);
+    ASSERT_EQ(window_->SwitchFreeMultiWindow(true), WSError::WS_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: SwitchFreeMultiWindow end";
+}
+
+/**
+ * @tc.name: UpdateTitleInTargetPos
+ * @tc.desc: UpdateTitleInTargetPos
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, UpdateTitleInTargetPos, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: UpdateTitleInTargetPos start";
+    window_ = GetTestWindowImpl("UpdateTitleInTargetPos");
+    ASSERT_NE(window_, nullptr);
+    ASSERT_EQ(window_->UpdateTitleInTargetPos(true, 100), WSError::WS_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: UpdateTitleInTargetPos end";
+}
+
+/**
+ * @tc.name: NotifySessionBackground
+ * @tc.desc: NotifySessionBackground
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, NotifySessionBackground, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: NotifySessionBackground start";
+    window_ = GetTestWindowImpl("NotifySessionBackground");
+    ASSERT_NE(window_, nullptr);
+    window_->NotifySessionBackground(true, true, true);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: NotifySessionBackground end";
+}
+
+/**
+ * @tc.name: UpdateMaximizeMode
+ * @tc.desc: UpdateMaximizeMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, UpdateMaximizeMode, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: UpdateMaximizeMode start";
+    window_ = GetTestWindowImpl("UpdateMaximizeMode");
+    ASSERT_NE(window_, nullptr);
+    ASSERT_EQ(window_->UpdateMaximizeMode(MaximizeMode::MODE_AVOID_SYSTEM_BAR), WSError::WS_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: UpdateMaximizeMode end";
+}
+
+/**
+ * @tc.name: DumpSessionElementInfo
+ * @tc.desc: DumpSessionElementInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, DumpSessionElementInfo, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: DumpSessionElementInfo start";
+    window_ = GetTestWindowImpl("DumpSessionElementInfo");
+    ASSERT_NE(window_, nullptr);
+    std::vector<std::string>& params;
+    window_->DumpSessionElementInfo(params);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: DumpSessionElementInfo end";
+}
+
+/**
+ * @tc.name: GetKeyboardAnimationConfig
+ * @tc.desc: GetKeyboardAnimationConfig
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, GetKeyboardAnimationConfig, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: GetKeyboardAnimationConfig start";
+    window_ = GetTestWindowImpl("GetKeyboardAnimationConfig");
+    ASSERT_NE(window_, nullptr);
+    window_->GetKeyboardAnimationConfig();
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: GetKeyboardAnimationConfig end";
+}
+
+/**
+ * @tc.name: SetWindowGravity
+ * @tc.desc: SetWindowGravity
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, SetWindowGravity, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: SetWindowGravity start";
+    window_ = GetTestWindowImpl("SetWindowGravity");
+    ASSERT_NE(window_, nullptr);
+    ASSERT_NE(window_->GetHostSession(), nullptr);
+    window_->hostSession_ = nullptr;
+    ASSERT_EQ(window_->SetWindowGravity(WindowGravity::WINDOW_GRAVITY_BOTTOM, 100), WMError::WM_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: SetWindowGravity end";
+}
+
+/**
+ * @tc.name: GetSubWindow
+ * @tc.desc: GetSubWindow
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, GetSubWindow, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: GetSubWindow start";
+    window_ = GetTestWindowImpl("GetSubWindow");
+    ASSERT_NE(window_, nullptr);
+    ASSERT_TRUE(window_->subWindowSessionMap_.empty());
+    std::vector<sptr<WindowSessionImpl>> vec;
+    vec.push_back(window_);
+    int32_t parentId = 111;
+    window_->subWindowSessionMap_.insert(std::pair<int32_t, std::vector<sptr<WindowSessionImpl>>>(parentId, vec));
+    std::vector<sptr<Window>> subWindows = window_->GetSubWindow(parentId);
+    ASSERT_EQ(subWindows.size(), 1);
+    GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: GetSubWindow end";
 }
 }
 } // namespace Rosen

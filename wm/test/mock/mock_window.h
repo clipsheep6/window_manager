@@ -87,6 +87,12 @@ public:
     MOCK_METHOD2(OnRectChange, void(Rect rect, WindowSizeChangeReason reason));
 };
 
+class MockIAceAbilityHandler : public IAceAbilityHandler {
+public:
+    MOCK_METHOD1(SetBackgroundColor, void(uint32_t color));
+    MOCK_METHOD0(GetBackgroundColor, uint32_t());
+};
+
 } // Rosen
 } // OHOS
 
