@@ -328,7 +328,6 @@ HWTEST_F(SceneSessionManagerTest, ClearDisplayStatusBarTemporarilyFlags, Functio
     sessionInfo.windowType_ = static_cast<uint32_t>(WindowType::APP_MAIN_WINDOW_BASE);
     sptr<SceneSession> sceneSession = ssm_->RequestSceneSession(sessionInfo, nullptr);
     ASSERT_NE(nullptr, sceneSession);
-    int32_t id = sceneSession->GetPersistentId();
     sceneSession->SetIsDisplayStatusBarTemporarily(true);
     ASSERT_EQ(true, sceneSession->GetIsDisplayStatusBarTemporarily());
     ssm_->ClearDisplayStatusBarTemporarilyFlags();
@@ -1304,7 +1303,7 @@ HWTEST_F(SceneSessionManagerTest, GetMainWindowInfos, Function | SmallTest | Lev
 */
 HWTEST_F(SceneSessionManagerTest, GetAllWindowVisibilityInfos, Function | SmallTest | Level3)
 {
-    ASSERT_NE(_ssm, nullptr);
+    ASSERT_NE(ssm_, nullptr);
     ssm_->sceneSessionMap_.clear();
     SessionInfo info;
     sptr<SceneSession> sceneSession = ssm_->CreateSceneSession(info, nullptr);
