@@ -1062,7 +1062,7 @@ HWTEST_F(WindowSessionImplTwoTest, InitUIContent, Function | SmallTest | Level2)
     napi_env env = nullptr;
     napi_value storage = nullptr;
     WindowSetUIContentType type = WindowSetUIContentType::DEFAULT;
-    AppExecFwk::Ability *ability = nullptr;
+    AppExecFwk::Ability* ability = nullptr;
     OHOS::Ace::UIContentErrorCode aceRet;
     BackupAndRestoreType restoreType = BackupAndRestoreType::NONE;
 

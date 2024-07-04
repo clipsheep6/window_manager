@@ -1922,7 +1922,6 @@ HWTEST_F(WindowSessionImplTest, SetTopmost, Function | SmallTest | Level2)
  * @tc.type: FUNC
  */
 HWTEST_F(WindowSessionImplTest, IsTopmost, Function | SmallTest | Level2)
-
 {
     sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("IsTopmost");
@@ -2291,9 +2290,8 @@ HWTEST_F(WindowSessionImplTest, NotifyRotationAnimationEnd, Function | SmallTest
     ASSERT_NE(window, nullptr);
     window->NotifyRotationAnimationEnd();
 
-    std::string url = "";
     OHOS::Ace::UIContentErrorCode aceRet = OHOS::Ace::UIContentErrorCode::NO_ERRORS;
-    window->InitUIContent(url, nullptr, nullptr, WindowSetUIContentType::BY_ABC, BackupAndRestoreType::NONE,
+    window->InitUIContent("", nullptr, nullptr, WindowSetUIContentType::BY_ABC, BackupAndRestoreType::NONE,
                           nullptr, aceRet);
     window->NotifyRotationAnimationEnd();
     ASSERT_NE(nullptr, window->uiContent_);
@@ -2346,13 +2344,11 @@ HWTEST_F(WindowSessionImplTest, IsFocused, Function | SmallTest | Level2)
     ASSERT_NE(nullptr, session);
     ASSERT_EQ(WMError::WM_OK, window->Create(nullptr, session));
     int32_t persistentId = window->GetPersistentId();
-    if (persistentId == INVALID_SESSION_ID)
-    {
+    if (persistentId == INVALID_SESSION_ID) {
         persistentId = 1;
         window->property_->SetPersistentId(persistentId);
     }
-    if (window->state_ == WindowState::STATE_DESTROYED)
-    {
+    if (window->state_ == WindowState::STATE_DESTROYED) {
         window->state_ = WindowState::STATE_SHOWN;
     }
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->RequestFocus());
