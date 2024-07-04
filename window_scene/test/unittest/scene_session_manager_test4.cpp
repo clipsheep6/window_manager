@@ -1540,13 +1540,150 @@ HWTEST_F(SceneSessionManagerTest4, GetSessionSnapshotPixelMap, Function | SmallT
 }
 
 /**
- * @tc.name: 
- * @tc.desc: 
+ * @tc.name: UpdateMaximizeMode
+ * @tc.desc: UpdateMaximizeMode
  * @tc.type: FUNC
 */
-HWTEST_F(SceneSessionManagerTest4, , Function | SmallTest | Level3)
+HWTEST_F(SceneSessionManagerTest4, UpdateMaximizeMode, Function | SmallTest | Level3)
 {
+    ASSERT_NE(ssm_, nullptr);
+    int32_t persistentId = 1;
+    bool isMaximize = true;
+    SessionInfo info;
+    info.bundleName_ = "test_bundleName";
+    info.moduleName_ = "test_moduleName";
+    info.abilityName_ = "test_abilityName";
+    sptr<SceneSession> sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
+    ASSERT_NE(sceneSession, nullptr);
+    ssm_->sceneSessionMap_.insert(std::make_pair(0, nullptr));
+    ssm_->sceneSessionMap_.insert(std::make_pair(1, sceneSession));
+    auto result = ssm_->UpdateMaximizeMode(0, isMaximize);
+    EXPECT_EQ(result, WSError::WS_OK);
+    result = ssm_->UpdateMaximizeMode(persistentId, isMaximize);
+    EXPECT_EQ(result, WSError::WS_OK);
+}
 
+/**
+ * @tc.name: PreHandleCollaborator02
+ * @tc.desc: PreHandleCollaborator
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest4, PreHandleCollaborator02, Function | SmallTest | Level3)
+{
+    ASSERT_NE(ssm_, nullptr);
+    sptr<SceneSession> sceneSession = nullptr;
+    auto result = ssm_->PreHandleCollaborator(sceneSession);
+    EXPECT_EQ(result, false);
+    SessionInfo info;
+    info.bundleName_ = "test_bundleName";
+    info.moduleName_ = "test_moduleName";
+    info.abilityName_ = "test_abilityName";
+    info.want = std::make_shared<AAFwk::Want>();
+    ASSERT_NE(info.want, nullptr);
+    std::string sessionAffinity = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_MISSION_AFFINITY_KEY);
+    EXPECT_TRUE(sessionAffinity.empty());
+    sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
+    ASSERT_NE(sceneSession, nullptr);
+    result = ssm_->PreHandleCollaborator(sceneSession);
+    EXPECT_EQ(info.sessionAffinity, sessionAffinity);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.name: NotifyEnterRecentTask
+ * @tc.desc: NotifyEnterRecentTask
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest4, NotifyEnterRecentTask, Function | SmallTest | Level3)
+{
+    ASSERT_NE(ssm_, nullptr);
+    ssm_->avoidAreaListenerSessionSet_.insert(0);
+    ssm_->avoidAreaListenerSessionSet_.insert(1);
+    ssm_->avoidAreaListenerSessionSet_.insert(2);
+    SessionInfo info;
+    info.bundleName_ = "test_bundleName";
+    info.moduleName_ = "test_moduleName";
+    info.abilityName_ = "test_abilityName";
+    sptr<SceneSession> sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
+    sptr<SceneSession> sceneSession02 = sptr<SceneSession>::MakeSptr(info, nullptr);
+    ASSERT_NE(sceneSession, nullptr);
+    ASSERT_NE(sceneSession02, nullptr);
+    ASSERT_NE(sceneSession->property_, nullptr);
+    sceneSession->property_->SetWindowType(WindowType::APP_SUB_WINDOW_BASE);
+    sceneSession->property_->SetParentPersistentId(0);
+    ASSERT_NE(sceneSession02->property_, nullptr);
+    sceneSession02->property_->SetWindowType(WindowType::APP_SUB_WINDOW_END);
+    sceneSession02->SetSessionState(SessionState::STATE_ACTIVE);
+    ssm_->sceneSessionMap_.insert(std::make_pair(0, nullptr));
+    ssm_->sceneSessionMap_.insert(std::make_pair(1, sceneSession));
+    ssm_->sceneSessionMap_.insert(std::make_pair(2, sceneSession02));
+    auto result = ssm_->NotifyEnterRecentTask(false);
+    EXPECT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: GetAllSceneSessionForAccessibility
+ * @tc.desc: GetAllSceneSessionForAccessibility
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest4, GetAllSceneSessionForAccessibility, Function | SmallTest | Level3)
+{
+    ASSERT_NE(ssm_, nullptr);
+    SessionInfo info;
+    info.bundleName_ = "test_bundleName";
+    info.moduleName_ = "test_moduleName";
+    info.abilityName_ = "test_abilityName";
+    sptr<SceneSession> sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
+    ASSERT_NE(sceneSession, nullptr);
+    sceneSession->forceTouchable_ = true;
+    sceneSession->systemTouchable_ = true;
+    sceneSession->isVisible_ = true;
+    ASSERT_NE(sceneSession->property_, nullptr);
+    sceneSession->property_->touchable_ = true;
+    sceneSession->property_->SetWindowType(WindowType::APP_SUB_WINDOW_END);
+    ssm_->sceneSessionMap_.insert(std::make_pair(0, nullptr));
+    ssm_->sceneSessionMap_.insert(std::make_pair(1, sceneSession));
+    std::vector<sptr<SceneSession>> sceneSessionList;
+    ssm_->GetAllSceneSessionForAccessibility(sceneSessionList);
+    sptr<SceneSession> sceneSession01 = sceneSessionList[0];
+    EXPECT_NE(sceneSession01, nullptr);
+}
+
+/**
+ * @tc.name: DestroyExtensionSession
+ * @tc.desc: DestroyExtensionSession
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest4, DestroyExtensionSession, Function | SmallTest | Level3)
+{
+    ASSERT_NE(ssm_, nullptr);
+    SessionInfo info;
+    info.bundleName_ = "test_bundleName";
+    info.moduleName_ = "test_moduleName";
+    info.abilityName_ = "test_abilityName";
+    sptr<IRemoteObject> remoteExtSession = sptr<IRemoteObjectMocker>::MakeSptr();
+    ASSERT_NE(remoteExtSession, nullptr);
+    ssm_->DestroyExtensionSession(remoteExtSession);
+
+    ssm_->remoteExtSessionMap_.clear();
+    ssm_->remoteExtSessionMap_.insert(std::make_pair(remoteExtSession, std::make_pair(0, 1)));
+    ssm_->DestroyExtensionSession(remoteExtSession);
+
+    ssm_->remoteExtSessionMap_.insert(std::make_pair(remoteExtSession, std::make_pair(0, 1)));
+    sptr<SceneSession> sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
+    ASSERT_NE(sceneSession, nullptr);
+    sceneSession->state_ = SessionState::STATE_FOREGROUND;
+    sceneSession->combinedExtWindowFlags_.SetAllActive();
+    ssm_->sceneSessionMap_.insert(std::make_pair(1, sceneSession));
+    ssm_->DestroyExtensionSession(remoteExtSession);
+
+    ssm_->remoteExtSessionMap_.insert(std::make_pair(remoteExtSession, std::make_pair(0, 1)));
+    sceneSession->combinedExtWindowFlags_.hideNonSecureWindowsFlag = false;
+    sceneSession->combinedExtWindowFlags_.waterMarkFlag = false;
+    sceneSession->combinedExtWindowFlags_.privacyModeFlag = false;
+    ssm_->DestroyExtensionSession(remoteExtSession);
+    ssm_->remoteExtSessionMap_.clear();
+    EXPECT_EQ(WSError::WS_ERROR_INVALID_SESSION, ssm_->HandleSecureSessionShouldHide(nullptr));
 }
 }
 } // namespace Rosen
