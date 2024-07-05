@@ -1066,7 +1066,7 @@ HWTEST_F(WindowSessionImplTwoTest, UnregisterWindowRectChangeListener01, Functio
     GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: UnregisterWindowRectChangeListener01 end";
 }
 
-/*
+/**
  * @tc.name: GetVirtualPixelRatio
  * @tc.desc: GetVirtualPixelRatio
  * @tc.type: FUNC
@@ -1117,7 +1117,7 @@ HWTEST_F(WindowSessionImplTwoTest, InitUIContent, Function | SmallTest | Level2)
     GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: InitUIContent end";
 }
 
-/*
+/**
  * @tc.name: NotifyScreenshot
  * @tc.desc: NotifyScreenshot01 listener==nullptr
  * @tc.type: FUNC
