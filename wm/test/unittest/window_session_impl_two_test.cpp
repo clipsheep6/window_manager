@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 
 #include "display_info.h"
+#include "ability_context_impl.h"
 #include "mock_session.h"
 #include "mock_uicontent.h"
 #include "mock_window.h"
@@ -224,7 +225,21 @@ HWTEST_F(WindowSessionImplTwoTest, Destroy, Function | SmallTest | Level2)
     window->hostSession_ = nullptr;
     ASSERT_EQ(window->Destroy(true, true), WMError::WM_ERROR_INVALID_WINDOW);
 
-    window->Destroy();
+    window = GetTestWindowImpl("Destroy");
+    ASSERT_NE(window, nullptr);
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> hostSession = new (std::nothrow) SessionMocker(sessionInfo);
+    window->hostSession_ = hostSession;
+    ASSERT_EQ(window->Destroy(true, true), WMError::WM_ERROR_INVALID_WINDOW);
+
+    window = GetTestWindowImpl("Destroy");
+    ASSERT_NE(window, nullptr);
+    window->hostSession_ = hostSession;
+    window->state_ = WindowState::STATE_INITIAL;
+    window->property_->SetPersistentId(1);
+    ASSERT_FALSE(window->IsWindowSessionInvalid());
+    window->context_ = std::make_shared<AbilityRuntime::AbilityContextImpl>();
+    ASSERT_EQ(window->Destroy(true, true), WMError::WM_OK);
 }
 
 /**
@@ -1081,7 +1096,7 @@ HWTEST_F(WindowSessionImplTwoTest, InitUIContent, Function | SmallTest | Level2)
     napi_env env = nullptr;
     napi_value storage = nullptr;
     WindowSetUIContentType type = WindowSetUIContentType::DEFAULT;
-    AppExecFwk::Ability *ability = nullptr;
+    AppExecFwk::Ability* ability = nullptr;
     OHOS::Ace::UIContentErrorCode aceRet;
     BackupAndRestoreType restoreType = BackupAndRestoreType::NONE;
 
@@ -1102,7 +1117,7 @@ HWTEST_F(WindowSessionImplTwoTest, InitUIContent, Function | SmallTest | Level2)
     GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: InitUIContent end";
 }
 
-/*
+/**
  * @tc.name: NotifyScreenshot
  * @tc.desc: NotifyScreenshot01 listener==nullptr
  * @tc.type: FUNC
@@ -1583,6 +1598,41 @@ HWTEST_F(WindowSessionImplTwoTest, TouchOutsideListener, Function | SmallTest | 
 
     window->UnregisterTouchOutsideListener(listener);
     window->UnregisterTouchOutsideListener(listener1);
+}
+
+/**
+ * @tc.name: SetRestoredRouterStack_0200
+ * @tc.desc: basic function test of set or get restored router stack.
+ * @tc.type: FUNC
+ * @tc.require: issue
+ */
+HWTEST_F(WindowSessionImplTwoTest, SetRestoredRouterStack_0200, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = sptr<WindowOption>::MakeSptr();
+    ASSERT_NE(option, nullptr);
+    sptr<WindowSessionImpl> window = sptr<WindowSessionImpl>::MakeSptr(option);
+    ASSERT_NE(window, nullptr);
+    std::string routerStack = "stackInfo:{}";
+    EXPECT_EQ(window->SetRestoredRouterStack(routerStack), WMError::WM_OK);
+    std::string gettedStack = window->GetRestoredRouterStack();
+    EXPECT_EQ(gettedStack, routerStack);
+    EXPECT_TRUE(window->GetRestoredRouterStack().empty());
+}
+
+/**
+ * @tc.name: SetUiDvsyncSwitch
+ * @tc.desc: SetUiDvsyncSwitch
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTwoTest, SetUiDvsyncSwitch, Function | SmallTest | Level2) {
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    ASSERT_NE(option, nullptr);
+    option->SetWindowName("SetUiDvsyncSwitch");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    window->SetUiDvsyncSwitch(true);
+    window->vsyncStation_ = nullptr;
+    window->SetUiDvsyncSwitch(true);
 }
 }
 } // namespace Rosen
