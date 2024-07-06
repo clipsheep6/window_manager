@@ -2298,6 +2298,26 @@ WSRect Session::GetSessionLastRect() const
     return lastWinRect_;
 }
 
+void Session::SetBlankFlag(bool isAddBlank)
+{
+    isAddBlank_ = isAddBlank;
+}
+
+bool Session::GetBlankFlag() const
+{
+    return isAddBlank_;
+}
+
+void Session::SetBufferAvailableCallbackFlag(bool isCallback)
+{
+    isCallback_ = isCallback;
+}
+
+bool Session::GetBufferAvailableCallbackFlag() const
+{
+    return isCallback_;
+}
+
 void Session::SetSessionRequestRect(const WSRect& rect)
 {
     auto property = GetSessionProperty();
