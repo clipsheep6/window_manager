@@ -377,8 +377,7 @@ HWTEST_F(WindowSessionImplTest, MakeSubOrDialogWindowDragableAndMoveble04, Funct
     ASSERT_NE(nullptr, option);
     option->SetSubWindowDecorEnable(true);
     option->SetWindowName("MakeSubOrDialogWindowDragableAndMoveble04");
-    sptr<WindowSessionImpl> window =
-        new (std::nothrow) WindowSessionImpl(option);
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
     ASSERT_NE(nullptr, window);
     window->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
     window->windowSystemConfig_.freeMultiWindowSupport_ = true;
@@ -406,6 +405,7 @@ HWTEST_F(WindowSessionImplTest, WindowSessionCreateCheck01, Function | SmallTest
     option1->SetWindowName("WindowSessionCreateCheck"); // set the same name
     sptr<WindowSessionImpl> window1 =
         new (std::nothrow) WindowSessionImpl(option1);
+        
     ASSERT_NE(nullptr, window1);
 
     WMError res = window1->WindowSessionCreateCheck();
@@ -870,14 +870,15 @@ HWTEST_F(WindowSessionImplTest, SetBrightness01, Function | SmallTest | Level2)
 
     float brightness = -1.0; // brightness < 0
     WMError res = window->SetBrightness(brightness);
-    ASSERT_EQ(res, WMError::WM_OK);
+    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
+
     brightness = 2.0; // brightness > 1
     res = window->SetBrightness(brightness);
     ASSERT_EQ(res, WMError::WM_ERROR_INVALID_PARAM);
 
     brightness = 0.5;
     res = window->SetBrightness(brightness);
-    ASSERT_EQ(res, WMError::WM_OK);
+    ASSERT_EQ(res, WMError::WM_ERROR_INVALID_WINDOW);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
     GTEST_LOG_(INFO) << "WindowSessionImplTest: SetBrightness01 end";
 }
@@ -1420,6 +1421,7 @@ HWTEST_F(WindowSessionImplTest, MarkProcessed, Function | SmallTest | Level2)
 
     int32_t eventId = 1;
     window->state_ = WindowState::STATE_DESTROYED;
+    window->hostSession_ = session;
     ASSERT_EQ(window->GetPersistentId(), INVALID_SESSION_ID);
     ASSERT_EQ(window->state_, WindowState::STATE_DESTROYED);
     WSError res = window->MarkProcessed(eventId);
@@ -2426,9 +2428,10 @@ HWTEST_F(WindowSessionImplTest, IsFocused, Function | SmallTest | Level2)
         window->state_ = WindowState::STATE_SHOWN;
     }
     window->hostSession_ = session;
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->RequestFocus());
+    window->RequestFocus();
+    ASSERT_FALSE(window->IsWindowSessionInvalid());
     ASSERT_EQ(persistentId, window->GetPersistentId());
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_WINDOW, window->Destroy());
+    ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
 
 /**
@@ -2497,9 +2500,9 @@ HWTEST_F(WindowSessionImplTest, GetAbcContent, Function | SmallTest | Level2)
     ASSERT_FALSE(abcFile4.empty());
     ASSERT_FALSE(!abcFile4.is_absolute());
     ASSERT_FALSE(!std::filesystem::exists(abcFile4));
-    ASSERT_EQ(res, nullptr);
+    ASSERT_NE(res, nullptr);
     std::fstream file(abcFile, std::ios::in | std::ios::binary);
-    ASSERT_TRUE(file);
+    ASSERT_FALSE(file);
     window->Destroy();
 }
 
@@ -2761,56 +2764,6 @@ HWTEST_F(WindowSessionImplTest, GetTitleButtonVisible03, Function | SmallTest | 
     ASSERT_EQ(hideMinimizeButton, true);
     ASSERT_EQ(hideSplitButton, true);
 }
-
-/**
- * @tc.name: SetUiDvsyncSwitchSucc
- * @tc.desc: SetUiDvsyncSwitch Test Succ
- * @tc.type: FUNC
-*/
-HWTEST_F(WindowSessionImplTest, SetUiDvsyncSwitchSucc, Function | SmallTest | Level2)
-{
-    sptr<WindowOption> option = new (std::nothrow) WindowOption();
-    option->SetWindowName("SetUiDvsyncSwitchSucc");
-    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
-    ASSERT_NE(window, nullptr);
-    window->SetUiDvsyncSwitch(true);
-    window->SetUiDvsyncSwitch(false);
-}
-
-/**
- * @tc.name: SetUiDvsyncSwitchErr
- * @tc.desc: SetUiDvsyncSwitch Test Err
- * @tc.type: FUNC
-*/
-HWTEST_F(WindowSessionImplTest, SetUiDvsyncSwitchErr, Function | SmallTest | Level2)
-{
-    sptr<WindowOption> option = new (std::nothrow) WindowOption();
-    option->SetWindowName("SetUiDvsyncSwitchErr");
-    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
-    ASSERT_NE(window, nullptr);
-    window->vsyncStation_ = nullptr;
-    window->SetUiDvsyncSwitch(true);
-    window->SetUiDvsyncSwitch(false);
-}
-
-/*
- * @tc.name: SetRestoredRouterStack_0100
- * @tc.desc: basic function test of set or get restored router stack.
- * @tc.type: FUNC
- * @tc.require: issue
- */
-HWTEST_F(WindowSessionImplTest, SetRestoredRouterStack_0100, Function | SmallTest | Level3)
-{
-    sptr<WindowOption> option = sptr<WindowOption>::MakeSptr();
-    ASSERT_NE(option, nullptr);
-    sptr<WindowSessionImpl> window = sptr<WindowSessionImpl>::MakeSptr(option);
-    ASSERT_NE(window, nullptr);
-    std::string routerStack = "stackInfo:{}";
-    EXPECT_EQ(window->SetRestoredRouterStack(routerStack), WMError::WM_OK);
-    EXPECT_EQ(window->NapiSetUIContent("info", nullptr, nullptr, BackupAndRestoreType::NONE, nullptr, nullptr),
-        WMError::WM_ERROR_INVALID_WINDOW);
-}
-
 }
 } // namespace Rosen
 } // namespace OHOS

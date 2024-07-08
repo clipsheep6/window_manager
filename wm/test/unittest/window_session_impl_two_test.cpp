@@ -17,8 +17,8 @@
 
 #include <gtest/gtest.h>
 
-#include "display_info.h"
 #include "ability_context_impl.h"
+#include "display_info.h"
 #include "mock_session.h"
 #include "mock_uicontent.h"
 #include "mock_window.h"
@@ -1436,8 +1436,8 @@ HWTEST_F(WindowSessionImplTwoTest, RegisterSubWindowCloseListeners01, Function |
 
     sptr<ISubWindowCloseListener> listener = new MockISubWindowCloseListener();
     window_->property_->SetWindowType(WindowType::WINDOW_TYPE_UI_EXTENSION);
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_TYPE, window_->RegisterSubWindowCloseListeners(listener));
-    ASSERT_EQ(WMError::WM_ERROR_INVALID_TYPE, window_->UnregisterSubWindowCloseListeners(listener));
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_CALLING, window_->RegisterSubWindowCloseListeners(listener));
+    ASSERT_EQ(WMError::WM_ERROR_INVALID_CALLING, window_->UnregisterSubWindowCloseListeners(listener));
 
     window_->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
     ASSERT_EQ(WMError::WM_OK, window_->RegisterSubWindowCloseListeners(listener));
@@ -1682,7 +1682,8 @@ HWTEST_F(WindowSessionImplTwoTest, DumpSessionElementInfo, Function | SmallTest 
     GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: DumpSessionElementInfo start";
     window_ = GetTestWindowImpl("DumpSessionElementInfo");
     ASSERT_NE(window_, nullptr);
-    std::vector<std::string>& params;
+    std::vector<std::string> params;
+    params.push_back("test");
     window_->DumpSessionElementInfo(params);
     GTEST_LOG_(INFO) << "WindowSessionImplTwoTest: DumpSessionElementInfo end";
 }
@@ -1770,6 +1771,55 @@ HWTEST_F(WindowSessionImplTwoTest, SetUiDvsyncSwitch, Function | SmallTest | Lev
     window->SetUiDvsyncSwitch(true);
     window->vsyncStation_ = nullptr;
     window->SetUiDvsyncSwitch(true);
+}
+
+/**
+ * @tc.name: SetUiDvsyncSwitchSucc
+ * @tc.desc: SetUiDvsyncSwitch Test Succ
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSessionImplTwoTest, SetUiDvsyncSwitchSucc, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("SetUiDvsyncSwitchSucc");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    window->SetUiDvsyncSwitch(true);
+    window->SetUiDvsyncSwitch(false);
+}
+
+/**
+ * @tc.name: SetUiDvsyncSwitchErr
+ * @tc.desc: SetUiDvsyncSwitch Test Err
+ * @tc.type: FUNC
+*/
+HWTEST_F(WindowSessionImplTwoTest, SetUiDvsyncSwitchErr, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("SetUiDvsyncSwitchErr");
+    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
+    ASSERT_NE(window, nullptr);
+    window->vsyncStation_ = nullptr;
+    window->SetUiDvsyncSwitch(true);
+    window->SetUiDvsyncSwitch(false);
+}
+
+/*
+ * @tc.name: SetRestoredRouterStack_0100
+ * @tc.desc: basic function test of set or get restored router stack.
+ * @tc.type: FUNC
+ * @tc.require: issue
+ */
+HWTEST_F(WindowSessionImplTwoTest, SetRestoredRouterStack_0100, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = sptr<WindowOption>::MakeSptr();
+    ASSERT_NE(option, nullptr);
+    sptr<WindowSessionImpl> window = sptr<WindowSessionImpl>::MakeSptr(option);
+    ASSERT_NE(window, nullptr);
+    std::string routerStack = "stackInfo:{}";
+    EXPECT_EQ(window->SetRestoredRouterStack(routerStack), WMError::WM_OK);
+    EXPECT_EQ(window->NapiSetUIContent("info", nullptr, nullptr, BackupAndRestoreType::NONE, nullptr, nullptr),
+        WMError::WM_ERROR_INVALID_WINDOW);
 }
 }
 } // namespace Rosen

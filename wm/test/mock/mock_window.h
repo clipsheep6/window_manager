@@ -93,6 +93,15 @@ public:
     MOCK_METHOD0(GetBackgroundColor, uint32_t());
 };
 
+class MockIDisplayMoveListener : public IDisplayMoveListener {
+public:
+    MOCK_METHOD2(OnDisplayMove, void(DisplayId from, DisplayId to));
+};
+
+class MockIWindowNoInteractionListener : public IWindowNoInteractionListener {
+public:
+    MOCK_METHOD0(OnWindowNoInteractionCallback, void());
+};
 } // Rosen
 } // OHOS
 

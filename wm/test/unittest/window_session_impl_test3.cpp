@@ -19,13 +19,10 @@
 
 #include "ability_context_impl.h"
 #include "display_info.h"
-#include "display_manager.h"
-#include "mock_display_manager_adapter.h"
 #include "mock_session.h"
 #include "mock_uicontent.h"
 #include "mock_window.h"
 #include "parameters.h"
-#include "singleton_mocker.h"
 #include "wm_common.h"
 
 using namespace testing;
@@ -33,7 +30,6 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
-using Mocker = SingletonMocker<DisplayManagerAdapter, MockDisplayManagerAdapter>;
 class WindowSessionImplTest3 : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -74,13 +70,11 @@ sptr<WindowSessionImpl> GetTestWindowImpl(const std::string& name)
     if (window == nullptr) {
         return nullptr;
     }
-
     SessionInfo sessionInfo = {name, name, name};
     sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
     if (session == nullptr) {
         return nullptr;
     }
-
     window->hostSession_ = session;
     return window;
 }
@@ -111,12 +105,52 @@ HWTEST_F(WindowSessionImplTest3, SetInputEventConsumer01, Function | SmallTest |
     window_ = GetTestWindowImpl("SetInputEventConsumer01");
     ASSERT_NE(window_, nullptr);
     window_->inputEventConsumer_ = nullptr;
-    std::shared_ptr<IInputEventConsumer>& inputEventConsumer = std::make_shared<MockInputEventConsumer>();
+    std::shared_ptr<IInputEventConsumer> inputEventConsumer = std::make_shared<MockInputEventConsumer>();
     window_->SetInputEventConsumer(inputEventConsumer);
     ASSERT_NE(window_->inputEventConsumer_, nullptr);
     GTEST_LOG_(INFO) << "WindowSessionImplTest3: SetInputEventConsumer01 end";
 }
 
+/**
+ * @tc.name: GetListeners
+ * @tc.desc: GetListeners01 IDisplayMoveListener
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest3, GetListeners01, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest3: GetListeners01 start";
+    window_ = GetTestWindowImpl("GetListeners01");
+    ASSERT_NE(window_, nullptr);
+    window_->displayMoveListeners_.clear();
+    window_->NotifyDisplayMove(0, 100);
+    ASSERT_TRUE(window_->displayMoveListeners_[window_->GetPersistentId()].empty());
+
+    sptr<IDisplayMoveListener> displayMoveListener = new (std::nothrow) MockIDisplayMoveListener();
+    ASSERT_EQ(window_->RegisterDisplayMoveListener(displayMoveListener), WMError::WM_OK);
+    window_->NotifyDisplayMove(0, 100);
+    ASSERT_FALSE(window_->displayMoveListeners_[window_->GetPersistentId()].empty());
+    GTEST_LOG_(INFO) << "WindowSessionImplTest3: GetListeners01 end";
+}
+
+/**
+ * @tc.name: RegisterWindowNoInteractionListener
+ * @tc.desc: RegisterWindowNoInteractionListener01
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest3, RegisterWindowNoInteractionListener01, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest3: RegisterWindowNoInteractionListener01 start";
+    window_ = GetTestWindowImpl("RegisterWindowNoInteractionListener01");
+    ASSERT_NE(window_, nullptr);
+    ASSERT_EQ(window_->RegisterWindowNoInteractionListener(nullptr), WMError::WM_ERROR_NULLPTR);
+    ASSERT_EQ(window_->UnregisterWindowNoInteractionListener(nullptr), WMError::WM_ERROR_NULLPTR);
+
+    sptr<IWindowNoInteractionListener> windowNoInteractionListenerSptr =
+        new (std::nothrow) MockIWindowNoInteractionListener();
+    ASSERT_EQ(window_->RegisterWindowNoInteractionListener(windowNoInteractionListenerSptr), WMError::WM_OK);
+    ASSERT_EQ(window_->UnregisterWindowNoInteractionListener(windowNoInteractionListenerSptr), WMError::WM_OK);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest3: RegisterWindowNoInteractionListener01 end";
+}
 }
 } // namespace Rosen
 } // namespace OHOS
