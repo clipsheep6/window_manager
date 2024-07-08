@@ -422,6 +422,58 @@ HWTEST_F(WindowSessionTest, GetSessionLastRect, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: SetBlankFlag
+ * @tc.desc: check func SetBlankFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetBlankFlag, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    bool isAddBlank = true;
+    session_->SetBlankFlag(isAddBlank);
+    ASSERT_EQ(isAddBlank, session_->isAddBlank_);
+}
+
+/**
+ * @tc.name: GetBlankFlag
+ * @tc.desc: check func GetBlankFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetBlankFlag, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    bool isAddBlank = true;
+    session_->SetBlankFlag(isAddBlank);
+    ASSERT_EQ(isAddBlank, session_->GetBlankFlag());
+}
+
+/**
+ * @tc.name: SetBufferAvailableCallbackFlag
+ * @tc.desc: check func SetBufferAvailableCallbackFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, SetBufferAvailableCallbackFlag, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    bool isCallback = true;
+    session_->SetBufferAvailableCallbackFlag(isCallback);
+    ASSERT_EQ(isCallback, session_->isCallback_);
+}
+
+/**
+ * @tc.name: GetBufferAvailableCallbackFlag
+ * @tc.desc: check func GetBufferAvailableCallbackFlag
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionTest, GetBufferAvailableCallbackFlag, Function | SmallTest | Level2)
+{
+    ASSERT_NE(session_, nullptr);
+    bool isCallback = true;
+    session_->SetBufferAvailableCallbackFlag(isCallback);
+    ASSERT_EQ(isCallback, session_->GetBufferAvailableCallbackFlag());
+}
+
+/**
  * @tc.name: CheckDialogOnForeground
  * @tc.desc: check func CheckDialogOnForeground
  * @tc.type: FUNC

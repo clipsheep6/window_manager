@@ -195,6 +195,10 @@ public:
     std::string GetWindowName() const;
     void SetSessionLastRect(const WSRect& rect);
     WSRect GetSessionLastRect() const;
+    void SetBlankFlag(bool isAddBlank);
+    bool GetBlankFlag() const;
+    void SetBufferAvailableCallbackFlag(bool isCallback);
+    bool GetBufferAvailableCallbackFlag() const;
 
     virtual WSError SetActive(bool active);
     virtual WSError UpdateSizeChangeReason(SizeChangeReason reason);
@@ -484,6 +488,8 @@ protected:
     float offsetY_ = 0.0f;
     std::atomic_bool isExitSplitOnBackground_ = false;
     bool isVisible_ = false;
+    bool isAddBlank_ = false;
+    bool isCallback_ = false;
     SizeChangeReason reason_ = SizeChangeReason::UNDEFINED;
 
     NotifyPendingSessionActivationFunc pendingSessionActivationFunc_;
