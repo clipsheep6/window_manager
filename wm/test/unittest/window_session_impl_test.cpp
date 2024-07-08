@@ -2042,25 +2042,6 @@ HWTEST_F(WindowSessionImplTest, SetSubWindowModal, Function | SmallTest | Level2
 }
 
 /**
- * @tc.name: SetDecorHeight
- * @tc.desc: SetDecorHeight and check the retCode
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSessionImplTest, SetDecorHeight, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetDecorHeighttest01 start";
-    sptr<WindowOption> option = new WindowOption();
-    ASSERT_NE(option, nullptr);
-    option->SetWindowName("SetDecorHeight");
-    sptr<WindowSessionImpl> window = new (std::nothrow) WindowSessionImpl(option);
-    ASSERT_NE(window, nullptr);
-    int32_t height = 50;
-    WMError res = window->SetDecorHeight(height);
-    ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
-    GTEST_LOG_(INFO) << "WindowSessionImplTest: SetDecorHeighttest01 end";
-}
-
-/**
  * @tc.name: GetDecorHeight
  * @tc.desc: GetDecorHeight and check the retCode
  * @tc.type: FUNC

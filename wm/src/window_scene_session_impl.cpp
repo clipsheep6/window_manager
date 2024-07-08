@@ -508,9 +508,10 @@ bool WindowSceneSessionImpl::HandlePointDownEvent(const std::shared_ptr<MMI::Poi
     WindowType windowType = property_->GetWindowType();
     bool isDecorDialog = windowType == WindowType::WINDOW_TYPE_DIALOG && property_->IsDecorEnable();
     bool isFixedSubWin = WindowHelper::IsSubWindow(windowType) && !property_->GetDragEnabled();
+    bool isFloatingMode = (property_->GetWindowMode() == Rosen::WindowMode::WINDOW_MODE_FLOATING);
     auto hostSession = GetHostSession();
     CHECK_HOST_SESSION_RETURN_ERROR_IF_NULL(hostSession, needNotifyEvent);
-    if ((WindowHelper::IsSystemWindow(windowType) || isFixedSubWin) && !isDecorDialog) {
+    if ((WindowHelper::IsSystemWindow(windowType) || isFixedSubWin || !isFloatingMode) && !isDecorDialog) {
         hostSession->ProcessPointDownSession(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
     } else {
         if (dragType != AreaType::UNDEFINED) {
@@ -676,8 +677,14 @@ void WindowSceneSessionImpl::GetConfigurationFromAbilityInfo()
         UpdateProperty(WSPropertyChangeAction::ACTION_UPDATE_MODE_SUPPORT_INFO);
         auto isPhone = windowSystemConfig_.uiType_ == "phone";
         auto isPad = windowSystemConfig_.uiType_ == "pad";
-        if (modeSupportInfo == WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN && !isPhone && !isPad) {
-            SetFullScreen(true);
+        bool isFreeMultiWindowMode = windowSystemConfig_.freeMultiWindowSupport_ &&
+            windowSystemConfig_.freeMultiWindowEnable_;
+        bool onlySupportFullScreen = (modeSupportInfo == WindowModeSupport::WINDOW_MODE_SUPPORT_FULLSCREEN) &&
+            ((!isPhone && !isPad) || isFreeMultiWindowMode);
+        if (onlySupportFullScreen || property_->GetFullScreenStart()) {
+            TLOGI(WmsLogTag::WMS_LAYOUT, "onlySupportFullScreen:%{public}d fullScreenStart:%{public}d",
+                onlySupportFullScreen, property_->GetFullScreenStart());
+            SetLayoutFullScreen(true);
         }
         // get orientation configuration
         OHOS::AppExecFwk::DisplayOrientation displayOrientation =
@@ -886,19 +893,21 @@ void WindowSceneSessionImpl::UpdateSubWindowStateAndNotify(int32_t parentPersist
 
 void WindowSceneSessionImpl::PreLayoutOnShow(WindowType type)
 {
+    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+    if (uiContent == nullptr) {
+        TLOGW(WmsLogTag::WMS_LIFE, "uiContent is null");
+        return;
+    }
     const auto& requestRect = GetRequestRect();
     TLOGI(WmsLogTag::WMS_LIFE, "name: %{public}s, id: %{public}d, type: %{public}u, requestRect:%{public}s",
         property_->GetWindowName().c_str(), GetPersistentId(), type, requestRect.ToString().c_str());
     if (requestRect.width_ != 0 && requestRect.height_ != 0) {
         UpdateViewportConfig(GetRequestRect(), WindowSizeChangeReason::RESIZE);
     }
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent != nullptr) {
-        state_ = WindowState::STATE_SHOWN;
-        requestState_ = WindowState::STATE_SHOWN;
-        uiContent->Foreground();
-        uiContent->PreLayout();
-    }
+    state_ = WindowState::STATE_SHOWN;
+    requestState_ = WindowState::STATE_SHOWN;
+    uiContent->Foreground();
+    uiContent->PreLayout();
 }
 
 WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
@@ -973,9 +982,9 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
         // update sub window state if this is main window
         if (WindowHelper::IsMainWindow(type)) {
             UpdateSubWindowStateAndNotify(GetPersistentId(), WindowState::STATE_SHOWN);
-            state_ = WindowState::STATE_SHOWN;
-            requestState_ = WindowState::STATE_SHOWN;
         }
+        state_ = WindowState::STATE_SHOWN;
+        requestState_ = WindowState::STATE_SHOWN;
         NotifyAfterForeground(true, WindowHelper::IsMainWindow(type));
         RefreshNoInteractionTimeoutMonitor();
         TLOGI(WmsLogTag::WMS_LIFE, "Window show success [name:%{public}s, id:%{public}d, type:%{public}u]",
@@ -1923,19 +1932,28 @@ WMError WindowSceneSessionImpl::Maximize()
     return WMError::WM_OK;
 }
 
-WMError WindowSceneSessionImpl::Maximize(MaximizeLayoutOption option)
+WMError WindowSceneSessionImpl::Maximize(std::optional<MaximizePresentation> presentation)
 {
-    if (option.dock != ShowType::HIDE || option.decor == ShowType::FORBIDDEN) {
-        WLOGE("[WMLayout] dock cannot be hide always! dock is not hide: %{public}d", option.dock != ShowType::HIDE);
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
     if (!WindowHelper::IsMainWindow(GetType())) {
-        WLOGFE("maximize fail, not main window");
+        TLOGE(WmsLogTag::WMS_LAYOUT, "maximize fail, not main window");
         return WMError::WM_ERROR_INVALID_CALLING;
     }
     if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
+    MaximizePresentation maximizePresentation = presentation.value_or(MaximizePresentation::ENTER_IMMERSIVE);
+    switch (maximizePresentation) {
+        case MaximizePresentation::ENTER_IMMERSIVE:
+            enableImmersiveMode_ = true;
+            break;
+        case MaximizePresentation::EXIT_IMMERSIVE:
+            enableImmersiveMode_ = false;
+            break;
+        case MaximizePresentation::FOLLOW_APP_IMMERSIVE_SETTING:
+            break;
+    }
+    TLOGI(WmsLogTag::WMS_LAYOUT, "present: %{public}d, enableImmersiveMode_:%{public}d!",
+        maximizePresentation, enableImmersiveMode_);
     return SetLayoutFullScreen(enableImmersiveMode_);
 }
 
@@ -3573,6 +3591,7 @@ WMError WindowSceneSessionImpl::SetImmersiveModeEnabledState(bool enable)
     }
 
     enableImmersiveMode_ = enable;
+    hostSession_->OnLayoutFullScreenChange(enableImmersiveMode_);
     WindowMode mode = GetMode();
     auto isPC = windowSystemConfig_.uiType_ == "pc";
     if (!isPC || mode == WindowMode::WINDOW_MODE_FULLSCREEN) {

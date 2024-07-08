@@ -265,6 +265,19 @@ bool IsJsIsSetPointerAreasUndefined(napi_env env, napi_value jsIsSetPointerAreas
     return true;
 }
 
+bool IsJsFullScreenStartUndefined(napi_env env, napi_value jsFullscreenStart, SessionInfo& sessionInfo)
+{
+    if (GetType(env, jsFullscreenStart) != napi_undefined) {
+        bool fullScreenStart = false;
+        if (!ConvertFromJsValue(env, jsFullscreenStart, fullScreenStart)) {
+            TLOGI(WmsLogTag::WMS_LAYOUT, "Failed to convert parameter to fullScreenStart");
+            return false;
+        }
+        sessionInfo.fullScreenStart_ = fullScreenStart;
+    }
+    return true;
+}
+
 bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sessionInfo)
 {
     napi_value jsBundleName = nullptr;
@@ -279,6 +292,8 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
     napi_get_named_property(env, jsObject, "isSystem", &jsIsSystem);
     napi_value jsWindowInputType = nullptr;
     napi_get_named_property(env, jsObject, "windowInputType", &jsWindowInputType);
+    napi_value jsFullScreenStart = nullptr;
+    napi_get_named_property(env, jsObject, "fullScreenStart", &jsFullScreenStart);
     if (!IsJsBundleNameUndefind(env, jsBundleName, sessionInfo)) {
         return false;
     }
@@ -295,6 +310,9 @@ bool ConvertSessionInfoName(napi_env env, napi_value jsObject, SessionInfo& sess
         return false;
     }
     if (!IsJsWindowInputTypeUndefind(env, jsWindowInputType, sessionInfo)) {
+        return false;
+    }
+    if (!IsJsFullScreenStartUndefined(env, jsFullScreenStart, sessionInfo)) {
         return false;
     }
     return true;
@@ -508,6 +526,44 @@ bool ConvertPointerItemFromJs(napi_env env, napi_value touchObject, MMI::Pointer
     return true;
 }
 
+bool ConvertTouchesObjectFromJs(napi_env env, napi_value jsTouches, int32_t pointerId, MMI::PointerEvent& pointerEvent)
+{
+    // iterator touches
+    if (jsTouches == nullptr) {
+        WLOGFE("[NAPI]Failed to convert to touchesObject list");
+        return false;
+    }
+    bool isArray = false;
+    napi_is_array(env, jsTouches, &isArray);
+    if (!isArray) {
+        return false;
+    }
+    uint32_t length = 0;
+    napi_get_array_length(env, jsTouches, &length);
+    for (uint32_t i = 0; i < length; i++) {
+        napi_value touchesObject = nullptr;
+        napi_get_element(env, jsTouches, i, &touchesObject);
+        if (touchesObject == nullptr) {
+            WLOGFE("[NAPI]Failed get to touchesObject");
+            return false;
+        }
+        napi_value jsNoChangedId = nullptr;
+        napi_get_named_property(env, touchesObject, "id", &jsNoChangedId);
+        int32_t noChangedId;
+        if (!ConvertFromJsValue(env, jsNoChangedId, noChangedId)) {
+            WLOGFE("[NAPI]Failed to convert parameter to jsNoChangeId");
+            return false;
+        }
+        if (pointerId == noChangedId) {
+            continue;
+        }
+        if (!ConvertPointerItemFromJs(env, touchesObject, pointerEvent)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ConvertPointerEventFromJs(napi_env env, napi_value jsObject, MMI::PointerEvent& pointerEvent)
 {
     napi_value jsSourceType = nullptr;
@@ -516,6 +572,8 @@ bool ConvertPointerEventFromJs(napi_env env, napi_value jsObject, MMI::PointerEv
     napi_get_named_property(env, jsObject, "timestamp", &jsTimestamp);
     napi_value jsChangedTouches = nullptr;
     napi_get_named_property(env, jsObject, "changedTouches", &jsChangedTouches);
+    napi_value jsTouches = nullptr;
+    napi_get_named_property(env, jsObject, "touches", &jsTouches);
     int32_t sourceType;
     if (!ConvertFromJsValue(env, jsSourceType, sourceType)) {
         WLOGFE("[NAPI]Failed to convert parameter to sourceType");
@@ -539,9 +597,20 @@ bool ConvertPointerEventFromJs(napi_env env, napi_value jsObject, MMI::PointerEv
         WLOGFE("[NAPI]Failed get to touchObject");
         return false;
     }
+    napi_value jsId = nullptr;
+    napi_get_named_property(env, touchObject, "id", &jsId);
+    int32_t pointerId;
+    if (!ConvertFromJsValue(env, jsId, pointerId)) {
+        WLOGFE("[NAPI]Failed to convert parameter to id");
+        return false;
+    }
     if (!ConvertPointerItemFromJs(env, touchObject, pointerEvent)) {
         return false;
     }
+    if (!ConvertTouchesObjectFromJs(env, jsTouches, pointerId, pointerEvent)) {
+        return false;
+    }
+    pointerEvent.SetPointerId(pointerId);
     return true;
 }
 

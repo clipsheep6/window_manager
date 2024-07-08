@@ -17,12 +17,15 @@
 
 #include <gtest/gtest.h>
 
-#include "display_info.h"
 #include "ability_context_impl.h"
+#include "display_info.h"
+#include "display_manager.h"
+#include "mock_display_manager_adapter.h"
 #include "mock_session.h"
 #include "mock_uicontent.h"
 #include "mock_window.h"
 #include "parameters.h"
+#include "singleton_mocker.h"
 #include "wm_common.h"
 
 using namespace testing;
@@ -30,7 +33,8 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
-class WindowSessionImplTwoTest : public testing::Test {
+using Mocker = SingletonMocker<DisplayManagerAdapter, MockDisplayManagerAdapter>;
+class WindowSessionImplTest3 : public testing::Test {
 public:
     static void SetUpTestCase();
     static void TearDownTestCase();
@@ -39,19 +43,19 @@ public:
     sptr<WindowSessionImpl> window_;
 };
 
-void WindowSessionImplTwoTest::SetUpTestCase()
+void WindowSessionImplTest3::SetUpTestCase()
 {
 }
 
-void WindowSessionImplTwoTest::TearDownTestCase()
+void WindowSessionImplTest3::TearDownTestCase()
 {
 }
 
-void WindowSessionImplTwoTest::SetUp()
+void WindowSessionImplTest3::SetUp()
 {
 }
 
-void WindowSessionImplTwoTest::TearDown()
+void WindowSessionImplTest3::TearDown()
 {
     if (window_ != nullptr) {
         window_->Destroy();
@@ -82,13 +86,35 @@ sptr<WindowSessionImpl> GetTestWindowImpl(const std::string& name)
 }
 
 /**
- * @tc.name: GetTitleButtonVisible
- * @tc.desc: GetTitleButtonVisible
+ * @tc.name: SetDecorHeight
+ * @tc.desc: SetDecorHeight01
  * @tc.type: FUNC
  */
-HWTEST_F(WindowSessionImplTwoTest, GetTitleButtonVisible, Function | SmallTest | Level2)
+HWTEST_F(WindowSessionImplTest3, SetDecorHeight01, Function | SmallTest | Level2)
 {
+    GTEST_LOG_(INFO) << "WindowSessionImplTest3: SetDecorHeight01 start";
+    window_ = GetTestWindowImpl("SetDecorHeight01");
+    ASSERT_NE(window_, nullptr);
+    WMError res = window_->SetDecorHeight(100);
+    ASSERT_EQ(res, WMError::WM_ERROR_NULLPTR);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest3: SetDecorHeight01 end";
+}
 
+/**
+ * @tc.name: SetInputEventConsumer
+ * @tc.desc: SetInputEventConsumer01
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionImplTest3, SetInputEventConsumer01, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "WindowSessionImplTest3: SetInputEventConsumer01 start";
+    window_ = GetTestWindowImpl("SetInputEventConsumer01");
+    ASSERT_NE(window_, nullptr);
+    window_->inputEventConsumer_ = nullptr;
+    std::shared_ptr<IInputEventConsumer>& inputEventConsumer = std::make_shared<MockInputEventConsumer>();
+    window_->SetInputEventConsumer(inputEventConsumer);
+    ASSERT_NE(window_->inputEventConsumer_, nullptr);
+    GTEST_LOG_(INFO) << "WindowSessionImplTest3: SetInputEventConsumer01 end";
 }
 
 }

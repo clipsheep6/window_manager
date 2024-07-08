@@ -59,6 +59,15 @@ std::shared_mutex WindowExtensionSessionImpl::windowExtensionSessionMutex_;
 
 WindowExtensionSessionImpl::WindowExtensionSessionImpl(const sptr<WindowOption>& option) : WindowSessionImpl(option)
 {
+    if (property_ == nullptr) {
+        return;
+    }
+    if (property_->GetUIExtensionUsage() == UIExtensionUsage::MODAL ||
+        property_->GetUIExtensionUsage() == UIExtensionUsage::CONSTRAINED_EMBEDDED) {
+        extensionWindowFlags_.hideNonSecureWindowsFlag = true;
+    }
+    TLOGI(WmsLogTag::WMS_UIEXT, "UIExtension usage=%{public}u, the default state of hideNonSecureWindows is %{public}d",
+        property_->GetUIExtensionUsage(), extensionWindowFlags_.hideNonSecureWindowsFlag);
 }
 
 WindowExtensionSessionImpl::~WindowExtensionSessionImpl()
@@ -436,6 +445,7 @@ WMError WindowExtensionSessionImpl::NapiSetUIContent(const std::string& contentI
         std::unique_lock<std::shared_mutex> lock(uiContentMutex_);
         uiContent_ = std::move(uiContent);
     }
+    UpdateAccessibilityTreeInfo();
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (focusState_ != std::nullopt) {
         focusState_.value() ? uiContent->Focus() : uiContent->UnFocus();
@@ -551,77 +561,12 @@ void WindowExtensionSessionImpl::UpdateRectForRotation(const Rect& wmRect, const
     handler_->PostTask(task, "WMS_WindowExtensionSessionImpl_UpdateRectForRotation");
 }
 
-WSError WindowExtensionSessionImpl::NotifySearchElementInfoByAccessibilityId(int64_t elementId, int32_t mode,
-    int64_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& infos)
-{
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent == nullptr) {
-        WLOGFE("NotifySearchElementInfoByAccessibilityId error, no uiContent");
-        return WSError::WS_ERROR_NO_UI_CONTENT_ERROR;
-    }
-    uiContent->SearchElementInfoByAccessibilityId(elementId, mode, baseParent, infos);
-    return WSError::WS_OK;
-}
-
-WSError WindowExtensionSessionImpl::NotifySearchElementInfosByText(int64_t elementId, const std::string& text,
-    int64_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& infos)
-{
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent == nullptr) {
-        WLOGFE("NotifySearchElementInfosByText error, no uiContent");
-        return WSError::WS_ERROR_NO_UI_CONTENT_ERROR;
-    }
-    uiContent->SearchElementInfosByText(elementId, text, baseParent, infos);
-    return WSError::WS_OK;
-}
-
-WSError WindowExtensionSessionImpl::NotifyFindFocusedElementInfo(int64_t elementId, int32_t focusType,
-    int64_t baseParent, Accessibility::AccessibilityElementInfo& info)
-{
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent == nullptr) {
-        WLOGFE("NotifyFindFocusedElementInfo error, no uiContent");
-        return WSError::WS_ERROR_NO_UI_CONTENT_ERROR;
-    }
-    uiContent->FindFocusedElementInfo(elementId, focusType, baseParent, info);
-    return WSError::WS_OK;
-}
-
-WSError WindowExtensionSessionImpl::NotifyFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
-    Accessibility::AccessibilityElementInfo& info)
-{
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent == nullptr) {
-        WLOGFE("NotifyFocusMoveSearch error, no uiContent");
-        return WSError::WS_ERROR_NO_UI_CONTENT_ERROR;
-    }
-    uiContent->FocusMoveSearch(elementId, direction, baseParent, info);
-    return WSError::WS_OK;
-}
-
-WSError WindowExtensionSessionImpl::NotifyExecuteAction(int64_t elementId,
-    const std::map<std::string, std::string>& actionAguments, int32_t action,
-    int64_t baseParent)
-{
-    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
-    if (uiContent == nullptr) {
-        WLOGFE("NotifyExecuteAction error, no uiContent");
-        return WSError::WS_ERROR_NO_UI_CONTENT_ERROR;
-    }
-    bool ret = uiContent->NotifyExecuteAction(elementId, actionAguments, action, baseParent);
-    if (!ret) {
-        WLOGFE("NotifyExecuteAction fail");
-        return WSError::WS_ERROR_INTERNAL_ERROR;
-    }
-    return WSError::WS_OK;
-}
-
 WSError WindowExtensionSessionImpl::NotifyAccessibilityHoverEvent(float pointX, float pointY, int32_t sourceType,
     int32_t eventType, int64_t timeMs)
 {
     std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
     if (uiContent == nullptr) {
-        WLOGFE("NotifyExecuteAction error, no uiContent");
+        WLOGFE("NotifyAccessibilityHoverEvent error, no uiContent");
         return WSError::WS_ERROR_NO_UI_CONTENT_ERROR;
     }
     uiContent->HandleAccessibilityHoverEvent(pointX, pointY, sourceType, eventType, timeMs);
@@ -788,6 +733,16 @@ float WindowExtensionSessionImpl::GetVirtualPixelRatio(sptr<DisplayInfo> display
 
 WMError WindowExtensionSessionImpl::HideNonSecureWindows(bool shouldHide)
 {
+    if (property_ == nullptr) {
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    if (property_->GetUIExtensionUsage() == UIExtensionUsage::MODAL ||
+        property_->GetUIExtensionUsage() == UIExtensionUsage::CONSTRAINED_EMBEDDED) {
+        extensionWindowFlags_.hideNonSecureWindowsFlag = true;
+        TLOGE(WmsLogTag::WMS_UIEXT, "Setting this property is not allowed in %{public}s UIExtension.",
+            property_->GetUIExtensionUsage() == UIExtensionUsage::MODAL ? "modal" : "constrained embedded");
+        return WMError::WM_ERROR_INVALID_OPERATION;
+    }
     if (state_ != WindowState::STATE_SHOWN) {
         extensionWindowFlags_.hideNonSecureWindowsFlag = shouldHide;
         return WMError::WM_OK;
@@ -842,6 +797,80 @@ void WindowExtensionSessionImpl::CheckAndRemoveExtWindowFlags()
         // If flag is true, make it inactive when background
         UpdateExtWindowFlags(ExtensionWindowFlags(), extensionWindowFlags_);
     }
+}
+
+WSError WindowExtensionSessionImpl::NotifyAccessibilityChildTreeRegister(
+    uint32_t windowId, int32_t treeId, int64_t accessibilityId)
+{
+    if (!handler_) {
+        return WSError::WS_ERROR_INTERNAL_ERROR;
+    }
+    auto uiContentSharedPtr = GetUIContentSharedPtr();
+    if (uiContentSharedPtr == nullptr) {
+        accessibilityChildTreeInfo_ = {
+            .windowId = windowId,
+            .treeId = treeId,
+            .accessibilityId = accessibilityId
+        };
+        TLOGD(WmsLogTag::WMS_UIEXT, "uiContent is null, save the accessibility child tree info.");
+        return WSError::WS_OK;
+    }
+
+    handler_->PostTask([uiContent = GetUIContentSharedPtr(), windowId, treeId, accessibilityId]() {
+        if (uiContent == nullptr) {
+            TLOGE(WmsLogTag::WMS_UIEXT, "NotifyAccessibilityChildTreeRegister error, no uiContent");
+            return;
+        }
+        TLOGI(WmsLogTag::WMS_UIEXT,
+            "NotifyAccessibilityChildTreeRegister: %{public}d %{public}" PRId64, treeId, accessibilityId);
+        uiContent->RegisterAccessibilityChildTree(windowId, treeId, accessibilityId);
+    });
+    return WSError::WS_OK;
+}
+
+WSError WindowExtensionSessionImpl::NotifyAccessibilityChildTreeUnregister()
+{
+    if (!handler_) {
+        return WSError::WS_ERROR_INTERNAL_ERROR;
+    }
+    handler_->PostTask([uiContent = GetUIContentSharedPtr()]() {
+        if (uiContent == nullptr) {
+            TLOGE(WmsLogTag::WMS_UIEXT, "NotifyAccessibilityChildTreeUnregister error, no uiContent");
+            return;
+        }
+        uiContent->DeregisterAccessibilityChildTree();
+    });
+    return WSError::WS_OK;
+}
+
+WSError WindowExtensionSessionImpl::NotifyAccessibilityDumpChildInfo(
+    const std::vector<std::string>& params, std::vector<std::string>& info)
+{
+    if (!handler_) {
+        return WSError::WS_ERROR_INTERNAL_ERROR;
+    }
+    handler_->PostSyncTask([uiContent = GetUIContentSharedPtr(), params, &info]() {
+        if (uiContent == nullptr) {
+            TLOGE(WmsLogTag::WMS_UIEXT, "NotifyAccessibilityDumpChildInfo error, no uiContent");
+            return;
+        }
+        uiContent->AccessibilityDumpChildInfo(params, info);
+    });
+    return WSError::WS_OK;
+}
+
+void WindowExtensionSessionImpl::UpdateAccessibilityTreeInfo()
+{
+    if (accessibilityChildTreeInfo_ == std::nullopt) {
+        return;
+    }
+    std::shared_ptr<Ace::UIContent> uiContent = GetUIContentSharedPtr();
+    if (uiContent == nullptr) {
+        return;
+    }
+    uiContent->RegisterAccessibilityChildTree(accessibilityChildTreeInfo_->windowId,
+        accessibilityChildTreeInfo_->treeId, accessibilityChildTreeInfo_->accessibilityId);
+    accessibilityChildTreeInfo_.reset();
 }
 
 WMError WindowExtensionSessionImpl::UpdateExtWindowFlags(const ExtensionWindowFlags& flags,
