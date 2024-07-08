@@ -78,7 +78,6 @@ ohos_shared_library("scene_session") {
   external_deps = [
     "ability_base:base",
     "ability_base:session_info",
-    "ability_base:want",
     "ability_runtime:ability_start_setting",
     "ability_runtime:process_options",
     "c_utils:utils",
@@ -96,6 +95,7 @@ ohos_shared_library("scene_session") {
     external_deps += [ "preferences:native_preferences" ]
   }
   public_external_deps = [
+    "ability_base:want",
     "accessibility:accessibility_common",
     "accessibility:accessibility_interface",
     "input:libmmi-util",
@@ -136,6 +136,10 @@ ohos_shared_library("scene_session") {
     defines += [ "IMF_ENABLE" ]
   }
 
+  if (build_variant == "root") {
+    defines += [ "ACCESSIBILITY_DUMP_FOR_TEST" ]
+  }
+
   innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"
   subsystem_name = "window"
@@ -170,6 +174,7 @@ ohos_shared_library("screen_session") {
     "init:libbegetutil",
   ]
   public_external_deps = [
+    "ability_base:want",
     "accessibility:accessibility_common",
     "input:libmmi-util",
   ]
