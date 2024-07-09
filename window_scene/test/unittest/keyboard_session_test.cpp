@@ -811,6 +811,7 @@ HWTEST_F(KeyboardSessionTest, CheckIfNeedRaiseCallingSession01, Function | Small
     info.abilityName_ = "CheckIfNeedRaiseCallingSession";
     info.bundleName_ = "CheckIfNeedRaiseCallingSession";
     sptr<SceneSession::SpecificSessionCallback> specificCb = sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
+    ASSERT_NE(specificCb, nullptr);
     sptr<SceneSession> callingSession = sptr<SceneSession>::MakeSptr(info, specificCb);
     ASSERT_NE(callingSession, nullptr);
     sptr<KeyboardSession> keyboardSession = sptr<KeyboardSession>::MakeSptr(info, nullptr, nullptr);
@@ -821,7 +822,7 @@ HWTEST_F(KeyboardSessionTest, CheckIfNeedRaiseCallingSession01, Function | Small
     ASSERT_NE(keyboardSession->property_, nullptr);
     keyboardSession->property_->sessionGravity_ = SessionGravity::SESSION_GRAVITY_BOTTOM;
     keyboardSession->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
-    keyboardSession->systemConfig_.uiType = "phone";
+    keyboardSession->systemConfig_.uiType_ = "phone";
     callingSession->systemConfig_.freeMultiWindowSupport_ = true;
     callingSession->systemConfig_.freeMultiWindowEnable_ = true;
     auto ret = keyboardSession->CheckIfNeedRaiseCallingSession(callingSession, true);
@@ -830,10 +831,10 @@ HWTEST_F(KeyboardSessionTest, CheckIfNeedRaiseCallingSession01, Function | Small
     ret = keyboardSession->CheckIfNeedRaiseCallingSession(callingSession, true);
     EXPECT_EQ(ret, false);
     callingSession->systemConfig_.freeMultiWindowEnable_ = true;
-    keyboardSession->systemConfig_.uiType = "pad";
+    keyboardSession->systemConfig_.uiType_ = "pad";
     ret = keyboardSession->CheckIfNeedRaiseCallingSession(callingSession, true);
     EXPECT_EQ(ret, true);
-    keyboardSession->systemConfig_.uiType = "pc";
+    keyboardSession->systemConfig_.uiType_ = "pc";
     callingSession->systemConfig_.freeMultiWindowEnable_ = false;
     ret = keyboardSession->CheckIfNeedRaiseCallingSession(callingSession, true);
     EXPECT_EQ(ret, true);
@@ -873,6 +874,6 @@ HWTEST_F(KeyboardSessionTest, UpdateCallingSessionIdAndPosition01, Function | Sm
     auto ret = keyboardSession->GetRSTransaction();
     EXPECT_EQ(ret, nullptr);
 }
-}
-}
-}
+}  // namespace
+}  // namespace Rosen
+}  // namespace OHOS
