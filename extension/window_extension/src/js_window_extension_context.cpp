@@ -97,6 +97,11 @@ private:
 
     napi_value OnStartAbility(napi_env env, napi_callback_info info)
     {
+        if(!Permissions::IsSystemCalling()) {
+            TLOGE(WmsLogTag::DEFAULT, "OnStartAbility permission denied!");
+            napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_NOT_SYSTEM_APP)));
+            return NapiGetUndefined(env);
+        }
         WLOGI("OnStartAbility is called");
         size_t argc = 4;
         napi_value argv[4] = {nullptr};
