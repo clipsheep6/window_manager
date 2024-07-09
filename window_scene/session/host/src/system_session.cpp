@@ -209,8 +209,11 @@ WSError SystemSession::ProcessPointDownSession(int32_t posX, int32_t posY)
             return WSError::WS_OK;
         }
     }
-    if (type == WindowType::WINDOW_TYPE_DIALOG && GetSessionProperty() && GetSessionProperty()->GetRaiseEnabled()) {
-        RaiseToAppTopForPointDown();
+    if (type == WindowType::WINDOW_TYPE_DIALOG) {
+        Session::ProcessClickModalSpecificWindowOutside(posX, posY);
+        if (GetSessionProperty() && GetSessionProperty()->GetRaiseEnabled()) {
+            RaiseToAppTopForPointDown();
+        }
     }
     PresentFocusIfPointDown();
     return SceneSession::ProcessPointDownSession(posX, posY);

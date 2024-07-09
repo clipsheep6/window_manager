@@ -35,6 +35,7 @@ const std::string CREATE_SUB_SESSION_CB = "createSpecificSession";
 const std::string BIND_DIALOG_TARGET_CB = "bindDialogTarget";
 const std::string RAISE_TO_TOP_CB = "raiseToTop";
 const std::string RAISE_TO_TOP_POINT_DOWN_CB = "raiseToTopForPointDown";
+const std::string CLICK_MODAL_SPECIFIC_WINDOW_OUTSIDE = "clickModalSpecificWindowOutside";
 const std::string BACK_PRESSED_CB = "backPressed";
 const std::string SESSION_FOCUSABLE_CHANGE_CB = "sessionFocusableChange";
 const std::string SESSION_TOUCHABLE_CHANGE_CB = "sessionTouchableChange";
@@ -270,6 +271,7 @@ void JsSceneSession::InitListenerFuncs()
         {BIND_DIALOG_TARGET_CB,                 ListenerFunctionType::BIND_DIALOG_TARGET_CB},
         {RAISE_TO_TOP_CB,                       ListenerFunctionType::RAISE_TO_TOP_CB},
         {RAISE_TO_TOP_POINT_DOWN_CB,            ListenerFunctionType::RAISE_TO_TOP_POINT_DOWN_CB},
+        {CLICK_MODAL_SPECIFIC_WINDOW_OUTSIDE,   ListenerFunctionType::CLICK_MODAL_SPECIFIC_WINDOW_OUTSIDE},
         {BACK_PRESSED_CB,                       ListenerFunctionType::BACK_PRESSED_CB},
         {SESSION_FOCUSABLE_CHANGE_CB,           ListenerFunctionType::SESSION_FOCUSABLE_CHANGE_CB},
         {SESSION_TOUCHABLE_CHANGE_CB,           ListenerFunctionType::SESSION_TOUCHABLE_CHANGE_CB},
@@ -1335,6 +1337,9 @@ void JsSceneSession::ProcessRegisterCallback(const std::string& cbType)
             break;
         case ListenerFunctionType::RAISE_TO_TOP_POINT_DOWN_CB:
             ProcessRaiseToTopForPointDownRegister();
+            break;
+        case ListenerFunctionType::CLICK_MODAL_SPECIFIC_WINDOW_OUTSIDE:
+            ProcessClickModalSpecificWindowOutsideRegister();
             break;
         case ListenerFunctionType::BACK_PRESSED_CB:
             ProcessBackPressedRegister();
@@ -2580,6 +2585,38 @@ napi_value JsSceneSession::OnSetExitSplitOnBackground(napi_env env, napi_callbac
     }
     session->SetExitSplitOnBackground(isExitSplitOnBackground);
     return NapiGetUndefined(env);
+}
+
+void JsSceneSession::ProcessClickModalSpecificWindowOutsideRegister()
+{
+    NotifyClickModalSpecificWindowOutsideFunc func = [this]() {
+        this->OnClickModalSpecificWindowOutside();
+    };
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, "session is nullptr");
+        return;
+    }
+    session->SetClickModalSpecificWindowOutsideListener(func);
+    TLOGD(WmsLogTag::WMS_LAYOUT, "success");
+}
+
+void JsSceneSession::OnClickModalSpecificWindowOutside()
+{
+    TLOGE(WmsLogTag::WMS_LAYOUT, "[NAPI]" );
+    std::shared_ptr<NativeReference> jsCallBack = GetJSCallback(CLICK_MODAL_SPECIFIC_WINDOW_OUTSIDE);
+    if (jsCallBack == nullptr) {
+        return;
+    }
+    auto task = [jsCallBack, env = env_]() {
+        if (!jsCallBack) {
+            TLOGE(WmsLogTag::WMS_LAYOUT, "[NAPI]jsCallBack is nullptr");
+            return;
+        }
+        napi_value argv[] = {};
+        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), 0, argv, nullptr);
+    };
+    taskScheduler_->PostMainThreadTask(task, "OnClickModalSpecificWindowOutside");
 }
 
 napi_value JsSceneSession::OnSetWaterMarkFlag(napi_env env, napi_callback_info info)

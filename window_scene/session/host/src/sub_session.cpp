@@ -17,6 +17,7 @@
 #include "screen_session_manager/include/screen_session_manager_client.h"
 
 #include "key_event.h"
+#include "window_helper.h"
 #include "parameters.h"
 #include "pointer_event.h"
 #include "window_manager_hilog.h"
@@ -147,10 +148,14 @@ WSError SubSession::ProcessPointDownSession(int32_t posX, int32_t posY)
 {
     const auto& id = GetPersistentId();
     WLOGFI("id: %{public}d, type: %{public}d", id, GetWindowType());
+    auto isModal = IsModal();
     auto parentSession = GetParentSession();
-    if (parentSession && parentSession->CheckDialogOnForeground()) {
+    if (!isModal && parentSession && parentSession->CheckDialogOnForeground()) {
         WLOGFI("Has dialog foreground, id: %{public}d, type: %{public}d", id, GetWindowType());
         return WSError::WS_OK;
+    }
+    if (isModal) {
+        Session::ProcessClickModalSpecificWindowOutside(posX, posY);
     }
     if (GetSessionProperty() && GetSessionProperty()->GetRaiseEnabled()) {
         RaiseToAppTopForPointDown();
@@ -224,5 +229,15 @@ bool SubSession::IsTopmost() const
     }
     TLOGI(WmsLogTag::WMS_SUB, "isTopmost: %{public}d", isTopmost);
     return isTopmost;
+}
+
+bool SubSession::IsModal() const
+{
+    auto property = GetSessionProperty();
+    bool isModal = false;
+    if (property != nullptr) {
+        isModal = WindowHelper::IsModalSubWindow(property->GetWindowType(), property->GetWindowFlags());
+    }
+    return isModal;
 }
 } // namespace OHOS::Rosen
