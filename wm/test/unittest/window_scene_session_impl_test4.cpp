@@ -377,7 +377,7 @@ HWTEST_F(WindowSceneSessionImplTest4, UpdateWindowMode03, Function | SmallTest |
               windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
     ASSERT_NE(nullptr, windowSceneSession->property_);
     windowSceneSession->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
-    ASSERT_EQ(WSError::WS_OK,
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_WINDOW,
               windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
 }
 }
