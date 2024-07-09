@@ -3,7 +3,7 @@
     "systemability": [
         {
             "name": 4607,
-            "libpath": "libwms.z.so",
+            "libpath": "libdms.z.so",
             "run-on-create": true,
             "distributed": false,
             "bootphase": "CoreStartPhase",
