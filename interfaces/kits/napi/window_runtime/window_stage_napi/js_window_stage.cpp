@@ -659,7 +659,13 @@ napi_value JsWindowStage::OnCreateSubWindowWithOptions(napi_env env, napi_callba
             windowOption->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
             windowOption->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
             windowOption->SetOnlySupportSceneBoard(true);
-            auto window = weakScene->CreateWindow(windowName, windowOption);
+            WMError errorCode = WMError::WM_OK;
+            auto window = weakScene->CreateWindow(windowName, windowOption, errorCode);
+            if (errorCode != WMError::WM_OK) {
+                WLOGFE("[NAPI]Get window failed");
+                task.Reject(env, JsErrUtils::CreateJsError(env, errorCode,"Get window failed"));
+                return;
+            }
             if (window == nullptr) {
                 WLOGFE("[NAPI]Get window failed");
                 task.Reject(env, JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY,
