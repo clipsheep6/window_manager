@@ -874,6 +874,52 @@ HWTEST_F(KeyboardSessionTest, UpdateCallingSessionIdAndPosition01, Function | Sm
     auto ret = keyboardSession->GetRSTransaction();
     EXPECT_EQ(ret, nullptr);
 }
+
+/**
+ * @tc.name: OpenKeyboardSyncTransaction
+ * @tc.desc: OpenKeyboardSyncTransaction
+ * @tc.type: FUNC
+ */
+HWTEST_F(KeyboardSessionTest, OpenKeyboardSyncTransaction, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "UpdateCallingSessionIdAndPosition";
+    info.bundleName_ = "UpdateCallingSessionIdAndPosition";
+    sptr<KeyboardSession> keyboardSession = sptr<KeyboardSession>::MakeSptr(info, nullptr, nullptr);
+    ASSERT_NE(keyboardSession, nullptr);
+    keyboardSession->isKeyboardSyncTransactionOpen_ = true;
+    keyboardSession->OpenKeyboardSyncTransaction();
+    keyboardSession->isKeyboardSyncTransactionOpen_ = false;
+    keyboardSession->OpenKeyboardSyncTransaction();
+    WSRect keyboardPanelRect = {0, 0, 0, 0};
+    keyboardSession->CloseKeyboardSyncTransaction(keyboardPanelRect, true, true);
+    keyboardSession->CloseKeyboardSyncTransaction(keyboardPanelRect, false, false);
+}
+
+/**
+ * @tc.name: RelayoutKeyBoard01
+ * @tc.desc: RelayoutKeyBoard01
+ * @tc.type: FUNC
+ */
+HWTEST_F(KeyboardSessionTest, RelayoutKeyBoard01, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "RelayoutKeyBoard";
+    info.bundleName_ = "RelayoutKeyBoard";
+    sptr<KeyboardSession> keyboardSession = sptr<KeyboardSession>::MakeSptr(info, nullptr, nullptr);
+    ASSERT_NE(keyboardSession, nullptr);
+    keyboardSession->property_ = nullptr;
+    keyboardSession->RelayoutKeyBoard();
+    sptr<WindowSessionProperty> windowSessionProperty = sptr<WindowSessionProperty>::MakeSptr();
+    ASSERT_NE(windowSessionProperty, nullptr);
+    keyboardSession->property_ = windowSessionProperty;
+    ASSERT_NE(keyboardSession->property_, nullptr);
+    keyboardSession->property_->sessionGravity_ = SessionGravity::SESSION_GRAVITY_BOTTOM;
+    keyboardSession->property_->sessionGravitySizePercent_ = 0;
+    keyboardSession->RelayoutKeyBoard();
+    keyboardSession->property_->sessionGravitySizePercent_ = 100;
+    keyboardSession->RelayoutKeyBoard();
+}
 }  // namespace
 }  // namespace Rosen
 }  // namespace OHOS
