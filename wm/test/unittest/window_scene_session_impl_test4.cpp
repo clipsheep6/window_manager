@@ -339,6 +339,47 @@ HWTEST_F(WindowSceneSessionImplTest4, MoveTo02, Function | SmallTest | Level2)
     ASSERT_EQ(WMError::WM_OK, subWindow->MoveTo(5, 5));
     WindowSceneSessionImpl::windowSessionMap_.erase(window->GetWindowName());
 }
+
+/**
+ * @tc.name: UpdateWindowMode03
+ * @tc.desc: UpdateWindowMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest4, UpdateWindowMode03, Function | SmallTest | Level2)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("UpdateWindowMode03");
+    option->SetWindowType(WindowType::SYSTEM_WINDOW_BASE);
+    sptr<WindowSceneSessionImpl> windowSceneSession = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_NE(nullptr, windowSceneSession);
+    SessionInfo sessionInfo = {"CreateTestBundle", "CreateTestModule", "CreateTestAbility"};
+    sptr<SessionMocker> session = new (std::nothrow) SessionMocker(sessionInfo);
+    ASSERT_NE(nullptr, session);
+    windowSceneSession->hostSession_ = session;
+    ASSERT_NE(nullptr, windowSceneSession->property_);
+    windowSceneSession->property_->SetPersistentId(1);
+    ASSERT_NE(nullptr, windowSceneSession->property_);
+    windowSceneSession->property_->SetModeSupportInfo(WindowModeSupport::WINDOW_MODE_SUPPORT_FLOATING);
+    ASSERT_EQ(WSError::WS_ERROR_INVALID_WINDOW_MODE_OR_SIZE,
+              windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
+    ASSERT_NE(nullptr, windowSceneSession->property_);
+    windowSceneSession->property_->SetModeSupportInfo(WindowModeSupport::WINDOW_MODE_SUPPORT_ALL);
+    windowSceneSession->windowSystemConfig_.uiType_ = "pc";
+    ASSERT_EQ(WSError::WS_OK,
+              windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_PIP));
+    ASSERT_EQ(WSError::WS_OK,
+              windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_PRIMARY));
+    ASSERT_EQ(WSError::WS_OK,
+              windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_SPLIT_SECONDARY));
+    ASSERT_EQ(WSError::WS_OK,
+              windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_FLOATING));
+    ASSERT_EQ(WSError::WS_OK,
+              windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
+    ASSERT_NE(nullptr, windowSceneSession->property_);
+    windowSceneSession->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
+    ASSERT_EQ(WSError::WS_OK,
+              windowSceneSession->UpdateWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN));
+}
 }
 } // namespace Rosen
 } // namespace OHOS
