@@ -46,15 +46,19 @@ public:
     DMError UnregisterFoldStatusListener(sptr<IFoldStatusListener> listener);
     void OnRemoteDied();
     sptr<DisplayLite> GetDisplayById(DisplayId displayId);
+    bool SetDisplayState(DisplayState state, DisplayStateCallback callback);
 private:
+    void ClearDisplayStateCallback();
     void NotifyDisplayCreate(sptr<DisplayInfo> info);
     void NotifyDisplayDestroy(DisplayId);
     void NotifyDisplayChange(sptr<DisplayInfo> displayInfo);
     bool UpdateDisplayInfoLocked(sptr<DisplayInfo>);
     void NotifyFoldStatusChanged(FoldStatus foldStatus);
+    void NotifyDisplayStateChanged(DisplayId id, DisplayState state);
     void Clear();
 
     std::map<DisplayId, sptr<DisplayLite>> displayMap_;
+    DisplayStateCallback displayStateCallback_;
     std::recursive_mutex& mutex_;
     std::set<sptr<IDisplayListener>> displayListeners_;
     std::set<sptr<IFoldStatusListener>> foldStatusListeners_;
@@ -62,6 +66,8 @@ private:
     sptr<DisplayManagerListener> displayManagerListener_;
     class DisplayManagerFoldStatusAgent;
     sptr<DisplayManagerFoldStatusAgent> foldStatusListenerAgent_;
+    class DisplayManagerAgent;
+    sptr<DisplayManagerAgent> displayStateAgent_;
 };
 
 class DisplayManagerLite::Impl::DisplayManagerListener : public DisplayManagerAgentDefault {
@@ -152,6 +158,21 @@ private:
     sptr<Impl> pImpl_;
 };
 
+class DisplayManagerLite::Impl::DisplayManagerAgent : public DisplayManagerAgentDefault {
+public:
+    explicit DisplayManagerAgent(sptr<Impl> impl) : pImpl_(impl)
+    {
+    }
+    ~DisplayManagerAgent() = default;
+
+    virtual void NotifyDisplayStateChanged(DisplayId id, DisplayState state) override
+    {
+        pImpl_->NotifyDisplayStateChanged(id, state);
+    }
+private:
+    sptr<Impl> pImpl_;
+};
+
 void DisplayManagerLite::Impl::Clear()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -164,6 +185,7 @@ void DisplayManagerLite::Impl::Clear()
     if (res != DMError::DM_OK) {
         WLOGFW("UnregisterDisplayManagerAgent DISPLAY_EVENT_LISTENER failed");
     }
+    ClearDisplayStateCallback();
 }
 
 DisplayManagerLite::Impl::~Impl()
@@ -430,4 +452,127 @@ sptr<DisplayLite> DisplayManagerLite::GetDisplayById(DisplayId displayId)
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     return pImpl_->GetDisplayById(displayId);
 }
+
+bool DisplayManagerLite::WakeUpBegin(PowerStateChangeReason reason)
+{
+    WLOGFD("[UL_POWER]WakeUpBegin start, reason:%{public}u", reason);
+    return SingletonContainer::Get<DisplayManagerAdapterLite>().WakeUpBegin(reason);
+}
+
+bool DisplayManagerLite::WakeUpEnd()
+{
+    WLOGFD("[UL_POWER]WakeUpEnd start");
+    return SingletonContainer::Get<DisplayManagerAdapterLite>().WakeUpEnd();
+}
+
+bool DisplayManagerLite::SuspendBegin(PowerStateChangeReason reason)
+{
+    // dms->wms notify other windows to hide
+    WLOGFD("[UL_POWER]SuspendBegin start, reason:%{public}u", reason);
+    return SingletonContainer::Get<DisplayManagerAdapterLite>().SuspendBegin(reason);
+}
+
+bool DisplayManagerLite::SuspendEnd()
+{
+    WLOGFD("[UL_POWER]SuspendEnd start");
+    return SingletonContainer::Get<DisplayManagerAdapterLite>().SuspendEnd();
+}
+
+bool DisplayManagerLite::SetDisplayState(DisplayState state, DisplayStateCallback callback)
+{
+    return pImpl_->SetDisplayState(state, callback);
+}
+
+bool DisplayManagerLite::Impl::SetDisplayState(DisplayState state, DisplayStateCallback callback)
+{
+    WLOGFD("[UL_POWER]state:%{public}u", state);
+    bool ret = true;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (displayStateCallback_ != nullptr || callback == nullptr) {
+            WLOGFI("[UL_POWER]previous callback not called or callback invalid");
+            if (displayStateCallback_ != nullptr) {
+                WLOGFI("[UL_POWER]previous callback not called, the displayStateCallback_ is not null");
+            }
+            if (callback == nullptr) {
+                WLOGFI("[UL_POWER]Invalid callback received");
+            }
+            return false;
+        }
+        displayStateCallback_ = callback;
+
+        if (displayStateAgent_ == nullptr) {
+            displayStateAgent_ = new DisplayManagerAgent(this);
+            ret = SingletonContainer::Get<DisplayManagerAdapterLite>().RegisterDisplayManagerAgent(
+                displayStateAgent_,
+                DisplayManagerAgentType::DISPLAY_STATE_LISTENER) == DMError::DM_OK;
+        }
+    }
+    ret = ret && SingletonContainer::Get<DisplayManagerAdapterLite>().SetDisplayState(state);
+    if (!ret) {
+        ClearDisplayStateCallback();
+    }
+    return ret;
+}
+
+void DisplayManagerLite::Impl::NotifyDisplayStateChanged(DisplayId id, DisplayState state)
+{
+    WLOGFD("state:%{public}u", state);
+    DisplayStateCallback displayStateCallback = nullptr;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        displayStateCallback = displayStateCallback_;
+    }
+    if (displayStateCallback) {
+        displayStateCallback(state);
+        ClearDisplayStateCallback();
+        return;
+    }
+    WLOGFW("callback_ target is not set!");
+}
+
+void DisplayManagerLite::Impl::ClearDisplayStateCallback()
+{
+    std::lock_guard<std::recursive_mutex> lock(mutex_);
+    WLOGFD("[UL_POWER]Clear displaystatecallback enter");
+    displayStateCallback_ = nullptr;
+    if (displayStateAgent_ != nullptr) {
+        WLOGFI("[UL_POWER]UnregisterDisplayManagerAgent enter and displayStateAgent_ is cleared");
+        SingletonContainer::Get<DisplayManagerAdapterLite>().UnregisterDisplayManagerAgent(displayStateAgent_,
+            DisplayManagerAgentType::DISPLAY_STATE_LISTENER);
+        displayStateAgent_ = nullptr;
+    }
+}
+
+bool DisplayManagerLite::SetScreenBrightness(uint64_t screenId, uint32_t level)
+{
+    WLOGFI("[UL_POWER]SetScreenBrightness screenId:%{public}" PRIu64", level:%{public}u,", screenId, level);
+    // RSInterfaces::GetInstance().SetScreenBacklight(screenId, level); // 依赖librender_service_client，需在服务端调用
+    SingletonContainer::Get<DisplayManagerAdapterLite>().SetScreenBrightness(screenId, level);
+    return true;
+}
+
+uint32_t DisplayManagerLite::GetScreenBrightness(uint64_t screenId) const
+{
+    // uint32_t level = static_cast<uint32_t>(RSInterfaces::GetInstance().GetScreenBacklight(screenId));
+    // 依赖librender_service_client，需在服务端调用
+    uint32_t level = SingletonContainer::Get<DisplayManagerAdapterLite>().GetScreenBrightness(screenId);
+    WLOGFI("GetScreenBrightness screenId:%{public}" PRIu64", level:%{public}u,", screenId, level);
+    return level;
+}
+
+DisplayId DisplayManagerLite::GetDefaultDisplayId()
+{
+    auto info = SingletonContainer::Get<DisplayManagerAdapterLite>().GetDefaultDisplayInfo();
+    if (info == nullptr) {
+        return DISPLAY_ID_INVALID;
+    }
+    return info->GetDisplayId();
+}
+
+std::vector<DisplayId> DisplayManagerLite::GetAllDisplayIds()
+{
+    return SingletonContainer::Get<DisplayManagerAdapterLite>().GetAllDisplayIds();
+}
+
 } // namespace OHOS::Rosen
