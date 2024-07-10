@@ -289,6 +289,60 @@ HWTEST_F(MainSessionTest, RectCheck03, Function | SmallTest | Level1)
     mainSession_->RectCheck(1000000000, 1000000000);
 }
 
+/**
+ * @tc.name: Reconnect01
+ * @tc.desc: check func Reconnect
+ * @tc.type: FUNC
+ */
+HWTEST_F(MainSessionTest, Reconnect02, Function | SmallTest | Level1)
+{
+    auto surfaceNode = CreateRSSurfaceNode();
+    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
+    ASSERT_NE(nullptr, property);
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    EXPECT_NE(nullptr, mockSessionStage);
+    sptr<TestWindowEventChannel> testWindowEventChannel = new (std::nothrow) TestWindowEventChannel();
+    EXPECT_NE(nullptr, testWindowEventChannel);
+
+    property->SetWindowState(WindowState::STATE_SHOWN);
+    auto result = mainSession_->Reconnect(mockSessionStage, testWindowEventChannel, surfaceNode, property);
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: NotifyForegroundInteractiveStatus02
+ * @tc.desc: check func NotifyForegroundInteractiveStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(MainSessionTest, NotifyForegroundInteractiveStatus02, Function | SmallTest | Level1)
+{
+    mainSession_->state_ = SessionState::STATE_ACTIVE;
+    SessionInfo info;
+    info.abilityName_ = "test1";
+    info.moduleName_ = "test2";
+    info.bundleName_ = "test3";
+    info.isSystem_ = true;
+    sptr<Session> Session = new (std::nothrow) SystemSession(info, nullptr);
+    ASSERT_NE(Session, nullptr);
+    Session->SetSessionState(SessionState::STATE_ACTIVE);
+    mainSession_->BindDialogToParentSession(Session);
+    mainSession_->NotifyForegroundInteractiveStatus(true);
+}
+
+/**
+ * @tc.name: SetExitSplitOnBackground
+ * @tc.desc: check func SetExitSplitOnBackground
+ * @tc.type: FUNC
+ */
+HWTEST_F(MainSessionTest, SetExitSplitOnBackground, Function | SmallTest | Level1)
+{
+    ASSERT_NE(mainSession_, nullptr);
+    mainSession_->SetExitSplitOnBackground(true);
+    ASSERT_EQ(true, mainSession_->IsExitSplitOnBackground());
+    mainSession_->SetExitSplitOnBackground(false);
+    ASSERT_EQ(false, mainSession_->IsExitSplitOnBackground());
+
+}
 }
 }
 }
