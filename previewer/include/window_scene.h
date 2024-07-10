@@ -21,6 +21,7 @@
 
 #include "window.h"
 #include "window_option.h"
+#include "wm_common.h"
 
 namespace OHOS::AppExecFwk {
     class Configuration;
@@ -37,7 +38,8 @@ public:
     ~WindowScene();
     WMError Init(DisplayId displayId, const std::shared_ptr<AbilityRuntime::Context>& context,
         sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option = nullptr);
-    sptr<Window> CreateWindow(const std::string& windowName, sptr<WindowOption>& option, errorCode) const;
+    sptr<Window> CreateWindow(const std::string& windowName, sptr<WindowOption>& option) const;
+    sptr<Window> CreateWindow(const std::string& windowName, sptr<WindowOption>& option, WMError& errorCode) const;
     const sptr<Window>& GetMainWindow() const;
     std::vector<sptr<Window>> GetSubWindow();
     WMError GoDestroy();
