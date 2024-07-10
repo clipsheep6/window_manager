@@ -33,6 +33,9 @@ public:
     void UnSubscriberEvent();
     void OnReceiveEvent(const EventFwk::CommonEventData& data);
 private:
+    enum class CommonEventAction {
+        COMMON_EVENT_USER_SWITCHED,
+    };
     class EventSubscriber : public EventFwk::CommonEventSubscriber {
     public:
         EventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscriberInfo,
@@ -49,9 +52,7 @@ private:
     void SubscriberEventInner(int retry);
     void HandleAccountSwitched(const EventFwk::CommonEventData& data) const;
 
-    typedef void (WindowCommonEvent::*HandleCommonEventFunc)(const EventFwk::CommonEventData& data) const;
-
-    std::map<std::string, HandleCommonEventFunc> handleCommonEventFuncs_;
+    std::map<std::string, CommonEventAction> eventCodeMap_;
     std::shared_ptr<EventSubscriber> subscriber_;
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
 };

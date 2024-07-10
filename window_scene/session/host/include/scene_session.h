@@ -75,8 +75,6 @@ using CameraSessionChangeCallback = std::function<void(uint32_t accessTokenId, b
 using NotifyLandscapeMultiWindowSessionFunc = std::function<void(bool isLandscapeMultiWindow)>;
 using NotifyKeyboardGravityChangeFunc = std::function<void(SessionGravity gravity)>;
 using NotifyKeyboardLayoutAdjustFunc = std::function<void(const KeyboardLayoutParams& params)>;
-using HandleUpdatePropertyFunc = WMError (SceneSession::*)(const sptr<WindowSessionProperty>& property,
-    const sptr<SceneSession>& sceneSession, WSPropertyChangeAction action);
 using SessionChangeByActionNotifyManagerFunc = std::function<void(const sptr<SceneSession>& sceneSession,
     const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action)>;
 using SystemSessionBufferAvailableCallback = std::function<void()>;
@@ -484,7 +482,6 @@ private:
     mutable std::shared_mutex uiExtNodeIdToPersistentIdMapMutex_;
     std::map<uint64_t, int32_t> uiExtNodeIdToPersistentIdMap_;
     std::string clientIdentityToken_ = { "" };
-    static const std::map<uint32_t, HandleUpdatePropertyFunc> sessionFuncMap_;
     SessionChangeByActionNotifyManagerFunc sessionChangeByActionNotifyManagerFunc_;
 };
 } // namespace OHOS::Rosen
