@@ -46,12 +46,13 @@ private:
     private:
         std::shared_ptr<WindowCommonEvent> eventHandler_;
     };
+    enum class CommonEventAction {
+        COMMON_EVENT_USER_SWITCHED,
+    };
     void SubscriberEventInner(int retry);
     void HandleAccountSwitched(const EventFwk::CommonEventData& data) const;
 
-    typedef void (WindowCommonEvent::*HandleCommonEventFunc)(const EventFwk::CommonEventData& data) const;
-
-    std::map<std::string, HandleCommonEventFunc> handleCommonEventFuncs_;
+    std::map<std::string, CommonEventAction> eventCodeMap_;
     std::shared_ptr<EventSubscriber> subscriber_;
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
 };
