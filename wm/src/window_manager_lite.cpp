@@ -209,8 +209,6 @@ void WindowManagerLite::Impl::UpdateCameraWindowStatus(uint32_t accessTokenId, b
 
 WindowManagerLite::WindowManagerLite() : pImpl_(std::make_unique<Impl>(mutex_))
 {
-    auto windowChecker = std::make_shared<WindowChecker>();
-    MMI::InputManager::GetInstance()->SetWindowCheckerHandler(windowChecker);
 }
 
 int32_t WindowChecker::CheckWindowId(int32_t windowId) const
@@ -337,7 +335,7 @@ WMError WindowManagerLite::UnregisterVisibilityChangedListener(const sptr<IVisib
 
 void WindowManagerLite::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
 {
-    WLOGFI("Get Focus window info lite");
+    WLOGFD("Get Focus window info lite");
     SingletonContainer::Get<WindowAdapterLite>().GetFocusWindowInfo(focusInfo);
 }
 

@@ -804,6 +804,12 @@ public:
         return WMError::WM_OK;
     }
     /**
+     * @brief notify window first frame drawing completed.
+     *
+     * @return WMError
+     */
+    virtual WMError NotifyDrawingCompleted() { return WMError::WM_OK; }
+    /**
      * @brief move the window to (x, y)
      *
      * @param x
@@ -1309,14 +1315,14 @@ public:
      */
     virtual std::string GetContentInfo(BackupAndRestoreType type = BackupAndRestoreType::CONTINUATION)
     {
-        return std::string();
+        return {};
     }
     /**
      * @brief Set uiability restored router stack.
      *
      * @return WMError.
      */
-    virtual WMError SetRestoredRouterStack(std::string& routerStack)
+    virtual WMError SetRestoredRouterStack(const std::string& routerStack)
     {
         return WMError::WM_OK;
     }
@@ -1417,12 +1423,15 @@ public:
     virtual WMError Maximize() { return WMError::WM_OK; }
 
     /**
-     * @brief maximize window with layoutOption.
+     * @brief maximize window with presentation enum.
      *
-     * @param option UI layout param.
+     * @param presentation the value means use presentation enum to layout when maximize window
      * @return WM_OK means maximize window ok, others means failed.
      */
-    virtual WMError Maximize(MaximizeLayoutOption option) { return WMError::WM_ERROR_DEVICE_NOT_SUPPORT; }
+    virtual WMError Maximize(std::optional<MaximizePresentation> presentation)
+    {
+        return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
 
     /**
      * @brief maximize the main window according to MaximizeMode. called by ACE when maximize button is clicked.
@@ -1641,6 +1650,14 @@ public:
     virtual void UpdatePiPRect(const Rect& rect, WindowSizeChangeReason reason) {}
 
     /**
+     * @brief update the pip control status.
+     *
+     * @param controlType pip control type.
+     * @param status pip control status.
+     */
+    virtual void UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status) {}
+
+    /**
      * @brief When get focused, keep the keyboard created by other windows, support system window and app subwindow.
      *
      * @param keepKeyboardFlag true means the keyboard should be preserved, otherwise means the opposite.
@@ -1753,7 +1770,7 @@ public:
     {
         return WMError::WM_OK;
     }
-    
+
     /**
      * @brief Get System Bar(include status bar and nav bar) Properties
      *

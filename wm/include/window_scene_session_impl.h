@@ -50,6 +50,7 @@ public:
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WMError Destroy(bool needNotifyServer, bool needClearListener = true) override;
+    WMError NotifyDrawingCompleted() override;
     WMError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) override;
     void PreProcessCreate();
     void SetDefaultProperty();
@@ -58,7 +59,7 @@ public:
     WMError Minimize() override;
     WMError MaximizeFloating() override;
     WMError Maximize() override;
-    WMError Maximize(MaximizeLayoutOption option) override;
+    WMError Maximize(std::optional<MaximizePresentation> presentation) override;
     WMError Recover() override;
     WMError Recover(uint32_t reason) override;
     void StartMove() override;

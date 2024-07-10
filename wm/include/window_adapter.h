@@ -119,7 +119,9 @@ public:
     virtual WMError RaiseWindowToTop(int32_t persistentId);
     virtual WMError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId);
     virtual void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage, int32_t persistentId,
-        int32_t parentId);
+        int32_t parentId, UIExtensionUsage usage, uint64_t surfaceNodeId);
+    virtual void UpdateModalExtensionRect(int32_t persistentId, int32_t parentId, Rect rect);
+    virtual void ProcessModalExtensionPointDown(int32_t persistentId, int32_t parentId, int32_t posX, int32_t posY);
     virtual WMError AddOrRemoveSecureSession(int32_t persistentId, bool shouldHide);
     virtual WMError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags,
         uint32_t extWindowActions);
@@ -137,17 +139,17 @@ private:
 
     void WindowManagerAndSessionRecover();
 
-    sptr<IWindowManager> GetWindowManagerServiceProxy();
+    sptr<IWindowManager> GetWindowManagerServiceProxy() const;
 
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     sptr<IWindowManager> windowManagerServiceProxy_ = nullptr;
     sptr<WMSDeathRecipient> wmsDeath_ = nullptr;
-    bool isProxyValid_ { false };
-
-    bool recoverInitialized = false;
+    bool isProxyValid_ = false;
+    bool recoverInitialized_ = false;
     bool isRegisteredUserSwitchListener_ = false;
     std::map<int32_t, SessionRecoverCallbackFunc> sessionRecoverCallbackFuncMap_;
     std::map<WindowManagerAgentType, std::set<sptr<IWindowManagerAgent>>> windowManagerAgentMap_;
+    // above guarded by mutex_
 };
 } // namespace Rosen
 } // namespace OHOS

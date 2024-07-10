@@ -114,6 +114,17 @@ bool SessionPermission::IsSACalling()
     return false;
 }
 
+bool SessionPermission::IsSACallingByCallerToken(const uint32_t callerToken)
+{
+    const auto flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        TLOGI(WmsLogTag::WMS_LIFE, "SA called, flag:%{public}u", flag);
+        return true;
+    }
+    TLOGW(WmsLogTag::WMS_LIFE, "Not SA called, flag:%{public}u", flag);
+    return false;
+}
+
 bool SessionPermission::VerifyCallingPermission(const std::string& permissionName)
 {
     auto callerToken = IPCSkeleton::GetCallingTokenID();
@@ -289,8 +300,6 @@ bool SessionPermission::IsStartedByUIExtension()
 
 bool SessionPermission::CheckCallingIsUserTestMode(pid_t pid)
 {
-    // reset ipc identity
-    std::string identity = IPCSkeleton::ResetCallingIdentity();
     TLOGI(WmsLogTag::DEFAULT, "Calling proxy func");
     bool isUserTestMode = false;
     auto appMgrClient = DelayedSingleton<AppExecFwk::AppMgrClient>::GetInstance();
@@ -298,13 +307,15 @@ bool SessionPermission::CheckCallingIsUserTestMode(pid_t pid)
         TLOGE(WmsLogTag::DEFAULT, "AppMgeClient is null!");
         return false;
     }
+    // reset ipc identity
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     int32_t ret = appMgrClient->CheckCallingIsUserTestMode(pid, isUserTestMode);
+    // set ipc identity to raw
+    IPCSkeleton::SetCallingIdentity(identity);
     if (ret != ERR_OK) {
         TLOGE(WmsLogTag::DEFAULT, "Permission denied! ret=%{public}d", ret);
         return false;
     }
-    // set ipc identity to raw
-    IPCSkeleton::SetCallingIdentity(identity);
     return isUserTestMode;
 }
 

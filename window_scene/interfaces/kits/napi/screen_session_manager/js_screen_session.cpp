@@ -15,6 +15,7 @@
 
 #include "js_screen_session.h"
 
+#include <hitrace_meter.h>
 #include <js_runtime_utils.h>
 
 #include "interfaces/include/ws_common.h"
@@ -365,7 +366,6 @@ void JsScreenSession::OnDisconnect(ScreenId screenId)
 void JsScreenSession::OnSensorRotationChange(float sensorRotation, ScreenId screenId)
 {
     const std::string callbackType = ON_SENSOR_ROTATION_CHANGE_CALLBACK;
-    WLOGD("Call js callback: %{public}s.", callbackType.c_str());
     if (mCallback_.count(callbackType) == 0) {
         WLOGFE("Callback %{public}s is unregistered!", callbackType.c_str());
         return;
@@ -373,31 +373,34 @@ void JsScreenSession::OnSensorRotationChange(float sensorRotation, ScreenId scre
 
     auto jsCallbackRef = mCallback_[callbackType];
     wptr<ScreenSession> screenSessionWeak(screenSession_);
-    auto complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
-        [jsCallbackRef, callbackType, screenSessionWeak, sensorRotation](
-            napi_env env, NapiAsyncTask& task, int32_t status) {
-            if (jsCallbackRef == nullptr) {
-                WLOGFE("Call js callback %{public}s failed, jsCallbackRef is null!", callbackType.c_str());
-                return;
-            }
-            auto method = jsCallbackRef->GetNapiValue();
-            if (method == nullptr) {
-                WLOGFE("Call js callback %{public}s failed, method is null!", callbackType.c_str());
-                return;
-            }
-            auto screenSession = screenSessionWeak.promote();
-            if (screenSession == nullptr) {
-                WLOGFE("Call js callback %{public}s failed, screenSession is null!", callbackType.c_str());
-                return;
-            }
-            napi_value argv[] = { CreateJsValue(env, sensorRotation) };
-            napi_call_function(env, NapiGetUndefined(env), method, ArraySize(argv), argv, nullptr);
-        });
+    auto napiTask = [jsCallbackRef, callbackType, screenSessionWeak, sensorRotation, env = env_]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "jsScreenSession::OnSensorRotationChange");
+        if (jsCallbackRef == nullptr) {
+            WLOGFE("Call js callback %{public}s failed, jsCallbackRef is null!", callbackType.c_str());
+            return;
+        }
+        auto method = jsCallbackRef->GetNapiValue();
+        if (method == nullptr) {
+            WLOGFE("Call js callback %{public}s failed, method is null!", callbackType.c_str());
+            return;
+        }
+        auto screenSession = screenSessionWeak.promote();
+        if (screenSession == nullptr) {
+            WLOGFE("Call js callback %{public}s failed, screenSession is null!", callbackType.c_str());
+            return;
+        }
+        napi_value argv[] = { CreateJsValue(env, sensorRotation) };
+        napi_call_function(env, NapiGetUndefined(env), method, ArraySize(argv), argv, nullptr);
+    };
 
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsScreenSession::" + callbackType, env_,
-        std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
+    if (env_ != nullptr) {
+        napi_status ret = napi_send_event(env_, napiTask, napi_eprio_immediate);
+        if (ret != napi_status::napi_ok) {
+            WLOGFE("OnSensorRotationChange: Failed to SendEvent.");
+        }
+    } else {
+        WLOGFE("OnSensorRotationChange: env is nullptr");
+    }
 }
 
 void JsScreenSession::OnScreenOrientationChange(float screenOrientation, ScreenId screenId)
@@ -450,32 +453,35 @@ void JsScreenSession::OnPropertyChange(const ScreenProperty& newProperty, Screen
 
     auto jsCallbackRef = mCallback_[callbackType];
     wptr<ScreenSession> screenSessionWeak(screenSession_);
-    auto complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
-        [jsCallbackRef, callbackType, screenSessionWeak, newProperty, reason](
-            napi_env env, NapiAsyncTask& task, int32_t status) {
-            if (jsCallbackRef == nullptr) {
-                WLOGFE("Call js callback %{public}s failed, jsCallbackRef is null!", callbackType.c_str());
-                return;
-            }
-            auto method = jsCallbackRef->GetNapiValue();
-            if (method == nullptr) {
-                WLOGFE("Call js callback %{public}s failed, method is null!", callbackType.c_str());
-                return;
-            }
-            auto screenSession = screenSessionWeak.promote();
-            if (screenSession == nullptr) {
-                WLOGFE("Call js callback %{public}s failed, screenSession is null!", callbackType.c_str());
-                return;
-            }
-            napi_value propertyChangeReason = CreateJsValue(env, static_cast<int32_t>(reason));
-            napi_value argv[] = { JsScreenUtils::CreateJsScreenProperty(env, newProperty), propertyChangeReason };
-            napi_call_function(env, NapiGetUndefined(env), method, ArraySize(argv), argv, nullptr);
-        });
+    auto napiTask = [jsCallbackRef, callbackType, screenSessionWeak, newProperty, reason, env = env_]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "jsScreenSession::OnPropertyChange");
+        if (jsCallbackRef == nullptr) {
+            WLOGFE("Call js callback %{public}s failed, jsCallbackRef is null!", callbackType.c_str());
+            return;
+        }
+        auto method = jsCallbackRef->GetNapiValue();
+        if (method == nullptr) {
+            WLOGFE("Call js callback %{public}s failed, method is null!", callbackType.c_str());
+            return;
+        }
+        auto screenSession = screenSessionWeak.promote();
+        if (screenSession == nullptr) {
+            WLOGFE("Call js callback %{public}s failed, screenSession is null!", callbackType.c_str());
+            return;
+        }
+        napi_value propertyChangeReason = CreateJsValue(env, static_cast<int32_t>(reason));
+        napi_value argv[] = { JsScreenUtils::CreateJsScreenProperty(env, newProperty), propertyChangeReason };
+        napi_call_function(env, NapiGetUndefined(env), method, ArraySize(argv), argv, nullptr);
+    };
 
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsScreenSession::" + callbackType, env_,
-        std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
+    if (env_ != nullptr) {
+        napi_status ret = napi_send_event(env_, napiTask, napi_eprio_immediate);
+        if (ret != napi_status::napi_ok) {
+            WLOGFE("OnPropertyChange: Failed to SendEvent.");
+        }
+    } else {
+        WLOGFE("OnPropertyChange: env is nullptr");
+    }
 }
 
 void JsScreenSession::OnScreenDensityChange()
@@ -528,34 +534,37 @@ void JsScreenSession::OnPowerStatusChange(DisplayPowerEvent event, EventStatus e
 
     auto jsCallbackRef = mCallback_[callbackType];
     wptr<ScreenSession> screenSessionWeak(screenSession_);
-    auto complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
-        [jsCallbackRef, callbackType, screenSessionWeak, event, eventStatus, reason](
-            napi_env env, NapiAsyncTask& task, int32_t status) {
-            if (jsCallbackRef == nullptr) {
-                WLOGFE("[UL_POWER]Call js callback %{public}s failed, jsCallbackRef is null!", callbackType.c_str());
-                return;
-            }
-            auto method = jsCallbackRef->GetNapiValue();
-            if (method == nullptr) {
-                WLOGFE("[UL_POWER]Call js callback %{public}s failed, method is null!", callbackType.c_str());
-                return;
-            }
-            auto screenSession = screenSessionWeak.promote();
-            if (screenSession == nullptr) {
-                WLOGFE("[UL_POWER]Call js callback %{public}s failed, screenSession is null!", callbackType.c_str());
-                return;
-            }
-            napi_value displayPowerEvent = CreateJsValue(env, static_cast<int32_t>(event));
-            napi_value powerEventStatus = CreateJsValue(env, static_cast<int32_t>(eventStatus));
-            napi_value powerStateChangeReason = CreateJsValue(env, static_cast<int32_t>(reason));
-            napi_value argv[] = { displayPowerEvent, powerEventStatus, powerStateChangeReason };
-            napi_call_function(env, NapiGetUndefined(env), method, ArraySize(argv), argv, nullptr);
-        });
+    auto napiTask = [jsCallbackRef, callbackType, screenSessionWeak, event, eventStatus, reason, env = env_]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "jsScreenSession::OnPowerStatusChange");
+        if (jsCallbackRef == nullptr) {
+            WLOGFE("[UL_POWER]Call js callback %{public}s failed, jsCallbackRef is null!", callbackType.c_str());
+            return;
+        }
+        auto method = jsCallbackRef->GetNapiValue();
+        if (method == nullptr) {
+            WLOGFE("[UL_POWER]Call js callback %{public}s failed, method is null!", callbackType.c_str());
+            return;
+        }
+        auto screenSession = screenSessionWeak.promote();
+        if (screenSession == nullptr) {
+            WLOGFE("[UL_POWER]Call js callback %{public}s failed, screenSession is null!", callbackType.c_str());
+            return;
+        }
+        napi_value displayPowerEvent = CreateJsValue(env, static_cast<int32_t>(event));
+        napi_value powerEventStatus = CreateJsValue(env, static_cast<int32_t>(eventStatus));
+        napi_value powerStateChangeReason = CreateJsValue(env, static_cast<int32_t>(reason));
+        napi_value argv[] = { displayPowerEvent, powerEventStatus, powerStateChangeReason };
+        napi_call_function(env, NapiGetUndefined(env), method, ArraySize(argv), argv, nullptr);
+    };
 
-    napi_ref callback = nullptr;
-    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
-    NapiAsyncTask::Schedule("JsScreenSession::" + callbackType, env_,
-        std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
+    if (env_ != nullptr) {
+        napi_status ret = napi_send_event(env_, napiTask, napi_eprio_immediate);
+        if (ret != napi_status::napi_ok) {
+            WLOGFE("OnPowerStatusChange: Failed to SendEvent.");
+        }
+    } else {
+        WLOGFE("OnPowerStatusChange: env is nullptr");
+    }
 }
 
 void JsScreenSession::OnScreenRotationLockedChange(bool isLocked, ScreenId screenId)

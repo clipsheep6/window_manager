@@ -37,11 +37,7 @@ class RSFrameRateLinker;
 class VsyncStation {
 public:
     explicit VsyncStation(NodeId nodeId);
-    ~VsyncStation()
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        destroyed_ = true;
-    }
+    ~VsyncStation();
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback);
     int64_t GetVSyncPeriod();
     FrameRateLinkerId GetFrameRateLinkerId();
@@ -82,7 +78,7 @@ private:
         .callbackWithId_ = OnVsync,
     };
     std::shared_ptr<AppExecFwk::EventHandler> vsyncHandler_ = nullptr;
-    AppExecFwk::EventHandler::Callback vsyncTimeoutCallback_ = std::bind(&VsyncStation::OnVsyncTimeOut, this);
+    AppExecFwk::EventHandler::Callback vsyncTimeoutCallback_ = [this] { this->OnVsyncTimeOut(); };
 };
 } // namespace Rosen
 } // namespace OHOS

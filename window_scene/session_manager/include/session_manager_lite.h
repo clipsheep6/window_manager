@@ -50,8 +50,10 @@ public:
 
     sptr<ISessionManagerService> GetSessionManagerServiceProxy();
 
+#ifndef USE_ADAPTER_LITE
     void SaveSessionListener(const sptr<ISessionListener>& listener);
     void DeleteSessionListener(const sptr<ISessionListener>& listener);
+#endif
     void RecoverSessionManagerService(const sptr<ISessionManagerService>& sessionManagerService);
     void RegisterUserSwitchListener(const UserSwitchCallbackFunc& callbackFunc);
     void OnWMSConnectionChanged(
@@ -72,10 +74,11 @@ private:
     void DeleteAllSessionListeners();
     void ReregisterSessionListener() const;
     void RegisterSMSRecoverListener();
-    void OnWMSConnectionChangedCallback(int32_t userId, int32_t screenId, bool isConnected);
+    void OnWMSConnectionChangedCallback(int32_t userId, int32_t screenId, bool isConnected, bool isCallbackRegistered);
     WMError InitMockSMSProxy();
-
     UserSwitchCallbackFunc userSwitchCallbackFunc_ = nullptr;
+
+    std::recursive_mutex mutex_;
     sptr<IMockSessionManagerInterface> mockSessionManagerServiceProxy_ = nullptr;
     sptr<ISessionManagerService> sessionManagerServiceProxy_ = nullptr;
     sptr<ISceneSessionManagerLite> sceneSessionManagerLiteProxy_ = nullptr;
@@ -84,15 +87,23 @@ private:
     sptr<IRemoteObject> smsRecoverListener_ = nullptr;
     sptr<FoundationDeathRecipientLite> foundationDeath_ = nullptr;
     bool recoverListenerRegistered_ = false;
-    std::recursive_mutex listenerLock_;
-    std::vector<sptr<ISessionListener>> sessionListeners_;
-    std::recursive_mutex mutex_;
     bool destroyed_ = false;
+    bool isFoundationListenerRegistered_ = false;
+    // above guarded by mutex_
+
+    std::recursive_mutex listenerLock_;
+#ifndef USE_ADAPTER_LITE
+    std::vector<sptr<ISessionListener>> sessionListeners_;
+#endif
+    // above guarded by listenerLock_
+
+    std::mutex wmsConnectionMutex_;
     int32_t currentWMSUserId_ = INVALID_USER_ID;
     int32_t currentScreenId_ = DEFAULT_SCREEN_ID;
-    bool isFoundationListenerRegistered_ = false;
     bool isWMSConnected_ = false;
     WMSConnectionChangedCallbackFunc wmsConnectionChangedFunc_ = nullptr;
+    // above guarded by wmsConnectionMutex_, among OnWMSConnectionChanged for wms connection event, user switched,
+    // register WMSConnectionChangedListener.
 };
 } // namespace OHOS::Rosen
 
