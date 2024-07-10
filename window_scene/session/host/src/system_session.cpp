@@ -207,8 +207,11 @@ WSError SystemSession::ProcessPointDownSession(int32_t posX, int32_t posY)
             return WSError::WS_OK;
         }
     }
-    if (type == WindowType::WINDOW_TYPE_DIALOG && GetSessionProperty() && GetSessionProperty()->GetRaiseEnabled()) {
-        RaiseToAppTopForPointDown();
+    if (type == WindowType::WINDOW_TYPE_DIALOG) {
+        Session::ProcessClickModalSpecificWindowOutside(posX, posY);
+        if (GetSessionProperty() && GetSessionProperty()->GetRaiseEnabled()) {
+            RaiseToAppTopForPointDown();
+        }
     }
     TLOGI(WmsLogTag::WMS_LIFE, "id: %{public}d, type: %{public}d", id, type);
     PresentFocusIfPointDown();

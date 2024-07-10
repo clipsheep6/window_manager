@@ -54,6 +54,7 @@ private:
         BIND_DIALOG_TARGET_CB,
         RAISE_TO_TOP_CB,
         RAISE_TO_TOP_POINT_DOWN_CB,
+        CLICK_MODAL_SPECIFIC_WINDOW_OUTSIDE,
         BACK_PRESSED_CB,
         SESSION_FOCUSABLE_CHANGE_CB,
         SESSION_TOUCHABLE_CHANGE_CB,
@@ -176,6 +177,7 @@ private:
     void ProcessPendingSessionToForegroundRegister();
     void ProcessPendingSessionToBackgroundForDelegatorRegister();
     void ProcessSessionDefaultAnimationFlagChangeRegister();
+    void ProcessClickModalSpecificWindowOutsideRegister();
     void ProcessIsCustomAnimationPlaying();
     void ProcessShowWhenLockedRegister();
     void ProcessRequestedOrientationChange();
@@ -231,6 +233,7 @@ private:
     void OnTouchOutside();
     void OnSessionInfoLockedStateChange(bool lockedState);
     void OnPrepareClosePiPSession();
+    void OnClickModalSpecificWindowOutside();
     void OnContextTransparent();
     void SetLandscapeMultiWindow(bool isLandscapeMultiWindow);
     void OnKeyboardGravityChange(SessionGravity gravity);
