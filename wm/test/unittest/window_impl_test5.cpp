@@ -959,7 +959,11 @@ HWTEST_F(WindowImplTest5, SetGlobalMaximizeMode, Function | SmallTest | Level1)
     EXPECT_EQ(window->SetGlobalMaximizeMode(MaximizeMode::MODE_RECOVER), WMError::WM_OK);
 
     window->property_->SetWindowType(WindowType::APP_SUB_WINDOW_BASE);
+<<<<<<< HEAD
     EXPECT_EQ(window->SetGlobalMaximizeMode(MaximizeMode::MODE_RECOVER), WMError::WM_ERROR_INVALID_WINDOW);
+=======
+    EXPECT_EQ(window->SetGlobalMaximizeMode(MaximizeMode::MODE_RECOVER), WMError::WM_ERROR_INVALID_PARAM);
+>>>>>>> 744d6d22e (window_impl.cpp 新增ut)
     EXPECT_CALL(m->Mock(), DestroyWindow(_)).Times(1).WillOnce(Return(WMError::WM_OK));
 }
 
@@ -1018,7 +1022,11 @@ HWTEST_F(WindowImplTest5, Resize, Function | SmallTest | Level1)
     window->state_ = WindowState::STATE_HIDDEN;
     EXPECT_EQ(window->Resize(10, 10), WMError::WM_OK);
 
+<<<<<<< HEAD
     window->state_ = WindowState::STATE_HIDDEN;
+=======
+    window->state_ = WindowState::STATE_SHOWN;
+>>>>>>> 744d6d22e (window_impl.cpp 新增ut)
     EXPECT_CALL(m->Mock(), UpdateProperty(_, _)).Times(1).WillOnce(Return(WMError::WM_OK));
     window->property_->SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
     EXPECT_EQ(window->Resize(10, 10), WMError::WM_ERROR_INVALID_OPERATION);
@@ -1245,13 +1253,21 @@ HWTEST_F(WindowImplTest5, WindowCreateCheck05, Function | SmallTest | Level1)
     ASSERT_NE(windowImpl2, nullptr);
     windowImpl2->property_->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
     WindowImpl::windowMap_.insert(std::make_pair("test", std::pair<uint32_t, sptr<Window>>(0, windowImpl2)));
+<<<<<<< HEAD
     EXPECT_EQ(window->WindowCreateCheck(0), WMError::WM_ERROR_REPEAT_OPERATION);
+=======
+    EXPECT_EQ(window->WindowCreateCheck(0), WMError::WM_ERROR_INVALID_PARENT);
+>>>>>>> 744d6d22e (window_impl.cpp 新增ut)
 
     sptr<WindowImpl> windowImpl3 = new (std::nothrow) WindowImpl(option);
     ASSERT_NE(windowImpl3, nullptr);
     windowImpl3->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
     WindowImpl::windowMap_.insert(std::make_pair("test", std::pair<uint32_t, sptr<Window>>(1, windowImpl3)));
+<<<<<<< HEAD
     EXPECT_EQ(window->WindowCreateCheck(1), WMError::WM_ERROR_REPEAT_OPERATION);
+=======
+    EXPECT_EQ(window->WindowCreateCheck(1), WMError::WM_OK);
+>>>>>>> 744d6d22e (window_impl.cpp 新增ut)
 }
 
 /**
