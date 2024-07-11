@@ -971,7 +971,7 @@ napi_value ExtensionWindowAttributeInit(napi_env env)
     napi_set_named_property(env, objValue, "SYSTEM_WINDOW",
         CreateJsValue(env, static_cast<int32_t>(ExtensionWindowAttribute::SYSTEM_WINDOW)));
     napi_set_named_property(env, objValue, "SUB_WINDOW",
-        CreateJsValue(env, static_cast<int32_t>(ExtensionWindowAttribute::SUB_WINDOW)));    
+        CreateJsValue(env, static_cast<int32_t>(ExtensionWindowAttribute::SUB_WINDOW)));
     return objValue;
 }
 } // namespace Rosen

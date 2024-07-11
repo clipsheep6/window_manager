@@ -1087,21 +1087,18 @@ enum class ExtensionWindowAttribute : int32_t {
     UNKNOWN
 };
 
-struct SystemWindowOptions
-{
+struct SystemWindowOptions {
     int32_t windowType;
 };
 
-struct SubWindowOptions
-{
+struct SubWindowOptions {
     std::string title;
     bool decorEnabled;
     bool isModal;
     bool isTopmost;
 };
 
-struct ExtensionWindowConfig
-{
+struct ExtensionWindowConfig {
     std::string windowName;
     ExtensionWindowAttribute windowAttribute = ExtensionWindowAttribute::UNKNOWN;
     Rect windowRect;

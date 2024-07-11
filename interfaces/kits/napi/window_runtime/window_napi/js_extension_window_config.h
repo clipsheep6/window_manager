@@ -20,8 +20,8 @@
 #include "native_engine/native_value.h"
 #include "js_runtime_utils.h"
 #include "wm_common.h"
-namespace OHOS{
-namespace Rosen{
+namespace OHOS {
+namespace Rosen {
 #ifdef _WIN32
 #define WINDOW_EXPORT __attribute__((dllexport))
 #else
@@ -29,8 +29,7 @@ namespace Rosen{
 #endif
 WINDOW_EXPORT napi_value CreateJsExtensionWindowConfig(napi_env env,
     std::shared_ptr<ExtensionWindowConfig> extensionWindowConfig);
-class JsExtensionWindowConfig
-{
+class JsExtensionWindowConfig {
 public:
     explicit JsExtensionWindowConfig(const std::shared_ptr<ExtensionWindowConfig>& extensionWindowConfig);
     ~JsExtensionWindowConfig();
