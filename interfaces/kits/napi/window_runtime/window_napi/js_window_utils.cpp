@@ -957,14 +957,14 @@ bool GetWindowMaskFromJsValue(napi_env env, napi_value jsObject, std::vector<std
 napi_value ExtensionWindowAttributeInit(napi_env env)
 {
     if (env == nullptr) {
-        WLOGFE("env is nullptr");
+        TLOGI(WmsLogTag::WMS_UIEXT, "env is nullptr");
         return nullptr;
     }
 
     napi_value objValue = nullptr;
     napi_create_object(env, &objValue);
     if (objValue == nullptr) {
-        WLOGFE("Failed to get object");
+        TLOGI(WmsLogTag::WMS_UIEXT, "Failed to get object");
         return nullptr;
     }
 
