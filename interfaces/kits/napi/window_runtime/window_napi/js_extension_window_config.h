@@ -64,9 +64,6 @@ public:
     static napi_value SetSystemWindowOptionsWindowType(napi_env env, napi_callback_info info);
 
 private:
-    napi_value CreateJsWindowRect(napi_env env);
-    napi_value CreateJsSubWindowOptions(napi_env env);
-    napi_value CreateJsSystemWindowOptions(napi_env env);
     napi_value OnGetWindowName(napi_env env, AbilityRuntime::NapiCallbackInfo& info);
     napi_value OnGetWindowAttribute(napi_env env, AbilityRuntime::NapiCallbackInfo& info);
     napi_value OnGetWindowRect(napi_env env, AbilityRuntime::NapiCallbackInfo& info);
