@@ -80,11 +80,17 @@ void SingleDisplayPocketFoldPolicy::ChangeScreenDisplayMode(FoldDisplayMode disp
         ReportFoldDisplayModeChange(displayMode);
         switch (displayMode) {
             case FoldDisplayMode::MAIN: {
+                
                 ChangeScreenDisplayModeToMain(screenSession);
                 break;
             }
             case FoldDisplayMode::FULL: {
+                AddOrRemoveDisplayNodeToTree(SCREEN_ID_FULL, REMOVE_DISPLAY_NODE);
                 ChangeScreenDisplayModeToFull(screenSession);
+                break;
+            }
+            case FoldDisplayMode::COORDINATION: {
+                ChangeScreenDisplayModeToCoordination();
                 break;
             }
             case FoldDisplayMode::UNKNOWN: {
@@ -331,6 +337,67 @@ void SingleDisplayPocketFoldPolicy::ChangeScreenDisplayModeToFull(sptr<ScreenSes
             PowerMgr::PowerMgrClient::GetInstance().WakeupDevice();
         };
         screenPowerTaskScheduler_->PostAsyncTask(taskScreenOnFullOn, "screenOnFullOnTask");
+    }
+}
+
+void DualDisplayFoldPolicy::ChangeScreenDisplayModeToCoordination()
+{
+    bool isScreenOn = PowerMgr::PowerMgrClient::GetInstance().IsFoldScreenOn();
+    TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayModeToCoordination, isScreenOn= %{public}d", isScreenOn);
+#ifdef TP_FEATURE_ENABLE
+    RSInterfaces::GetInstance().SetTpFeatureConfig(TP_TYPE, MAIN_TP.c_str());
+#endif
+    // on main screen
+    auto taskScreenOnMain = [=] {
+        TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayMode: on main screenId");
+        screenId_ = SCREEN_ID_MAIN;
+        if (isScreenOn) {
+            ScreenSessionManager::GetInstance().SetKeyguardDrawnDoneFlag(false);
+            ScreenSessionManager::GetInstance().SetScreenPower(ScreenPowerStatus::POWER_STATUS_ON,
+                PowerStateChangeReason::STATE_CHANGE_REASON_DISPLAY_SWITCH);
+            PowerMgr::PowerMgrClient::GetInstance().RefreshActivity();
+        } else {
+            PowerMgr::PowerMgrClient::GetInstance().WakeupDevice();
+        }
+    };
+    screenPowerTaskScheduler_->PostAsyncTask(taskScreenOnMain, "taskScreenOnMain");
+    // on full screen
+    auto taskScreenOnSub = [=] {
+        TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayMode: on full screenId");
+        screenId_ = SCREEN_ID_FULL;
+        ScreenSessionManager::GetInstance().SetKeyguardDrawnDoneFlag(false);
+        ScreenSessionManager::GetInstance().SetScreenPower(ScreenPowerStatus::POWER_STATUS_ON,
+            PowerStateChangeReason::STATE_CHANGE_REASON_DISPLAY_SWITCH);
+        PowerMgr::PowerMgrClient::GetInstance().RefreshActivity();
+    };
+    screenPowerTaskScheduler_->PostAsyncTask(taskScreenOnSub, "taskScreenOnSub");
+    // 协同场景新增使用screen id为5的display id.
+    AddOrRemoveDisplayNodeToTree(SCREEN_ID_FULL, ADD_DISPLAY_NODE);
+}
+
+void DualDisplayFoldPolicy::AddOrRemoveDisplayNodeToTree(ScreenId screenId, int32_t command)
+{
+    TLOGI(WmsLogTag::DMS, "AddOrRemoveDisplayNodeToTree, screenId: %{public}" PRIu64 ", command: %{public}d",
+        screenId, command);
+    sptr<ScreenSession> screenSession = ScreenSessionManager::GetInstance().GetScreenSession(screenId);
+    if (screenSession == nullptr) {
+        TLOGE(WmsLogTag::DMS, "AddOrRemoveDisplayNodeToTree, screenSession is null");
+        return;
+    }
+    std::shared_ptr<RSDisplayNode> displayNode = screenSession->GetDisplayNode();
+    if (displayNode == nullptr) {
+        TLOGE(WmsLogTag::DMS, "AddOrRemoveDisplayNodeToTree, displayNode is null");
+        return;
+    }
+    if (command == ADD_DISPLAY_NODE) {
+        displayNode->AddDisplayNodeToTree();
+    } else if (command == REMOVE_DISPLAY_NODE) {
+        displayNode->RemoveDisplayNodeFromTree();
+    }
+    auto transactionProxy = RSTransactionProxy::GetInstance();
+    if (transactionProxy != nullptr) {
+        TLOGI(WmsLogTag::DMS, "add or remove displayNode");
+        transactionProxy->FlushImplicitTransaction();
     }
 }
 

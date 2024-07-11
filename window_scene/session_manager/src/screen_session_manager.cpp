@@ -1058,7 +1058,7 @@ sptr<ScreenSession> ScreenSessionManager::GetScreenSessionInner(ScreenId screenI
 {
     ScreenId defScreenId = GetDefaultScreenId();
     TLOGI(WmsLogTag::DMS, "GetScreenSessionInner: screenId:%{public}" PRIu64 "", screenId);
-    if (IsDefaultMirrorMode(screenId)) {
+    if (IsDefaultMirrorMode(screenId) || screenId == SCREEN_ID_MAIN) {
         return CreatePhysicalMirrorSessionInner(screenId, defScreenId, property);
     }
     std::string screenName = "UNKNOWN";
@@ -1143,7 +1143,7 @@ sptr<ScreenSession> ScreenSessionManager::GetOrCreateScreenSession(ScreenId scre
         if (screenId == SCREEN_ID_MAIN) {
             SetPostureAndHallSensorEnabled();
         }
-        if (screenId == SCREEN_ID_MAIN && !FoldScreenStateInternel::IsDualDisplayFoldDevice()) {
+        if (screenId == SCREEN_ID_MAIN && FoldScreenStateInternel::IsSingleDisplayFoldDevice()) {
             return nullptr;
         }
     }
@@ -4646,7 +4646,7 @@ void ScreenSessionManager::NotifyFoldToExpandCompletion(bool foldToExpand)
             SysCapUtil::GetClientName().c_str(), IPCSkeleton::GetCallingPid());
         return;
     }
-    if (FoldScreenStateInternel::IsSingleDisplayFoldDevice()) {
+    if (!FoldScreenStateInternel::IsDualDisplayFoldDevice()) {
         SetDisplayNodeScreenId(SCREEN_ID_FULL, foldToExpand ? SCREEN_ID_FULL : SCREEN_ID_MAIN);
     }
     sptr<ScreenSession> screenSession = GetDefaultScreenSession();
