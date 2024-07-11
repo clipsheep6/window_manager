@@ -21,7 +21,6 @@ namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "JsExtensionWindowConfig"};
     constexpr char EXTENSION_WINDOW_CONFIG_NAME[] = "__extension_window_config_ptr__";
     napi_value NapiGetUndefined(napi_env env)
     {
