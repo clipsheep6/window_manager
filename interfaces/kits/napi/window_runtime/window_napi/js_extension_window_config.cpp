@@ -43,7 +43,6 @@ namespace {
         properties[0].attributes = napi_default;
         properties[0].data = nullptr;
         napi_define_properties(env, object, 1, properties);
-
     }
 } // namespace
 JsExtensionWindowConfig::JsExtensionWindowConfig(const std::shared_ptr<ExtensionWindowConfig> &extensionWindowConfig)
@@ -607,7 +606,7 @@ napi_value JsExtensionWindowConfig::OnSetSubWindowOptions(napi_env env, NapiCall
         return NapiGetUndefined(env);
     }
     std::string title;
-    if (!ParseJsValue(result, env, "title", res)) {
+    if (!ParseJsValue(result, env, "title", title)) {
         TLOGE(WmsLogTag::WMS_UIEXT, "failed to convert parameter to subWindowOptions title");
         return NapiGetUndefined(env);
     }
@@ -759,7 +758,7 @@ napi_value JsExtensionWindowConfig::OnSetSystemWindowOptions(napi_env env, NapiC
         return NapiGetUndefined(env);
     }
     int32_t windowType = 0;
-    if (!ParseJsValue(result, env, "windowType", res)) {
+    if (!ParseJsValue(result, env, "windowType", windowType)) {
         TLOGE(WmsLogTag::WMS_UIEXT, "failed to convert parameter to systemWindowOptions windowType");
         return NapiGetUndefined(env);
     }
