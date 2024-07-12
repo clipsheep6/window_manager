@@ -67,97 +67,97 @@ void MockSessionManagerServiceProxy::NotifySceneBoardAvailable()
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteInterfaceToken failed");
+        WLOGFE("[WMSRecover] WriteInterfaceToken failed");
         return;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(
         MockSessionManagerServiceMessage::TRANS_ID_NOTIFY_SCENE_BOARD_AVAILABLE),
         data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "SendRequest failed");
+        WLOGFE("[WMSRecover] SendRequest failed");
         return;
     }
 }
 
 void MockSessionManagerServiceProxy::RegisterSMSRecoverListener(const sptr<IRemoteObject>& listener)
 {
-    TLOGD(WmsLogTag::WMS_RECOVER, "Register");
+    WLOGFD("[WMSRecover] Register");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteInterfaceToken failed");
+        WLOGFE("[WMSRecover] WriteInterfaceToken failed");
         return;
     }
 
     if (!data.WriteRemoteObject(listener)) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteRemoteObject listener failed");
+        WLOGFE("[WMSRecover] WriteRemoteObject listener failed");
         return;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(
         MockSessionManagerServiceMessage::TRANS_ID_REGISTER_SMS_RECOVER_LISTENER),
         data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "SendRequest failed");
+        WLOGFE("[WMSRecover] SendRequest failed");
         return;
     }
 }
 
 void MockSessionManagerServiceProxy::UnregisterSMSRecoverListener()
 {
-    TLOGD(WmsLogTag::WMS_RECOVER, "UnRegister");
+    WLOGFD("[WMSRecover] UnRegister");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteInterfaceToken failed");
+        WLOGFE("[WMSRecover] WriteInterfaceToken failed");
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(
         MockSessionManagerServiceMessage::TRANS_ID_UNREGISTER_SMS_RECOVER_LISTENER),
         data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "SendRequest failed");
+        WLOGFE("[WMSRecover] SendRequest failed");
         return;
     }
 }
 
 void MockSessionManagerServiceProxy::RegisterSMSLiteRecoverListener(const sptr<IRemoteObject>& listener)
 {
-    TLOGD(WmsLogTag::WMS_RECOVER, "Register");
+    WLOGFD("[WMSRecover] Register");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteInterfaceToken failed");
+        WLOGFE("[WMSRecover] WriteInterfaceToken failed");
         return;
     }
 
     if (!data.WriteRemoteObject(listener)) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteRemoteObject listener failed");
+        WLOGFE("[WMSRecover] WriteRemoteObject listener failed");
         return;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(
         MockSessionManagerServiceMessage::TRANS_ID_REGISTER_SMS_LITE_RECOVER_LISTENER),
         data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "SendRequest failed");
+        WLOGFE("[WMSRecover] SendRequest failed");
         return;
     }
 }
 
 void MockSessionManagerServiceProxy::UnregisterSMSLiteRecoverListener()
 {
-    TLOGD(WmsLogTag::WMS_RECOVER, "Unregister");
+    WLOGFD("[WMSRecover] Unregister");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteInterfaceToken failed");
+        WLOGFE("[WMSRecover] WriteInterfaceToken failed");
         return;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(
         MockSessionManagerServiceMessage::TRANS_ID_UNREGISTER_SMS_LITE_RECOVER_LISTENER),
         data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "SendRequest failed");
+        WLOGFE("[WMSRecover] SendRequest failed");
         return;
     }
 }

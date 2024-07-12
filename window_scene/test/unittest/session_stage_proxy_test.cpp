@@ -21,7 +21,6 @@
 #include "util.h"
 #include "window_manager.h"
 #include "window_manager_hilog.h"
-#include "wm_common.h"
 
 
 using namespace testing;
@@ -97,19 +96,6 @@ HWTEST_F(SessionStageProxyTest, HandleBackEvent, Function | SmallTest | Level1)
     ASSERT_TRUE((sessionStage_ != nullptr));
     WSError res = sessionStage_->HandleBackEvent();
     ASSERT_EQ(WSError::WS_OK, res);
-}
-
-/**
- * @tc.name: GetUIContentRemoteObj
- * @tc.desc: test function : GetUIContentRemoteObj
- * @tc.type: FUNC
- */
-HWTEST_F(SessionStageProxyTest, GetUIContentRemoteObj, Function | SmallTest | Level1)
-{
-    ASSERT_NE(sessionStage_, nullptr);
-    sptr<IRemoteObject> remoteObj;
-    WSError res = sessionStage_->GetUIContentRemoteObj(remoteObj);
-    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
 }
 
 /**
@@ -293,17 +279,6 @@ HWTEST_F(SessionStageProxyTest, NotifyWindowVisibility, Function | SmallTest | L
 }
 
 /**
- * @tc.name: NotifyDensityFollowHost
- * @tc.desc: test function : NotifyDensityFollowHost
- * @tc.type: FUNC
- */
-HWTEST_F(SessionStageProxyTest, NotifyDensityFollowHost, Function | SmallTest | Level1)
-{
-    ASSERT_TRUE((sessionStage_ != nullptr));
-    ASSERT_EQ(WSError::WS_OK, sessionStage_->NotifyDensityFollowHost(true, 1.0f));
-}
-
-/**
  * @tc.name: SetPipActionEvent
  * @tc.desc: test function : SetPipActionEvent
  * @tc.type: FUNC
@@ -312,19 +287,6 @@ HWTEST_F(SessionStageProxyTest, SetPipActionEvent, Function | SmallTest | Level1
 {
     ASSERT_TRUE((sessionStage_ != nullptr));
     sessionStage_->SetPipActionEvent("close", 0);
-}
-
-/**
- * @tc.name: SetPiPControlEvent
- * @tc.desc: test function : SetPiPControlEvent
- * @tc.type: FUNC
- */
-HWTEST_F(SessionStageProxyTest, SetPiPControlEvent, Function | SmallTest | Level1)
-{
-    ASSERT_TRUE(sessionStage_ != nullptr);
-    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = WsPiPControlStatus::PLAY;
-    sessionStage_->SetPiPControlEvent(controlType, status);
 }
 }
 }

@@ -41,11 +41,11 @@ public:
     virtual ~WindowOption() = default;
 
     /**
-     * @brief Set window mode.
+     * @brief Set window rect.
      *
-     * @param mode The mode of window.
+     * @param rect The rect of window to set window position and size.
      */
-    void SetWindowMode(WindowMode mode);
+    void SetWindowRect(const struct Rect& rect);
 
     /**
      * @brief Set window type.
@@ -55,25 +55,11 @@ public:
     void SetWindowType(WindowType type);
 
     /**
-     * @brief Set window rect.
+     * @brief Set window mode.
      *
-     * @param rect The rect of window to set window position and size.
+     * @param mode The mode of window.
      */
-    void SetWindowRect(const struct Rect& rect);
-
-    /**
-     * @brief Set parent id.
-     *
-     * @param parentId The parent window id.
-     */
-    void SetParentId(uint32_t parentId);
-
-    /**
-     * @brief Set display id.
-     *
-     * @param displayId The display id of window.
-     */
-    void SetDisplayId(DisplayId displayId);
+    void SetWindowMode(WindowMode mode);
 
     /**
      * @brief Set window focusable.
@@ -90,11 +76,18 @@ public:
     void SetTouchable(bool isTouchable);
 
     /**
-     * @brief Set bundle name.
+     * @brief Set display id.
      *
-     * @param bundleName The bundle name.
+     * @param displayId The display id of window.
      */
-    void SetBundleName(const std::string bundleName);
+    void SetDisplayId(DisplayId displayId);
+
+    /**
+     * @brief Set parent id.
+     *
+     * @param parentId The parent window id.
+     */
+    void SetParentId(uint32_t parentId);
 
     /**
      * @brief Set window name.
@@ -104,18 +97,11 @@ public:
     void SetWindowName(const std::string& windowName);
 
     /**
-     * @brief Set window flags.
+     * @brief Set bundle name.
      *
-     * @param flags The flag value.
+     * @param bundleName The bundle name.
      */
-    void SetWindowFlags(uint32_t flags);
-
-    /**
-     * @brief Remove winodw flag.
-     *
-     * @param flag The flag value removed.
-     */
-    void RemoveWindowFlag(WindowFlag flag);
+    void SetBundleName(const std::string bundleName);
 
     /**
      * @brief Add window flag.
@@ -125,11 +111,18 @@ public:
     void AddWindowFlag(WindowFlag flag);
 
     /**
-     * @brief Set window tag.
+     * @brief Remove winodw flag.
      *
-     * @param windowTag The tag of window.
+     * @param flag The flag value removed.
      */
-    void SetWindowTag(WindowTag windowTag);
+    void RemoveWindowFlag(WindowFlag flag);
+
+    /**
+     * @brief Set window flags.
+     *
+     * @param flags The flag value.
+     */
+    void SetWindowFlags(uint32_t flags);
 
     /**
      * @brief Set system bar property.
@@ -140,40 +133,25 @@ public:
     void SetSystemBarProperty(WindowType type, const SystemBarProperty& property);
 
     /**
-     * @brief Set window session type.
-     *
-     * @param sessionType The session type of window.
-     */
-    void SetWindowSessionType(WindowSessionType sessionType);
-
-    /**
      * @brief Set hit offset.
      *
      * @param x The position x of hit offset.
      * @param y The position y of hit offset.
      */
     void SetHitOffset(int32_t x, int32_t y);
+    /**
+     * @brief Set window tag.
+     *
+     * @param windowTag The tag of window.
+     */
+    void SetWindowTag(WindowTag windowTag);
 
     /**
-     * @brief Is turned screen on.
+     * @brief Set window session type.
      *
-     * @return The window is marked to turn the screen on or not.
+     * @param sessionType The session type of window.
      */
-    bool IsTurnScreenOn() const;
-
-    /**
-     * @brief Set screen on.
-     *
-     * @param turnScreenOn mark the window to turn the screen on or not.
-     */
-    void SetTurnScreenOn(bool turnScreenOn);
-
-    /**
-     * @brief Is keep screen on.
-     *
-     * @return Return true means the window would keep screen on, otherwise not.
-     */
-    bool IsKeepScreenOn() const;
+    void SetWindowSessionType(WindowSessionType sessionType);
 
     /**
      * @brief Set keep screen on.
@@ -183,18 +161,25 @@ public:
     void SetKeepScreenOn(bool keepScreenOn);
 
     /**
-     * @brief Set window calling window id.
+     * @brief Is keep screen on.
      *
-     * @param windowId The window id of calling window.
+     * @return Return true means the window would keep screen on, otherwise not.
      */
-    void SetCallingWindow(uint32_t windowId);
+    bool IsKeepScreenOn() const;
 
     /**
-     * @brief Set window requested orientation.
+     * @brief Set screen on.
      *
-     * @param orientation The requested orientation of window.
+     * @param turnScreenOn mark the window to turn the screen on or not.
      */
-    void SetRequestedOrientation(Orientation orientation);
+    void SetTurnScreenOn(bool turnScreenOn);
+
+    /**
+     * @brief Is turned screen on.
+     *
+     * @return The window is marked to turn the screen on or not.
+     */
+    bool IsTurnScreenOn() const;
 
     /**
      * @brief Set window brightness.
@@ -204,18 +189,25 @@ public:
     void SetBrightness(float brightness);
 
     /**
+     * @brief Set window requested orientation.
+     *
+     * @param orientation The requested orientation of window.
+     */
+    void SetRequestedOrientation(Orientation orientation);
+
+    /**
+     * @brief Set window calling window id.
+     *
+     * @param windowId The window id of calling window.
+     */
+    void SetCallingWindow(uint32_t windowId);
+
+    /**
      * @brief Set window main handler available.
      *
      * @param isMainHandlerAvailable is window main handler available.
      */
     void SetMainHandlerAvailable(bool isMainHandlerAvailable);
-
-    /**
-     * @brief Set subwindow decor enable.
-     *
-     * @param subWindowDecorEnable the subwindow decor enable.
-     */
-    void SetSubWindowDecorEnable(bool subWindowDecorEnable);
 
     /**
      * @brief Set subwindow title.
@@ -225,11 +217,11 @@ public:
     void SetSubWindowTitle(const std::string& subWindowTitle);
 
     /**
-     * @brief Set subwindow topmost.
+     * @brief Set subwindow decor enable.
      *
-     * @param isTopmost true means enable, default disabled.
+     * @param subWindowDecorEnable the subwindow decor enable.
      */
-    void SetWindowTopmost(bool isTopmost);
+    void SetSubWindowDecorEnable(bool subWindowDecorEnable);
 
     /**
      * @brief Set only sceneboard supported.
@@ -239,11 +231,11 @@ public:
     void SetOnlySupportSceneBoard(bool onlySupportSceneBoard);
 
     /**
-     * @brief Get window mode.
+     * @brief Get window rect.
      *
-     * @return The mode of window.
+     * @return The rect of window.
      */
-    WindowMode GetWindowMode() const;
+    Rect GetWindowRect() const;
 
     /**
      * @brief Get window type.
@@ -253,60 +245,11 @@ public:
     WindowType GetWindowType() const;
 
     /**
-     * @brief Get window tag.
+     * @brief Get window mode.
      *
-     * @return Return window tag.
+     * @return The mode of window.
      */
-    WindowTag GetWindowTag() const;
-
-    /**
-     * @brief Get window rect.
-     *
-     * @return The rect of window.
-     */
-    Rect GetWindowRect() const;
-
-    /**
-     * @brief Get parent id.
-     *
-     * @return Return parent window id.
-     */
-    uint32_t GetParentId() const;
-
-    /**
-     * @brief Get display id.
-     *
-     * @return Return diplay id.
-     */
-    DisplayId GetDisplayId() const;
-
-    /**
-     * @brief Get window flags.
-     *
-     * @return Return the window flags.
-     */
-    uint32_t GetWindowFlags() const;
-
-    /**
-     * @brief Get bundle name.
-     *
-     * @return Return the bundle name.
-     */
-    const std::string GetBundleName() const;
-
-    /**
-     * @brief Get window name.
-     *
-     * @return Return the window name.
-     */
-    const std::string& GetWindowName() const;
-
-    /**
-     * @brief Get window touchable.
-     *
-     * @return Return true means the window is touchable, otherwise not.
-     */
-    bool GetTouchable() const;
+    WindowMode GetWindowMode() const;
 
     /**
      * @brief Get window focusable.
@@ -316,11 +259,46 @@ public:
     bool GetFocusable() const;
 
     /**
-     * @brief Get window hit offset.
+     * @brief Get window touchable.
      *
-     * @return Return hit offset value as PointInfo.
+     * @return Return true means the window is touchable, otherwise not.
      */
-    const PointInfo& GetHitOffset() const;
+    bool GetTouchable() const;
+
+    /**
+     * @brief Get display id.
+     *
+     * @return Return diplay id.
+     */
+    DisplayId GetDisplayId() const;
+
+    /**
+     * @brief Get parent id.
+     *
+     * @return Return parent window id.
+     */
+    uint32_t GetParentId() const;
+
+    /**
+     * @brief Get window name.
+     *
+     * @return Return the window name.
+     */
+    const std::string& GetWindowName() const;
+
+    /**
+     * @brief Get bundle name.
+     *
+     * @return Return the bundle name.
+     */
+    const std::string GetBundleName() const;
+
+    /**
+     * @brief Get window flags.
+     *
+     * @return Return the window flags.
+     */
+    uint32_t GetWindowFlags() const;
 
     /**
      * @brief Get system bar property.
@@ -330,11 +308,18 @@ public:
     const std::unordered_map<WindowType, SystemBarProperty>& GetSystemBarProperty() const;
 
     /**
-     * @brief Get window request orientation.
+     * @brief Get window hit offset.
      *
-     * @return Return window requested orientation.
+     * @return Return hit offset value as PointInfo.
      */
-    Orientation GetRequestedOrientation() const;
+    const PointInfo& GetHitOffset() const;
+
+    /**
+     * @brief Get window tag.
+     *
+     * @return Return window tag.
+     */
+    WindowTag GetWindowTag() const;
 
     /**
      * @brief Get window session type.
@@ -344,18 +329,25 @@ public:
     WindowSessionType GetWindowSessionType() const;
 
     /**
-     * @brief Get calling window id.
-     *
-     * @return Return the calling window id of window.
-     */
-    uint32_t GetCallingWindow() const;
-
-    /**
      * @brief Get window brightness.
      *
      * @return Return screen brightness.
      */
     float GetBrightness() const;
+
+    /**
+     * @brief Get window request orientation.
+     *
+     * @return Return window requested orientation.
+     */
+    Orientation GetRequestedOrientation() const;
+
+    /**
+     * @brief Get calling window id.
+     *
+     * @return Return the calling window id of window.
+     */
+    uint32_t GetCallingWindow() const;
 
     /**
      * @brief Get main handler available
@@ -365,11 +357,11 @@ public:
     bool GetMainHandlerAvailable() const;
 
     /**
-     * @brief Get only sceneboard supported
+     * @brief Get subwindow title
      *
-     * @return Return ture means only sceneboard supported, otherwise not.
+     * @return Return the subwindow title
     */
-    bool GetOnlySupportSceneBoard() const;
+    std::string GetSubWindowTitle() const;
 
     /**
      * @brief Get subwindow decor enable
@@ -379,48 +371,39 @@ public:
     bool GetSubWindowDecorEnable() const;
 
     /**
-     * @brief Get subwindow title
+     * @brief Get only sceneboard supported
      *
-     * @return Return the subwindow title
+     * @return Return ture means only sceneboard supported, otherwise not.
     */
-    std::string GetSubWindowTitle() const;
-
-    /**
-     * @brief Get window topmost
-     *
-     * @return true means the window is topmost, otherwise not.
-    */
-    bool GetWindowTopmost() const;
+    bool GetOnlySupportSceneBoard() const;
 
 private:
     Rect windowRect_ { 0, 0, 0, 0 };
-    std::string windowName_ { "" };
-    std::string bundleName_ { "" };
-    std::string subWindowTitle_ = { "" };
     WindowType type_ { WindowType::WINDOW_TYPE_APP_MAIN_WINDOW };
     WindowMode mode_ { WindowMode::WINDOW_MODE_UNDEFINED };
     bool focusable_ { true };
     bool touchable_ { true };
-    bool subWindowDecorEnable_ = { false };
-    bool onlySupportSceneBoard_ = { false };
-    bool keepScreenOn_ = { false };
-    bool turnScreenOn_ = { false };
-    bool isMainHandlerAvailable_ = { true };
-    bool isTopmost_ = false;
     DisplayId displayId_ { 0 };
     uint32_t parentId_ = INVALID_WINDOW_ID;
-    uint32_t callingWindow_ = INVALID_WINDOW_ID;
+    std::string windowName_ { "" };
+    std::string bundleName_ { "" };
     uint32_t flags_ { 0 };
     PointInfo hitOffset_ { 0, 0 };
     WindowTag windowTag_;
     WindowSessionType sessionType_ { WindowSessionType::SCENE_SESSION };
+    bool keepScreenOn_ = false;
+    bool turnScreenOn_ = false;
+    bool isMainHandlerAvailable_ = true;
     float brightness_ = UNDEFINED_BRIGHTNESS;
-
-    Orientation requestedOrientation_ { Orientation::UNSPECIFIED };
+    uint32_t callingWindow_ = INVALID_WINDOW_ID;
     std::unordered_map<WindowType, SystemBarProperty> sysBarPropMap_ {
         { WindowType::WINDOW_TYPE_STATUS_BAR,     SystemBarProperty() },
         { WindowType::WINDOW_TYPE_NAVIGATION_BAR, SystemBarProperty() },
     };
+    Orientation requestedOrientation_ { Orientation::UNSPECIFIED };
+    std::string subWindowTitle_ = { "" };
+    bool subWindowDecorEnable_ = false;
+    bool onlySupportSceneBoard_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

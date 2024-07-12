@@ -18,10 +18,15 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION_MANAGER,
+                                          "ScreenRotationProperty" };
+}
+
 void ScreenRotationProperty::HandleSensorEventInput(DeviceRotation deviceRotation)
 {
     static DeviceRotation lastSensorRotationConverted_ = DeviceRotation::INVALID;
-    TLOGI(WmsLogTag::DMS, "ScreenRotationProperty::HandleSensorEventInput deviceRotation: %{public}d, "
+    WLOGFI("ScreenRotationProperty::HandleSensorEventInput deviceRotation: %{public}d, "
         "lastSensorRotationConverted: %{public}d", deviceRotation, lastSensorRotationConverted_);
 
     if (deviceRotation != DeviceRotation::INVALID && lastSensorRotationConverted_ != deviceRotation) {
@@ -29,7 +34,7 @@ void ScreenRotationProperty::HandleSensorEventInput(DeviceRotation deviceRotatio
     }
     auto screenSession = ScreenSessionManager::GetInstance().GetDefaultScreenSession();
     if (!screenSession) {
-        TLOGW(WmsLogTag::DMS, "screenSession is null, sensor rotation status handle failed");
+        WLOGFW("screenSession is null, sensor rotation status handle failed");
         return;
     }
     screenSession->HandleSensorRotation(ConvertDeviceToFloat(deviceRotation));
@@ -55,7 +60,7 @@ float ScreenRotationProperty::ConvertDeviceToFloat(DeviceRotation deviceRotation
             sensorRotation = -1.0f; // keep before degree
             break;
         default:
-            TLOGW(WmsLogTag::DMS, "invalid device rotation: %{public}d", deviceRotation);
+            WLOGFW("invalid device rotation: %{public}d", deviceRotation);
     }
     return sensorRotation;
 }

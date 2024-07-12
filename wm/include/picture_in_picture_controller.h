@@ -49,18 +49,6 @@ enum class StopPipType : uint32_t {
     PACKAGE_STOP = 3,
 };
 
-static std::map<std::string, PiPControlType> CONTROL_TYPE_MAP = {
-    {"playbackStateChanged", PiPControlType::VIDEO_PLAY_PAUSE},
-    {"nextVideo", PiPControlType::VIDEO_NEXT},
-    {"previousVideo", PiPControlType::VIDEO_PREVIOUS},
-    {"hangUp", PiPControlType::HANG_UP_BUTTON},
-    {"micStateChanged", PiPControlType::MICROPHONE_SWITCH},
-    {"videoStateChanged", PiPControlType::CAMERA_SWITCH},
-    {"voiceStateChanged", PiPControlType::MUTE_SWITCH},
-    {"fastForward", PiPControlType::FAST_FORWARD},
-    {"fastBackward", PiPControlType::FAST_BACKWARD}
-};
-
 using namespace Ace;
 class PictureInPictureController : virtual public RefBase {
 public:
@@ -69,19 +57,16 @@ public:
     WMError StartPictureInPicture(StartPipType startType);
     WMError StopPictureInPicture(bool destroyWindow, StopPipType stopPipType);
     WMError StopPictureInPictureFromClient();
-    WMError DestroyPictureInPictureWindow();
     sptr<Window> GetPipWindow() const;
     uint32_t GetMainWindowId();
     void SetPipWindow(sptr<Window> window);
     void SetAutoStartEnabled(bool enable);
     void IsAutoStartEnabled(bool& enable) const;
     void UpdateContentSize(int32_t width, int32_t height);
-    void UpdatePiPControlStatus(PiPControlType controlType, PiPControlStatus status);
-    bool IsContentSizeChanged(float width, float height, float posX, float posY);
     void DoActionEvent(const std::string& actionName, int32_t status);
-    void DoControlEvent(PiPControlType controlType, PiPControlStatus status);
-    void PreRestorePictureInPicture();
     void RestorePictureInPictureWindow();
+    void SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener);
+    void SetPictureInPictureActionObserver(sptr<IPiPActionObserver> listener);
     void LocateSource();
     WMError RegisterPiPLifecycle(const sptr<IPiPLifeCycle>& listener);
     WMError RegisterPiPActionObserver(const sptr<IPiPActionObserver>& listener);
@@ -91,69 +76,39 @@ public:
     WMError UnregisterPiPControlObserver(const sptr<IPiPControlObserver>& listener);
     sptr<IPiPLifeCycle> GetPictureInPictureLifecycle() const;
     sptr<IPiPActionObserver> GetPictureInPictureActionObserver() const;
-    sptr<IPiPControlObserver> GetPictureInPictureControlObserver() const;
     WMError SetXComponentController(std::shared_ptr<XComponentController> xComponentController);
     PiPWindowState GetControllerState();
     std::string GetPiPNavigationId();
-    napi_ref GetCustomNodeController();
-
-    class PiPMainWindowListenerImpl : public Rosen::IWindowChangeListener {
-    public:
-        PiPMainWindowListenerImpl(const sptr<Window> window);
-        void OnSizeChange(Rect rect, WindowSizeChangeReason reason,
-            const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override {};
-        void OnModeChange(WindowMode mode, bool hasDeco = true) override;
-        WindowMode GetMode();
-        bool IsValid();
-    private:
-        void DelayReset();
-
-        WindowMode mode_;
-        bool isValid_ = true;
-        std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
-    };
 
     class PipMainWindowLifeCycleImpl : public Rosen::IWindowLifeCycle {
     public:
-        PipMainWindowLifeCycleImpl(const std::string& navigationId, const sptr<Window> window)
+        PipMainWindowLifeCycleImpl(const std::string& navigationId)
         {
             navigationId_ = navigationId;
-            if (window != nullptr) {
-                window_ = window;
-                windowListener_ = new PiPMainWindowListenerImpl(window_);
-                window_->RegisterWindowChangeListener(windowListener_);
-            }
         };
-        ~PipMainWindowLifeCycleImpl()
-        {
-            if (window_ != nullptr && windowListener_ != nullptr) {
-                window_->UnregisterWindowChangeListener(windowListener_);
-            }
-        };
+        ~PipMainWindowLifeCycleImpl() {};
         void AfterBackground() override;
         void BackgroundFailed(int32_t type) override;
     private:
         std::string navigationId_ = "";
-        sptr<Window> window_;
-        sptr<PiPMainWindowListenerImpl> windowListener_;
     };
 
 private:
     static sptr<IRemoteObject> remoteObj_;
     static ErrCode getSettingsAutoStartStatus(const std::string& key, std::string& value);
-    uint32_t GetPipPriority(uint32_t pipTemplateType);
-    WMError CreatePictureInPictureWindow(StartPipType startType);
+    WMError CreatePictureInPictureWindow();
     WMError ShowPictureInPictureWindow(StartPipType startType);
     WMError StartPictureInPictureInner(StartPipType startType);
     WMError StopPictureInPictureInner(StopPipType stopType);
     void UpdateXComponentPositionAndSize();
-    void UpdatePiPSourceRect() const;
     void ResetExtController();
     bool IsPullPiPAndHandleNavigation();
     template<typename T> WMError RegisterListener(std::vector<sptr<T>>& holder, const sptr<T>& listener);
     template<typename T> WMError UnregisterListener(std::vector<sptr<T>>& holder, const sptr<T>& listener);
     wptr<PictureInPictureController> weakRef_ = nullptr;
     sptr<PipOption> pipOption_;
+    sptr<IPiPLifeCycle> pipLifeCycleListener_;
+    sptr<IPiPActionObserver> pipActionObserver_;
     std::vector<sptr<IPiPLifeCycle>> pipLifeCycleListeners_;
     std::vector<sptr<IPiPActionObserver>> pipActionObservers_;
     std::vector<sptr<IPiPControlObserver>> pipControlObservers_;

@@ -43,7 +43,7 @@ std::pair<sptr<ISession>, sptr<IRemoteObject>> GetProxy()
 
     sptr<WindowOption> option = new WindowOption();
     option->SetWindowName("SessionInterfaceFuzzTest");
-    option->SetWindowType(WindowType::WINDOW_TYPE_WALLPAPER);
+    option->SetWindowType(WindowType::WINDOW_TYPE_FLOAT);
 
     sptr<WindowSessionImpl> window = new WindowSceneSessionImpl(option);
     WMError err = window->Create(abilityContext, nullptr);
@@ -135,6 +135,8 @@ void IPCSpecificInterfaceFuzzTest2(sptr<IRemoteObject> proxy, MessageParcel& sen
         sendData, reply, option);
     proxy->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_AVOID_AREA),
         sendData, reply, option);
+    proxy->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_SESSION_PROPERTY),
+        sendData, reply, option);
     proxy->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_ASPECT_RATIO),
         sendData, reply, option);
     proxy->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG),
@@ -152,6 +154,8 @@ void IPCSpecificInterfaceFuzzTest2(sptr<IRemoteObject> proxy, MessageParcel& sen
     proxy->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_ABILITY_RESULT),
         sendData, reply, option);
     proxy->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_EXTENSION_DATA),
+        sendData, reply, option);
+    proxy->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_REMOTE_READY),
         sendData, reply, option);
     proxy->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_DIED),
         sendData, reply, option);
@@ -192,6 +196,7 @@ void ProxyInterfaceFuzzTestPart1(const uint8_t* data, size_t size)
 
     sptr<WindowSessionProperty> property = UnmarshallingDataTo<WindowSessionProperty>(data, size);
     proxy->Foreground(property);
+    proxy->SetSessionProperty(property);
     proxy->Background();
     proxy->RaiseToAppTop();
 
@@ -264,6 +269,7 @@ void ProxyInterfaceFuzzTestPart3(const uint8_t* data, size_t size)
 
     sptr<AAFwk::WantParams> wantParams = UnmarshallingDataTo<AAFwk::WantParams>(data, size);
     proxy->TransferExtensionData(*wantParams);
+    proxy->NotifyRemoteReady();
     proxy->NotifyExtensionDied();
     int32_t errorCode = 1;
     proxy->NotifyExtensionTimeout(errorCode);

@@ -52,7 +52,6 @@ ohos_unittest("extension_window_extension_context_test") {
     "ability_base:want",
     "ability_runtime:ability_context_native",
     "ability_runtime:ability_manager",
-    "ability_runtime:ability_start_options",
     "ability_runtime:app_context",
     "ability_runtime:extensionkit_native",
     "ability_runtime:napi_common",
@@ -95,7 +94,6 @@ ohos_static_library("window_extension_unittest_common") {
   ]
 
   public_deps = [
-    "${window_base_path}/wm:libwm",
     "//commonlibrary/c_utils/base:utils",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",

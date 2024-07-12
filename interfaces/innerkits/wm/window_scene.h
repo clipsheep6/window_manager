@@ -21,7 +21,6 @@
 
 #include "window.h"
 #include "window_option.h"
-#include "wm_common.h"
 
 namespace OHOS::AppExecFwk {
     class Configuration;
@@ -62,12 +61,10 @@ public:
      * @param listener the life cycle listener of the window
      * @param option the settings for window, such as WindowType, width, height, etc
      * @param iSession session token of window session
-     * @param identityToken identity token of sceneSession
      * @return the error code of window
      */
     WMError Init(DisplayId displayId, const std::shared_ptr<AbilityRuntime::Context>& context,
-        sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option, const sptr<IRemoteObject>& iSession,
-        const std::string& identityToken = "");
+        sptr<IWindowLifeCycle>& listener, sptr<WindowOption> option, const sptr<IRemoteObject>& iSession);
 
     /**
      * Create a window instance based on the parameters windowName and option.
@@ -151,7 +148,7 @@ public:
      *
      * @return content info of main window
      */
-    std::string GetContentInfo(BackupAndRestoreType type = BackupAndRestoreType::CONTINUATION) const;
+    std::string GetContentInfo() const;
 
     /**
      * @brief Handle and notify memory.

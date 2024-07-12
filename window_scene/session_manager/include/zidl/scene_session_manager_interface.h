@@ -24,6 +24,7 @@
 #include "session/container/include/zidl/window_event_channel_interface.h"
 #include "session/host/include/session.h"
 #include "focus_change_info.h"
+#include "session_listener_interface.h"
 #include "window_manager.h"
 #include "zidl/window_manager_interface.h"
 #include "session_info.h"
@@ -57,6 +58,8 @@ public:
         TRANS_ID_SET_SESSION_LABEL,
         TRANS_ID_SET_SESSION_ICON,
         TRANS_ID_IS_VALID_SESSION_IDS,
+        TRANS_ID_REGISTER_SESSION_CHANGE_LISTENER,
+        TRANS_ID_UNREGISTER_SESSION_CHANGE_LISTENER,
         TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED,
         TRANS_ID_GET_WINDOW_INFO,
         TRANS_ID_PENDING_SESSION_TO_FOREGROUND,
@@ -75,7 +78,6 @@ public:
         TRANS_ID_GET_SESSION_DUMP_INFO,
         TRANS_ID_UPDATE_AVOIDAREA_LISTENER,
         TRANS_ID_GET_SESSION_SNAPSHOT,
-        TRANS_ID_GET_SESSION_SNAPSHOT_BY_ID,
         TRANS_ID_SET_SESSION_CONTINUE_STATE,
         TRANS_ID_NOTIFY_DUMP_INFO_RESULT,
         TRANS_ID_CLEAR_SESSION,
@@ -92,26 +94,25 @@ public:
         TRANS_ID_RECOVER_AND_RECONNECT_SCENE_SESSION,
 		TRANS_ID_RECOVER_AND_CONNECT_SPECIFIC_SESSION,
         TRANS_ID_GET_TOP_WINDOW_ID,
-        TRANS_ID_GET_UI_CONTENT_REMOTE_OBJ,
         TRANS_ID_UPDATE_WINDOW_VISIBILITY_LISTENER,
         TRANS_ID_SHIFT_APP_WINDOW_FOCUS,
         TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID,
         TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB,
-        TRANS_ID_UPDATE_MODALEXTENSION_RECT_TO_SCB,
-        TRANS_ID_PROCESS_MODALEXTENSION_POINTDOWN_TO_SCB,
         TRANS_ID_ADD_OR_REMOVE_SECURE_SESSION,
+        TRANS_ID_ADD_OR_REMOVE_SECURE_EXT_SESSION,
         TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS,
         TRANS_ID_GET_HOST_WINDOW_RECT,
         TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION_WITH_DETACH_CALLBACK,
         TRANS_ID_GET_WINDOW_STATUS,
         TRANS_ID_GET_WINDOW_RECT,
-        TRANS_ID_GET_WINDOW_MODE_TYPE,
-        TRANS_ID_GET_UNRELIABLE_WINDOW_INFO,
+        TRANS_ID_GET_WINDOW_BACK_HOME_STATUS,
     };
 
     virtual WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) = 0;
     virtual WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) = 0;
     virtual WSError IsValidSessionIds(const std::vector<int32_t> &sessionIds, std::vector<bool> &results) = 0;
+    virtual WSError RegisterSessionListener(const sptr<ISessionChangeListener> sessionListener) = 0;
+    virtual void UnregisterSessionListener() = 0;
     virtual WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) = 0;
     virtual WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) = 0;
     virtual WSError GetFocusSessionToken(sptr<IRemoteObject> &token) = 0;
@@ -131,8 +132,7 @@ public:
     }
     virtual WSError SetSessionContinueState(const sptr<IRemoteObject> &token, const ContinueState& continueState) = 0;
 
-    virtual WSError TerminateSessionNew(
-        const sptr<AAFwk::SessionInfo> info, bool needStartCaller, bool isFromBroker = false) = 0;
+    virtual WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller) = 0;
     virtual WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info) = 0;
     virtual WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
                                        SessionSnapshot& snapshot, bool isLowResolution) = 0;
@@ -143,10 +143,6 @@ public:
     virtual WSError MoveSessionsToForeground(const std::vector<std::int32_t>& sessionIds, int32_t topSessionId) = 0;
     virtual WSError MoveSessionsToBackground(const std::vector<std::int32_t>& sessionIds,
         std::vector<std::int32_t>& result) = 0;
-    virtual WMError GetSessionSnapshotById(int32_t persistentId, SessionSnapshot& snapshot)
-    {
-        return WMError::WM_OK;
-    }
     virtual WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override
     {
         return WSError::WS_OK;
@@ -186,10 +182,6 @@ public:
     {
         return WMError::WM_OK;
     }
-    WMError GetUnreliableWindowInfo(int32_t windowId, std::vector<sptr<UnreliableWindowInfo>>& infos) override
-    {
-        return WMError::WM_OK;
-    }
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override { return WMError::WM_OK; }
     WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) override
     {
@@ -222,16 +214,17 @@ public:
     {
         return WSError::WS_OK;
     }
-    void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage,
-        const sptr<IRemoteObject>& token, uint64_t surfaceNodeId) override {}
-    void UpdateModalExtensionRect(const sptr<IRemoteObject>& token, Rect rect) override {}
-    void ProcessModalExtensionPointDown(const sptr<IRemoteObject>& token, int32_t posX, int32_t posY) override {}
+    void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage, int32_t persistentId,
+        int32_t parentId) override {}
     WSError AddOrRemoveSecureSession(int32_t persistentId, bool shouldHide) override
     {
         return WSError::WS_OK;
     }
-    WSError UpdateExtWindowFlags(const sptr<IRemoteObject>& token, uint32_t extWindowFlags,
-        uint32_t extWindowActions) override
+    WSError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide) override
+    {
+        return WSError::WS_OK;
+    }
+    WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags) override
     {
         return WSError::WS_OK;
     }
@@ -247,7 +240,7 @@ public:
     {
         return WMError::WM_OK;
     }
-    WMError GetWindowModeType(WindowModeType& windowModeType) override { return WMError::WM_OK; }
+    WMError GetWindowBackHomeStatus(bool &isBackHome) override { return WMError::WM_OK; }
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_INTERFACE_H

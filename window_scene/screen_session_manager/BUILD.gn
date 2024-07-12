@@ -32,7 +32,7 @@ ohos_shared_library("screen_session_manager_client") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
   }
   sources = [
@@ -45,7 +45,6 @@ ohos_shared_library("screen_session_manager_client") {
 
   deps = [
     "${window_base_path}/utils:libwmutil",
-    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/session:screen_session",
   ]
 

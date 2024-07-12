@@ -49,6 +49,7 @@ SystemSession::~SystemSession()
 
 void SystemSession::UpdateCameraWindowStatus(bool isShowing)
 {
+    TLOGI(WmsLogTag::WMS_SYSTEM, "isShowing: %{public}d", static_cast<int>(isShowing));
     if (specificCallback_ == nullptr) {
         return;
     }
@@ -69,7 +70,7 @@ void SystemSession::UpdateCameraWindowStatus(bool isShowing)
             specificCallback_->onCameraSessionChange_(GetSessionProperty()->GetAccessTokenId(), isShowing);
         }
     } else {
-        TLOGI(WmsLogTag::WMS_SYSTEM, "Skip window type, isShowing: %{public}d", isShowing);
+        TLOGI(WmsLogTag::WMS_SYSTEM, "skip window type");
     }
 }
 
@@ -134,9 +135,8 @@ WSError SystemSession::Hide()
         }
         // background will remove surfaceNode, custom not execute
         // not animation playing when already background; inactive may be animation playing
-        auto sessionProperty = session->GetSessionProperty();
-        if (sessionProperty &&
-            sessionProperty->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
+        if (session->GetSessionProperty() &&
+            session->GetSessionProperty()->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
             session->NotifyIsCustomAnimationPlaying(true);
             return WSError::WS_OK;
         }
@@ -200,19 +200,17 @@ WSError SystemSession::ProcessPointDownSession(int32_t posX, int32_t posY)
 {
     const auto& id = GetPersistentId();
     const auto& type = GetWindowType();
-    auto parentSession = GetParentSession();
-    if (parentSession && parentSession->CheckDialogOnForeground()) {
+    WLOGFI("id: %{public}d, type: %{public}d", id, type);
+    if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
         WLOGFI("Parent has dialog foreground, id: %{public}d, type: %{public}d", id, type);
-        parentSession->HandlePointDownDialog();
+        parentSession_->HandlePointDownDialog();
         if (!IsTopDialog()) {
             return WSError::WS_OK;
         }
     }
-    auto sessionProperty = GetSessionProperty();
-    if (type == WindowType::WINDOW_TYPE_DIALOG && sessionProperty && sessionProperty->GetRaiseEnabled()) {
+    if (type == WindowType::WINDOW_TYPE_DIALOG && GetSessionProperty() && GetSessionProperty()->GetRaiseEnabled()) {
         RaiseToAppTopForPointDown();
     }
-    TLOGI(WmsLogTag::WMS_LIFE, "id: %{public}d, type: %{public}d", id, type);
     PresentFocusIfPointDown();
     return SceneSession::ProcessPointDownSession(posX, posY);
 }
@@ -230,8 +228,7 @@ WSError SystemSession::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& ke
         if (keyEvent->GetKeyCode() == MMI::KeyEvent::KEYCODE_BACK) {
             return WSError::WS_ERROR_INVALID_PERMISSION;
         }
-        auto parentSession = GetParentSession();
-        if (parentSession && parentSession->CheckDialogOnForeground() &&
+        if (parentSession_ && parentSession_->CheckDialogOnForeground() &&
             !IsTopDialog()) {
             return WSError::WS_ERROR_INVALID_PERMISSION;
         }
@@ -248,8 +245,6 @@ WSError SystemSession::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& ke
 WSError SystemSession::ProcessBackEvent()
 {
     if (!IsSessionValid()) {
-        TLOGD(WmsLogTag::WMS_EVENT, "Session is invalid, id: %{public}d state: %{public}u",
-            GetPersistentId(), GetSessionState());
         return WSError::WS_ERROR_INVALID_SESSION;
     }
     if (GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) {
@@ -263,11 +258,7 @@ WSError SystemSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> r
 {
     auto task = [weakThis = wptr(this), rsTransaction]() {
         auto session = weakThis.promote();
-        if (!session) {
-            WLOGFE("session is null");
-            return WSError::WS_ERROR_DESTROYED_OBJECT;
-        }
-        WSError ret = session->NotifyClientToUpdateRectTask(rsTransaction);
+        WSError ret = session->NotifyClientToUpdateRectTask(weakThis, rsTransaction);
         if (ret != WSError::WS_OK) {
             return ret;
         }
@@ -286,8 +277,7 @@ WSError SystemSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> r
 
 int32_t SystemSession::GetMissionId() const
 {
-    auto parentSession = GetParentSession();
-    return parentSession != nullptr ? parentSession->GetPersistentId() : SceneSession::GetMissionId();
+    return parentSession_ != nullptr ? parentSession_->GetPersistentId() : SceneSession::GetMissionId();
 }
 
 bool SystemSession::CheckKeyEventDispatch(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const

@@ -73,18 +73,14 @@ WSError MainSession::Reconnect(const sptr<ISessionStage>& sessionStage, const sp
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
         WSError ret = session->Session::Reconnect(sessionStage, eventChannel, surfaceNode, property, token, pid, uid);
-        if (ret != WSError::WS_OK) {
-            return ret;
-        }
         WindowState windowState = property->GetWindowState();
-        if (windowState == WindowState::STATE_SHOWN) {
-            session->isActive_ = true;
-            session->UpdateSessionState(SessionState::STATE_ACTIVE);
-        } else {
-            session->isActive_ = false;
-            session->UpdateSessionState(SessionState::STATE_BACKGROUND);
-            if (session->scenePersistence_) {
-                session->scenePersistence_->SetHasSnapshot(true);
+        if (ret == WSError::WS_OK) {
+            if (windowState == WindowState::STATE_SHOWN) {
+                session->isActive_ = true;
+                session->UpdateSessionState(SessionState::STATE_ACTIVE);
+            } else {
+                session->isActive_ = false;
+                session->UpdateSessionState(SessionState::STATE_BACKGROUND);
             }
         }
         return ret;
@@ -107,8 +103,6 @@ void MainSession::NotifyForegroundInteractiveStatus(bool interactive)
 {
     SetForegroundInteractiveStatus(interactive);
     if (!IsSessionValid() || !sessionStage_) {
-        TLOGW(WmsLogTag::WMS_MAIN, "Session or sessionStage is invalid, id: %{public}d state: %{public}u",
-            GetPersistentId(), GetSessionState());
         return;
     }
     const auto& state = GetSessionState();
@@ -186,23 +180,26 @@ bool MainSession::IsTopmost() const
     return GetSessionProperty()->IsTopmost();
 }
 
+bool MainSession::IfNotNeedAvoidKeyBoardForSplit()
+{
+    if (ScreenSessionManagerClient::GetInstance().IsFoldable() &&
+            ScreenSessionManagerClient::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
+        return false;
+    }
+    if (Session::GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (!Session::GetFocused() || Session::GetSessionRect().posY_ == 0) {
+        return false;
+    }
+    return true;
+}
+
 void MainSession::RectCheck(uint32_t curWidth, uint32_t curHeight)
 {
     uint32_t minWidth = GetSystemConfig().miniWidthOfMainWindow_;
     uint32_t minHeight = GetSystemConfig().miniHeightOfMainWindow_;
     uint32_t maxFloatingWindowSize = GetSystemConfig().maxFloatingWindowSize_;
     RectSizeCheckProcess(curWidth, curHeight, minWidth, minHeight, maxFloatingWindowSize);
-}
-
-void MainSession::SetExitSplitOnBackground(bool isExitSplitOnBackground)
-{
-    TLOGI(WmsLogTag::WMS_MULTI_WINDOW, "id: %{public}d, isExitSplitOnBackground: %{public}d", persistentId_,
-        isExitSplitOnBackground);
-    isExitSplitOnBackground_ = isExitSplitOnBackground;
-}
-
-bool MainSession::IsExitSplitOnBackground() const
-{
-    return isExitSplitOnBackground_;
 }
 } // namespace OHOS::Rosen

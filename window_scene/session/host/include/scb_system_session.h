@@ -19,12 +19,10 @@
 #include "session/host/include/scene_session.h"
 
 namespace OHOS::Rosen {
-using KeyboardPanelRectUpdateCallback = std::function<void()>;
 class SCBSystemSession : public SceneSession {
 public:
     SCBSystemSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback);
     ~SCBSystemSession();
-    void RegisterBufferAvailableCallback(const SystemSessionBufferAvailableCallback& func) override;
     WSError ProcessPointDownSession(int32_t posX, int32_t posY) override;
 
     WSError NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rsTransaction) override;
@@ -36,15 +34,9 @@ public:
     WSError SetSystemSceneBlockingFocus(bool blocking) override;
     void BindKeyboardSession(sptr<SceneSession> session) override;
     sptr<SceneSession> GetKeyboardSession() const override;
-    void SetKeyboardPanelRectUpdateCallback(const KeyboardPanelRectUpdateCallback& func);
-    void SetSkipSelfWhenShowOnVirtualScreen(bool isSkip) override;
-    std::shared_ptr<RSSurfaceNode> GetSurfaceNode();
 
 protected:
     void UpdatePointerArea(const WSRect& rect) override;
-
-private:
-    KeyboardPanelRectUpdateCallback keyboardPanelRectUpdateCallback_;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SCB_SYSTEM_SESSION_H

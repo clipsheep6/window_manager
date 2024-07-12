@@ -383,15 +383,9 @@ HWTEST_F(DisplayManagerProxyTest, SetScreenGamutMap01, Function | SmallTest | Le
  */
 HWTEST_F(DisplayManagerProxyTest, SetScreenColorTransform01, Function | SmallTest | Level1)
 {
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.SetScreenColorTransform(0);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
     DisplayManagerProxy proxy2(remoteMocker);
     EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
     auto result2 = proxy2.SetScreenColorTransform(0);
     EXPECT_EQ(DMError::DM_OK, result2);
 
@@ -439,17 +433,12 @@ HWTEST_F(DisplayManagerProxyTest, UnregisterDisplayManagerAgent01, Function | Sm
  */
 HWTEST_F(DisplayManagerProxyTest, WakeUpBegin01, Function | SmallTest | Level1)
 {
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
+    sptr<IRemoteObject> iRemoteObject = new IRemoteObjectMocker();
+    DisplayManagerProxy proxy1(iRemoteObject);
+    EXPECT_NE(nullptr, proxy1.remoteObject_);
     PowerStateChangeReason reason = PowerStateChangeReason::POWER_BUTTON;
-    auto result1 = proxy1.WakeUpBegin(reason);
-    EXPECT_EQ(result1, false);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.WakeUpBegin(reason);
-    EXPECT_EQ(result2, false);
+    bool result01 = proxy1.WakeUpBegin(reason);
+    EXPECT_EQ(result01, false);
 }
 
 /**
@@ -459,16 +448,11 @@ HWTEST_F(DisplayManagerProxyTest, WakeUpBegin01, Function | SmallTest | Level1)
  */
 HWTEST_F(DisplayManagerProxyTest, WakeUpEnd01, Function | SmallTest | Level1)
 {
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
-    auto result1 = proxy1.WakeUpEnd();
-    EXPECT_EQ(result1, false);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.WakeUpEnd();
-    EXPECT_EQ(result2, false);
+    sptr<IRemoteObject> iRemoteObject = new IRemoteObjectMocker();
+    DisplayManagerProxy proxy1(iRemoteObject);
+    EXPECT_NE(nullptr, proxy1.remoteObject_);
+    bool result01 = proxy1.WakeUpEnd();
+    EXPECT_EQ(result01, false);
 }
 
 /**
@@ -478,22 +462,12 @@ HWTEST_F(DisplayManagerProxyTest, WakeUpEnd01, Function | SmallTest | Level1)
  */
 HWTEST_F(DisplayManagerProxyTest, GetPixelFormat, Function | SmallTest | Level1)
 {
-    GraphicPixelFormat pixelFormat = GraphicPixelFormat{GRAPHIC_PIXEL_FMT_CLUT1};
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.GetPixelFormat(0, pixelFormat);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetPixelFormat(0, pixelFormat);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetPixelFormat(0, pixelFormat);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    GraphicPixelFormat pixelFormat = GraphicPixelFormat{GRAPHIC_PIXEL_FMT_CLUT1};
+    auto result = proxy.GetPixelFormat(0, pixelFormat);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -503,22 +477,12 @@ HWTEST_F(DisplayManagerProxyTest, GetPixelFormat, Function | SmallTest | Level1)
  */
 HWTEST_F(DisplayManagerProxyTest, SetPixelFormat, Function | SmallTest | Level1)
 {
-    GraphicPixelFormat pixelFormat = GraphicPixelFormat{GRAPHIC_PIXEL_FMT_CLUT1};
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.SetPixelFormat(0, pixelFormat);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.SetPixelFormat(0, pixelFormat);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.SetPixelFormat(0, pixelFormat);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    GraphicPixelFormat pixelFormat = GraphicPixelFormat{GRAPHIC_PIXEL_FMT_CLUT1};
+    auto result = proxy.SetPixelFormat(0, pixelFormat);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -528,22 +492,12 @@ HWTEST_F(DisplayManagerProxyTest, SetPixelFormat, Function | SmallTest | Level1)
  */
 HWTEST_F(DisplayManagerProxyTest, GetSupportedHDRFormats, Function | SmallTest | Level1)
 {
-    std::vector<ScreenHDRFormat> hdrFormats;
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.GetSupportedHDRFormats(0, hdrFormats);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetSupportedHDRFormats(0, hdrFormats);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetSupportedHDRFormats(0, hdrFormats);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    std::vector<ScreenHDRFormat> hdrFormats;
+    auto result = proxy.GetSupportedHDRFormats(0, hdrFormats);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -553,21 +507,11 @@ HWTEST_F(DisplayManagerProxyTest, GetSupportedHDRFormats, Function | SmallTest |
  */
 HWTEST_F(DisplayManagerProxyTest, SetScreenHDRFormat, Function | SmallTest | Level1)
 {
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.SetScreenHDRFormat(0, 0);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.SetScreenHDRFormat(0, 0);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.SetScreenHDRFormat(0, 0);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    auto result = proxy.SetScreenHDRFormat(0, 0);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -577,22 +521,12 @@ HWTEST_F(DisplayManagerProxyTest, SetScreenHDRFormat, Function | SmallTest | Lev
  */
 HWTEST_F(DisplayManagerProxyTest, GetScreenHDRFormat, Function | SmallTest | Level1)
 {
-    ScreenHDRFormat hdrFormats = ScreenHDRFormat{VIDEO_HLG};
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.GetScreenHDRFormat(0, hdrFormats);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetScreenHDRFormat(0, hdrFormats);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetScreenHDRFormat(0, hdrFormats);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    ScreenHDRFormat hdrFormats = ScreenHDRFormat{VIDEO_HLG};
+    auto result = proxy.GetScreenHDRFormat(0, hdrFormats);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -602,22 +536,12 @@ HWTEST_F(DisplayManagerProxyTest, GetScreenHDRFormat, Function | SmallTest | Lev
  */
 HWTEST_F(DisplayManagerProxyTest, GetSupportedColorSpaces, Function | SmallTest | Level1)
 {
-    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.GetSupportedColorSpaces(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetSupportedColorSpaces(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetSupportedColorSpaces(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    std::vector<GraphicCM_ColorSpaceType> colorSpaces;
+    auto result = proxy.GetSupportedColorSpaces(0, colorSpaces);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -627,22 +551,12 @@ HWTEST_F(DisplayManagerProxyTest, GetSupportedColorSpaces, Function | SmallTest 
  */
 HWTEST_F(DisplayManagerProxyTest, GetScreenColorSpace, Function | SmallTest | Level1)
 {
-    GraphicCM_ColorSpaceType colorSpaces;
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.GetScreenColorSpace(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetScreenColorSpace(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetScreenColorSpace(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    GraphicCM_ColorSpaceType colorSpaces;
+    auto result = proxy.GetScreenColorSpace(0, colorSpaces);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -652,22 +566,12 @@ HWTEST_F(DisplayManagerProxyTest, GetScreenColorSpace, Function | SmallTest | Le
  */
 HWTEST_F(DisplayManagerProxyTest, SetScreenColorSpace, Function | SmallTest | Level1)
 {
-    GraphicCM_ColorSpaceType colorSpaces = GraphicCM_ColorSpaceType{GRAPHIC_CM_BT601_EBU_FULL};
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.SetScreenColorSpace(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.SetScreenColorSpace(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.SetScreenColorSpace(0, colorSpaces);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    GraphicCM_ColorSpaceType colorSpaces = GraphicCM_ColorSpaceType{GRAPHIC_CM_BT601_EBU_FULL};
+    auto result = proxy.SetScreenColorSpace(0, colorSpaces);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -678,16 +582,10 @@ HWTEST_F(DisplayManagerProxyTest, SetScreenColorSpace, Function | SmallTest | Le
 HWTEST_F(DisplayManagerProxyTest, SuspendBegin, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
+    DisplayManagerProxy proxy(remoteMocker);
     PowerStateChangeReason reason = PowerStateChangeReason{0};
-    auto result1 = proxy1.SuspendBegin(reason);
-    EXPECT_EQ(result1, false);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.SuspendBegin(reason);
-    EXPECT_EQ(result2, false);
+    auto result = proxy.SuspendBegin(reason);
+    ASSERT_FALSE(result);
 }
 
 /**
@@ -698,15 +596,9 @@ HWTEST_F(DisplayManagerProxyTest, SuspendBegin, Function | SmallTest | Level1)
 HWTEST_F(DisplayManagerProxyTest, SuspendEnd, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
-    auto result1 = proxy1.SuspendEnd();
-    EXPECT_EQ(result1, false);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.SuspendEnd();
-    EXPECT_EQ(result2, false);
+    DisplayManagerProxy proxy(remoteMocker);
+    auto result = proxy.SuspendEnd();
+    ASSERT_FALSE(result);
 }
 
 /**
@@ -717,17 +609,11 @@ HWTEST_F(DisplayManagerProxyTest, SuspendEnd, Function | SmallTest | Level1)
 HWTEST_F(DisplayManagerProxyTest, SetScreenPowerForAll, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
+    DisplayManagerProxy proxy(remoteMocker);
     ScreenPowerState state = ScreenPowerState{0};
     PowerStateChangeReason reason = PowerStateChangeReason{0};
-    auto result1 = proxy1.SetScreenPowerForAll(state, reason);
-    EXPECT_EQ(result1, false);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.SetScreenPowerForAll(state, reason);
-    EXPECT_EQ(result2, false);
+    auto result = proxy.SetScreenPowerForAll(state, reason);
+    ASSERT_FALSE(result);
 }
 
 /**
@@ -738,17 +624,11 @@ HWTEST_F(DisplayManagerProxyTest, SetScreenPowerForAll, Function | SmallTest | L
 HWTEST_F(DisplayManagerProxyTest, SetSpecifiedScreenPower, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
+    DisplayManagerProxy proxy(remoteMocker);
     ScreenPowerState state = ScreenPowerState{0};
     PowerStateChangeReason reason = PowerStateChangeReason{0};
-    auto result1 = proxy1.SetSpecifiedScreenPower(0, state, reason);
-    EXPECT_EQ(result1, false);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.SetSpecifiedScreenPower(0, state, reason);
-    EXPECT_EQ(result2, false);
+    auto result = proxy.SetSpecifiedScreenPower(0, state, reason);
+    ASSERT_FALSE(result);
 }
 
 /**
@@ -759,16 +639,10 @@ HWTEST_F(DisplayManagerProxyTest, SetSpecifiedScreenPower, Function | SmallTest 
 HWTEST_F(DisplayManagerProxyTest, SetDisplayState, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
+    DisplayManagerProxy proxy(remoteMocker);
     DisplayState state = DisplayState{0};
-    auto result1 = proxy1.SetDisplayState(state);
-    EXPECT_EQ(result1, false);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.SetDisplayState(state);
-    EXPECT_EQ(result2, false);
+    auto result = proxy.SetDisplayState(state);
+    ASSERT_FALSE(result);
 }
 
 /**
@@ -779,16 +653,11 @@ HWTEST_F(DisplayManagerProxyTest, SetDisplayState, Function | SmallTest | Level1
 HWTEST_F(DisplayManagerProxyTest, AddSurfaceNodeToDisplay, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
     std::shared_ptr<class RSSurfaceNode> surfaceNode;
-    auto result1 = proxy1.AddSurfaceNodeToDisplay(0, surfaceNode, true);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result1);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.AddSurfaceNodeToDisplay(0, surfaceNode, true);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result2);
+    auto result = proxy.AddSurfaceNodeToDisplay(0, surfaceNode, true);
+    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result);
 }
 
 /**
@@ -799,16 +668,11 @@ HWTEST_F(DisplayManagerProxyTest, AddSurfaceNodeToDisplay, Function | SmallTest 
 HWTEST_F(DisplayManagerProxyTest, RemoveSurfaceNodeFromDisplay, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
     std::shared_ptr<class RSSurfaceNode> surfaceNode;
-    auto result1 = proxy1.RemoveSurfaceNodeFromDisplay(0, surfaceNode);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result1);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.RemoveSurfaceNodeFromDisplay(0, surfaceNode);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result2);
+    auto result = proxy.RemoveSurfaceNodeFromDisplay(0, surfaceNode);
+    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result);
 }
 
 /**
@@ -819,16 +683,11 @@ HWTEST_F(DisplayManagerProxyTest, RemoveSurfaceNodeFromDisplay, Function | Small
 HWTEST_F(DisplayManagerProxyTest, HasPrivateWindow, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
     bool hasPrivateWindow = true;
-    auto result1 = proxy1.HasPrivateWindow(0, hasPrivateWindow);
-    EXPECT_EQ(DMError::DM_OK, result1);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.HasPrivateWindow(0, hasPrivateWindow);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result2);
+    auto result = proxy.HasPrivateWindow(0, hasPrivateWindow);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -839,147 +698,13 @@ HWTEST_F(DisplayManagerProxyTest, HasPrivateWindow, Function | SmallTest | Level
 HWTEST_F(DisplayManagerProxyTest, SetFreeze, Function | SmallTest | Level1)
 {
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
+    DisplayManagerProxy proxy(remoteMocker);
+    DisplayEvent event = DisplayEvent{0};
+    proxy.NotifyDisplayEvent(event);
 
     std::vector<DisplayId> displayIds;
-    auto result1 = proxy1.SetFreeze(displayIds, true);
-    EXPECT_TRUE(result1);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.SetFreeze(displayIds, true);
-    EXPECT_FALSE(result2);
-}
-
-/**
- * @tc.name: GetDisplayState
- * @tc.desc: test DisplayManagerProxy::GetDisplayState
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, GetDisplayState, Function | SmallTest | Level1)
-{
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
-    DisplayId displayId = 0;
-    auto result1 = proxy1.GetDisplayState(displayId);
-    EXPECT_EQ(result1, DisplayState::UNKNOWN);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.GetDisplayState(displayId);
-    EXPECT_EQ(result2, DisplayState::UNKNOWN);
-}
-
-/**
- * @tc.name: GetScreenPower
- * @tc.desc: test DisplayManagerProxy::GetScreenPower
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, GetScreenPower, Function | SmallTest | Level1)
-{
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
-    auto result1 = proxy1.GetScreenPower(0);
-    EXPECT_EQ(result1, ScreenPowerState::POWER_ON);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.GetScreenPower(0);
-    EXPECT_EQ(result2, ScreenPowerState::INVALID_STATE);
-}
-
-/**
- * @tc.name: GetAllDisplayIds
- * @tc.desc: test DisplayManagerProxy::GetAllDisplayIds
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, GetAllDisplayIds, Function | SmallTest | Level1)
-{
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
-    auto result1 = proxy1.GetAllDisplayIds();
-    EXPECT_TRUE(result1.empty());
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result2 = proxy1.GetAllDisplayIds();
-    EXPECT_TRUE(result2.empty());
-}
-
-/**
- * @tc.name: GetCutoutInfo
- * @tc.desc: test DisplayManagerProxy::GetCutoutInfo
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, GetCutoutInfo, Function | SmallTest | Level1)
-{
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-    auto result1 = proxy1.GetCutoutInfo(0);
-    EXPECT_EQ(nullptr, result1);
-    
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetCutoutInfo(0);
-    EXPECT_EQ(nullptr, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetCutoutInfo(0);
-    EXPECT_EQ(nullptr, result3);
-}
-
-/**
- * @tc.name: NotifyDisplayEvent
- * @tc.desc: test DisplayManagerProxy::NotifyDisplayEvent
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, NotifyDisplayEvent, Function | SmallTest | Level1)
-{
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy1(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy1.remoteObject_);
-
-    DisplayEvent event = DisplayEvent::UNLOCK;
-    proxy1.NotifyDisplayEvent(event);
-    EXPECT_TRUE(true);
-
-    remoteMocker->sendRequestResult_ = 1;
-    proxy1.NotifyDisplayEvent(event);
-    EXPECT_TRUE(true);
-}
-
-/**
- * @tc.name: MakeMirror
- * @tc.desc: test DisplayManagerProxy::MakeMirror
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, MakeMirror, Function | SmallTest | Level1)
-{
-    ScreenId mainScreenId = static_cast<ScreenId>(0);
-    std::vector<ScreenId> mirrorScreenId;
-    mirrorScreenId.emplace_back(1001);
-    ScreenId screenGroupId{0};
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.MakeMirror(mainScreenId, mirrorScreenId, screenGroupId);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.MakeMirror(mainScreenId, mirrorScreenId, screenGroupId);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.MakeMirror(mainScreenId, mirrorScreenId, screenGroupId);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    auto result = proxy.SetFreeze(displayIds, true);
+    ASSERT_TRUE(result);
 }
 
 /**
@@ -989,24 +714,14 @@ HWTEST_F(DisplayManagerProxyTest, MakeMirror, Function | SmallTest | Level1)
  */
 HWTEST_F(DisplayManagerProxyTest, StopMirror, Function | SmallTest | Level1)
 {
-    std::vector<ScreenId> mirrorScreenId;
-    mirrorScreenId.emplace_back(1001);
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.StopMirror(mirrorScreenId);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.StopMirror(mirrorScreenId);
-    EXPECT_EQ(DMError::DM_OK, result2);
+    DisplayManagerProxy proxy(remoteMocker);
+    DisplayEvent event = DisplayEvent{0};
+    proxy.NotifyDisplayEvent(event);
 
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.StopMirror(mirrorScreenId);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    std::vector<ScreenId> mirrorScreenIds;
+    auto result = proxy.StopMirror(mirrorScreenIds);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -1016,23 +731,13 @@ HWTEST_F(DisplayManagerProxyTest, StopMirror, Function | SmallTest | Level1)
  */
 HWTEST_F(DisplayManagerProxyTest, GetScreenInfoById, Function | SmallTest | Level1)
 {
-    ScreenId screenId = static_cast<ScreenId>(0);
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.GetScreenInfoById(screenId);
-    EXPECT_EQ(nullptr, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetScreenInfoById(screenId);
-    EXPECT_EQ(nullptr, result2);
+    DisplayManagerProxy proxy(remoteMocker);
+    DisplayEvent event = DisplayEvent{0};
+    proxy.NotifyDisplayEvent(event);
 
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetScreenInfoById(screenId);
-    EXPECT_EQ(nullptr, result3);
+    auto result = proxy.GetScreenInfoById(0);
+    EXPECT_EQ(nullptr, result);
 }
 
 /**
@@ -1042,23 +747,13 @@ HWTEST_F(DisplayManagerProxyTest, GetScreenInfoById, Function | SmallTest | Leve
  */
 HWTEST_F(DisplayManagerProxyTest, GetScreenGroupInfoById, Function | SmallTest | Level1)
 {
-    ScreenId screenId = static_cast<ScreenId>(0);
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.GetScreenGroupInfoById(screenId);
-    EXPECT_EQ(nullptr, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetScreenGroupInfoById(screenId);
-    EXPECT_EQ(nullptr, result2);
+    DisplayManagerProxy proxy(remoteMocker);
+    DisplayEvent event = DisplayEvent{0};
+    proxy.NotifyDisplayEvent(event);
 
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetScreenGroupInfoById(screenId);
-    EXPECT_EQ(nullptr, result3);
+    auto result = proxy.GetScreenGroupInfoById(0);
+    EXPECT_EQ(nullptr, result);
 }
 
 /**
@@ -1068,23 +763,12 @@ HWTEST_F(DisplayManagerProxyTest, GetScreenGroupInfoById, Function | SmallTest |
  */
 HWTEST_F(DisplayManagerProxyTest, GetAllScreenInfos, Function | SmallTest | Level1)
 {
-    std::vector<sptr<ScreenInfo>> screenInfos{nullptr};
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.GetAllScreenInfos(screenInfos);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetAllScreenInfos(screenInfos);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetAllScreenInfos(screenInfos);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    std::vector<sptr<ScreenInfo>> screenInfos;
+    auto result = proxy.GetAllScreenInfos(screenInfos);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -1094,29 +778,14 @@ HWTEST_F(DisplayManagerProxyTest, GetAllScreenInfos, Function | SmallTest | Leve
  */
 HWTEST_F(DisplayManagerProxyTest, MakeExpand, Function | SmallTest | Level1)
 {
-    ScreenId screenId_ = static_cast<ScreenId>(0);
-    std::vector<ScreenId> screenId;
-    screenId.push_back(screenId_);
-    std::vector<Point> startPoint;
-    Point point{0, 0};
-    startPoint.push_back(point);
-    ScreenId screenGroupId{0};
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.MakeExpand(screenId, startPoint, screenGroupId);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.MakeExpand(screenId, startPoint, screenGroupId);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.MakeExpand(screenId, startPoint, screenGroupId);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    std::vector<ScreenId> screenId;
+    std::vector<Point> startPoint;
+    ScreenId screenGroupId;
+    auto result = proxy.MakeExpand(screenId, startPoint, screenGroupId);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -1126,53 +795,12 @@ HWTEST_F(DisplayManagerProxyTest, MakeExpand, Function | SmallTest | Level1)
  */
 HWTEST_F(DisplayManagerProxyTest, StopExpand, Function | SmallTest | Level1)
 {
-    ScreenId screenId_ = static_cast<ScreenId>(0);
-    std::vector<ScreenId> screenId;
-    screenId.push_back(screenId_);
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.StopExpand(screenId);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.StopExpand(screenId);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.StopExpand(screenId);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
-}
-
-/**
- * @tc.name: RemoveVirtualScreenFromGroup
- * @tc.desc: test DisplayManagerProxy::RemoveVirtualScreenFromGroup
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, RemoveVirtualScreenFromGroup, Function | SmallTest | Level1)
-{
-    ScreenId screenId_ = static_cast<ScreenId>(0);
-    std::vector<ScreenId> screenId;
-    screenId.push_back(screenId_);
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    proxy1.RemoveVirtualScreenFromGroup(screenId);
-    EXPECT_TRUE(true);
-    
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    proxy2.RemoveVirtualScreenFromGroup(screenId);
-    EXPECT_TRUE(true);
-
-    remoteMocker->sendRequestResult_ = 1;
-    proxy2.RemoveVirtualScreenFromGroup(screenId);
-    EXPECT_TRUE(true);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    std::vector<ScreenId> expandScreenIds;
+    auto result = proxy.StopExpand(expandScreenIds);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -1182,23 +810,12 @@ HWTEST_F(DisplayManagerProxyTest, RemoveVirtualScreenFromGroup, Function | Small
  */
 HWTEST_F(DisplayManagerProxyTest, SetScreenActiveMode, Function | SmallTest | Level1)
 {
-    ScreenId screenId = static_cast<ScreenId>(0);
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.SetScreenActiveMode(screenId, 0);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.SetScreenActiveMode(screenId, 0);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.SetScreenActiveMode(screenId, 0);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    ScreenId screenId = 0;
+    auto result = proxy.SetScreenActiveMode(screenId, 0);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -1208,24 +825,12 @@ HWTEST_F(DisplayManagerProxyTest, SetScreenActiveMode, Function | SmallTest | Le
  */
 HWTEST_F(DisplayManagerProxyTest, SetVirtualPixelRatio, Function | SmallTest | Level1)
 {
-    ScreenId screenId = static_cast<ScreenId>(0);
-    float virtualPixelRatio = 0;
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.SetVirtualPixelRatio(screenId, virtualPixelRatio);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.SetVirtualPixelRatio(screenId, virtualPixelRatio);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.SetVirtualPixelRatio(screenId, virtualPixelRatio);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    ScreenId screenId = 0;
+    auto result = proxy.SetVirtualPixelRatio(screenId, 1.0);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**
@@ -1241,33 +846,6 @@ HWTEST_F(DisplayManagerProxyTest, SetResolution, Function | SmallTest | Level1)
     ScreenId screenId = 0;
     auto result = proxy.SetResolution(screenId, 50, 100, 1.00);
     EXPECT_EQ(DMError::DM_OK, result);
-}
-
-/**
- * @tc.name: GetDensityInCurResolution
- * @tc.desc: test DisplayManagerProxy::GetDensityInCurResolution
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, GetDensityInCurResolution, Function | SmallTest | Level1)
-{
-    ScreenId screenId = static_cast<ScreenId>(0);
-    float virtualPixelRatio = 0;
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.GetDensityInCurResolution(screenId, virtualPixelRatio);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.GetDensityInCurResolution(screenId, virtualPixelRatio);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.GetDensityInCurResolution(screenId, virtualPixelRatio);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
 }
 
 /**
@@ -1292,47 +870,12 @@ HWTEST_F(DisplayManagerProxyTest, IsScreenRotationLocked, Function | SmallTest |
  */
 HWTEST_F(DisplayManagerProxyTest, SetScreenRotationLocked, Function | SmallTest | Level1)
 {
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.SetScreenRotationLocked(true);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
     sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.SetScreenRotationLocked(true);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.SetScreenRotationLocked(true);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
-}
-
-/**
- * @tc.name: SetScreenRotationLockedFromJs
- * @tc.desc: test DisplayManagerProxy::SetScreenRotationLockedFromJs
- * @tc.type: FUNC
- */
-HWTEST_F(DisplayManagerProxyTest, SetScreenRotationLockedFromJs, Function | SmallTest | Level1)
-{
-    DisplayManagerProxy proxy1(nullptr);
-    EXPECT_EQ(nullptr, proxy1.remoteObject_);
-
-    auto result1 = proxy1.SetScreenRotationLockedFromJs(true);
-    EXPECT_EQ(DMError::DM_ERROR_NULLPTR, result1);
-    
-    sptr<RemoteMocker> remoteMocker = new RemoteMocker();
-    DisplayManagerProxy proxy2(remoteMocker);
-    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy2.remoteObject_);
-    
-    auto result2 = proxy2.SetScreenRotationLockedFromJs(true);
-    EXPECT_EQ(DMError::DM_OK, result2);
-
-    remoteMocker->sendRequestResult_ = 1;
-    auto result3 = proxy2.SetScreenRotationLockedFromJs(true);
-    EXPECT_EQ(DMError::DM_ERROR_IPC_FAILED, result3);
+    DisplayManagerProxy proxy(remoteMocker);
+    EXPECT_EQ(static_cast<sptr<IRemoteObject>>(remoteMocker), proxy.remoteObject_);
+    bool isLocked = true;
+    auto result = proxy.SetScreenRotationLocked(isLocked);
+    EXPECT_EQ(DMError::DM_OK, result);
 }
 
 /**

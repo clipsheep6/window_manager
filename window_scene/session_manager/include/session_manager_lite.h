@@ -32,16 +32,10 @@ public:
     virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
 };
 
-class FoundationDeathRecipientLite : public IRemoteObject::DeathRecipient {
-public:
-    virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
-};
-
 class SessionManagerLite {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SessionManagerLite);
 public:
     using UserSwitchCallbackFunc = std::function<void()>;
-    using WMSConnectionChangedCallbackFunc = std::function<void(int32_t, int32_t, bool)>;
     void ClearSessionManagerProxy();
     void Clear();
 
@@ -50,17 +44,11 @@ public:
 
     sptr<ISessionManagerService> GetSessionManagerServiceProxy();
 
-#ifndef USE_ADAPTER_LITE
     void SaveSessionListener(const sptr<ISessionListener>& listener);
     void DeleteSessionListener(const sptr<ISessionListener>& listener);
-#endif
     void RecoverSessionManagerService(const sptr<ISessionManagerService>& sessionManagerService);
     void RegisterUserSwitchListener(const UserSwitchCallbackFunc& callbackFunc);
-    void OnWMSConnectionChanged(
-        int32_t userId, int32_t screenId, bool isConnected, const sptr<ISessionManagerService>& sessionManagerService);
-    void OnFoundationDied();
-
-    WMError RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc);
+    void OnWMSConnectionChanged(int32_t userId, int32_t screenId, bool isConnected);
 
 protected:
     SessionManagerLite() = default;
@@ -70,40 +58,23 @@ private:
     void InitSessionManagerServiceProxy();
     void InitSceneSessionManagerLiteProxy();
     void InitScreenSessionManagerLiteProxy();
-    void OnUserSwitch(const sptr<ISessionManagerService> &sessionManagerService);
+    void OnUserSwitch();
     void DeleteAllSessionListeners();
     void ReregisterSessionListener() const;
-    void RegisterSMSRecoverListener();
-    void OnWMSConnectionChangedCallback(int32_t userId, int32_t screenId, bool isConnected, bool isCallbackRegistered);
-    WMError InitMockSMSProxy();
-    UserSwitchCallbackFunc userSwitchCallbackFunc_ = nullptr;
 
-    std::recursive_mutex mutex_;
+    UserSwitchCallbackFunc userSwitchCallbackFunc_ = nullptr;
     sptr<IMockSessionManagerInterface> mockSessionManagerServiceProxy_ = nullptr;
     sptr<ISessionManagerService> sessionManagerServiceProxy_ = nullptr;
     sptr<ISceneSessionManagerLite> sceneSessionManagerLiteProxy_ = nullptr;
     sptr<IScreenSessionManagerLite> screenSessionManagerLiteProxy_ = nullptr;
     sptr<SSMDeathRecipientLite> ssmDeath_ = nullptr;
     sptr<IRemoteObject> smsRecoverListener_ = nullptr;
-    sptr<FoundationDeathRecipientLite> foundationDeath_ = nullptr;
     bool recoverListenerRegistered_ = false;
-    bool destroyed_ = false;
-    bool isFoundationListenerRegistered_ = false;
-    // above guarded by mutex_
-
     std::recursive_mutex listenerLock_;
-#ifndef USE_ADAPTER_LITE
     std::vector<sptr<ISessionListener>> sessionListeners_;
-#endif
-    // above guarded by listenerLock_
-
-    std::mutex wmsConnectionMutex_;
+    std::recursive_mutex mutex_;
+    bool destroyed_ = false;
     int32_t currentWMSUserId_ = INVALID_USER_ID;
-    int32_t currentScreenId_ = DEFAULT_SCREEN_ID;
-    bool isWMSConnected_ = false;
-    WMSConnectionChangedCallbackFunc wmsConnectionChangedFunc_ = nullptr;
-    // above guarded by wmsConnectionMutex_, among OnWMSConnectionChanged for wms connection event, user switched,
-    // register WMSConnectionChangedListener.
 };
 } // namespace OHOS::Rosen
 

@@ -19,6 +19,10 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "FoldScreenStateMachine"};
+} // namespace
+
 FoldScreenStateMachine::FoldScreenStateMachine() = default;
 
 FoldScreenStateMachine::~FoldScreenStateMachine() = default;
@@ -65,7 +69,7 @@ void FoldScreenStateMachine::TransitionTo(FoldScreenState state)
     }
     auto previous = currState_;
     currState_ = state;
-    TLOGI(WmsLogTag::DMS, "state transition from %{public}u to %{public}u",
+    WLOGI("state transition from %{public}u to %{public}u",
           static_cast<int32_t>(currState_), static_cast<int32_t>(state));
     for (const auto &callback : callbacks_) {
         if (callback) {

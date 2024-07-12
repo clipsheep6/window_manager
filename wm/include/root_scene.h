@@ -46,7 +46,7 @@ public:
 
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback) override;
     int64_t GetVSyncPeriod() override;
-    void FlushFrameRate(uint32_t rate, int32_t animatorExpectedFrameRate, uint32_t rateType = 0) override;
+    void FlushFrameRate(uint32_t rate) override;
 
     void OnBundleUpdated(const std::string& bundleName);
     static void SetOnConfigurationUpdatedCallback(
@@ -89,8 +89,6 @@ public:
     {
         return uiContent_.get();
     }
-    
-    void SetUiDvsyncSwitch(bool dvsyncSwitch) override;
 
     static sptr<RootScene> staticRootScene_;
 
@@ -102,7 +100,7 @@ private:
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
     sptr<AppExecFwk::LauncherService> launcherService_;
     float density_ = 1.0f;
-    int32_t orientation_ = 0;
+    int32_t orientation_;
     WindowType type_ = WindowType::WINDOW_TYPE_SCENE_BOARD;
     std::string name_ = "EntryView";
 

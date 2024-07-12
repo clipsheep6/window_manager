@@ -23,7 +23,6 @@
 #include <viewport_config.h>
 
 #include "app_mgr_client.h"
-#include "fold_screen_state_internel.h"
 #include "input_transfer_station.h"
 #include "singleton.h"
 #include "singleton_container.h"
@@ -203,14 +202,14 @@ int64_t RootScene::GetVSyncPeriod()
     return vsyncStation_->GetVSyncPeriod();
 }
 
-void RootScene::FlushFrameRate(uint32_t rate, int32_t animatorExpectedFrameRate, uint32_t rateType)
+void RootScene::FlushFrameRate(uint32_t rate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (vsyncStation_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_MAIN, "vsyncStation is nullptr");
+        TLOGE(WmsLogTag::WMS_MAIN, "FlushFrameRate failed, vsyncStation is nullptr");
         return;
     }
-    vsyncStation_->FlushFrameRate(rate, animatorExpectedFrameRate, rateType);
+    vsyncStation_->FlushFrameRate(rate);
 }
 
 void RootScene::OnBundleUpdated(const std::string& bundleName)
@@ -234,16 +233,6 @@ void RootScene::SetFrameLayoutFinishCallback(std::function<void()>&& callback)
         uiContent_->SetFrameLayoutFinishCallback(std::move(frameLayoutFinishCb_));
     }
     TLOGI(WmsLogTag::WMS_LAYOUT, "SetFrameLayoutFinishCallback end");
-}
-
-void RootScene::SetUiDvsyncSwitch(bool dvsyncSwitch)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (vsyncStation_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_MAIN, "set dvsync switch failed, vsyncStation is nullptr");
-        return;
-    }
-    vsyncStation_->SetUiDvsyncSwitch(dvsyncSwitch);
 }
 } // namespace Rosen
 } // namespace OHOS

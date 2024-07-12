@@ -14,69 +14,45 @@
  */
 
 #include "fold_screen_controller/fold_screen_controller.h"
-#include "fold_screen_controller/single_display_fold_policy.h"
-#include "fold_screen_controller/single_display_pocket_fold_policy.h"
-#include "fold_screen_controller/dual_display_fold_policy.h"
+#include "fold_screen_controller/dual_display_device_policy.h"
 #include "fold_screen_controller/fold_screen_sensor_manager.h"
-#include "fold_screen_controller/sensor_fold_state_manager/single_display_sensor_fold_state_manager.h"
-#include "fold_screen_controller/sensor_fold_state_manager/single_display_sensor_pocket_fold_state_manager.h"
-#include "fold_screen_controller/sensor_fold_state_manager/dual_display_sensor_fold_state_manager.h"
-#include "fold_screen_state_internel.h"
 
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
+namespace {
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "FoldScreenController"};
+} // namespace
+
 FoldScreenController::FoldScreenController(std::recursive_mutex& displayInfoMutex,
     std::shared_ptr<TaskScheduler> screenPowerTaskScheduler)
     : displayInfoMutex_(displayInfoMutex), screenPowerTaskScheduler_(screenPowerTaskScheduler)
 {
-    if (FoldScreenStateInternel::IsDualDisplayFoldDevice()) {
-        foldScreenPolicy_ = GetFoldScreenPolicy(DisplayDeviceType::DOUBLE_DISPLAY_DEVICE);
-        sensorFoldStateManager_ = new DualDisplaySensorFoldStateManager();
-        TLOGI(WmsLogTag::DMS, "fold polocy: DOUBLE_DISPLAY_DEVICE");
-    } else if (FoldScreenStateInternel::IsSingleDisplayFoldDevice()) {
-        foldScreenPolicy_ = GetFoldScreenPolicy(DisplayDeviceType::SINGLE_DISPLAY_DEVICE);
-        sensorFoldStateManager_ = new SingleDisplaySensorFoldStateManager();
-        TLOGI(WmsLogTag::DMS, "fold polocy: SINGLE_DISPLAY_DEVICE");
-    } else if (FoldScreenStateInternel::IsSingleDisplayPocketFoldDevice()) {
-        foldScreenPolicy_ = GetFoldScreenPolicy(DisplayDeviceType::SINGLE_DISPLAY_POCKET_DEVICE);
-        sensorFoldStateManager_ = new SingleDisplaySensorPocketFoldStateManager();
-        TLOGI(WmsLogTag::DMS, "fold polocy: SINGLE_DISPLAY_POCKET_DEVICE");
-    }
-
+    foldScreenPolicy_ = GetFoldScreenPolicy(DisplayDeviceType::DOUBLE_DISPLAY_DEVICE);
     if (foldScreenPolicy_ == nullptr) {
-        TLOGE(WmsLogTag::DMS, "FoldScreenPolicy is null");
+        WLOGE("FoldScreenPolicy is null");
         return;
     }
 #ifdef SENSOR_ENABLE
     FoldScreenSensorManager::GetInstance().SetFoldScreenPolicy(foldScreenPolicy_);
-    FoldScreenSensorManager::GetInstance().SetSensorFoldStateManager(sensorFoldStateManager_);
 #endif
 }
 
 FoldScreenController::~FoldScreenController()
 {
-    TLOGI(WmsLogTag::DMS, "FoldScreenController is destructed");
+    WLOGFI("FoldScreenController is destructed");
 }
 
 sptr<FoldScreenPolicy> FoldScreenController::GetFoldScreenPolicy(DisplayDeviceType productType)
 {
     sptr<FoldScreenPolicy> tempPolicy = nullptr;
     switch (productType) {
-        case DisplayDeviceType::SINGLE_DISPLAY_DEVICE: {
-            tempPolicy = new SingleDisplayFoldPolicy(displayInfoMutex_, screenPowerTaskScheduler_);
-            break;
-        }
         case DisplayDeviceType::DOUBLE_DISPLAY_DEVICE: {
-            tempPolicy = new DualDisplayFoldPolicy(displayInfoMutex_, screenPowerTaskScheduler_);
-            break;
-        }
-        case DisplayDeviceType::SINGLE_DISPLAY_POCKET_DEVICE:{
-            tempPolicy = new SingleDisplayPocketFoldPolicy(displayInfoMutex_, screenPowerTaskScheduler_);
+            tempPolicy = new DualDisplayDevicePolicy(displayInfoMutex_, screenPowerTaskScheduler_);
             break;
         }
         default: {
-            TLOGE(WmsLogTag::DMS, "GetFoldScreenPolicy DisplayDeviceType is invalid");
+            WLOGE("GetFoldScreenPolicy DisplayDeviceType is invalid");
             break;
         }
     }
@@ -87,7 +63,7 @@ sptr<FoldScreenPolicy> FoldScreenController::GetFoldScreenPolicy(DisplayDeviceTy
 void FoldScreenController::SetDisplayMode(const FoldDisplayMode displayMode)
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "SetDisplayMode: foldScreenPolicy_ is null");
+        WLOGW("SetDisplayMode: foldScreenPolicy_ is null");
         return;
     }
     foldScreenPolicy_->ChangeScreenDisplayMode(displayMode);
@@ -96,7 +72,7 @@ void FoldScreenController::SetDisplayMode(const FoldDisplayMode displayMode)
 void FoldScreenController::LockDisplayStatus(bool locked)
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "LockDisplayStatus: foldScreenPolicy_ is null");
+        WLOGW("LockDisplayStatus: foldScreenPolicy_ is null");
         return;
     }
     foldScreenPolicy_->LockDisplayStatus(locked);
@@ -105,7 +81,7 @@ void FoldScreenController::LockDisplayStatus(bool locked)
 FoldDisplayMode FoldScreenController::GetDisplayMode()
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "GetDisplayMode: foldScreenPolicy_ is null");
+        WLOGW("GetDisplayMode: foldScreenPolicy_ is null");
         return FoldDisplayMode::UNKNOWN;
     }
     return foldScreenPolicy_->GetScreenDisplayMode();
@@ -119,7 +95,7 @@ bool FoldScreenController::IsFoldable()
 FoldStatus FoldScreenController::GetFoldStatus()
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "GetFoldStatus: foldScreenPolicy_ is null");
+        WLOGW("GetFoldStatus: foldScreenPolicy_ is null");
         return FoldStatus::UNKNOWN;
     }
     return foldScreenPolicy_->GetFoldStatus();
@@ -128,7 +104,7 @@ FoldStatus FoldScreenController::GetFoldStatus()
 void FoldScreenController::SetFoldStatus(FoldStatus foldStatus)
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "SetFoldStatus: foldScreenPolicy_ is null");
+        WLOGW("SetFoldStatus: foldScreenPolicy_ is null");
         return;
     }
     foldScreenPolicy_->SetFoldStatus(foldStatus);
@@ -137,7 +113,7 @@ void FoldScreenController::SetFoldStatus(FoldStatus foldStatus)
 sptr<FoldCreaseRegion> FoldScreenController::GetCurrentFoldCreaseRegion()
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "GetFoldStatus: foldScreenPolicy_ is null");
+        WLOGW("GetFoldStatus: foldScreenPolicy_ is null");
         return nullptr;
     }
     return foldScreenPolicy_->GetCurrentFoldCreaseRegion();
@@ -146,7 +122,7 @@ sptr<FoldCreaseRegion> FoldScreenController::GetCurrentFoldCreaseRegion()
 ScreenId FoldScreenController::GetCurrentScreenId()
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "GetCurrentScreenId: foldScreenPolicy_ is null");
+        WLOGW("GetCurrentScreenId: foldScreenPolicy_ is null");
         return 0;
     }
     return foldScreenPolicy_->GetCurrentScreenId();
@@ -155,7 +131,7 @@ ScreenId FoldScreenController::GetCurrentScreenId()
 void FoldScreenController::SetOnBootAnimation(bool onBootAnimation)
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "SetOnBootAnimation: foldScreenPolicy_ is null");
+        WLOGW("SetOnBootAnimation: foldScreenPolicy_ is null");
         return;
     }
     foldScreenPolicy_->SetOnBootAnimation(onBootAnimation);
@@ -164,7 +140,7 @@ void FoldScreenController::SetOnBootAnimation(bool onBootAnimation)
 void FoldScreenController::UpdateForPhyScreenPropertyChange()
 {
     if (foldScreenPolicy_ == nullptr) {
-        TLOGW(WmsLogTag::DMS, "UpdateForPhyScreenPropertyChange: foldScreenPolicy_ is null");
+        WLOGW("UpdateForPhyScreenPropertyChange: foldScreenPolicy_ is null");
         return;
     }
     foldScreenPolicy_->UpdateForPhyScreenPropertyChange();

@@ -114,19 +114,6 @@ HWTEST_F(WindowManagerProxyTest, GetTopWindowId, Function | SmallTest | Level2)
 }
 
 /**
- * @tc.name: GetSnapshotByWindowId
- * @tc.desc: test GetSnapshotByWindowId
- * @tc.type: FUNC
- */
-HWTEST_F(WindowManagerProxyTest, GetSnapshotByWindowId, Function | SmallTest | Level2)
-{
-    int windowId = INVALID_WINDOW_ID;
-    std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
-    WMError err = windowManagerProxy_->GetSnapshotByWindowId(windowId, pixelMap);
-    ASSERT_EQ(err, WMError::WM_ERROR_NULLPTR);
-}
-
-/**
  * @tc.name: NotifyWindowTransition
  * @tc.desc: test success
  * @tc.type: FUNC
@@ -231,19 +218,6 @@ HWTEST_F(WindowManagerProxyTest, GetVisibilityWindowInfo01, Function | SmallTest
 {
     std::vector<sptr<WindowVisibilityInfo>> infos;
     WMError err = windowManagerProxy_->GetVisibilityWindowInfo(infos);
-    ASSERT_EQ(err, WMError::WM_OK);
-}
-
-/**
- * @tc.name: GetUnreliableWindowInfo01
- * @tc.desc: test success
- * @tc.type: FUNC
- */
-HWTEST_F(WindowManagerProxyTest, GetUnreliableWindowInfo01, Function | SmallTest | Level2)
-{
-    std::vector<sptr<UnreliableWindowInfo>> infos;
-    int32_t windowId = 0;
-    WMError err = windowManagerProxy_->GetUnreliableWindowInfo(windowId, infos);
     ASSERT_EQ(err, WMError::WM_OK);
 }
 

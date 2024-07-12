@@ -43,6 +43,15 @@ const int PARAM_NUMBER = 2; // 2: callback func input number, also reused by Pro
         }                                       \
     } while (0)
 
+#define GNAPI_INNER(call)                         \
+    do {                                          \
+        napi_status s = (call);                   \
+        if (s != napi_ok) {                       \
+            GNAPI_LOG(#call " is %{public}d", s); \
+            return s;                             \
+        }                                         \
+    } while (0)
+
 namespace OHOS {
 napi_status SetMemberInt32(napi_env env, napi_value result, const char *key, int32_t value);
 napi_status SetMemberUint32(napi_env env, napi_value result, const char *key, uint32_t value);
@@ -57,67 +66,6 @@ void ProcessCallback(napi_env env, napi_ref ref, napi_value result[], int count)
 bool NAPICall(napi_env env, napi_status status);
 
 template<typename ParamT>
-struct AsyncCallbackInfo {
-    napi_async_work asyncWork;
-    napi_deferred deferred;
-    void (*async)(napi_env env, std::unique_ptr<ParamT>& param);
-    napi_value (*resolve)(napi_env env, std::unique_ptr<ParamT>& param);
-    std::unique_ptr<ParamT> param;
-    napi_ref ref;
-};
-
-template<typename ParamT>
-void AsyncFunc(napi_env env, void *data)
-{
-    AsyncCallbackInfo<ParamT> *info = reinterpret_cast<AsyncCallbackInfo<ParamT> *>(data);
-    if (info->async) {
-        info->async(env, info->param);
-    }
-}
-
-template<typename ParamT>
-void CompleteFunc(napi_env env, napi_status status, void *data)
-{
-    AsyncCallbackInfo<ParamT> *info = reinterpret_cast<AsyncCallbackInfo<ParamT> *>(data);
-    napi_value result[PARAM_NUMBER] = {nullptr};
-    if (info->param->wret == Rosen::DmErrorCode::DM_OK) {
-        napi_get_undefined(env, &result[0]);
-        result[1] = info->resolve(env, info->param);
-    } else {
-        SetErrorInfo(env, info->param->wret, info->param->errMessage, result, PARAM_NUMBER);
-    }
-    if (info->deferred) {
-        ProcessPromise(env, info->param->wret, info->deferred, result, PARAM_NUMBER);
-    } else {
-        ProcessCallback(env, info->ref, result, PARAM_NUMBER);
-    }
-    napi_delete_async_work(env, info->asyncWork);
-    delete info;
-}
-
-template<typename ParamT>
-napi_value CreatePromise(napi_env env, napi_value resourceName,
-    const std::string& funcname, AsyncCallbackInfo<ParamT>* info)
-{
-    napi_value result = nullptr;
-    if (!NAPICall(env, napi_create_promise(env, &info->deferred, &result))) {
-        return nullptr;
-    }
-    return result;
-}
-
-template<typename ParamT>
-napi_value CreateUndefined(napi_env env, napi_value resourceName,
-    const std::string& funcname, AsyncCallbackInfo<ParamT>* info)
-{
-    napi_value result = nullptr;
-    if (!NAPICall(env, napi_get_undefined(env, &result))) {
-        return nullptr;
-    }
-    return result;
-}
-
-template<typename ParamT>
 napi_value AsyncProcess(napi_env env,
                         const std::string& funcname,
                         void(*async)(napi_env env, std::unique_ptr<ParamT>& param),
@@ -125,7 +73,16 @@ napi_value AsyncProcess(napi_env env,
                         napi_ref& callbackRef,
                         std::unique_ptr<ParamT>& param)
 {
-    AsyncCallbackInfo<ParamT> *info = new AsyncCallbackInfo<ParamT> {
+    struct AsyncCallbackInfo {
+        napi_async_work asyncWork;
+        napi_deferred deferred;
+        void (*async)(napi_env env, std::unique_ptr<ParamT>& param);
+        napi_value (*resolve)(napi_env env, std::unique_ptr<ParamT>& param);
+        std::unique_ptr<ParamT> param;
+        napi_ref ref;
+    };
+
+    AsyncCallbackInfo *info = new AsyncCallbackInfo {
         .async = async,
         .resolve = resolve,
         .param = std::move(param),
@@ -138,20 +95,46 @@ napi_value AsyncProcess(napi_env env,
         return nullptr;
     }
 
+    // decide use promise or callback
     napi_value result = nullptr;
-    if (callbackRef == nullptr) {
-        result = CreatePromise(env, resourceName, funcname, info);
+    if (info->ref == nullptr) {
+        if (!NAPICall(env, napi_create_promise(env, &info->deferred, &result))) {
+            delete info;
+            return nullptr;
+        }
     } else {
-        result = CreateUndefined(env, resourceName, funcname, info);
+        if (!NAPICall(env, napi_get_undefined(env, &result))) {
+            delete info;
+            return nullptr;
+        }
     }
 
-    if (result == nullptr) {
+    auto asyncFunc = [](napi_env env, void *data) {
+        AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
+        if (info->async) {
+            info->async(env, info->param);
+        }
+    };
+
+    auto completeFunc = [](napi_env env, napi_status status, void *data) {
+        AsyncCallbackInfo *info = reinterpret_cast<AsyncCallbackInfo *>(data);
+        napi_value result[PARAM_NUMBER] = {nullptr};
+        if (info->param->wret == Rosen::DmErrorCode::DM_OK) {
+            napi_get_undefined(env, &result[0]);
+            result[1] = info->resolve(env, info->param);
+        } else {
+            SetErrorInfo(env, info->param->wret, info->param->errMessage, result, PARAM_NUMBER);
+        }
+        if (info->deferred) {
+            ProcessPromise(env, info->param->wret, info->deferred, result, PARAM_NUMBER);
+        } else {
+            ProcessCallback(env, info->ref, result, PARAM_NUMBER);
+        }
+        napi_delete_async_work(env, info->asyncWork);
         delete info;
-        return nullptr;
-    }
-
-    if (!NAPICall(env, napi_create_async_work(env, nullptr, resourceName, AsyncFunc<ParamT>,
-        CompleteFunc<ParamT>, reinterpret_cast<void *>(info), &info->asyncWork))) {
+    };
+    if (!NAPICall(env, napi_create_async_work(env, nullptr, resourceName, asyncFunc,
+        completeFunc, reinterpret_cast<void *>(info), &info->asyncWork))) {
         delete info;
         return nullptr;
     }

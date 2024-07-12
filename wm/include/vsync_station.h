@@ -26,7 +26,6 @@
 #include <event_handler.h>
 #include <vsync_receiver.h>
 #include <ui/rs_display_node.h>
-#include <ui/rs_ui_display_soloist.h>
 
 #include "wm_common.h"
 #include "wm_single_instance.h"
@@ -37,13 +36,16 @@ class RSFrameRateLinker;
 class VsyncStation {
 public:
     explicit VsyncStation(NodeId nodeId);
-    ~VsyncStation();
+    ~VsyncStation()
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        destroyed_ = true;
+    }
     void RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback);
     int64_t GetVSyncPeriod();
     FrameRateLinkerId GetFrameRateLinkerId();
-    void FlushFrameRate(uint32_t rate, int32_t animatorExpectedFrameRate, uint32_t rateType = 0);
+    void FlushFrameRate(uint32_t rate);
     void SetFrameRateLinkerEnable(bool enabled);
-    void SetDisplaySoloistFrameRateLinkerEnable(bool enabled);
     void RemoveCallback();
     void SetIsMainHandlerAvailable(bool available)
     {
@@ -54,11 +56,10 @@ public:
     {
         vsyncHandler_ = eventHandler;
     }
-    void SetUiDvsyncSwitch(bool dvsyncSwitch);
 
 private:
-    static void OnVsync(int64_t nanoTimestamp, int64_t frameCount, void* client);
-    void VsyncCallbackInner(int64_t nanoTimestamp, int64_t frameCount);
+    static void OnVsync(int64_t nanoTimestamp, void* client);
+    void VsyncCallbackInner(int64_t nanoTimestamp);
     void OnVsyncTimeOut();
     void Init();
 
@@ -75,10 +76,10 @@ private:
     std::unordered_set<std::shared_ptr<VsyncCallback>> vsyncCallbacks_;
     VSyncReceiver::FrameCallback frameCallback_ = {
         .userData_ = this,
-        .callbackWithId_ = OnVsync,
+        .callback_ = OnVsync,
     };
     std::shared_ptr<AppExecFwk::EventHandler> vsyncHandler_ = nullptr;
-    AppExecFwk::EventHandler::Callback vsyncTimeoutCallback_ = [this] { this->OnVsyncTimeOut(); };
+    AppExecFwk::EventHandler::Callback vsyncTimeoutCallback_ = std::bind(&VsyncStation::OnVsyncTimeOut, this);
 };
 } // namespace Rosen
 } // namespace OHOS

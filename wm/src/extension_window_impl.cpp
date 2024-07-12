@@ -42,14 +42,20 @@ sptr<Window> ExtensionWindowImpl::GetWindow()
 
 WMError ExtensionWindowImpl::HideNonSecureWindows(bool shouldHide)
 {
-    TLOGI(WmsLogTag::WMS_UIEXT, "HideNonSecureWindows is called");
+    WLOGI("HideNonSecureWindows is called");
     return windowExtensionSessionImpl_->HideNonSecureWindows(shouldHide);
 }
 
 WMError ExtensionWindowImpl::SetWaterMarkFlag(bool isEnable)
 {
     TLOGI(WmsLogTag::WMS_UIEXT, "SetWaterMarkFlag is called");
-    return windowExtensionSessionImpl_->SetWaterMarkFlag(isEnable);
+    if (isEnable) {
+        return windowExtensionSessionImpl_->AddExtensionWindowFlag(
+            ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
+    } else {
+        return windowExtensionSessionImpl_->RemoveExtensionWindowFlag(
+            ExtensionWindowFlag::EXTENSION_WINDOW_FLAG_WATER_MARK);
+    }
 }
 } // namespace Rosen
 } // namespace OHOS

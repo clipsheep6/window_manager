@@ -60,13 +60,8 @@ public:
     void SetPhyHeight(uint32_t phyHeight);
     int32_t GetPhyHeight() const;
 
-    void SetDpiPhyBounds(uint32_t phyWidth, uint32_t phyHeight);
-
     void SetRefreshRate(uint32_t refreshRate);
     uint32_t GetRefreshRate() const;
-
-    void SetDefaultDeviceRotationOffset(uint32_t defaultRotationOffset);
-    uint32_t GetDefaultDeviceRotationOffset() const;
 
     void UpdateVirtualPixelRatio(const RRect& bounds);
     void SetVirtualPixelRatio(float virtualPixelRatio);
@@ -124,12 +119,7 @@ private:
     uint32_t phyWidth_ { UINT32_MAX };
     uint32_t phyHeight_ { UINT32_MAX };
 
-    uint32_t dpiPhyWidth_ { UINT32_MAX };
-    uint32_t dpiPhyHeight_ { UINT32_MAX };
-
     uint32_t refreshRate_ { 0 };
-    uint32_t defaultDeviceRotationOffset_ { 0 };
-
     float virtualPixelRatio_ { 1.0f };
     float defaultDensity_ { 1.0f };
     float densityInCurResolution_ { 1.0f };

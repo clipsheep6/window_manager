@@ -19,7 +19,6 @@
 #include <iremote_broker.h>
 #include <pixel_map.h>
 #include <surface.h>
-#include <set>
 
 #include "display_cutout_controller.h"
 #include "display_info.h"
@@ -40,6 +39,7 @@ public:
         TRANS_ID_GET_DISPLAY_BY_ID,
         TRANS_ID_GET_DISPLAY_BY_SCREEN,
         TRANS_ID_GET_DISPLAY_SNAPSHOT,
+        TRANS_ID_DISABLE_DISPLAY_SNAPSHOT,
         TRANS_ID_REGISTER_DISPLAY_MANAGER_AGENT,
         TRANS_ID_UNREGISTER_DISPLAY_MANAGER_AGENT,
         TRANS_ID_WAKE_UP_BEGIN,
@@ -89,7 +89,6 @@ public:
         TRANS_ID_SCREEN_SET_COLOR_SPACE,
         TRANS_ID_IS_SCREEN_ROTATION_LOCKED,
         TRANS_ID_SET_SCREEN_ROTATION_LOCKED,
-        TRANS_ID_SET_SCREEN_ROTATION_LOCKED_FROM_JS,
         TRANS_ID_HAS_PRIVATE_WINDOW,
         TRANS_ID_GET_CUTOUT_INFO,
         TRANS_ID_HAS_IMMERSIVE_WINDOW,
@@ -113,13 +112,10 @@ public:
         TRANS_ID_GET_DISPLAY_NODE,
         TRANS_ID_UPDATE_SCREEN_ROTATION_PROPERTY,
         TRANS_ID_UPDATE_AVAILABLE_AREA,
-        TRANS_ID_SET_SCREEN_OFF_DELAY_TIME,
         TRANS_ID_GET_CURVED_SCREEN_COMPRESSION_AREA,
         TRANS_ID_GET_PHY_SCREEN_PROPERTY,
         TRANS_ID_NOTIFY_DISPLAY_CHANGE_INFO,
         TRANS_ID_SET_SCREEN_PRIVACY_STATE,
-        TRANS_ID_SET_SCREENID_PRIVACY_STATE,
-        TRANS_ID_SET_SCREEN_PRIVACY_WINDOW_LIST,
         TRANS_ID_RESIZE_VIRTUAL_SCREEN,
         TRANS_ID_GET_AVAILABLE_AREA,
         TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION,
@@ -131,13 +127,6 @@ public:
         TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE,
         TRANS_ID_DEVICE_IS_CAPTURE,
         TRANS_ID_GET_SNAPSHOT_BY_PICKER,
-        TRANS_ID_SWITCH_USER,
-        TRANS_ID_SET_VIRTUAL_SCREEN_BLACK_LIST,
-        TRANS_ID_DISABLE_POWEROFF_RENDER_CONTROL,
-        TRANS_ID_PROXY_FOR_FREEZE,
-        TRANS_ID_RESET_ALL_FREEZE_STATUS,
-        TRANS_ID_NOTIFY_DISPLAY_HOOK_INFO,
-        TRANS_ID_GET_ALL_PHYSICAL_DISPLAY_RESOLUTION,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;
@@ -145,7 +134,6 @@ public:
     virtual sptr<DisplayInfo> GetDisplayInfoByScreen(ScreenId screenId) = 0;
     virtual DMError HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow) = 0;
     virtual bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId) { return false; };
-    virtual void UpdateDisplayHookInfo(int32_t uid, bool enable, DMHookInfo hookInfo) {};
 
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
         const sptr<IRemoteObject>& displayManagerAgent) = 0;
@@ -165,7 +153,6 @@ public:
         return nullptr;
     }
     virtual DMError SetScreenRotationLocked(bool isLocked) = 0;
-    virtual DMError SetScreenRotationLockedFromJs(bool isLocked) = 0;
     virtual DMError IsScreenRotationLocked(bool& isLocked) = 0;
 
     // colorspace, gamut
@@ -282,21 +269,6 @@ public:
     virtual DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval)
     {
         return DMError::DM_OK;
-    }
-    virtual DMError ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy)
-    {
-        return DMError::DM_OK;
-    }
-    virtual DMError ResetAllFreezeStatus()
-    {
-        return DMError::DM_OK;
-    }
-    virtual void SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList) {}
-    virtual void DisablePowerOffRenderControl(ScreenId screenId) {}
-
-    virtual std::vector<DisplayPhysicalResolution> GetAllDisplayPhysicalResolution()
-    {
-        return std::vector<DisplayPhysicalResolution> {};
     }
 };
 } // namespace OHOS::Rosen

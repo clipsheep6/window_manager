@@ -22,6 +22,7 @@
 
 namespace OHOS::Rosen {
 class WindowEventChannelStub;
+using WindowEventChannelStubFunc = int (WindowEventChannelStub::*)(MessageParcel& data, MessageParcel& reply);
 
 class WindowEventChannelStub : public IRemoteStub<IWindowEventChannel> {
 public:
@@ -32,6 +33,8 @@ public:
         MessageOption &option) override;
 
 private:
+    static const std::map<uint32_t, WindowEventChannelStubFunc> stubFuncMap_;
+
     int HandleTransferBackpressedEvent(MessageParcel& data, MessageParcel& reply);
     int HandleTransferKeyEvent(MessageParcel& data, MessageParcel& reply);
     int HandleTransferKeyEventAsync(MessageParcel& data, MessageParcel& reply);
@@ -39,10 +42,12 @@ private:
     int HandleGetApplicationPid(MessageParcel& data, MessageParcel& reply);
     int HandleTransferFocusActiveEvent(MessageParcel& data, MessageParcel& reply);
     int HandleTransferFocusStateEvent(MessageParcel& data, MessageParcel& reply);
+    int HandleTransferSearchElementInfo(MessageParcel& data, MessageParcel& reply);
+    int HandleTransferSearchElementInfosByText(MessageParcel& data, MessageParcel& reply);
+    int HandleTransferFindFocusedElementInfo(MessageParcel& data, MessageParcel& reply);
+    int HandleTransferFocusMoveSearch(MessageParcel& data, MessageParcel& reply);
+    int HandleTransferExecuteAction(MessageParcel& data, MessageParcel& reply);
     int HandleTransferAccessibilityHoverEvent(MessageParcel& data, MessageParcel& reply);
-    int HandleTransferAccessibilityChildTreeRegister(MessageParcel& data, MessageParcel& reply);
-    int HandleTransferAccessibilityChildTreeUnregister(MessageParcel& data, MessageParcel& reply);
-    int HandleTransferAccessibilityDumpChildInfo(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_WINDOW_EVENT_CHANNEL_STUB_H

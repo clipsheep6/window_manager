@@ -19,7 +19,7 @@
 #include <string>
 #include <unordered_map>
 
-#include "dm_common.h"
+#include "../dm/dm_common.h"
 #include "wm_common.h"
 
 namespace OHOS {
@@ -238,13 +238,6 @@ public:
     void SetExtensionTag(bool isExtensionTag);
 
     /**
-     * @brief Set UIExtension usage.
-     *
-     * @param uiExtensionUsage UIExtension usage.
-     */
-    void SetUIExtensionUsage(uint32_t uiExtensionUsage);
-
-    /**
      * @brief Set Dialog Decor Enable Or Not.
      *
      * @param decorEnable true means enable, default disabled.
@@ -257,13 +250,6 @@ public:
      * @param dialogTitle true means enable, default disabled.
      */
     void SetDialogTitle(const std::string& dialogTitle);
-
-    /**
-     * @brief Set window topmost.
-     *
-     * @param isTopmost true means enable, default disabled.
-     */
-    void SetWindowTopmost(bool isTopmost);
 
     /**
      * @brief Get window rect.
@@ -420,13 +406,6 @@ public:
     bool GetExtensionTag() const;
 
     /**
-     * @brief Get UIExtension usage.
-     *
-     * @param Return UIExtension usage.
-     */
-    uint32_t GetUIExtensionUsage() const;
-
-    /**
      * @brief Get dialog decor enable
      *
      * @return true means the dialog decor is enabled, otherwise not.
@@ -439,13 +418,6 @@ public:
      * @return Return the dialog title
     */
     std::string GetDialogTitle() const;
-
-    /**
-     * @brief Get window topmost
-     *
-     * @return true means the window is topmost, otherwise not.
-    */
-    bool GetWindowTopmost() const;
 
 private:
     Rect windowRect_ { 0, 0, 0, 0 };
@@ -475,10 +447,8 @@ private:
     bool subWindowDecorEnable_ = false;
     bool onlySupportSceneBoard_ = false;
     bool isExtensionTag_ = false;
-    uint32_t uiExtensionUsage_ = static_cast<uint32_t>(UIExtensionUsage::EMBEDDED);
     bool dialogDecorEnable_ = false;
     std::string dialogTitle_ = { "" };
-    bool isTopmost_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

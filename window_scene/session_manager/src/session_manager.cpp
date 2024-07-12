@@ -26,19 +26,19 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DISPLAY, "SessionManager" };
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionManager" };
 }
 
 class SessionManagerServiceRecoverListener : public IRemoteStub<ISessionManagerServiceRecoverListener> {
 public:
     explicit SessionManagerServiceRecoverListener() = default;
 
-    virtual int32_t OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
-        MessageOption& option) override
+    virtual int32_t OnRemoteRequest(
+        uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override
     {
         if (data.ReadInterfaceToken() != GetDescriptor()) {
-            WLOGFE("InterfaceToken check failed");
-            return -1;
+        WLOGFE("InterfaceToken check failed");
+        return -1;
         }
         auto msgId = static_cast<SessionManagerServiceRecoverMessage>(code);
         switch (msgId) {
@@ -51,11 +51,7 @@ public:
                 int32_t userId = data.ReadInt32();
                 int32_t screenId = data.ReadInt32();
                 bool isConnected = data.ReadBool();
-                if (isConnected) {
-                    OnWMSConnectionChanged(userId, screenId, isConnected, data.ReadRemoteObject());
-                } else {
-                    OnWMSConnectionChanged(userId, screenId, isConnected, nullptr);
-                }
+                OnWMSConnectionChanged(userId, screenId, isConnected);
                 break;
             }
             default:
@@ -74,11 +70,11 @@ public:
         SessionManager::GetInstance().RecoverSessionManagerService(sms);
     }
 
-    void OnWMSConnectionChanged(
-        int32_t userId, int32_t screenId, bool isConnected, const sptr<IRemoteObject> &sessionManagerService) override
+    void OnWMSConnectionChanged(int32_t userId, int32_t screenId, bool isConnected) override
     {
-        auto sms = iface_cast<ISessionManagerService>(sessionManagerService);
-        SessionManager::GetInstance().OnWMSConnectionChanged(userId, screenId, isConnected, sms);
+        TLOGI(WmsLogTag::WMS_MULTI_USER, "userId=%{public}d, screenId=%{public}d, isConnected=%{public}d", userId,
+            screenId, isConnected);
+        SessionManager::GetInstance().OnWMSConnectionChanged(userId, screenId, isConnected);
     }
 };
 
@@ -90,52 +86,35 @@ SessionManager::~SessionManager()
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     destroyed_ = true;
     if (mockSessionManagerServiceProxy_ != nullptr) {
-        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        IPCSkeleton::ResetCallingIdentity();
         mockSessionManagerServiceProxy_->UnregisterSMSRecoverListener();
-        IPCSkeleton::SetCallingIdentity(identity);
         mockSessionManagerServiceProxy_ = nullptr;
     }
 }
 
-void SessionManager::OnWMSConnectionChangedCallback(
-    int32_t userId, int32_t screenId, bool isConnected, bool isCallbackRegistered)
+void SessionManager::OnWMSConnectionChangedCallback(int32_t userId, int32_t screenId, bool isConnected)
 {
-    if (isCallbackRegistered) {
+    if (wmsConnectionChangedFunc_ != nullptr) {
         TLOGI(WmsLogTag::WMS_MULTI_USER,
             "WMS connection changed with userId=%{public}d, screenId=%{public}d, isConnected=%{public}d", userId,
             screenId, isConnected);
         wmsConnectionChangedFunc_(userId, screenId, isConnected);
-    } else {
-        TLOGE(WmsLogTag::WMS_MULTI_USER, "WMS CallbackFunc is null.");
     }
 }
 
-void SessionManager::OnWMSConnectionChanged(
-    int32_t userId, int32_t screenId, bool isConnected, const sptr<ISessionManagerService>& sessionManagerService)
+void SessionManager::OnWMSConnectionChanged(int32_t userId, int32_t screenId, bool isConnected)
 {
-    TLOGI(WmsLogTag::WMS_MULTI_USER,
-        "curUserId=%{public}d, oldUserId=%{public}d, screenId=%{public}d, isConnected=%{public}d", userId,
-        currentWMSUserId_, screenId, isConnected);
-    bool isCallbackRegistered = false;
-    auto lastUserId = currentWMSUserId_;
-    auto lastScreenId = currentScreenId_;
-    {
-        // The mutex ensures the timing of the following variable states in multiple threads
-        std::lock_guard<std::mutex> lock(wmsConnectionMutex_);
-        isWMSConnected_ = isConnected;
-        isCallbackRegistered = wmsConnectionChangedFunc_ != nullptr;
-        if (isConnected) {
-            currentWMSUserId_ = userId;
-            currentScreenId_ = screenId;
-        }
-    }
-    if (isConnected && lastUserId > INVALID_UID && lastUserId != userId) {
+    TLOGD(WmsLogTag::WMS_MULTI_USER, "WMS connection changed enter");
+    if (isConnected && currentWMSUserId_ > INVALID_UID && currentWMSUserId_ != userId) {
+        OnUserSwitch();
         // Notify the user that the old wms has been disconnected.
-        OnWMSConnectionChangedCallback(lastUserId, lastScreenId, false, isCallbackRegistered);
-        OnUserSwitch(sessionManagerService);
+        OnWMSConnectionChangedCallback(currentWMSUserId_, currentScreenId_, false);
     }
+    isWMSConnected_ = isConnected;
+    currentWMSUserId_ = userId;
+    currentScreenId_ = screenId;
     // Notify the user that the current wms connection has changed.
-    OnWMSConnectionChangedCallback(userId, screenId, isConnected, isCallbackRegistered);
+    OnWMSConnectionChangedCallback(userId, screenId, isConnected);
 }
 
 void SessionManager::ClearSessionManagerProxy()
@@ -155,7 +134,8 @@ void SessionManager::ClearSessionManagerProxy()
     sceneSessionManagerProxy_ = nullptr;
 }
 
-__attribute__((no_sanitize("cfi"))) sptr<ISceneSessionManager> SessionManager::GetSceneSessionManagerProxy()
+__attribute__((no_sanitize("cfi")))
+sptr<ISceneSessionManager> SessionManager::GetSceneSessionManagerProxy()
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     InitSessionManagerServiceProxy();
@@ -219,7 +199,8 @@ WMError SessionManager::InitMockSMSProxy()
     return WMError::WM_OK;
 }
 
-__attribute__((no_sanitize("cfi"))) void SessionManager::InitSceneSessionManagerProxy()
+__attribute__((no_sanitize("cfi")))
+void SessionManager::InitSceneSessionManagerProxy()
 {
     if (sceneSessionManagerProxy_) {
         return;
@@ -255,15 +236,14 @@ void SessionManager::RegisterSMSRecoverListener()
 {
     if (!isRecoverListenerRegistered_) {
         if (!mockSessionManagerServiceProxy_) {
-            TLOGE(WmsLogTag::WMS_RECOVER, "mockSessionManagerServiceProxy_ is null");
+            WLOGFE("[WMSRecover] mockSessionManagerServiceProxy_ is null");
             return;
         }
         isRecoverListenerRegistered_ = true;
-        TLOGI(WmsLogTag::WMS_RECOVER, "Register recover listener");
+        WLOGFI("[WMSRecover] Register recover listener");
         smsRecoverListener_ = new SessionManagerServiceRecoverListener();
-        std::string identity = IPCSkeleton::ResetCallingIdentity();
+        IPCSkeleton::ResetCallingIdentity();
         mockSessionManagerServiceProxy_->RegisterSMSRecoverListener(smsRecoverListener_);
-        IPCSkeleton::SetCallingIdentity(identity);
     }
 }
 
@@ -279,25 +259,25 @@ void SessionManager::RecoverSessionManagerService(const sptr<ISessionManagerServ
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         sessionManagerServiceProxy_ = sessionManagerService;
     }
-
+    
     {
         std::lock_guard<std::recursive_mutex> lock(recoverMutex_);
-        TLOGI(WmsLogTag::WMS_RECOVER, "Run recover");
+        WLOGFI("[WMSRecover] Run recover");
         if (windowManagerRecoverFunc_ != nullptr) {
-            TLOGD(WmsLogTag::WMS_RECOVER, "windowManagerRecover");
+            WLOGFD("[WMSRecover] windowManagerRecover");
             windowManagerRecoverFunc_();
         }
     }
 }
 
-void SessionManager::OnUserSwitch(const sptr<ISessionManagerService> &sessionManagerService)
+void SessionManager::OnUserSwitch()
 {
     TLOGI(WmsLogTag::WMS_MULTI_USER, "User switched");
     Clear();
     ClearSessionManagerProxy();
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
-        sessionManagerServiceProxy_ = sessionManagerService;
+        InitSessionManagerServiceProxy();
         InitSceneSessionManagerProxy();
         if (!sceneSessionManagerProxy_) {
             TLOGE(WmsLogTag::WMS_MULTI_USER, "sceneSessionManagerProxy_ is null");
@@ -320,22 +300,7 @@ void SessionManager::Clear()
 
 WMError SessionManager::RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc)
 {
-    TLOGI(WmsLogTag::WMS_MULTI_USER, "in");
-    if (callbackFunc == nullptr) {
-        TLOGE(WmsLogTag::WMS_MULTI_USER, "callbackFunc is null");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-    bool isWMSAlreadyConnected = false;
-    {
-        // The mutex ensures the timing of the following variable states in multiple threads
-        std::lock_guard<std::mutex> lock(wmsConnectionMutex_);
-        wmsConnectionChangedFunc_ = callbackFunc;
-        isWMSAlreadyConnected = isWMSConnected_ && (currentWMSUserId_ > INVALID_USER_ID);
-    }
-    if (isWMSAlreadyConnected) {
-        TLOGI(WmsLogTag::WMS_MULTI_USER, "WMS already connected, notify immediately");
-        OnWMSConnectionChangedCallback(currentWMSUserId_, currentScreenId_, true, true);
-    }
+    TLOGI(WmsLogTag::WMS_MULTI_USER, "RegisterWMSConnectionChangedListener in");
     {
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         auto ret = InitMockSMSProxy();
@@ -344,6 +309,10 @@ WMError SessionManager::RegisterWMSConnectionChangedListener(const WMSConnection
             return ret;
         }
         RegisterSMSRecoverListener();
+    }
+    wmsConnectionChangedFunc_ = callbackFunc;
+    if (isWMSConnected_ && currentWMSUserId_ > INVALID_USER_ID) {
+        OnWMSConnectionChangedCallback(currentWMSUserId_, currentScreenId_, true);
     }
     return WMError::WM_OK;
 }
@@ -356,7 +325,7 @@ void SessionManager::RegisterUserSwitchListener(const UserSwitchCallbackFunc& ca
 
 void SessionManager::OnFoundationDied()
 {
-    TLOGI(WmsLogTag::WMS_RECOVER, "enter");
+    TLOGI(WmsLogTag::WMS_RECOVER, "On foundation died enter");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     isFoundationListenerRegistered_ = false;
     isRecoverListenerRegistered_ = false;

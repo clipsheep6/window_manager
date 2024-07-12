@@ -17,9 +17,7 @@
 #define WINDOW_WINDOW_MANAGER_PIP_REPORT_H
 
 #include <map>
-#include <mutex>
 #include "wm_single_instance.h"
-#include "wm_common.h"
 
 namespace OHOS::Rosen {
 class PiPReporter {
@@ -30,13 +28,12 @@ public:
     void ReportPiPStartWindow(int32_t source, int32_t templateType, int32_t isSuccess, const std::string &errorReason);
     void ReportPiPStopWindow(int32_t source, int32_t templateType, int32_t isSuccess, const std::string &errorReason);
     void ReportPiPActionEvent(int32_t templateType, const std::string &actionEvent);
-    void ReportPiPControlEvent(int32_t templateType, PiPControlType controlType);
+    void ReportPiPResize(int32_t scaleLevel, int32_t windowWidth, int32_t windowHeight);
     void ReportPiPRatio(int32_t windowWidth, int32_t windowHeight);
     void ReportPiPRestore();
+    void ReportPiPMove();
 private:
-    std::string GetPackageName() const;
     std::string packageName_;
-    mutable std::mutex packageNameMutex_;
 };
 } // namespace OHOS::Rosen
 

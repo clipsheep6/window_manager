@@ -55,7 +55,6 @@ public:
         const std::map<DisplayId, sptr<DisplayInfo>>& displayInfoMap, DisplayStateChangeType type);
     WMError NotifyServerReadyToMoveOrDrag(uint32_t windowId, sptr<MoveDragProperty>& moveDragProperty);
     WMError ProcessPointDown(uint32_t windowId, bool isPointDown);
-    std::shared_ptr<Media::PixelMap> GetSnapshot(int32_t windowId);
     WMError ProcessPointUp(uint32_t windowId);
     void MinimizeAllAppWindows(DisplayId displayId);
     WMError ToggleShownStateForAllAppWindows();
@@ -73,7 +72,6 @@ public:
         sptr<RSIWindowAnimationFinishedCallback>& finishCallback);
     void OnScreenshot(DisplayId displayId);
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) const;
-    WMError GetUnreliableWindowInfo(int32_t windowId, std::vector<sptr<UnreliableWindowInfo>>& infos) const;
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) const;
     void SetAnchorAndScale(int32_t x, int32_t y, float scale);
     void SetAnchorOffset(int32_t deltaX, int32_t deltaY);
@@ -89,6 +87,7 @@ public:
     WMError SetAspectRatio(uint32_t windowId, float ratio);
     void FlushWindowInfo(uint32_t windowId);
     void SetDragFrameGravity(int32_t dragGravity);
+    WMError GetWindowBackHomeStatus(bool &isBackHome) const;
 
 private:
     uint32_t GenWindowId();

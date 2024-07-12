@@ -41,8 +41,6 @@ private:
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     static napi_value SetScreenRotationLocked(napi_env env, napi_callback_info info);
     napi_value OnSetScreenRotationLocked(napi_env env, napi_callback_info info);
-    static napi_value SetTouchEnabled(napi_env env, napi_callback_info info);
-    napi_value OnSetTouchEnabled(napi_env env, napi_callback_info info);
     void CallJsCallback(const std::string& callbackType);
     void RegisterScreenChangeListener();
 
@@ -55,7 +53,6 @@ private:
     void OnSensorRotationChange(float sensorRotation, ScreenId screenId) override;
     void OnScreenOrientationChange(float screenOrientation, ScreenId screenId) override;
     void OnScreenRotationLockedChange(bool isLocked, ScreenId screenId) override;
-    void OnScreenDensityChange();
 
     napi_env env_;
     sptr<ScreenSession> screenSession_;

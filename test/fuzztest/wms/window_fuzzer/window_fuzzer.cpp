@@ -510,9 +510,6 @@ void CheckWindowImplFunctionsPart4(sptr<WindowImpl> window, const uint8_t* data,
     window->SetNeedRemoveWindowInputChannel(boolVal);
     window->SetRequestedOrientation(static_cast<Orientation>(data[0]));
 
-    startPos += GetObject(boolVal, data + startPos, size - startPos);
-    window->SetImmersiveModeEnabledState(boolVal);
-
     std::vector<OHOS::Rosen::Rect> rectVector;
     OHOS::Rosen::Rect rect;
     startPos += GetObject(rect, data + startPos, size - startPos);
@@ -749,6 +746,8 @@ void CheckWindowImplFunctionsPart9(sptr<WindowImpl> window, const uint8_t* data,
     }
     std::shared_ptr<IInputEventConsumer> iInputEventConsumer = std::make_shared<IInputEventConsumer>();
     window->SetInputEventConsumer(iInputEventConsumer);
+    std::shared_ptr<VsyncCallback> callback;
+    window->RequestVsync(callback);
     std::shared_ptr<AppExecFwk::Configuration> configuration = std::make_shared<AppExecFwk::Configuration>();
     window->UpdateConfiguration(configuration);
     sptr<IWindowLifeCycle> windowLifeCycleListener = new IWindowLifeCycle();

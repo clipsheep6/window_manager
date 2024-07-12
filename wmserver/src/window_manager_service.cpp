@@ -89,8 +89,8 @@ WindowManagerService::WindowManagerService() : SystemAbility(WINDOW_MANAGER_SERV
         AppExecFwk::EventQueue::Priority::IMMEDIATE);
     // init RSUIDirector, it will handle animation callback
     rsUiDirector_ = RSUIDirector::Create();
-    rsUiDirector_->SetUITaskRunner([this](const std::function<void()>& task, uint32_t delay) {
-        PostAsyncTask(task, "WindowManagerService:cacheGuard", delay);
+    rsUiDirector_->SetUITaskRunner([this](const std::function<void()>& task) {
+        PostAsyncTask(task, "WindowManagerService:cacheGuard");
     });
     rsUiDirector_->Init(false);
 }
@@ -122,10 +122,10 @@ void WindowManagerService::OnStart()
     WLOGI("end");
 }
 
-void WindowManagerService::PostAsyncTask(Task task, const std::string& taskName, uint32_t delay)
+void WindowManagerService::PostAsyncTask(Task task, const std::string& taskName)
 {
     if (handler_) {
-        bool ret = handler_->PostTask(task, "wms:" + taskName, delay, AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        bool ret = handler_->PostTask(task, "wms:" + taskName, 0, AppExecFwk::EventQueue::Priority::IMMEDIATE);
         if (!ret) {
             WLOGFE("EventHandler PostTask Failed");
         }
@@ -191,8 +191,8 @@ void WindowManagerService::WindowVisibilityChangeCallback(std::shared_ptr<RSOccl
 
 void WindowManagerService::InitWithRanderServiceAdded()
 {
-    auto windowVisibilityChangeCb =
-        [this](std::shared_ptr<RSOcclusionData> occlusionData) { this->WindowVisibilityChangeCallback(occlusionData); };
+    auto windowVisibilityChangeCb = std::bind(&WindowManagerService::WindowVisibilityChangeCallback, this,
+        std::placeholders::_1);
     WLOGI("RegisterWindowVisibilityChangeCallback");
     if (rsInterface_.RegisterOcclusionChangeCallback(windowVisibilityChangeCb) != WM_OK) {
         WLOGFE("RegisterWindowVisibilityChangeCallback failed");
@@ -213,9 +213,7 @@ void WindowManagerService::InitWithAbilityManagerServiceAdded()
         wmsHandler_ = new WindowManagerServiceHandler();
     }
     WLOGI("RegisterWindowManagerServiceHandler");
-    bool animaEnabled = RemoteAnimation::CheckAnimationController();
-    if (AAFwk::AbilityManagerClient::GetInstance()->RegisterWindowManagerServiceHandler(
-        wmsHandler_, animaEnabled) != ERR_OK) {
+    if (AAFwk::AbilityManagerClient::GetInstance()->RegisterWindowManagerServiceHandler(wmsHandler_) != ERR_OK) {
         WLOGFE("RegisterWindowManagerServiceHandler failed");
     }
 }
@@ -423,16 +421,6 @@ void WindowManagerService::ConfigureWindowManagerService()
             numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
             maximizeMode_ = static_cast<MaximizeMode>(numbers[0]);
         }
-    }
-    item = config["uiType"];
-    if (item.IsString()) {
-        systemConfig_.uiType_ = item.stringValue_;
-        StartingWindow::uiType_ = item.stringValue_;
-        WindowNodeContainer::uiType_ = item.stringValue_;
-    }
-    item = config["supportTypeFloatWindow"].GetProp("enable");
-    if (item.IsBool()) {
-        systemConfig_.supportTypeFloatWindow_ = item.boolValue_;
     }
 }
 
@@ -1366,19 +1354,6 @@ WMError WindowManagerService::GetAccessibilityWindowInfo(std::vector<sptr<Access
     return PostSyncTask(task, "GetAccessibilityWindowInfo");
 }
 
-WMError WindowManagerService::GetUnreliableWindowInfo(int32_t windowId,
-    std::vector<sptr<UnreliableWindowInfo>>& infos)
-{
-    if (!Permission::IsSystemServiceCalling()) {
-        WLOGFE("get unreliable window info permission denied!");
-        return WMError::WM_ERROR_NOT_SYSTEM_APP;
-    }
-    auto task = [this, windowId, &infos]() {
-        return windowController_->GetUnreliableWindowInfo(windowId, infos);
-    };
-    return PostSyncTask(task, "GetUnreliableWindowInfo");
-}
-
 WMError WindowManagerService::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
 {
     auto task = [this, &infos]() {
@@ -1401,14 +1376,7 @@ WmErrorCode WindowManagerService::RaiseToAppTop(uint32_t windowId)
 
 std::shared_ptr<Media::PixelMap> WindowManagerService::GetSnapshot(int32_t windowId)
 {
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("permission denied!");
-        return nullptr;
-    }
-    auto task = [this, windowId]() {
-        return windowController_->GetSnapshot(windowId);
-    };
-    return PostSyncTask(task, "GetSnapshot");
+    return nullptr;
 }
 
 void WindowManagerService::DispatchKeyEvent(uint32_t windowId, std::shared_ptr<MMI::KeyEvent> event)
@@ -1549,10 +1517,6 @@ void WindowManagerService::HasPrivateWindow(DisplayId displayId, bool& hasPrivat
 
 WMError WindowManagerService::SetGestureNavigaionEnabled(bool enable)
 {
-    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("permission denied!");
-        return WMError::WM_ERROR_NOT_SYSTEM_APP;
-    }
     auto task = [this, enable]() {
         return windowRoot_->SetGestureNavigaionEnabled(enable);
     };

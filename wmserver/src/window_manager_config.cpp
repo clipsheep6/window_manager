@@ -72,8 +72,6 @@ const std::map<std::string, WindowManagerConfig::ValueType> WindowManagerConfig:
     { "stretchable",                                  WindowManagerConfig::ValueType::UNDIFINED },
     { "remoteAnimation",                              WindowManagerConfig::ValueType::UNDIFINED },
     { "configMainFloatingWindowAbove",                WindowManagerConfig::ValueType::UNDIFINED },
-    { "uiType",                                       WindowManagerConfig::ValueType::STRING },
-    { "supportTypeFloatWindow",                       WindowManagerConfig::ValueType::STRING },
 };
 
 std::vector<std::string> WindowManagerConfig::SplitNodeContent(const xmlNodePtr& node, const std::string& pattern)
@@ -113,13 +111,18 @@ void WindowManagerConfig::ReadConfig(const xmlNodePtr& rootPtr, std::map<std::st
         }
         std::string nodeName = reinterpret_cast<const char*>(curNodePtr->name);
         if (configItemTypeMap_.count(nodeName)) {
-            std::map<std::string, ConfigItem> property = ReadProperty(curNodePtr);
-            if (property.size() > 0) {
-                mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetProperty(property);
+            std::map<std::string, ConfigItem> p = ReadProperty(curNodePtr);
+            if (p.size() > 0) {
+                mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetProperty(p);
             }
             switch (configItemTypeMap_.at(nodeName)) {
                 case ValueType::INTS: {
                     std::vector<int> v = ReadIntNumbersConfigInfo(curNodePtr);
+                    mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetValue(v);
+                    break;
+                }
+                case ValueType::POSITIVE_FLOATS: {
+                    std::vector<float> v = ReadFloatNumbersConfigInfo(curNodePtr, false);
                     mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetValue(v);
                     break;
                 }
@@ -128,8 +131,9 @@ void WindowManagerConfig::ReadConfig(const xmlNodePtr& rootPtr, std::map<std::st
                     mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetValue(v);
                     break;
                 }
-                case ValueType::POSITIVE_FLOATS: {
-                    std::vector<float> v = ReadFloatNumbersConfigInfo(curNodePtr, false);
+                case ValueType::MAP: {
+                    std::map<std::string, ConfigItem> v;
+                    ReadConfig(curNodePtr, v);
                     mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetValue(v);
                     break;
                 }
@@ -140,12 +144,6 @@ void WindowManagerConfig::ReadConfig(const xmlNodePtr& rootPtr, std::map<std::st
                 }
                 case ValueType::STRINGS: {
                     std::vector<std::string> v = ReadStringsConfigInfo(curNodePtr);
-                    mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetValue(v);
-                    break;
-                }
-                case ValueType::MAP: {
-                    std::map<std::string, ConfigItem> v;
-                    ReadConfig(curNodePtr, v);
                     mapValue[reinterpret_cast<const char*>(curNodePtr->name)].SetValue(v);
                     break;
                 }
@@ -197,20 +195,20 @@ bool WindowManagerConfig::IsValidNode(const xmlNode& currNode)
 std::map<std::string, XmlConfigBase::ConfigItem> WindowManagerConfig::ReadProperty(const xmlNodePtr& currNode)
 {
     std::map<std::string, ConfigItem> property;
-    xmlChar* propVal = xmlGetProp(currNode, reinterpret_cast<const xmlChar*>("enable"));
-    if (propVal != nullptr) {
-        if (!xmlStrcmp(propVal, reinterpret_cast<const xmlChar*>("true"))) {
+    xmlChar* prop = xmlGetProp(currNode, reinterpret_cast<const xmlChar*>("enable"));
+    if (prop != nullptr) {
+        if (!xmlStrcmp(prop, reinterpret_cast<const xmlChar*>("true"))) {
             property["enable"].SetValue(true);
-        } else if (!xmlStrcmp(propVal, reinterpret_cast<const xmlChar*>("false"))) {
+        } else if (!xmlStrcmp(prop, reinterpret_cast<const xmlChar*>("false"))) {
             property["enable"].SetValue(false);
         }
-        xmlFree(propVal);
+        xmlFree(prop);
     }
 
-    propVal = xmlGetProp(currNode, reinterpret_cast<const xmlChar*>("name"));
-    if (propVal != nullptr) {
-        property["name"].SetValue(std::string(reinterpret_cast<const char*>(propVal)));
-        xmlFree(propVal);
+    prop = xmlGetProp(currNode, reinterpret_cast<const xmlChar*>("name"));
+    if (prop != nullptr) {
+        property["name"].SetValue(std::string(reinterpret_cast<const char*>(prop)));
+        xmlFree(prop);
     }
 
     return property;
@@ -285,25 +283,25 @@ void WindowManagerConfig::DumpConfig(const std::map<std::string, ConfigItem>& co
             }
         }
         switch (conf.second.type_) {
-            case ValueType::INTS:
-                for (auto& num : *conf.second.intsValue_) {
-                    TLOGI(WmsLogTag::DEFAULT, "[WmConfig] Num: %{public}d", num);
-                }
-                break;
             case ValueType::MAP:
                 if (conf.second.mapValue_) {
                     DumpConfig(*conf.second.mapValue_);
                 }
                 break;
-            case ValueType::STRING:
-                TLOGI(WmsLogTag::DEFAULT, "[WmConfig] %{public}s", conf.second.stringValue_.c_str());
-                break;
             case ValueType::BOOL:
-                TLOGI(WmsLogTag::DEFAULT, "[WmConfig] %{public}u", conf.second.boolValue_);
+                WLOGI("[WmConfig] %{public}u", conf.second.boolValue_);
+                break;
+            case ValueType::STRING:
+                WLOGI("[WmConfig] %{public}s", conf.second.stringValue_.c_str());
+                break;
+            case ValueType::INTS:
+                for (auto& num : *conf.second.intsValue_) {
+                    WLOGI("[WmConfig] Num: %{public}d", num);
+                }
                 break;
             case ValueType::FLOATS:
                 for (auto& num : *conf.second.floatsValue_) {
-                    TLOGI(WmsLogTag::DEFAULT, "[WmConfig] Num: %{public}f", num);
+                    WLOGI("[WmConfig] Num: %{public}f", num);
                 }
                 break;
             default:

@@ -44,7 +44,6 @@ public:
     static void SetDefaultWindowMode(WindowMode defaultMode);
     static void SetAnimationConfig(AnimationConfig config);
     static bool transAnimateEnable_;
-    static std::string uiType_;
 private:
     static WMError CreateLeashAndStartingSurfaceNode(sptr<WindowNode>& node);
     static WMError SetStartingWindowAnimation(wptr<WindowNode> weak);
@@ -54,8 +53,6 @@ private:
     static WindowMode defaultMode_;
     static AnimationConfig animationConfig_;
     static bool IsWindowFollowParent(WindowType type);
-    static sptr<WindowProperty> InitializeWindowProperty(const sptr<WindowTransitionInfo>& info, uint32_t winId);
-    static void UpdateRSTree(sptr<WindowNode>& node, bool isMultiDisplay);
 };
 } // Rosen
 } // OHOS

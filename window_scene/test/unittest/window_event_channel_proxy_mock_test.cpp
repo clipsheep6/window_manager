@@ -60,129 +60,431 @@ void WindowEventChannelProxyMockTest::TearDown()
 
 namespace {
 /**
- * @tc.name: TransferAccessibilityChildTreeRegister
- * @tc.desc: test function : TransferAccessibilityChildTreeRegister
+ * @tc.name: TransferSearchElementInfo
+ * @tc.desc: test function : TransferSearchElementInfo
  * @tc.type: FUNC
  */
-HWTEST_F(WindowEventChannelProxyMockTest, TransferAccessibilityChildTreeRegister, Function | SmallTest | Level1)
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfo, Function | SmallTest | Level1)
 {
-    WLOGI("TransferAccessibilityChildTreeRegister begin");
+    WLOGI("TransferSearchElementInfo begin");
     MockMessageParcel::SetWriteInterfaceTokenErrorFlag(true);
-    uint32_t windowId = 0;
-    int32_t treeId = 0;
-    int64_t accessibilityId = 0;
-    WSError res = windowEventChannelProxy_->TransferAccessibilityChildTreeRegister(windowId, treeId, accessibilityId);
+    int64_t elementId = 0;
+    int32_t mode = 0;
+    int64_t baseParent = 0;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
+    
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfo(elementId, mode, baseParent, infos);
     ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
     MockMessageParcel::ClearAllErrorFlag();
-    WLOGI("TransferAccessibilityChildTreeRegister end");
+    WLOGI("TransferSearchElementInfo end");
 }
-
 /**
- * @tc.name: TransferAccessibilityChildTreeRegister
- * @tc.desc: test function : TransferAccessibilityChildTreeRegister
+ * @tc.name: TransferSearchElementInfo
+ * @tc.desc: test function : TransferSearchElementInfo
  * @tc.type: FUNC
  */
-HWTEST_F(WindowEventChannelProxyMockTest, TransferAccessibilityChildTreeRegister1, Function | SmallTest | Level1)
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfo1, Function | SmallTest | Level1)
 {
-    WLOGI("TransferAccessibilityChildTreeRegister1 begin");
-    uint32_t windowId = 0;
-    int32_t treeId = -1;
-    int64_t accessibilityId = 0;
-    WSError res = windowEventChannelProxy_->TransferAccessibilityChildTreeRegister(windowId, treeId, accessibilityId);
+    WLOGI("TransferSearchElementInfo1 begin");
+    int64_t elementId = -1;
+    int32_t mode = 0;
+    int64_t baseParent = 0;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
+
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfo(elementId, mode, baseParent, infos);
     ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
-    WLOGI("TransferAccessibilityChildTreeRegister1 end");
+    WLOGI("TransferSearchElementInfo1 end");
 }
 
 /**
- * @tc.name: TransferAccessibilityChildTreeRegister
- * @tc.desc: test function : TransferAccessibilityChildTreeRegister
+ * @tc.name: TransferSearchElementInfo2
+ * @tc.desc: test function : TransferSearchElementInfo
  * @tc.type: FUNC
  */
-HWTEST_F(WindowEventChannelProxyMockTest, TransferAccessibilityChildTreeRegister2, Function | SmallTest | Level1)
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfo2, Function | SmallTest | Level1)
 {
-    WLOGI("TransferAccessibilityChildTreeRegister2 begin");
-    uint32_t windowId = 0;
-    int32_t treeId = 0;
-    int64_t accessibilityId = -1;
-    WSError res = windowEventChannelProxy_->TransferAccessibilityChildTreeRegister(windowId, treeId, accessibilityId);
+    WLOGI("TransferSearchElementInfo2 begin");
+    int64_t elementId = 0;
+    int32_t mode = -1;
+    int64_t baseParent = 0;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
+
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfo(elementId, mode, baseParent, infos);
     ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
-    WLOGI("TransferAccessibilityChildTreeRegister2 end");
+    WLOGI("TransferSearchElementInfo2 end");
 }
 
 /**
- * @tc.name: TransferAccessibilityChildTreeUnregister
- * @tc.desc: test function : TransferAccessibilityChildTreeUnregister
+ * @tc.name: TransferSearchElementInfo3
+ * @tc.desc: test function : TransferSearchElementInfo
  * @tc.type: FUNC
  */
-HWTEST_F(WindowEventChannelProxyMockTest, TransferAccessibilityChildTreeUnregister, Function | SmallTest | Level1)
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfo3, Function | SmallTest | Level1)
 {
-    WLOGI("TransferAccessibilityChildTreeUnregister begin");
-    MockMessageParcel::SetWriteInterfaceTokenErrorFlag(true);
-    WSError res = windowEventChannelProxy_->TransferAccessibilityChildTreeUnregister();
+    WLOGI("TransferSearchElementInfo3 begin");
+    int64_t elementId = 0;
+    int32_t mode = 0;
+    int64_t baseParent = -1;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
+
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfo(elementId, mode, baseParent, infos);
     ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
-    MockMessageParcel::ClearAllErrorFlag();
-    WLOGI("TransferAccessibilityChildTreeUnregister end");
+    WLOGI("TransferSearchElementInfo3 end");
 }
 
 /**
- * @tc.name: TransferAccessibilityChildTreeUnregister
- * @tc.desc: test function : TransferAccessibilityChildTreeUnregister
+ * @tc.name: TransferSearchElementInfo4
+ * @tc.desc: test function : TransferSearchElementInfo
  * @tc.type: FUNC
  */
-HWTEST_F(WindowEventChannelProxyMockTest, TransferAccessibilityChildTreeUnregister1, Function | SmallTest | Level1)
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfo4, Function | SmallTest | Level1)
 {
-    WLOGI("TransferAccessibilityChildTreeUnregister1 begin");
-    WSError res = windowEventChannelProxy_->TransferAccessibilityChildTreeUnregister();
-    ASSERT_EQ(WSError::WS_OK, res);
-    WLOGI("TransferAccessibilityChildTreeUnregister1 end");
-}
+    WLOGI("TransferSearchElementInfo4 begin");
+    MockMessageParcel::SetReadInt64ErrorFlag(true);
+    int64_t elementId = 0;
+    int32_t mode = 0;
+    int64_t baseParent = 0;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
 
-/**
- * @tc.name: TransferAccessibilityDumpChildInfo
- * @tc.desc: test function : TransferAccessibilityDumpChildInfo
- * @tc.type: FUNC
- */
-HWTEST_F(WindowEventChannelProxyMockTest, TransferAccessibilityDumpChildInfo, Function | SmallTest | Level1)
-{
-    WLOGI("TransferAccessibilityDumpChildInfo begin");
-    std::vector<std::string> params;
-    std::vector<std::string> info;
-    MockMessageParcel::SetWriteInterfaceTokenErrorFlag(true);
-    WSError res = windowEventChannelProxy_->TransferAccessibilityDumpChildInfo(params, info);
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfo(elementId, mode, baseParent, infos);
     ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
     MockMessageParcel::ClearAllErrorFlag();
-    WLOGI("TransferAccessibilityDumpChildInfo end");
+    WLOGI("TransferSearchElementInfo4 end");
 }
 
 /**
- * @tc.name: TransferAccessibilityDumpChildInfo
- * @tc.desc: test function : TransferAccessibilityDumpChildInfo
+ * @tc.name: TransferSearchElementInfosByText
+ * @tc.desc: test function : TransferSearchElementInfosByText
  * @tc.type: FUNC
  */
-HWTEST_F(WindowEventChannelProxyMockTest, TransferAccessibilityDumpChildInfo1, Function | SmallTest | Level1)
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfosByText, Function | SmallTest | Level1)
 {
-    WLOGI("TransferAccessibilityDumpChildInfo1 begin");
-    std::vector<std::string> params;
-    std::vector<std::string> info;
-    WSError res = windowEventChannelProxy_->TransferAccessibilityDumpChildInfo(params, info);
-    ASSERT_EQ(WSError::WS_OK, res);
-    WLOGI("TransferAccessibilityDumpChildInfo1 end");
-}
+    WLOGI("TransferSearchElementInfosByText begin");
+    MockMessageParcel::SetWriteInterfaceTokenErrorFlag(true);
+    int64_t elementId = 0;
+    string text;
+    int64_t baseParent = 0;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
 
-/**
- * @tc.name: TransferAccessibilityDumpChildInfo
- * @tc.desc: test function : TransferAccessibilityDumpChildInfo
- * @tc.type: FUNC
- */
-HWTEST_F(WindowEventChannelProxyMockTest, TransferAccessibilityDumpChildInfo2, Function | SmallTest | Level1)
-{
-    WLOGI("TransferAccessibilityDumpChildInfo2 begin");
-    std::vector<std::string> params;
-    params.push_back("test");
-    std::vector<std::string> info;
-    WSError res = windowEventChannelProxy_->TransferAccessibilityDumpChildInfo(params, info);
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfosByText(elementId, text, baseParent, infos);
     ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
-    WLOGI("TransferAccessibilityDumpChildInfo2 end");
+    MockMessageParcel::ClearAllErrorFlag();
+    WLOGI("TransferSearchElementInfosByText end");
+}
+
+/**
+ * @tc.name: TransferSearchElementInfosByText1
+ * @tc.desc: test function : TransferSearchElementInfosByText
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfosByText1, Function | SmallTest | Level1)
+{
+    WLOGI("TransferSearchElementInfosByText1 begin");
+    int64_t elementId = -1;
+    string text;
+    int64_t baseParent = 0;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
+
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfosByText(elementId, text, baseParent, infos);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferSearchElementInfosByText1 end");
+}
+
+/**
+ * @tc.name: TransferSearchElementInfosByText2
+ * @tc.desc: test function : TransferSearchElementInfosByText
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfosByText2, Function | SmallTest | Level1)
+{
+    WLOGI("TransferSearchElementInfosByText2 begin");
+    int64_t elementId = 0;
+    string text = "error";
+    int64_t baseParent = 0;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
+
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfosByText(elementId, text, baseParent, infos);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferSearchElementInfosByText2 end");
+}
+
+/**
+ * @tc.name: TransferSearchElementInfosByText3
+ * @tc.desc: test function : TransferSearchElementInfosByText
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfosByText3, Function | SmallTest | Level1)
+{
+    WLOGI("TransferSearchElementInfosByText3 begin");
+    int64_t elementId = 0;
+    string text;
+    int64_t baseParent = -1;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
+
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfosByText(elementId, text, baseParent, infos);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferSearchElementInfosByText3 end");
+}
+
+/**
+ * @tc.name: TransferSearchElementInfosByText4
+ * @tc.desc: test function : TransferSearchElementInfosByText
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferSearchElementInfosByText4, Function | SmallTest | Level1)
+{
+    WLOGI("TransferSearchElementInfosByText4 begin");
+    MockMessageParcel::SetReadInt64ErrorFlag(true);
+    int64_t elementId = 0;
+    string text;
+    int64_t baseParent = 0;
+    std::list<Accessibility::AccessibilityElementInfo> infos;
+
+    WSError res = windowEventChannelProxy_->TransferSearchElementInfosByText(elementId, text, baseParent, infos);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    MockMessageParcel::ClearAllErrorFlag();
+    WLOGI("TransferSearchElementInfosByText4 end");
+}
+
+/**
+ * @tc.name: TransferFindFocusedElementInfo
+ * @tc.desc: test function : TransferFindFocusedElementInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferFindFocusedElementInfo, Function | SmallTest | Level1)
+{
+    WLOGI("TransferFindFocusedElementInfo begin");
+    MockMessageParcel::SetWriteInterfaceTokenErrorFlag(true);
+    int64_t elementId = 0;
+    int32_t focusType = 0;
+    int64_t baseParent = 0;
+    Accessibility::AccessibilityElementInfo info;
+
+    WSError res = windowEventChannelProxy_->TransferFindFocusedElementInfo(elementId, focusType, baseParent, info);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    MockMessageParcel::ClearAllErrorFlag();
+    WLOGI("TransferFindFocusedElementInfo end");
+}
+
+/**
+ * @tc.name: TransferFindFocusedElementInfo1
+ * @tc.desc: test function : TransferFindFocusedElementInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferFindFocusedElementInfo1, Function | SmallTest | Level1)
+{
+    WLOGI("TransferFindFocusedElementInfo1 begin");
+    int64_t elementId = -1;
+    int32_t focusType = 0;
+    int64_t baseParent = 0;
+    Accessibility::AccessibilityElementInfo info;
+
+    WSError res = windowEventChannelProxy_->TransferFindFocusedElementInfo(elementId, focusType, baseParent, info);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferFindFocusedElementInfo1 end");
+}
+
+/**
+ * @tc.name: TransferFindFocusedElementInfo2
+ * @tc.desc: test function : TransferFindFocusedElementInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferFindFocusedElementInfo2, Function | SmallTest | Level1)
+{
+    WLOGI("TransferFindFocusedElementInfo2 begin");
+    int64_t elementId = 0;
+    int32_t focusType = -1;
+    int64_t baseParent = 0;
+    Accessibility::AccessibilityElementInfo info;
+
+    WSError res = windowEventChannelProxy_->TransferFindFocusedElementInfo(elementId, focusType, baseParent, info);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferFindFocusedElementInfo2 end");
+}
+
+/**
+ * @tc.name: TransferFindFocusedElementInfo3
+ * @tc.desc: test function : TransferFindFocusedElementInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferFindFocusedElementInfo3, Function | SmallTest | Level1)
+{
+    WLOGI("TransferFindFocusedElementInfo3 begin");
+    int64_t elementId = 0;
+    int32_t focusType = 0;
+    int64_t baseParent = -1;
+    Accessibility::AccessibilityElementInfo info;
+
+    WSError res = windowEventChannelProxy_->TransferFindFocusedElementInfo(elementId, focusType, baseParent, info);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferFindFocusedElementInfo3 end");
+}
+
+/**
+ * @tc.name: TransferFocusMoveSearch
+ * @tc.desc: test function : TransferFocusMoveSearch
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferFocusMoveSearch, Function | SmallTest | Level1)
+{
+    WLOGI("TransferFocusMoveSearch begin");
+    MockMessageParcel::SetWriteInterfaceTokenErrorFlag(true);
+    int64_t elementId = 0;
+    int32_t direction = 0;
+    int64_t baseParent = 0;
+    Accessibility::AccessibilityElementInfo info;
+    
+    WSError res = windowEventChannelProxy_->TransferFocusMoveSearch(elementId, direction, baseParent, info);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    MockMessageParcel::ClearAllErrorFlag();
+    WLOGI("TransferFocusMoveSearch end");
+}
+
+/**
+ * @tc.name: TransferFocusMoveSearch1
+ * @tc.desc: test function : TransferFocusMoveSearch
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferFocusMoveSearch1, Function | SmallTest | Level1)
+{
+    WLOGI("TransferFocusMoveSearch1 begin");
+    int64_t elementId = -1;
+    int32_t direction = 0;
+    int64_t baseParent = 0;
+    Accessibility::AccessibilityElementInfo info;
+    
+    WSError res = windowEventChannelProxy_->TransferFocusMoveSearch(elementId, direction, baseParent, info);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferFocusMoveSearch1 end");
+}
+
+/**
+ * @tc.name: TransferFocusMoveSearch2
+ * @tc.desc: test function : TransferFocusMoveSearch
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferFocusMoveSearch2, Function | SmallTest | Level1)
+{
+    WLOGI("TransferFocusMoveSearch2 begin");
+    int64_t elementId = 0;
+    int32_t direction = -1;
+    int64_t baseParent = 0;
+    Accessibility::AccessibilityElementInfo info;
+    
+    WSError res = windowEventChannelProxy_->TransferFocusMoveSearch(elementId, direction, baseParent, info);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferFocusMoveSearch2 end");
+}
+
+/**
+ * @tc.name: TransferFocusMoveSearch3
+ * @tc.desc: test function : TransferFocusMoveSearch
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferFocusMoveSearch3, Function | SmallTest | Level1)
+{
+    WLOGI("TransferFocusMoveSearch3 begin");
+    int64_t elementId = 0;
+    int32_t direction = 0;
+    int64_t baseParent = -1;
+    Accessibility::AccessibilityElementInfo info;
+    
+    WSError res = windowEventChannelProxy_->TransferFocusMoveSearch(elementId, direction, baseParent, info);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferFocusMoveSearch3 end");
+}
+
+/**
+ * @tc.name: TransferExecuteAction
+ * @tc.desc: test function : TransferExecuteAction
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferExecuteAction, Function | SmallTest | Level1)
+{
+    WLOGI("TransferExecuteAction begin");
+    MockMessageParcel::SetWriteInterfaceTokenErrorFlag(true);
+    int64_t elementId = 0;
+    map<string, string> actionArguments;
+    int32_t action = 0;
+    int64_t baseParent = 0;
+
+    WSError res = windowEventChannelProxy_->TransferExecuteAction(elementId, actionArguments, action, baseParent);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    MockMessageParcel::ClearAllErrorFlag();
+    WLOGI("TransferExecuteAction end");
+}
+
+/**
+ * @tc.name: TransferExecuteAction1
+ * @tc.desc: test function : TransferExecuteAction
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferExecuteAction1, Function | SmallTest | Level1)
+{
+    WLOGI("TransferExecuteAction1 begin");
+    int64_t elementId = -1;
+    map<string, string> actionArguments;
+    int32_t action = 0;
+    int64_t baseParent = 0;
+
+    WSError res = windowEventChannelProxy_->TransferExecuteAction(elementId, actionArguments, action, baseParent);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferExecuteAction1 end");
+}
+
+/**
+ * @tc.name: TransferExecuteAction2
+ * @tc.desc: test function : TransferExecuteAction
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferExecuteAction2, Function | SmallTest | Level1)
+{
+    WLOGI("TransferExecuteAction2 begin");
+    int64_t elementId = 0;
+    map<string, string> actionArguments;
+    actionArguments.insert(pair<string, string>("test", "test"));
+    int32_t action = 0;
+    int64_t baseParent = 0;
+
+    WSError res = windowEventChannelProxy_->TransferExecuteAction(elementId, actionArguments, action, baseParent);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferExecuteAction2 end");
+}
+
+/**
+ * @tc.name: TransferExecuteAction3
+ * @tc.desc: test function : TransferExecuteAction
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferExecuteAction3, Function | SmallTest | Level1)
+{
+    WLOGI("TransferExecuteAction3 begin");
+    int64_t elementId = 0;
+    map<string, string> actionArguments;
+    int32_t action = -1;
+    int64_t baseParent = 0;
+
+    WSError res = windowEventChannelProxy_->TransferExecuteAction(elementId, actionArguments, action, baseParent);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferExecuteAction3 end");
+}
+
+/**
+ * @tc.name: TransferExecuteAction4
+ * @tc.desc: test function : TransferExecuteAction
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowEventChannelProxyMockTest, TransferExecuteAction4, Function | SmallTest | Level1)
+{
+    WLOGI("TransferExecuteAction4 begin");
+    int64_t elementId = 0;
+    map<string, string> actionArguments;
+    int32_t action = 0;
+    int64_t baseParent = -1;
+
+    WSError res = windowEventChannelProxy_->TransferExecuteAction(elementId, actionArguments, action, baseParent);
+    ASSERT_EQ(WSError::WS_ERROR_IPC_FAILED, res);
+    WLOGI("TransferExecuteAction4 end");
 }
 }
 }

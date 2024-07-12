@@ -29,8 +29,6 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-private:
-    static constexpr uint32_t WAIT_SYNC_IN_NS = 200000;
 };
 
 void WindowManagerAgentProxyTest::SetUpTestCase()
@@ -47,7 +45,6 @@ void WindowManagerAgentProxyTest::SetUp()
 
 void WindowManagerAgentProxyTest::TearDown()
 {
-    usleep(WAIT_SYNC_IN_NS);
 }
 
 namespace {

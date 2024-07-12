@@ -16,11 +16,11 @@
 #ifndef OHOS_WINDOW_ADAPTER_LITE_H
 #define OHOS_WINDOW_ADAPTER_LITE_H
 
-#include <shared_mutex>
 #include <refbase.h>
 #include <zidl/window_manager_agent_interface.h>
 
 #include "singleton_delegator.h"
+#include "window_property.h"
 #include "wm_single_instance.h"
 #include "zidl/window_manager_lite_interface.h"
 
@@ -34,7 +34,6 @@ public:
 class WindowAdapterLite {
 WM_DECLARE_SINGLE_INSTANCE(WindowAdapterLite);
 public:
-    using WMSConnectionChangedCallbackFunc = std::function<void(int32_t, int32_t, bool)>;
     virtual void GetFocusWindowInfo(FocusChangeInfo& focusInfo);
     virtual WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent);
@@ -43,31 +42,18 @@ public:
     virtual WMError CheckWindowId(int32_t windowId, int32_t &pid);
     virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos);
     virtual void ClearWindowAdapter();
-    virtual WMError GetWindowModeType(WindowModeType& windowModeType);
-    virtual WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo);
-    virtual WMError GetAllMainWindowInfos(std::vector<MainWindowInfo>& infos);
-    virtual WMError ClearMainSessions(const std::vector<int32_t>& persistentIds);
-    virtual WMError ClearMainSessions(const std::vector<int32_t>& persistentIds, std::vector<int32_t>& clearFailedIds);
-    virtual WMError RaiseWindowToTop(int32_t persistentId);
-    WMError RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc);
+    virtual WMError GetWindowBackHomeStatus(bool &isBackHome);
 
 private:
     static inline SingletonDelegator<WindowAdapterLite> delegator;
     bool InitSSMProxy();
     void OnUserSwitch();
-    void ReregisterWindowManagerLiteAgent();
 
-    sptr<IWindowManagerLite> GetWindowManagerServiceProxy() const;
-
-    mutable std::mutex mutex_;
+    std::recursive_mutex mutex_;
     sptr<IWindowManagerLite> windowManagerServiceProxy_ = nullptr;
     sptr<WMSDeathRecipient> wmsDeath_ = nullptr;
-    bool isProxyValid_ = false;
+    bool isProxyValid_ { false };
     bool isRegisteredUserSwitchListener_ = false;
-    // above guarded by mutex_
-
-    std::mutex windowManagerLiteAgentMapMutex_;
-    std::map<WindowManagerAgentType, std::set<sptr<IWindowManagerAgent>>> windowManagerLiteAgentMap_;
 };
 } // namespace Rosen
 } // namespace OHOS

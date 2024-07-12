@@ -45,13 +45,9 @@ public:
     static bool IsAttachedToSameWindow(uint32_t windowId);
     static sptr<Window> GetCurrentWindow();
 
-    static void DoPreRestore();
     static void DoRestore();
     static void DoClose(bool destroyWindow, bool needAnim);
-    static void DoActionClose();
-    static void DoLocateSource();
     static void DoActionEvent(const std::string& actionName, int32_t status);
-    static void DoControlEvent(PiPControlType controlType, PiPControlStatus status);
     static void AutoStartPipWindow(std::string navigationId);
 private:
     // controller in use
@@ -63,7 +59,7 @@ private:
     static std::map<int32_t, sptr<PictureInPictureController>> windowToControllerMap_;
     static sptr<IWindowLifeCycle> mainWindowLifeCycleImpl_;
     static std::shared_mutex controllerMapMutex_;
-    static std::mutex mutex_;
+    static std::recursive_mutex mutex_;
 };
 } // namespace Rosen
 } // namespace OHOS

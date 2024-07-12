@@ -121,8 +121,6 @@ class SessionListenerControllerTest : public testing::Test {
     void SetUp() override;
     void TearDown() override;
     std::shared_ptr<SessionListenerController> slController;
-private:
-    static constexpr uint32_t WAIT_SYNC_IN_NS = 200000;
 };
 
 
@@ -141,7 +139,6 @@ void SessionListenerControllerTest::SetUp()
 
 void SessionListenerControllerTest::TearDown()
 {
-    usleep(WAIT_SYNC_IN_NS);
 }
 
 namespace {
@@ -378,17 +375,13 @@ HWTEST_F(SessionListenerControllerTest, NotifySessionLabelUpdated, Function | Sm
 HWTEST_F(SessionListenerControllerTest, OnListenerDied, Function | SmallTest | Level2)
 {
     sptr<IRemoteObject> remote;
-    if (slController == nullptr) {
-        return;
-    }
     slController->OnListenerDied(remote);
     EXPECT_EQ(nullptr, remote);
 
-    if (SingletonContainer::Get<ScreenManagerAdapter>().InitDMSProxy()) {
-        remote = SingletonContainer::Get<ScreenManagerAdapter>().displayManagerServiceProxy_->AsObject();
-        slController->OnListenerDied(remote);
-        EXPECT_NE(nullptr, remote);
-    }
+    SingletonContainer::Get<ScreenManagerAdapter>().InitDMSProxy();
+    remote = SingletonContainer::Get<ScreenManagerAdapter>().displayManagerServiceProxy_->AsObject();
+    slController->OnListenerDied(remote);
+    EXPECT_NE(nullptr, remote);
 }
 
 /**
@@ -435,12 +428,11 @@ HWTEST_F(SessionListenerControllerTest, ListenerDeathRecipient, Function | Small
     slController->AddSessionListener(listener);
     EXPECT_NE(nullptr,  slController->listenerDeathRecipient_);
 
-    if (SingletonContainer::Get<ScreenManagerAdapter>().InitDMSProxy()) {
-        sptr<IRemoteObject> remote;
-        remote = SingletonContainer::Get<ScreenManagerAdapter>().displayManagerServiceProxy_->AsObject();
-        slController->listenerDeathRecipient_->OnRemoteDied(remote);
-        EXPECT_NE(nullptr, remote);
-    }
+    SingletonContainer::Get<ScreenManagerAdapter>().InitDMSProxy();
+    sptr<IRemoteObject> remote;
+    remote = SingletonContainer::Get<ScreenManagerAdapter>().displayManagerServiceProxy_->AsObject();
+    slController->listenerDeathRecipient_->OnRemoteDied(remote);
+    EXPECT_NE(nullptr, remote);
     GTEST_LOG_(INFO) << "TaskSchedulerText: task_scheduler_test001 end";
 }
 } // namespace

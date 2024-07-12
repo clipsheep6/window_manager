@@ -23,7 +23,10 @@ config("libwmutil_private_config") {
 }
 
 config("libwmutil_public_config") {
-  include_dirs = [ "include" ]
+  include_dirs = [
+    "include",
+    "//foundation/multimodalinput/input/interfaces/native/innerkits/event/include",
+  ]
 }
 
 ## build libwmutil_static.a
@@ -32,7 +35,7 @@ ohos_static_library("libwmutil_static") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
     integer_overflow = true
     ubsan = true
@@ -46,7 +49,6 @@ ohos_static_library("libwmutil_static") {
     "src/display_change_info.cpp",
     "src/display_info.cpp",
     "src/dms_reporter.cpp",
-    "src/js_err_utils.cpp",
     "src/perform_reporter.cpp",
     "src/permission.cpp",
     "src/persistent_storage.cpp",
@@ -60,7 +62,6 @@ ohos_static_library("libwmutil_static") {
     "src/surface_reader.cpp",
     "src/surface_reader_handler_impl.cpp",
     "src/sys_cap_util.cpp",
-    "src/unreliable_window_info.cpp",
     "src/window_drawing_content_info.cpp",
     "src/window_property.cpp",
     "src/window_transition_info.cpp",
@@ -94,7 +95,6 @@ ohos_static_library("libwmutil_static") {
     "image_framework:image_native",
     "input:libmmi-client",
     "ipc:ipc_single",
-    "napi:ace_napi",
     "preferences:native_preferences",
     "samgr:samgr_proxy",
   ]
@@ -109,7 +109,7 @@ ohos_shared_library("libwmutil_base") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
   }
   sources = [
@@ -124,7 +124,6 @@ ohos_shared_library("libwmutil_base") {
     "src/screenshot_info.cpp",
     "src/singleton_container.cpp",
     "src/string_util.cpp",
-    "src/unreliable_window_info.cpp",
     "src/window_drawing_content_info.cpp",
     "src/window_visibility_info.cpp",
     "src/wm_math.cpp",
@@ -149,19 +148,16 @@ ohos_shared_library("libwmutil_base") {
 ohos_shared_library("libwmutil") {
   sources = [
     "src/dms_reporter.cpp",
-    "src/js_err_utils.cpp",
     "src/perform_reporter.cpp",
     "src/permission.cpp",
     "src/persistent_storage.cpp",
     "src/pip_report.cpp",
-    "src/screen_fold_data.cpp",
     "src/screen_group_info.cpp",
     "src/screen_info.cpp",
     "src/surface_draw.cpp",
     "src/surface_reader.cpp",
     "src/surface_reader_handler_impl.cpp",
     "src/sys_cap_util.cpp",
-    "src/typec_port_info.cpp",
     "src/window_property.cpp",
     "src/window_transition_info.cpp",
   ]
@@ -173,7 +169,7 @@ ohos_shared_library("libwmutil") {
 
   public_configs = [ ":libwmutil_public_config" ]
 
-  deps = [ ":libwmutil_base" ]
+  public_deps = [ ":libwmutil_base" ]
 
   external_deps = [
     "ability_base:want",
@@ -192,12 +188,9 @@ ohos_shared_library("libwmutil") {
     "image_framework:image_native",
     "input:libmmi-client",
     "ipc:ipc_single",
-    "napi:ace_napi",
+    "preferences:native_preferences",
     "samgr:samgr_proxy",
   ]
-  if (!(host_os == "linux" && host_cpu == "arm64")) {
-    external_deps += [ "preferences:native_preferences" ]
-  }
 
   innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"

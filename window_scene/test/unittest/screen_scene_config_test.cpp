@@ -17,20 +17,15 @@
 
 #include <libxml/globals.h>
 #include <libxml/xmlstring.h>
-
-#include "window_manager_hilog.h"
-#include "xml_config_base.h"
 #include "screen_scene_config.h"
-#include "screen_session_manager.h"
+#include "xml_config_base.h"
+#include "window_manager_hilog.h"
 
 using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
-namespace {
-    constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
-}
 class ScreenSceneConfigTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -45,7 +40,6 @@ void ScreenSceneConfigTest::SetUpTestCase()
 
 void ScreenSceneConfigTest::TearDownTestCase()
 {
-    usleep(SLEEP_TIME_IN_US);
 }
 
 void ScreenSceneConfigTest::SetUp()
@@ -67,12 +61,6 @@ HWTEST_F(ScreenSceneConfigTest, IsNumber, Function | SmallTest | Level1)
     bool result = ScreenSceneConfig::IsNumber("123");
     ASSERT_EQ(true, result);
     result = ScreenSceneConfig::IsNumber("a123");
-    ASSERT_EQ(false, result);
-    result = ScreenSceneConfig::IsNumber("");
-    ASSERT_EQ(false, result);
-    result = ScreenSceneConfig::IsNumber("-123");
-    ASSERT_EQ(false, result);
-    result = ScreenSceneConfig::IsNumber("123.456");
     ASSERT_EQ(false, result);
 }
 
@@ -134,21 +122,6 @@ HWTEST_F(ScreenSceneConfigTest, IsValidNode2, Function | SmallTest | Level1)
     node.type = XML_TEXT_NODE;
     auto result = ScreenSceneConfig::IsValidNode(node);
     ASSERT_EQ(true, result);
-}
-
-/**
- * @tc.name: IsValidNode3
- * @tc.desc: test function : IsValidNode
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenSceneConfigTest, IsValidNode3, Function | SmallTest | Level1)
-{
-    const xmlChar xmlStringText[] = { 't', 'e', 'x', 't', 0 };
-    xmlNode node;
-    node.name = xmlStringText;
-    node.type = XML_COMMENT_NODE;
-    auto result = ScreenSceneConfig::IsValidNode(node);
-    ASSERT_EQ(false, result);
 }
 
 /**
@@ -283,14 +256,9 @@ HWTEST_F(ScreenSceneConfigTest, ReadStringConfigInfo, Function | SmallTest | Lev
             readCount++;
             continue;
         }
-        if (!xmlStrcmp(nodeName, reinterpret_cast<const xmlChar*>("externalScreenDefaultMode"))) {
-            ScreenSceneConfig::ReadStringConfigInfo(curNodePtr);
-            readCount++;
-            continue;
-        }
     }
 
-    ASSERT_GT(ScreenSceneConfig::stringConfig_.size(), readCount);
+    ASSERT_LE(ScreenSceneConfig::stringConfig_.size(), readCount);
     ScreenSceneConfig::DumpConfig();
     xmlFreeDoc(docPtr);
 }
@@ -329,17 +297,6 @@ HWTEST_F(ScreenSceneConfigTest, GetStringConfig, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.name: GetStringListConfig
- * @tc.desc: test function : GetStringListConfig
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenSceneConfigTest, GetStringListConfig, Function | SmallTest | Level1)
-{
-    auto result = ScreenSceneConfig::GetStringListConfig();
-    ASSERT_EQ(0, result.size());
-}
-
-/**
  * @tc.name: GetCurvedScreenBoundaryConfig
  * @tc.desc: test function : GetCurvedScreenBoundaryConfig
  * @tc.type: FUNC
@@ -347,11 +304,7 @@ HWTEST_F(ScreenSceneConfigTest, GetStringListConfig, Function | SmallTest | Leve
 HWTEST_F(ScreenSceneConfigTest, GetCurvedScreenBoundaryConfig, Function | SmallTest | Level1)
 {
     auto result = ScreenSceneConfig::GetCurvedScreenBoundaryConfig();
-    if (ScreenSessionManager::GetInstance().GetCurvedCompressionArea() == 0) {
-        ASSERT_EQ(0, result.size());
-    } else {
-        ASSERT_NE(0, result.size());
-    }
+    ASSERT_NE(0, result.size());
 }
 
 /**
@@ -373,17 +326,8 @@ HWTEST_F(ScreenSceneConfigTest, GetCutoutBoundaryRect, Function | SmallTest | Le
  */
 HWTEST_F(ScreenSceneConfigTest, GetSubCutoutBoundaryRect, Function | SmallTest | Level3)
 {
-    bool isFoldableMachine = false;
-    if (ScreenSessionManager::GetInstance().IsFoldable() &&
-        ScreenSessionManager::GetInstance().GetFoldStatus() == FoldStatus::FOLDED) {
-        isFoldableMachine = true;
-    }
     auto result = ScreenSceneConfig::GetSubCutoutBoundaryRect();
-    if (isFoldableMachine) {
-        ASSERT_TRUE(result.size() > 0);
-    } else {
-        ASSERT_TRUE(result.size() == 0);
-    }
+    ASSERT_TRUE(result.size() > 0);
 }
 
 /**

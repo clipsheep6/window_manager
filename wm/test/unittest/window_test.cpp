@@ -127,18 +127,10 @@ HWTEST_F(WindowTest, CreatePiP, Function | SmallTest | Level2)
     ASSERT_EQ(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_));
     option->SetWindowType(WindowType::WINDOW_TYPE_PIP);
     option->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
-    Rect rect = {0, 0, 10, 10};
-    option->SetWindowRect(rect);
-    WMError errCode;
     if (SceneBoardJudgement::IsSceneBoardEnabled()) {
-        sptr<Window> window = Window::CreatePiP(option, pipTemplateInfo, abilityContext_, errCode);
-        if (errCode == WMError::WM_OK) {
-            ASSERT_NE(nullptr, window);
-        } else {
-            ASSERT_EQ(nullptr, window);
-        }
+        ASSERT_NE(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_));
     } else {
-        ASSERT_EQ(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_, errCode));
+        ASSERT_EQ(nullptr, Window::CreatePiP(option, pipTemplateInfo, abilityContext_));
     }
 }
 
@@ -428,20 +420,6 @@ HWTEST_F(WindowTest, GetAvoidAreaByType, Function | SmallTest | Level2)
     ASSERT_NE(nullptr, window);
     AvoidArea avoidArea;
     auto ret = window->GetAvoidAreaByType(AvoidAreaType::TYPE_CUTOUT, avoidArea);
-    ASSERT_EQ(WMError::WM_OK, ret);
-    ASSERT_EQ(WMError::WM_OK, window->Destroy());
-}
-
-/**
- * @tc.name: SetImmersiveModeEnabledState
- * @tc.desc: get
- * @tc.type: FUNC
- */
-HWTEST_F(WindowTest, SetImmersiveModeEnabledState, Function | SmallTest | Level2)
-{
-    sptr<Window> window = new Window();
-    ASSERT_NE(nullptr, window);
-    auto ret = window->SetImmersiveModeEnabledState(true);
     ASSERT_EQ(WMError::WM_OK, ret);
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
@@ -1653,7 +1631,6 @@ HWTEST_F(WindowTest, Recover, Function | SmallTest | Level2)
     sptr<Window> window = new Window();
     ASSERT_NE(nullptr, window);
     auto ret = window->Recover();
-    
     if (SceneBoardJudgement::IsSceneBoardEnabled()) {
         ASSERT_NE(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, ret);
     } else {
@@ -2312,9 +2289,7 @@ HWTEST_F(WindowTest, FlushFrameRate, Function | SmallTest | Level2)
     sptr<Window> window = new Window();
     ASSERT_NE(nullptr, window);
     uint32_t rate = 120;
-    uint32_t rateType = 0;
-    int32_t animatorExpectedFrameRate = -1;
-    window->FlushFrameRate(rate, animatorExpectedFrameRate, rateType);
+    window->FlushFrameRate(rate);
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
 
@@ -2327,8 +2302,8 @@ HWTEST_F(WindowTest, Maximize01, Function | SmallTest | Level2)
 {
     sptr<Window> window = new Window();
     ASSERT_NE(nullptr, window);
-    std::optional<MaximizePresentation> presentation;
-    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->Maximize(presentation));
+    MaximizeLayoutOption option;
+    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->Maximize(option));
 }
 
 /**
@@ -2357,36 +2332,6 @@ HWTEST_F(WindowTest, UnregisterWindowRectChangeListener, Function | SmallTest | 
     ASSERT_NE(nullptr, window);
     sptr<IWindowRectChangeListener> listener = nullptr;
     auto ret = window->UnregisterWindowRectChangeListener(listener);
-    ASSERT_EQ(WMError::WM_OK, ret);
-    ASSERT_EQ(WMError::WM_OK, window->Destroy());
-}
-
-/**
- * @tc.name: RegisterKeyboardPanelInfoChangeListener
- * @tc.desc: get
- * @tc.type: FUNC
- */
-HWTEST_F(WindowTest, RegisterKeyboardPanelInfoChangeListener, Function | SmallTest | Level2)
-{
-    sptr<Window> window = new Window();
-    ASSERT_NE(nullptr, window);
-    sptr<IKeyboardPanelInfoChangeListener> listener = nullptr;
-    auto ret = window->RegisterKeyboardPanelInfoChangeListener(listener);
-    ASSERT_EQ(WMError::WM_OK, ret);
-    ASSERT_EQ(WMError::WM_OK, window->Destroy());
-}
-
-/**
- * @tc.name: UnregisterKeyboardPanelInfoChangeListener
- * @tc.desc: get
- * @tc.type: FUNC
- */
-HWTEST_F(WindowTest, UnregisterKeyboardPanelInfoChangeListener, Function | SmallTest | Level2)
-{
-    sptr<Window> window = new Window();
-    ASSERT_NE(nullptr, window);
-    sptr<IKeyboardPanelInfoChangeListener> listener = nullptr;
-    auto ret = window->UnregisterKeyboardPanelInfoChangeListener(listener);
     ASSERT_EQ(WMError::WM_OK, ret);
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
 }
@@ -2611,90 +2556,6 @@ HWTEST_F(WindowTest, Test03, Function | SmallTest | Level2)
     IWindowTitleButtonRectChangedListener windowTitleButtonRectChangedListener;
     windowTitleButtonRectChangedListener.OnWindowTitleButtonRectChanged(titleButtonRect);
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
-}
-
-/**
- * @tc.name: Test04
- * @tc.desc: Test04
- * @tc.type: FUNC
- */
-HWTEST_F(WindowTest, Test04, Function | SmallTest | Level2)
-{
-    ExtensionWindowFlags flags;
-    ASSERT_EQ(flags.bitData, 0);
-    ExtensionWindowFlags flags1(7);
-    ASSERT_EQ(flags1.bitData, 7);
-    sptr<Window> window = new Window();
-    ASSERT_NE(nullptr, window);
-    ASSERT_EQ(nullptr, window->GetUIContentWithId(0));
-    sptr<IKeyboardPanelInfoChangeListener> listener = new IKeyboardPanelInfoChangeListener();
-    KeyboardPanelInfo keyboardPanelInfo;
-    listener->OnKeyboardPanelInfoChanged(keyboardPanelInfo);
-    window->TriggerBindModalUIExtension();
-    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->SetWaterMarkFlag(true));
-    ASSERT_EQ(WMError::WM_ERROR_DEVICE_NOT_SUPPORT, window->SetGrayScale(0));
-    ASSERT_EQ(WMError::WM_OK, window->Destroy());
-}
-
-/**
- * @tc.name: Test05
- * @tc.desc: Test05
- * @tc.type: FUNC
- */
-HWTEST_F(WindowTest, Test05, Function | SmallTest | Level2)
-{
-    sptr<Window> window = new Window();
-    ASSERT_NE(nullptr, window);
-    auto mainWinId = 0;
-    auto window1 = window->GetTopWindowWithId(mainWinId);
-    ASSERT_EQ(nullptr, window1);
-    ASSERT_EQ(WMError::WM_OK, window->Destroy());
-}
-
-/**
- * @tc.name: Test06
- * @tc.desc: Test06
- * @tc.type: FUNC
- */
-HWTEST_F(WindowTest, Test06, Function | SmallTest | Level2)
-{
-    KeyboardLayoutParams param;
-    KeyboardLayoutParams param1;
-    ASSERT_EQ(true, (param == param1));
-    ASSERT_EQ(false, (param != param1));
-    ASSERT_EQ(true, param.isEmpty());
-    Parcel parcel;
-    Rect rect = {0, 0, 0, 0};
-    ASSERT_EQ(false, KeyboardLayoutParams::ReadParcel(parcel, rect));
-    parcel.WriteUint32(0);
-    ASSERT_EQ(nullptr, KeyboardLayoutParams::Unmarshalling(parcel));
-}
-
-/**
- * @tc.name: SetTitleButtonVisible
- * @tc.desc: SetTitleButtonVisible
- * @tc.type: FUNC
-*/
-HWTEST_F(WindowTest, SetTitleButtonVisible, Function | SmallTest | Level2)
-{
-    sptr<Window> window = new (std::nothrow) Window();
-    ASSERT_NE(window, nullptr);
-    WMError res = window->SetTitleButtonVisible(true, true, true);
-    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
-    res = window->SetTitleButtonVisible(false, true, true);
-    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
-    res = window->SetTitleButtonVisible(true, false, true);
-    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
-    res = window->SetTitleButtonVisible(true, true, false);
-    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
-    res = window->SetTitleButtonVisible(false, false, true);
-    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
-    res = window->SetTitleButtonVisible(false, true, false);
-    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
-    res = window->SetTitleButtonVisible(true, false, false);
-    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
-    res = window->SetTitleButtonVisible(false, false, false);
-    ASSERT_EQ(res, WMError::WM_ERROR_DEVICE_NOT_SUPPORT);
 }
 }
 } // namespace Rosen

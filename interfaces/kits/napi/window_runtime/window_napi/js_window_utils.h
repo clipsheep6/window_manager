@@ -28,12 +28,12 @@
 #endif
 
 #include "window_option.h"
-#include "window_visibility_info.h"
 #include "wm_common.h"
 namespace OHOS {
 namespace Rosen {
 constexpr int32_t RGB_LENGTH = 6;
 constexpr int32_t RGBA_LENGTH = 8;
+constexpr int32_t WINDOW_MAX_WIDTH = 1920;
 
 #define CHECK_NAPI_RETCODE(errCode, code, call)                                           \
     do {                                                                                  \
@@ -42,23 +42,6 @@ constexpr int32_t RGBA_LENGTH = 8;
             WLOGFE("napi call failed, return %{public}d", static_cast<int32_t>(retCode)); \
             errCode = code;                                                               \
         }                                                                                 \
-    } while (0)
-
-#define CHECK_NAPI_ENV_RETURN_IF_NULL(env)               \
-    do {                                                 \
-        if ((env) == nullptr) {                          \
-            TLOGE(WmsLogTag::DEFAULT, "env is invalid"); \
-            return nullptr;                              \
-        }                                                \
-    } while (0)
-
-#define CHECK_NAPI_CREATE_OBJECT_RETURN_IF_NULL(env, objValue) \
-    do {                                                       \
-        napi_create_object((env), &(objValue));                \
-        if ((objValue) == nullptr) {                           \
-            TLOGE(WmsLogTag::DEFAULT, "Failed to get object"); \
-            return nullptr;                                    \
-        }                                                      \
     } while (0)
 
 enum class ApiWindowType : uint32_t {
@@ -174,8 +157,7 @@ const std::map<ApiWindowMode, WindowMode> JS_TO_NATIVE_WINDOW_MODE_MAP {
 };
 
 enum class ApiOrientation : uint32_t {
-    BEGIN = 0,
-    UNSPECIFIED = BEGIN,
+    UNSPECIFIED = 0,
     PORTRAIT = 1,
     LANDSCAPE = 2,
     PORTRAIT_INVERTED = 3,
@@ -192,8 +174,6 @@ enum class ApiOrientation : uint32_t {
     USER_ROTATION_LANDSCAPE = 14,
     USER_ROTATION_PORTRAIT_INVERTED = 15,
     USER_ROTATION_LANDSCAPE_INVERTED = 16,
-    FOLLOW_DESKTOP = 17,
-    END = FOLLOW_DESKTOP,
 };
 
 const std::map<ApiOrientation, Orientation> JS_TO_NATIVE_ORIENTATION_MAP {
@@ -214,7 +194,6 @@ const std::map<ApiOrientation, Orientation> JS_TO_NATIVE_ORIENTATION_MAP {
     {ApiOrientation::USER_ROTATION_LANDSCAPE,               Orientation::USER_ROTATION_LANDSCAPE            },
     {ApiOrientation::USER_ROTATION_PORTRAIT_INVERTED,       Orientation::USER_ROTATION_PORTRAIT_INVERTED    },
     {ApiOrientation::USER_ROTATION_LANDSCAPE_INVERTED,      Orientation::USER_ROTATION_LANDSCAPE_INVERTED   },
-    {ApiOrientation::FOLLOW_DESKTOP,                        Orientation::FOLLOW_DESKTOP                     },
 };
 
 const std::map<Orientation, ApiOrientation> NATIVE_TO_JS_ORIENTATION_MAP {
@@ -236,7 +215,6 @@ const std::map<Orientation, ApiOrientation> NATIVE_TO_JS_ORIENTATION_MAP {
     {Orientation::USER_ROTATION_LANDSCAPE,               ApiOrientation::USER_ROTATION_LANDSCAPE            },
     {Orientation::USER_ROTATION_PORTRAIT_INVERTED,       ApiOrientation::USER_ROTATION_PORTRAIT_INVERTED    },
     {Orientation::USER_ROTATION_LANDSCAPE_INVERTED,      ApiOrientation::USER_ROTATION_LANDSCAPE_INVERTED   },
-    {Orientation::FOLLOW_DESKTOP,                        ApiOrientation::FOLLOW_DESKTOP                     },
 };
 
 enum class RectChangeReason : uint32_t {
@@ -269,20 +247,21 @@ const std::map<WindowSizeChangeReason, RectChangeReason> JS_SIZE_CHANGE_REASON {
     { WindowSizeChangeReason::END,                   RectChangeReason::UNDEFINED  },
 };
 
-    napi_value CreateJsWindowInfoArrayObject(napi_env env, const std::vector<sptr<WindowVisibilityInfo>>& infos);
-    napi_value CreateJsWindowInfoObject(napi_env env, const sptr<WindowVisibilityInfo>& window);
+struct SystemBarPropertyFlag {
+    bool enableFlag;
+    bool backgroundColorFlag;
+    bool contentColorFlag;
+    bool enableAnimationFlag;
+    SystemBarPropertyFlag() : enableFlag(false), backgroundColorFlag(false), contentColorFlag(false),
+        enableAnimationFlag(false) {}
+};
+
     napi_value GetRectAndConvertToJsValue(napi_env env, const Rect& rect);
     napi_value CreateJsWindowPropertiesObject(napi_env env, sptr<Window>& window, const Rect& drawableRect);
     napi_value CreateJsSystemBarPropertiesObject(napi_env env, sptr<Window>& window);
     bool SetSystemBarPropertiesFromJs(napi_env env, napi_value jsObject,
         std::map<WindowType, SystemBarProperty>& properties, std::map<WindowType, SystemBarPropertyFlag>& propertyFlags,
         sptr<Window>& window);
-    bool SetWindowStatusBarContentColor(napi_env env, napi_value jsObject,
-        std::map<WindowType, SystemBarProperty>& properties,
-        std::map<WindowType, SystemBarPropertyFlag>& propertyFlags);
-    bool SetWindowNavigationBarContentColor(napi_env env, napi_value jsObject,
-        std::map<WindowType, SystemBarProperty>& properties,
-        std::map<WindowType, SystemBarPropertyFlag>& propertyFlags);
     bool GetSystemBarStatus(std::map<WindowType, SystemBarProperty>& systemBarProperties,
         std::map<WindowType, SystemBarPropertyFlag>& systemBarpropertyFlags,
         napi_env env, napi_callback_info info, sptr<Window>& window);
@@ -304,18 +283,13 @@ const std::map<WindowSizeChangeReason, RectChangeReason> JS_SIZE_CHANGE_REASON {
     napi_value WindowEventTypeInit(napi_env env);
     napi_value WindowLayoutModeInit(napi_env env);
     napi_value BlurStyleInit(napi_env env);
-    napi_value MaximizePresentationInit(napi_env env);
     napi_value WindowErrorCodeInit(napi_env env);
     napi_value WindowErrorInit(napi_env env);
     napi_value WindowStatusTypeInit(napi_env env);
-    napi_value RectChangeReasonInit(napi_env env);
     napi_value GetWindowLimitsAndConvertToJsValue(napi_env env, const WindowLimits& windowLimits);
     napi_value ConvertTitleButtonAreaToJsValue(napi_env env, const TitleButtonRect& titleButtonRect);
     bool GetAPI7Ability(napi_env env, AppExecFwk::Ability* &ability);
     bool GetWindowMaskFromJsValue(napi_env env, napi_value jsObject, std::vector<std::vector<uint32_t>>& windowMask);
-    void ConvertJSSystemBarStyleToSystemBarProperties(napi_env env, napi_value jsObject,
-        std::map<WindowType, SystemBarProperty>& properties,
-        std::map<WindowType, SystemBarPropertyFlag>& propertyFlags);
     template<class T>
     bool ParseJsValue(napi_value jsObject, napi_env env, const std::string& name, T& data)
     {

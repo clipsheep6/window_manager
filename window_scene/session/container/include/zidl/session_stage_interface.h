@@ -44,7 +44,6 @@ public:
     virtual WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
     virtual void UpdateDensity() = 0;
-    virtual WSError UpdateOrientation() = 0;
     virtual WSError HandleBackEvent() = 0;
     virtual WSError MarkProcessed(int32_t eventId) = 0;
     virtual WSError UpdateFocus(bool isFocused) = 0;
@@ -53,8 +52,7 @@ public:
     virtual WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams) = 0;
     virtual WSErrorCode NotifyTransferComponentDataSync(const AAFwk::WantParams& wantParams,
         AAFwk::WantParams& reWantParams) = 0;
-    virtual void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info,
-                                              const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) = 0;
+    virtual void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) = 0;
     virtual WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) = 0;
     virtual void NotifyScreenshot() = 0;
     virtual void DumpSessionElementInfo(const std::vector<std::string>& params) = 0;
@@ -69,11 +67,9 @@ public:
     virtual void NotifyTransformChange(const Transform& transform) = 0;
     virtual WSError NotifyDialogStateChange(bool isForeground) = 0;
     virtual WSError SetPipActionEvent(const std::string& action, int32_t status) = 0;
-    virtual WSError SetPiPControlEvent(WsPiPControlType controlType, WsPiPControlStatus status) = 0;
     virtual WSError UpdateDisplayId(uint64_t displayId) = 0;
     virtual void NotifyDisplayMove(DisplayId from, DisplayId to) = 0;
     virtual WSError SwitchFreeMultiWindow(bool enable) = 0;
-    virtual WSError GetUIContentRemoteObj(sptr<IRemoteObject>& uiContentRemoteObj) = 0;
 
     // **Non** IPC interface
     virtual void NotifyBackpressedEvent(bool& isConsumed) {}
@@ -87,7 +83,28 @@ public:
     {
         return -1;
     }
-    virtual WSError NotifyDensityFollowHost(bool isFollowHost, float densityValue)
+    virtual WSError NotifySearchElementInfoByAccessibilityId(int64_t elementId, int32_t mode, int64_t baseParent,
+        std::list<Accessibility::AccessibilityElementInfo>& infos)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError NotifySearchElementInfosByText(int64_t elementId, const std::string& text, int64_t baseParent,
+        std::list<Accessibility::AccessibilityElementInfo>& infos)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError NotifyFindFocusedElementInfo(int64_t elementId, int32_t focusType, int64_t baseParent,
+        Accessibility::AccessibilityElementInfo& info)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError NotifyFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
+        Accessibility::AccessibilityElementInfo& info)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError NotifyExecuteAction(int64_t elementId, const std::map<std::string, std::string>& actionArguments,
+        int32_t action, int64_t baseParent)
     {
         return WSError::WS_OK;
     }
@@ -96,22 +113,6 @@ public:
     {
         return WSError::WS_OK;
     }
-    virtual WSError NotifyAccessibilityChildTreeRegister(
-        uint32_t windowId, int32_t treeId, int64_t accessibilityId)
-    {
-        return WSError::WS_OK;
-    }
-    virtual WSError NotifyAccessibilityChildTreeUnregister()
-    {
-        return WSError::WS_OK;
-    }
-    virtual WSError NotifyAccessibilityDumpChildInfo(
-        const std::vector<std::string>& params, std::vector<std::string>& info)
-    {
-        return WSError::WS_OK;
-    }
-
-    virtual void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) {}
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_WINDOW_SCENE_SESSION_STAGE_INTERFACE_H

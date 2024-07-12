@@ -40,12 +40,9 @@ public:
         TRANS_ID_SET_DISPLAY_NODE_SCREEN_ID,
         TRANS_ID_GET_SURFACENODEID_FROM_MISSIONID,
         TRANS_ID_SET_FOLD_DISPLAY_MODE,
-        TRANS_ID_ON_SWITCH_USER_CMD,
         TRANS_ID_SET_VIRTUAL_PIXEL_RATIO_SYSTEM,
-        TRANS_ID_ON_FOLDSTATUS_CHANGED_REPORT_UE,
     };
 
-    virtual void SwitchUserCallback(std::vector<int32_t> oldScbPids, int32_t currentScbPid) = 0;
     virtual void OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent,
         ScreenId rsId, const std::string& name) = 0;
     virtual void OnPropertyChanged(ScreenId screenId,
@@ -65,7 +62,6 @@ public:
         std::vector<uint64_t>& surfaceNodeIds) = 0;
     virtual void OnUpdateFoldDisplayMode(FoldDisplayMode displayMode) = 0;
     virtual void SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio) = 0;
-    virtual void OnFoldStatusChangedReportUE(const std::vector<std::string>& screenFoldInfo) = 0;
 };
 } // namespace OHOS::Rosen
 

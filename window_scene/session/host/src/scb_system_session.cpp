@@ -35,7 +35,6 @@ SCBSystemSession::SCBSystemSession(const SessionInfo& info, const sptr<SpecificS
     if (sessionInfo_.isSystem_) {
         RSSurfaceNodeConfig config;
         config.SurfaceNodeName = name;
-        config.surfaceWindowType = SurfaceWindowType::SYSTEM_SCB_WINDOW;
         surfaceNode_ = Rosen::RSSurfaceNode::Create(config, Rosen::RSSurfaceNodeType::APP_WINDOW_NODE);
     }
     WLOGFD("Create SCBSystemSession");
@@ -44,16 +43,6 @@ SCBSystemSession::SCBSystemSession(const SessionInfo& info, const sptr<SpecificS
 SCBSystemSession::~SCBSystemSession()
 {
     WLOGD("~SCBSystemSession, id: %{public}d", GetPersistentId());
-}
-
-void SCBSystemSession::RegisterBufferAvailableCallback(const SystemSessionBufferAvailableCallback& func)
-{
-    if (surfaceNode_) {
-        TLOGI(WmsLogTag::WMS_MULTI_USER, "Set buffer available callback");
-        surfaceNode_->SetBufferAvailableCallback(func);
-    } else {
-        TLOGE(WmsLogTag::WMS_MULTI_USER, "surfaceNode_ is null");
-    }
 }
 
 WSError SCBSystemSession::ProcessPointDownSession(int32_t posX, int32_t posY)
@@ -69,19 +58,9 @@ WSError SCBSystemSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction
 {
     auto task = [weakThis = wptr(this), rsTransaction]() {
         auto session = weakThis.promote();
-        if (!session) {
-            WLOGFE("session is null");
-            return WSError::WS_ERROR_DESTROYED_OBJECT;
-        }
-        WSError ret = session->NotifyClientToUpdateRectTask(rsTransaction);
-        if (session->specificCallback_ != nullptr && session->specificCallback_->onUpdateAvoidArea_ != nullptr &&
-            session->specificCallback_->onClearDisplayStatusBarTemporarilyFlags_ != nullptr) {
+        WSError ret = session->NotifyClientToUpdateRectTask(weakThis, rsTransaction);
+        if (session->specificCallback_ != nullptr && session->specificCallback_->onUpdateAvoidArea_ != nullptr) {
             session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
-            session->specificCallback_->onClearDisplayStatusBarTemporarilyFlags_();
-        }
-        if (session->GetWindowType() == WindowType::WINDOW_TYPE_KEYBOARD_PANEL &&
-            session->keyboardPanelRectUpdateCallback_ && session->isKeyboardPanelEnabled_) {
-            session->keyboardPanelRectUpdateCallback_();
         }
         // clear after use
         if (session->reason_ != SizeChangeReason::DRAG) {
@@ -94,10 +73,6 @@ WSError SCBSystemSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction
     return WSError::WS_OK;
 }
 
-void SCBSystemSession::SetKeyboardPanelRectUpdateCallback(const KeyboardPanelRectUpdateCallback& func)
-{
-    keyboardPanelRectUpdateCallback_ = func;
-}
 
 void SCBSystemSession::BindKeyboardSession(sptr<SceneSession> session)
 {
@@ -106,12 +81,6 @@ void SCBSystemSession::BindKeyboardSession(sptr<SceneSession> session)
         return;
     }
     keyboardSession_ = session;
-    KeyboardPanelRectUpdateCallback onKeyboardPanelRectUpdate = [this]() {
-        if (this->keyboardSession_ != nullptr) {
-            this->keyboardSession_->OnKeyboardPanelUpdated();
-        }
-    };
-    SetKeyboardPanelRectUpdateCallback(onKeyboardPanelRectUpdate);
     TLOGI(WmsLogTag::WMS_KEYBOARD, "Success, id: %{public}d", keyboardSession_->GetPersistentId());
 }
 
@@ -124,8 +93,7 @@ void SCBSystemSession::PresentFocusIfPointDown()
 {
     WLOGFI("PresentFocusIfPointDown, id: %{public}d, type: %{public}d", GetPersistentId(), GetWindowType());
     if (!isFocused_ && GetFocusable()) {
-        FocusChangeReason reason = FocusChangeReason::CLICK;
-        NotifyRequestFocusStatusNotifyManager(true, false, reason);
+        NotifyRequestFocusStatusNotifyManager(true, false);
         NotifyClick();
     }
 }
@@ -147,8 +115,7 @@ void SCBSystemSession::PresentFoucusIfNeed(int32_t pointerAction)
     if (pointerAction == MMI::PointerEvent::POINTER_ACTION_DOWN ||
         pointerAction == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
         if (!isFocused_ && GetFocusable()) {
-            FocusChangeReason reason = FocusChangeReason::CLICK;
-            NotifyRequestFocusStatusNotifyManager(true, false, reason);
+            NotifyRequestFocusStatusNotifyManager(true, false);
             NotifyClick();
         }
     }
@@ -195,37 +162,5 @@ WSError SCBSystemSession::SetSystemSceneBlockingFocus(bool blocking)
 void SCBSystemSession::UpdatePointerArea(const WSRect& rect)
 {
     return;
-}
-
-void SCBSystemSession::SetSkipSelfWhenShowOnVirtualScreen(bool isSkip)
-{
-    TLOGD(WmsLogTag::WMS_SCB, "Set Skip Self, isSkip: %{public}d", isSkip);
-    auto task = [weakThis = wptr(this), isSkip]() {
-        auto session = weakThis.promote();
-        if (!session) {
-            TLOGE(WmsLogTag::WMS_SCB, "session is null");
-            return WSError::WS_ERROR_DESTROYED_OBJECT;
-        }
-        std::shared_ptr<RSSurfaceNode> surfaceNode = session->GetSurfaceNode();
-        if (!surfaceNode) {
-            TLOGE(WmsLogTag::WMS_SCB, "surfaceNode_ is null");
-            return WSError::WS_OK;
-        }
-        if (session->specificCallback_ != nullptr
-            && session->specificCallback_->onSetSkipSelfWhenShowOnVirtualScreen_ != nullptr) {
-            session->specificCallback_->onSetSkipSelfWhenShowOnVirtualScreen_(surfaceNode->GetId(), isSkip);
-        }
-        return WSError::WS_OK;
-    };
-    PostTask(task, "SetSkipSelf");
-}
-
-std::shared_ptr<RSSurfaceNode> SCBSystemSession::GetSurfaceNode()
-{
-    if (!surfaceNode_) {
-        TLOGE(WmsLogTag::WMS_SCB, "surfaceNode_ is null");
-        return nullptr;
-    }
-    return surfaceNode_;
 }
 } // namespace OHOS::Rosen

@@ -33,11 +33,10 @@
 
 namespace OHOS::Rosen {
 namespace {
+constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION_MANAGER, "ScreenSceneConfig"};
 constexpr uint32_t NO_WATERFALL_DISPLAY_COMPRESSION_SIZE = 0;
-constexpr uint32_t DISPLAY_PHYSICAL_SIZE = 2;
 enum XmlNodeElement {
     DPI = 0,
-    SUB_DPI,
     IS_WATERFALL_DISPLAY,
     CURVED_SCREEN_BOUNDARY,
     CURVED_AREA_IN_LANDSCAPE,
@@ -47,32 +46,19 @@ enum XmlNodeElement {
     DEFAULT_DISPLAY_CUTOUT_PATH,
     SUB_DISPLAY_CUTOUT_PATH,
     ROTATION_POLICY,
-    HALL_SWITCH_APP,
-    PACKAGE_NAME,
-    SCREEN_SNAPSHOT_BUNDLE_NAME,
-    SCREEN_SNAPSHOT_ABILITY_NAME,
-    IS_RIGHT_POWER_BUTTON,
-    SUPPORT_ROTATE_WITH_SCREEN,
-    EXTERNAL_SCREEN_DEFAULT_MODE,
-    CAST_BUNDLE_NAME,
-    CAST_ABILITY_NAME,
-    PHYSICAL_DISPLAY_RESOLUTION
 };
 }
 
 std::map<std::string, bool> ScreenSceneConfig::enableConfig_;
 std::map<std::string, std::vector<int>> ScreenSceneConfig::intNumbersConfig_;
 std::map<std::string, std::string> ScreenSceneConfig::stringConfig_;
-std::map<std::string, std::vector<std::string>> ScreenSceneConfig::stringListConfig_;
 std::map<uint64_t, std::vector<DMRect>> ScreenSceneConfig::cutoutBoundaryRectMap_;
-std::vector<DisplayPhysicalResolution> ScreenSceneConfig::displayPhysicalResolution_;
 std::vector<DMRect> ScreenSceneConfig::subCutoutBoundaryRect_;
 bool ScreenSceneConfig::isWaterfallDisplay_ = false;
 bool ScreenSceneConfig::isScreenCompressionEnableInLandscape_ = false;
 uint32_t ScreenSceneConfig::curvedAreaInLandscape_ = 0;
 std::map<int32_t, std::string> ScreenSceneConfig::xmlNodeMap_ = {
     {DPI, "dpi"},
-    {SUB_DPI, "subDpi"},
     {IS_WATERFALL_DISPLAY, "isWaterfallDisplay"},
     {CURVED_SCREEN_BOUNDARY, "curvedScreenBoundary"},
     {CURVED_AREA_IN_LANDSCAPE, "waterfallAreaCompressionSizeWhenHorzontal"},
@@ -82,16 +68,6 @@ std::map<int32_t, std::string> ScreenSceneConfig::xmlNodeMap_ = {
     {DEFAULT_DISPLAY_CUTOUT_PATH, "defaultDisplayCutoutPath"},
     {SUB_DISPLAY_CUTOUT_PATH, "subDisplayCutoutPath"},
     {ROTATION_POLICY, "rotationPolicy"},
-    {HALL_SWITCH_APP, "hallSwitchApp"},
-    {PACKAGE_NAME, "packageName"},
-    {SCREEN_SNAPSHOT_BUNDLE_NAME, "screenSnapshotBundleName"},
-    {SCREEN_SNAPSHOT_ABILITY_NAME, "screenSnapshotAbilityName"},
-    {IS_RIGHT_POWER_BUTTON, "isRightPowerButton"},
-    {SUPPORT_ROTATE_WITH_SCREEN, "supportRotateWithSensor"},
-    {EXTERNAL_SCREEN_DEFAULT_MODE, "externalScreenDefaultMode"},
-    {CAST_BUNDLE_NAME, "castBundleName"},
-    {CAST_ABILITY_NAME, "castAbilityName"},
-    {PHYSICAL_DISPLAY_RESOLUTION, "physicalDisplayResolution"}
 };
 
 
@@ -130,7 +106,7 @@ std::string ScreenSceneConfig::GetConfigPath(const std::string& configFileName)
     char* configPath = GetOneCfgFile(configFileName.c_str(), buf, PATH_MAX + 1);
     char tmpPath[PATH_MAX + 1] = { 0 };
     if (!configPath || strlen(configPath) == 0 || strlen(configPath) > PATH_MAX || !realpath(configPath, tmpPath)) {
-        TLOGI(WmsLogTag::DMS, "[SsConfig] can not get customization config file");
+        WLOGFI("[SsConfig] can not get customization config file");
         return "/system/" + configFileName;
     }
     return std::string(tmpPath);
@@ -144,63 +120,46 @@ bool ScreenSceneConfig::LoadConfigXml()
         std::lock_guard<std::recursive_mutex> lock(mutex_);
         docPtr = xmlReadFile(configFilePath.c_str(), nullptr, XML_PARSE_NOBLANKS);
     }
-    TLOGI(WmsLogTag::DMS, "[SsConfig] filePath: %{public}s", configFilePath.c_str());
+    WLOGFI("[SsConfig] filePath: %{public}s", configFilePath.c_str());
     if (docPtr == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] load xml error!");
+        WLOGFE("[SsConfig] load xml error!");
         return false;
     }
+
     xmlNodePtr rootPtr = xmlDocGetRootElement(docPtr);
     if (rootPtr == nullptr || rootPtr->name == nullptr ||
         xmlStrcmp(rootPtr->name, reinterpret_cast<const xmlChar*>("Configs"))) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] get root element failed!");
+        WLOGFE("[SsConfig] get root element failed!");
         xmlFreeDoc(docPtr);
         return false;
     }
+
     for (xmlNodePtr curNodePtr = rootPtr->xmlChildrenNode; curNodePtr != nullptr; curNodePtr = curNodePtr->next) {
         if (!IsValidNode(*curNodePtr)) {
-            TLOGE(WmsLogTag::DMS, "SsConfig]: invalid node!");
+            WLOGFE("SsConfig]: invalid node!");
             continue;
         }
-        ParseNodeConfig(curNodePtr);
+
+        std::string nodeName(reinterpret_cast<const char*>(curNodePtr->name));
+        if ((xmlNodeMap_[IS_WATERFALL_DISPLAY] == nodeName) ||
+            (xmlNodeMap_[IS_CURVED_COMPRESS_ENABLED] == nodeName)) {
+            ReadEnableConfigInfo(curNodePtr);
+        } else if ((xmlNodeMap_[DPI] == nodeName) ||
+            (xmlNodeMap_[CURVED_SCREEN_BOUNDARY] == nodeName) ||
+            (xmlNodeMap_[CURVED_AREA_IN_LANDSCAPE] == nodeName) ||
+            (xmlNodeMap_[BUILD_IN_DEFAULT_ORIENTATION] == nodeName) ||
+            (xmlNodeMap_[DEFAULT_DEVICE_ROTATION_OFFSET] == nodeName)) {
+            ReadIntNumbersConfigInfo(curNodePtr);
+        } else if ((xmlNodeMap_[DEFAULT_DISPLAY_CUTOUT_PATH] == nodeName) ||
+            (xmlNodeMap_[SUB_DISPLAY_CUTOUT_PATH] == nodeName) ||
+            (xmlNodeMap_[ROTATION_POLICY] == nodeName)) {
+            ReadStringConfigInfo(curNodePtr);
+        } else {
+            WLOGFI("xml config node name is not match, nodeName:%{public}s", nodeName.c_str());
+        }
     }
     xmlFreeDoc(docPtr);
     return true;
-}
-
-void ScreenSceneConfig::ParseNodeConfig(const xmlNodePtr& currNode)
-{
-    std::string nodeName(reinterpret_cast<const char*>(currNode->name));
-    bool enableConfigCheck = (xmlNodeMap_[IS_WATERFALL_DISPLAY] == nodeName) ||
-        (xmlNodeMap_[IS_CURVED_COMPRESS_ENABLED] == nodeName) ||
-        (xmlNodeMap_[IS_RIGHT_POWER_BUTTON] == nodeName) ||
-        (xmlNodeMap_[SUPPORT_ROTATE_WITH_SCREEN] == nodeName);
-    bool numberConfigCheck = (xmlNodeMap_[DPI] == nodeName) ||
-        (xmlNodeMap_[SUB_DPI] == nodeName) ||
-        (xmlNodeMap_[CURVED_SCREEN_BOUNDARY] == nodeName) ||
-        (xmlNodeMap_[CURVED_AREA_IN_LANDSCAPE] == nodeName) ||
-        (xmlNodeMap_[BUILD_IN_DEFAULT_ORIENTATION] == nodeName) ||
-        (xmlNodeMap_[DEFAULT_DEVICE_ROTATION_OFFSET] == nodeName);
-    bool stringConfigCheck = (xmlNodeMap_[DEFAULT_DISPLAY_CUTOUT_PATH] == nodeName) ||
-        (xmlNodeMap_[SUB_DISPLAY_CUTOUT_PATH] == nodeName) ||
-        (xmlNodeMap_[ROTATION_POLICY] == nodeName) ||
-        (xmlNodeMap_[SCREEN_SNAPSHOT_BUNDLE_NAME] == nodeName) ||
-        (xmlNodeMap_[SCREEN_SNAPSHOT_ABILITY_NAME] == nodeName) ||
-        (xmlNodeMap_[EXTERNAL_SCREEN_DEFAULT_MODE] == nodeName) ||
-        (xmlNodeMap_[CAST_BUNDLE_NAME] == nodeName) ||
-        (xmlNodeMap_[CAST_ABILITY_NAME] == nodeName);
-    if (enableConfigCheck) {
-        ReadEnableConfigInfo(currNode);
-    } else if (numberConfigCheck) {
-        ReadIntNumbersConfigInfo(currNode);
-    } else if (stringConfigCheck) {
-        ReadStringConfigInfo(currNode);
-    } else if (xmlNodeMap_[HALL_SWITCH_APP] == nodeName) {
-        ReadStringListConfigInfo(currNode, nodeName);
-    } else if (xmlNodeMap_[PHYSICAL_DISPLAY_RESOLUTION] == nodeName) {
-        ReadPhysicalDisplayConfigInfo(currNode);
-    } else {
-        TLOGI(WmsLogTag::DMS, "xml config node name is not match, nodeName:%{public}s", nodeName.c_str());
-    }
 }
 
 bool ScreenSceneConfig::IsValidNode(const xmlNode& currNode)
@@ -215,7 +174,7 @@ void ScreenSceneConfig::ReadIntNumbersConfigInfo(const xmlNodePtr& currNode)
 {
     xmlChar* context = xmlNodeGetContent(currNode);
     if (context == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] read xml node error: nodeName:(%{public}s)", currNode->name);
+        WLOGFE("[SsConfig] read xml node error: nodeName:(%{public}s)", currNode->name);
         return;
     }
 
@@ -228,7 +187,7 @@ void ScreenSceneConfig::ReadIntNumbersConfigInfo(const xmlNodePtr& currNode)
     auto numbers = Split(numbersStr, " ");
     for (auto& num : numbers) {
         if (!IsNumber(num)) {
-            TLOGE(WmsLogTag::DMS, "[SsConfig] read number error: nodeName:(%{public}s)", currNode->name);
+            WLOGFE("[SsConfig] read number error: nodeName:(%{public}s)", currNode->name);
             xmlFree(context);
             return;
         }
@@ -240,60 +199,11 @@ void ScreenSceneConfig::ReadIntNumbersConfigInfo(const xmlNodePtr& currNode)
     xmlFree(context);
 }
 
-void ScreenSceneConfig::ReadPhysicalDisplayConfigInfo(const xmlNodePtr& currNode)
-{
-    xmlChar* displayMode = xmlGetProp(currNode, reinterpret_cast<const xmlChar*>("displayMode"));
-    if (displayMode == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] read xml node error: nodeName:(%{public}s)", currNode->name);
-        return;
-    }
-    xmlChar* displayModeContext = xmlNodeGetContent(currNode);
-    if (displayModeContext == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] read xml nodeName:(%{public}s) context null", currNode->name);
-        xmlFree(displayMode);
-        return;
-    }
-    std::string displaySizeStr = reinterpret_cast<const char*>(displayModeContext);
-    if (displaySizeStr.empty()) {
-        xmlFree(displayModeContext);
-        xmlFree(displayMode);
-        return;
-    }
-    auto displaySizeArray = Split(displaySizeStr, ":");
-    if (displaySizeArray.size() != DISPLAY_PHYSICAL_SIZE) {
-        xmlFree(displayModeContext);
-        xmlFree(displayMode);
-        return;
-    }
-    DisplayPhysicalResolution physicalSize;
-    if (!xmlStrcmp(displayMode, reinterpret_cast<const xmlChar*>("FOLD_DISPLAY_MODE_FULL"))) {
-        physicalSize.foldDisplayMode_ = FoldDisplayMode::FULL;
-    } else if (!xmlStrcmp(displayMode, reinterpret_cast<const xmlChar*>("FOLD_DISPLAY_MODE_MAIN"))) {
-        physicalSize.foldDisplayMode_ = FoldDisplayMode::MAIN;
-    } else if (!xmlStrcmp(displayMode, reinterpret_cast<const xmlChar*>("FOLD_DISPLAY_MODE_SUB"))) {
-        physicalSize.foldDisplayMode_ = FoldDisplayMode::SUB;
-    } else {
-        physicalSize.foldDisplayMode_ = FoldDisplayMode::UNKNOWN;
-    }
-    if (IsNumber(displaySizeArray[0]) && IsNumber(displaySizeArray[1])) {
-        physicalSize.physicalWidth_ = std::stoi(displaySizeArray[0]);
-        physicalSize.physicalHeight_ = std::stoi(displaySizeArray[1]);
-    }
-    displayPhysicalResolution_.emplace_back(physicalSize);
-    xmlFree(displayModeContext);
-    xmlFree(displayMode);
-}
-
-std::vector<DisplayPhysicalResolution> ScreenSceneConfig::GetAllDisplayPhysicalConfig()
-{
-    return displayPhysicalResolution_;
-}
-
 void ScreenSceneConfig::ReadEnableConfigInfo(const xmlNodePtr& currNode)
 {
     xmlChar* enable = xmlGetProp(currNode, reinterpret_cast<const xmlChar*>("enable"));
     if (enable == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] read xml node error: nodeName:(%{public}s)", currNode->name);
+        WLOGFE("[SsConfig] read xml node error: nodeName:(%{public}s)", currNode->name);
         return;
     }
 
@@ -315,7 +225,7 @@ void ScreenSceneConfig::ReadStringConfigInfo(const xmlNodePtr& currNode)
 {
     xmlChar* context = xmlNodeGetContent(currNode);
     if (context == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] read xml node error: nodeName:(%{public}s)", currNode->name);
+        WLOGFE("[SsConfig] read xml node error: nodeName:(%{public}s)", currNode->name);
         return;
     }
 
@@ -323,29 +233,6 @@ void ScreenSceneConfig::ReadStringConfigInfo(const xmlNodePtr& currNode)
     std::string nodeName = reinterpret_cast<const char*>(currNode->name);
     stringConfig_[nodeName] = inputString;
     xmlFree(context);
-}
-
-void ScreenSceneConfig::ReadStringListConfigInfo(const xmlNodePtr& rootNode, std::string name)
-{
-    xmlChar* rootContext = xmlNodeGetContent(rootNode);
-    if (rootNode == nullptr || rootNode->name == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] get root element failed!");
-        xmlFree(rootContext);
-        return;
-    }
-    std::vector<std::string> stringVec;
-    for (xmlNodePtr curNodePtr = rootNode->xmlChildrenNode; curNodePtr != nullptr; curNodePtr = curNodePtr->next) {
-        if (!IsValidNode(*curNodePtr)) {
-            TLOGE(WmsLogTag::DMS, "SsConfig]: invalid node!");
-            continue;
-        }
-        xmlChar* context = xmlNodeGetContent(curNodePtr);
-        std::string str = reinterpret_cast<const char*>(context);
-        stringVec.emplace_back(str);
-        xmlFree(context);
-    }
-    stringListConfig_[name] = stringVec;
-    xmlFree(rootContext);
 }
 
 const std::map<std::string, bool>& ScreenSceneConfig::GetEnableConfig()
@@ -363,25 +250,19 @@ const std::map<std::string, std::string>& ScreenSceneConfig::GetStringConfig()
     return stringConfig_;
 }
 
-const std::map<std::string, std::vector<std::string>>& ScreenSceneConfig::GetStringListConfig()
-{
-    return stringListConfig_;
-}
-
 void ScreenSceneConfig::DumpConfig()
 {
     for (auto& enable : enableConfig_) {
-        TLOGI(WmsLogTag::DMS, "[SsConfig] Enable: %{public}s %{public}u", enable.first.c_str(), enable.second);
+        WLOGFI("[SsConfig] Enable: %{public}s %{public}u", enable.first.c_str(), enable.second);
     }
     for (auto& numbers : intNumbersConfig_) {
-        TLOGI(WmsLogTag::DMS, "[SsConfig] Numbers: %{public}s %{public}zu",
-            numbers.first.c_str(), numbers.second.size());
+        WLOGFI("[SsConfig] Numbers: %{public}s %{public}zu", numbers.first.c_str(), numbers.second.size());
         for (auto& num : numbers.second) {
-            TLOGI(WmsLogTag::DMS, "[SsConfig] Num: %{public}d", num);
+            WLOGFI("[SsConfig] Num: %{public}d", num);
         }
     }
     for (auto& string : stringConfig_) {
-        TLOGI(WmsLogTag::DMS, "[SsConfig] String: %{public}s", string.first.c_str());
+        WLOGFI("[SsConfig] String: %{public}s", string.first.c_str());
     }
 }
 
@@ -402,26 +283,25 @@ DMRect ScreenSceneConfig::CalcCutoutBoundaryRect(std::string svgPath)
     DMRect emptyRect = { 0, 0, 0, 0 };
     SkPath skCutoutSvgPath;
     if (!SkParsePath::FromSVGString(svgPath.c_str(), &skCutoutSvgPath)) {
-        TLOGE(WmsLogTag::DMS, "Parse svg string path failed.");
+        WLOGFE("Parse svg string path failed.");
         return emptyRect;
     }
     SkRect skRect = skCutoutSvgPath.computeTightBounds();
     if (skRect.isEmpty()) {
-        TLOGW(WmsLogTag::DMS, "Get empty skRect");
+        WLOGFW("Get empty skRect");
         return emptyRect;
     }
     SkIRect skiRect = skRect.roundOut();
     if (skiRect.isEmpty()) {
-        TLOGW(WmsLogTag::DMS, "Get empty skiRect");
+        WLOGFW("Get empty skiRect");
         return emptyRect;
     }
     int32_t left = static_cast<int32_t>(skiRect.left());
     int32_t top = static_cast<int32_t>(skiRect.top());
     uint32_t width = static_cast<uint32_t>(skiRect.width());
     uint32_t height = static_cast<uint32_t>(skiRect.height());
-    TLOGI(WmsLogTag::DMS,
-        "calc cutout boundary rect - left: [%{public}d top: %{public}d width: %{public}u height: %{public}u]",
-        left, top, width, height);
+    WLOGFI("calc cutout boundary rect - left: [%{public}d top: %{public}d width: %{public}u height: %{public}u]", left,
+        top, width, height);
     DMRect cutoutMinOuterRect = {
         .posX_ = left,
         .posY_ = top,
@@ -454,7 +334,7 @@ void ScreenSceneConfig::SetCurvedCompressionAreaInLandscape()
     if (intNumbersConfig_[xmlNodeMap_[CURVED_AREA_IN_LANDSCAPE]].size() > 0) {
         curvedAreaInLandscape_ = static_cast<uint32_t>(intNumbersConfig_[xmlNodeMap_[CURVED_AREA_IN_LANDSCAPE]][0]);
     } else {
-        TLOGW(WmsLogTag::DMS, "waterfallAreaCompressionSizeWhenHorzontal value is not exist");
+        WLOGFW("waterfallAreaCompressionSizeWhenHorzontal value is not exist");
     }
 }
 
@@ -466,25 +346,9 @@ std::vector<int> ScreenSceneConfig::GetCurvedScreenBoundaryConfig()
 uint32_t ScreenSceneConfig::GetCurvedCompressionAreaInLandscape()
 {
     if (!isWaterfallDisplay_ || !isScreenCompressionEnableInLandscape_) {
-        TLOGW(WmsLogTag::DMS, "not waterfall screen or waterfall compression is not enabled");
+        WLOGFW("not waterfall screen or waterfall compression is not enabled");
         return NO_WATERFALL_DISPLAY_COMPRESSION_SIZE;
     }
     return curvedAreaInLandscape_;
 }
-
-bool ScreenSceneConfig::IsSupportRotateWithSensor()
-{
-    if (enableConfig_.count("supportRotateWithSensor") != 0) {
-        return static_cast<bool>(enableConfig_["supportRotateWithSensor"]);
-    }
-    return false;
-}
-std::string ScreenSceneConfig::GetExternalScreenDefaultMode()
-{
-    if (stringConfig_.count("externalScreenDefaultMode") != 0) {
-        return static_cast<std::string>(stringConfig_["externalScreenDefaultMode"]);
-    }
-    return "";
-}
-
 } // namespace OHOS::Rosen

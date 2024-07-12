@@ -17,7 +17,7 @@
 #define OHOS_ROSEN_SCREEN_EVENT_TRACKER_H
 
 #include <iomanip>
-#include <vector>
+#include <map>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -28,6 +28,14 @@ namespace OHOS {
 namespace Rosen {
 const int32_t OUTPUT_FREQ = 1; // 1Hz
 
+enum class TrackSupportEvent: int32_t {
+    INVALID = -1,
+    DMS_CONSTRUCTION,
+    DMS_ONSTART,
+    DMS_REGISTER_STATUS,
+    DMS_CALLBACK,
+};
+
 struct TrackInfo {
     std::string info;
     std::chrono::system_clock::time_point timestamp;
@@ -35,16 +43,16 @@ struct TrackInfo {
 
 class EventTracker {
 public:
-    void RecordEvent(std::string info = "")
+    void RecordEvent(TrackSupportEvent event, std::string info = "")
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        recordInfos_.push_back({info, std::chrono::system_clock::now()});
+        recordMap_[event].push_back({info, std::chrono::system_clock::now()});
     }
 
     void ClearAllRecordedEvents()
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        recordInfos_.clear();
+        recordMap_.clear();
     }
 
     void LogWarningAllInfos() const
@@ -56,45 +64,33 @@ public:
         lastOutputTime_ = now;
         
         std::lock_guard<std::mutex> lock(mutex_);
-        for (const auto& info : recordInfos_) {
-            TLOGW(WmsLogTag::DMS, "[%{public}s]: %{public}s",
-                formatTimestamp(info.timestamp).c_str(), info.info.c_str());
+        for (const auto& [event, Infos] : recordMap_) {
+            for (const auto& info : Infos) {
+                TLOGW(WmsLogTag::DMS, "[EventId: %{public}d][%{public}s]: %{public}s",
+                    static_cast<int32_t>(event), formatTimestamp(info.timestamp).c_str(), info.info.c_str());
+            }
         }
     }
 
     std::string formatTimestamp(const std::chrono::system_clock::time_point& timePoint) const
     {
-        const int32_t WIDTH_TIME = 2;
-        const int32_t WIDTH_TIME_MS = 3;
-        const int32_t TIME_CONVERT_MS = 1000;
-        const char DEFAULT_CHAR = '0';
-        auto time = std::chrono::system_clock::to_time_t(timePoint);
-        std::tm localTime;
-        localtime_r(&time, &localTime);
-        auto timeMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-            timePoint.time_since_epoch()) % TIME_CONVERT_MS;
-
-        std::ostringstream oss;
-        oss << std::setfill(DEFAULT_CHAR)
-            << std::setw(WIDTH_TIME) << (localTime.tm_mon + 1) << '-'
-            << std::setw(WIDTH_TIME) << localTime.tm_mday << ' '
-            << std::setw(WIDTH_TIME) << localTime.tm_hour << ':'
-            << std::setw(WIDTH_TIME) << localTime.tm_min << ':'
-            << std::setw(WIDTH_TIME) << localTime.tm_sec << '.'
-            << std::setw(WIDTH_TIME_MS) << timeMs.count();
-        return oss.str();
+        std::time_t timeT = std::chrono::system_clock::to_time_t(timePoint);
+        std::tm tm = *std::localtime(&timeT);
+        std::stringstream ss;
+        ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
+        return ss.str();
     }
 
-    const std::vector<TrackInfo>& GetRecordInfos() const
+    const std::map<TrackSupportEvent, std::vector<TrackInfo>>& GetRecordMap() const
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        return recordInfos_;
+        return recordMap_;
     }
 
 private:
     mutable std::mutex mutex_;
     mutable std::chrono::system_clock::time_point lastOutputTime_;
-    std::vector<TrackInfo> recordInfos_;
+    std::map<TrackSupportEvent, std::vector<TrackInfo>> recordMap_;
 };
 
 

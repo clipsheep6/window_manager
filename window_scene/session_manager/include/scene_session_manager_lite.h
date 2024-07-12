@@ -41,8 +41,7 @@ public:
     WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) override;
     WSError GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
         SessionInfoBean& sessionInfo) override;
-    WSError TerminateSessionNew(
-        const sptr<AAFwk::SessionInfo> info, bool needStartCaller, bool isFromBroker = false) override;
+    WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller) override;
     WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
                                SessionSnapshot& snapshot, bool isLowResolution) override;
     WSError SetSessionContinueState(const sptr<IRemoteObject>& token, const ContinueState& continueState) override;
@@ -61,14 +60,7 @@ public:
     WMError CheckWindowId(int32_t windowId, int32_t &pid) override;
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WSError UpdateWindowMode(int32_t persistentId, int32_t windowMode);
-    WMError GetWindowModeType(WindowModeType& windowModeType) override;
-    WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo) override;
-    WMError GetAllMainWindowInfos(std::vector<MainWindowInfo>& infos) override;
-    WMError ClearMainSessions(const std::vector<int32_t>& persistentIds, std::vector<int32_t>& clearFailedIds) override;
-    WSError RaiseWindowToTop(int32_t persistentId) override;
-    WSError RegisterIAbilityManagerCollaborator(int32_t type,
-        const sptr<AAFwk::IAbilityManagerCollaborator>& impl) override;
-    WSError UnregisterIAbilityManagerCollaborator(int32_t type) override;
+    WMError GetWindowBackHomeStatus(bool &isBackHome) override;
 
 protected:
     SceneSessionManagerLite() = default;

@@ -19,7 +19,7 @@ ohos_shared_library("libintention_event") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
   }
   include_dirs = [
@@ -32,7 +32,6 @@ ohos_shared_library("libintention_event") {
 
   deps = [
     "${window_base_path}/utils:libwmutil",
-    "${window_base_path}/utils:libwmutil_base",
     "../common:window_scene_common",
     "../session:scene_session",
     "../session_manager:scene_session_manager",
@@ -44,9 +43,7 @@ ohos_shared_library("libintention_event") {
     "ace_engine:ace_uicontent",
     "c_utils:utils",
     "eventhandler:libeventhandler",
-    "ffrt:libffrt",
     "graphic_2d:libcomposer",
-    "graphic_2d:librender_service_client",
     "graphic_2d:window_animation",
     "hilog:libhilog",
     "hisysevent:libhisysevent",

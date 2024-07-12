@@ -18,8 +18,6 @@
 
 #include <event_handler.h>
 
-#include <unistd.h>
-
 namespace OHOS::Rosen {
 
 void StartTraceForSyncTask(std::string name);
@@ -51,12 +49,7 @@ public:
             ret = task();
             FinishTraceForSyncTask();
         };
-        AppExecFwk::EventQueue::Priority priority = AppExecFwk::EventQueue::Priority::IMMEDIATE;
-        static pid_t pid = getpid();
-        if (pid == gettid()) {
-            priority = AppExecFwk::EventQueue::Priority::VIP;
-        }
-        handler_->PostSyncTask(std::move(syncTask), "wms:" + name, priority);
+        handler_->PostSyncTask(std::move(syncTask), "wms:" + name, AppExecFwk::EventQueue::Priority::IMMEDIATE);
         return ret;
     }
 

@@ -17,9 +17,6 @@
 #define OHOS_ROSEN_WINDOW_SCENE_KEYBOARD_SESSION_H
 
 #include "session/host/include/system_session.h"
-#include <transaction/rs_interfaces.h>
-#include <transaction/rs_transaction.h>
-#include "transaction/rs_sync_transaction_controller.h"
 
 namespace OHOS::Rosen {
 using OnGetSceneSessionCallback = std::function<sptr<SceneSession>(uint32_t callingSessionId)>;
@@ -45,9 +42,6 @@ public:
     void BindKeyboardPanelSession(sptr<SceneSession> panelSession) override;
     sptr<SceneSession> GetKeyboardPanelSession() const override;
     SessionGravity GetKeyboardGravity() const override;
-    void OnKeyboardPanelUpdated() override;
-    void OpenKeyboardSyncTransaction() override;
-    void CloseKeyboardSyncTransaction(const WSRect& keyboardPanelRect, bool isKeyboardShow, bool isRotating) override;
 
 private:
     sptr<SceneSession> GetSceneSession(uint32_t persistentId);
@@ -55,24 +49,22 @@ private:
 
     WSError SetKeyboardSessionGravity(SessionGravity gravity, uint32_t percent) override;
     void SetCallingSessionId(uint32_t callingSessionId) override;
-    uint32_t GetCallingSessionId();
+    sptr<SceneSession> GetCallingSession();
 
+    bool IsStatusBarVisible(const sptr<SceneSession>& session);
     int32_t GetStatusBarHeight();
     void NotifyOccupiedAreaChangeInfo(const sptr<SceneSession>& callingSession, const WSRect& rect,
-        const WSRect& occupiedArea, const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
-    void RaiseCallingSession(const WSRect& keyboardPanelRect,
-        const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
-    void RestoreCallingSession(const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
+        const WSRect& occupiedArea);
+    void RaiseCallingSession(bool isKeyboardUpdated = false);
+    void RestoreCallingSession();
     void UseFocusIdIfCallingSessionIdInvalid();
+    void OnKeyboardSessionShown();
     void UpdateCallingSessionIdAndPosition(uint32_t callingSessionId);
     void RelayoutKeyBoard();
-    void NotifyKeyboardPanelInfoChange(WSRect rect, bool isKeyboardPanelShow);
-    bool CheckIfNeedRaiseCallingSession(sptr<SceneSession> callingSession, bool isCallingSessionFloating);
-    WSError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
-    std::shared_ptr<RSTransaction> GetRSTransaction();
 
     sptr<KeyboardSessionCallback> keyboardCallback_ = nullptr;
-    bool isKeyboardSyncTransactionOpen_ = false;
+    WSRect callingSessionRestoringRect_ = {0, 0, 0, 0};
+    WSRect callingSessionRaisedRect_ = {0, 0, 0, 0};
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_KEYBOARD_SESSION_H

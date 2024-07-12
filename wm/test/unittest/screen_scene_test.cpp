@@ -68,20 +68,6 @@ HWTEST_F(ScreenSceneTest, LoadContent01, Function | SmallTest | Level3)
 }
 
 /**
- * @tc.name: Destroy01
- * @tc.desc: context is nullptr
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenSceneTest, Destroy01, Function | SmallTest | Level3)
-{
-    ScreenScene screenScene("UNKNOW");
-    screenScene.LoadContent("a", nullptr, nullptr, nullptr);
-    screenScene.Destroy();
-    ASSERT_EQ(1, screenScene.GetWindowId());
-}
-
-
-/**
  * @tc.name: UpdateViewportConfig01
  * @tc.desc: UpdateViewportConfig Test
  * @tc.type: FUNC
@@ -155,8 +141,7 @@ HWTEST_F(ScreenSceneTest, FlushFrameRate, Function | SmallTest | Level3)
 {
     ScreenScene screenScene("UNKNOW");
     uint32_t rate = 120;
-    int32_t animatorExpectedFrameRate = -1;
-    screenScene.FlushFrameRate(rate, animatorExpectedFrameRate);
+    screenScene.FlushFrameRate(rate);
     ASSERT_EQ(1, screenScene.GetWindowId());
 }
 

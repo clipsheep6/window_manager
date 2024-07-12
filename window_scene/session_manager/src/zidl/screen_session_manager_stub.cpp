@@ -27,8 +27,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION_MANAGER,
                                           "ScreenSessionManagerStub" };
 const static uint32_t MAX_SCREEN_SIZE = 32;
-const static int32_t ERR_INVALID_DATA = -1;
-const static int32_t MAX_BUFF_SIZE = 100;
+const static uint32_t ERR_INVALID_DATA = -1;
 }
 
 int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
@@ -490,12 +489,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }
-        case DisplayManagerMessage::TRANS_ID_SET_SCREEN_ROTATION_LOCKED_FROM_JS: {
-            bool isLocked = static_cast<bool>(data.ReadBool());
-            DMError ret = SetScreenRotationLockedFromJs(isLocked);
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
-        }
         case DisplayManagerMessage::TRANS_ID_IS_SCREEN_ROTATION_LOCKED: {
             bool isLocked = false;
             DMError ret = IsScreenRotationLocked(isLocked);
@@ -595,7 +588,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
         case DisplayManagerMessage::TRANS_ID_SET_CLIENT: {
             auto remoteObject = data.ReadRemoteObject();
             auto clientProxy = iface_cast<IScreenSessionManagerClient>(remoteObject);
-            if (clientProxy == nullptr) {
+            if (!clientProxy) {
                 WLOGFE("clientProxy is null");
                 break;
             }
@@ -654,19 +647,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             SetScreenPrivacyState(hasPrivate);
             break;
         }
-        case DisplayManagerMessage::TRANS_ID_SET_SCREENID_PRIVACY_STATE: {
-            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            auto hasPrivate = data.ReadBool();
-            SetPrivacyStateByDisplayId(displayId, hasPrivate);
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_SET_SCREEN_PRIVACY_WINDOW_LIST: {
-            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-            std::vector<std::string> privacyWindowList;
-            data.ReadStringVector(&privacyWindowList);
-            SetScreenPrivacyWindowList(displayId, privacyWindowList);
-            break;
-        }
         case DisplayManagerMessage::TRANS_ID_RESIZE_VIRTUAL_SCREEN: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             uint32_t width = data.ReadUint32();
@@ -685,14 +665,15 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             UpdateAvailableArea(screenId, area);
             break;
         }
-        case DisplayManagerMessage::TRANS_ID_SET_SCREEN_OFF_DELAY_TIME: {
-            int32_t delay = data.ReadInt32();
-            int32_t ret = SetScreenOffDelayTime(delay);
-            reply.WriteInt32(ret);
-            break;
-        }
         case DisplayManagerMessage::TRANS_ID_GET_AVAILABLE_AREA: {
-            ProcGetAvailableArea(data, reply);
+            DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
+            DMRect area;
+            DMError ret = GetAvailableArea(displayId, area);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            reply.WriteInt32(area.posX_);
+            reply.WriteInt32(area.posY_);
+            reply.WriteUint32(area.width_);
+            reply.WriteUint32(area.height_);
             break;
         }
         case DisplayManagerMessage::TRANS_ID_NOTIFY_FOLD_TO_EXPAND_COMPLETION: {
@@ -721,65 +702,11 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }
-        case DisplayManagerMessage::TRANS_ID_SWITCH_USER: {
-            SwitchUser();
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_BLACK_LIST: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            std::vector<uint64_t> windowIdList;
-            if (!data.ReadUInt64Vector(&windowIdList)) {
-                TLOGE(WmsLogTag::DMS, "Failed to receive windowIdList in stub");
-                break;
-            }
-            SetVirtualScreenBlackList(screenId, windowIdList);
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_DISABLE_POWEROFF_RENDER_CONTROL: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            DisablePowerOffRenderControl(screenId);
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_PROXY_FOR_FREEZE: {
-            ProcProxyForFreeze(data, reply);
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_RESET_ALL_FREEZE_STATUS: {
-            DMError ret = ResetAllFreezeStatus();
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_NOTIFY_DISPLAY_HOOK_INFO: {
-            int32_t uid = data.ReadInt32();
-            bool enable = data.ReadBool();
-            DMHookInfo hookInfo;
-            hookInfo.width_ = data.ReadUint32();
-            hookInfo.height_ = data.ReadUint32();
-            hookInfo.density_ = data.ReadFloat();
-            UpdateDisplayHookInfo(uid, enable, hookInfo);
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_GET_ALL_PHYSICAL_DISPLAY_RESOLUTION: {
-            ProcGetAllDisplayPhysicalResolution(data, reply);
-            break;
-        }
         default:
             WLOGFW("unknown transaction code");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return 0;
-}
-
-void ScreenSessionManagerStub::ProcGetAvailableArea(MessageParcel& data, MessageParcel& reply)
-{
-    DisplayId displayId = static_cast<DisplayId>(data.ReadUint64());
-    DMRect area;
-    DMError ret = GetAvailableArea(displayId, area);
-    reply.WriteInt32(static_cast<int32_t>(ret));
-    reply.WriteInt32(area.posX_);
-    reply.WriteInt32(area.posY_);
-    reply.WriteUint32(area.width_);
-    reply.WriteUint32(area.height_);
 }
 
 void ScreenSessionManagerStub::ProcGetSnapshotByPicker(MessageParcel& reply)
@@ -808,49 +735,5 @@ void ScreenSessionManagerStub::ProcGetVirtualScreenFlag(MessageParcel& data, Mes
     ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
     VirtualScreenFlag screenFlag = GetVirtualScreenFlag(screenId);
     reply.WriteUint32(static_cast<uint32_t>(screenFlag));
-}
-
-void ScreenSessionManagerStub::ProcProxyForFreeze(MessageParcel& data, MessageParcel& reply)
-{
-    std::set<int32_t> pidList;
-    int32_t size = data.ReadInt32();
-    if (size > MAX_BUFF_SIZE) {
-        WLOGFE("pid List size invalid: %{public}d", size);
-        size = MAX_BUFF_SIZE;
-    }
-    for (int32_t i = 0; i < size; i++) {
-        pidList.insert(data.ReadInt32());
-    }
-    bool isProxy = data.ReadBool();
-    DMError ret = ProxyForFreeze(pidList, isProxy);
-    reply.WriteInt32(static_cast<int32_t>(ret));
-}
-
-void ScreenSessionManagerStub::ProcGetAllDisplayPhysicalResolution(MessageParcel& data, MessageParcel& reply)
-{
-    auto physicalInfos = GetAllDisplayPhysicalResolution();
-    size_t infoSize = physicalInfos.size();
-    bool writeRet = reply.WriteInt32(static_cast<int32_t>(infoSize));
-    if (!writeRet) {
-        WLOGFE("write physical size error");
-        return;
-    }
-    for (const auto &physicalItem : physicalInfos) {
-        writeRet = reply.WriteUint32(static_cast<uint32_t>(physicalItem.foldDisplayMode_));
-        if (!writeRet) {
-            WLOGFE("write display mode error");
-            break;
-        }
-        writeRet = reply.WriteUint32(physicalItem.physicalWidth_);
-        if (!writeRet) {
-            WLOGFE("write physical width error");
-            break;
-        }
-        writeRet = reply.WriteUint32(physicalItem.physicalHeight_);
-        if (!writeRet) {
-            WLOGFE("write physical height error");
-            break;
-        }
-    }
 }
 } // namespace OHOS::Rosen

@@ -13,9 +13,8 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
-
 #include "extension_session.h"
+#include <gtest/gtest.h>
 #include "accessibility_event_info.h"
 #include "session_info.h"
 #include "interfaces/include/ws_common.h"
@@ -34,11 +33,34 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
-    sptr<ExtensionSession> extensionSession_ = nullptr;
-    sptr<SessionStageMocker> mockSessionStage_ = nullptr;
-    sptr<WindowEventChannelMocker> mockEventChannel_ = nullptr;
-    sptr<ExtensionSession::ExtensionSessionEventCallback> extSessionEventCallback_ = nullptr;
+    sptr<ExtensionSession::ExtensionSessionEventCallback> extSessionEventCallback = nullptr;
 };
+
+void TransferAbilityResultTest(uint32_t resultCode, const AAFwk::Want& want)
+{
+    resultCode--;
+}
+
+void TransferExtensionDataTest(const AAFwk::WantParams& wantParams)
+{
+    AAFwk::WantParams test(wantParams);
+}
+
+void NotifyRemoteReadyTest()
+{
+}
+
+void NotifySyncOnTest()
+{
+}
+
+void NotifyAsyncOnTest()
+{
+}
+
+void NotifyBindModalTest()
+{
+}
 
 void ExtensionSessionTest::SetUpTestCase()
 {
@@ -50,49 +72,16 @@ void ExtensionSessionTest::TearDownTestCase()
 
 void ExtensionSessionTest::SetUp()
 {
-    SessionInfo info;
-    info.abilityName_ = "ExtensionSessionTest";
-    info.bundleName_ = "ExtensionSessionTest";
-    extensionSession_ = new (std::nothrow) ExtensionSession(info);
-    ASSERT_NE(extensionSession_, nullptr);
-
-    mockSessionStage_ = new (std::nothrow) SessionStageMocker();
-    ASSERT_NE(mockSessionStage_, nullptr);
-
-    mockEventChannel_ = new (std::nothrow) WindowEventChannelMocker(mockSessionStage_);
-    ASSERT_NE(mockEventChannel_, nullptr);
-
-    extSessionEventCallback_ = new (std::nothrow) ExtensionSession::ExtensionSessionEventCallback();
-    ASSERT_NE(extSessionEventCallback_, nullptr);
+    extSessionEventCallback = new(std::nothrow) ExtensionSession::ExtensionSessionEventCallback();
 }
 
 void ExtensionSessionTest::TearDown()
 {
-    extensionSession_ = nullptr;
-    mockSessionStage_ = nullptr;
-    mockEventChannel_ = nullptr;
-    extSessionEventCallback_ = nullptr;
+    delete extSessionEventCallback;
+    extSessionEventCallback = nullptr;
 }
 
 namespace {
-/**
- * @tc.name: Connect
- * @tc.desc: test function : Connect
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, Connect, Function | SmallTest | Level1)
-{
-    SystemSessionConfig sessionConfig;
-    extensionSession_->state_ = SessionState::STATE_DISCONNECT;
-    auto res = extensionSession_->Connect(mockSessionStage_, mockEventChannel_, nullptr, sessionConfig, nullptr,
-        nullptr, "");
-    ASSERT_EQ(res, WSError::WS_OK);
-
-    extensionSession_->state_ = SessionState::STATE_DISCONNECT;
-    res = extensionSession_->Connect(mockSessionStage_, nullptr, nullptr, sessionConfig, nullptr, nullptr, "");
-    ASSERT_EQ(res, WSError::WS_ERROR_NULLPTR);
-}
-
 /**
  * @tc.name: RegisterExtensionSessionEventCallback
  * @tc.desc: test function : RegisterExtensionSessionEventCallback
@@ -100,8 +89,12 @@ HWTEST_F(ExtensionSessionTest, Connect, Function | SmallTest | Level1)
  */
 HWTEST_F(ExtensionSessionTest, RegisterExtensionSessionEventCallback, Function | SmallTest | Level1)
 {
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    ASSERT_NE(nullptr, extensionSession_->GetExtensionSessionEventCallback());
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    extensionSession_.RegisterExtensionSessionEventCallback(extSessionEventCallback);
+    ASSERT_NE(nullptr, extensionSession_.GetExtensionSessionEventCallback());
 }
 
 /**
@@ -111,7 +104,11 @@ HWTEST_F(ExtensionSessionTest, RegisterExtensionSessionEventCallback, Function |
  */
 HWTEST_F(ExtensionSessionTest, GetExtensionSessionEventCallback, Function | SmallTest | Level1)
 {
-    ASSERT_NE(nullptr, extensionSession_->GetExtensionSessionEventCallback());
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    ASSERT_NE(nullptr, extensionSession_.GetExtensionSessionEventCallback());
 }
 
 /**
@@ -121,25 +118,15 @@ HWTEST_F(ExtensionSessionTest, GetExtensionSessionEventCallback, Function | Smal
  */
 HWTEST_F(ExtensionSessionTest, TransferAbilityResult, Function | SmallTest | Level1)
 {
-    MockFunction<void(uint32_t, const AAFwk::Want&)> mockTransferAbilityResultFunc;
-    extSessionEventCallback_->transferAbilityResultFunc_ = mockTransferAbilityResultFunc.AsStdFunction();
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    uint32_t test = 0;
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    extSessionEventCallback->transferAbilityResultFunc_ = TransferAbilityResultTest;
+    extensionSession_.RegisterExtensionSessionEventCallback(extSessionEventCallback);
+    uint32_t test01 = 15;
     AAFwk::Want want;
-    EXPECT_CALL(mockTransferAbilityResultFunc, Call(_, _)).Times(1);
-    WSError result = extensionSession_->TransferAbilityResult(test, want);
-    ASSERT_EQ(result, WSError::WS_OK);
-
-    extSessionEventCallback_->transferAbilityResultFunc_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockTransferAbilityResultFunc, Call(_, _)).Times(0);
-    result = extensionSession_->TransferAbilityResult(test, want);
-    ASSERT_EQ(result, WSError::WS_OK);
-
-    extSessionEventCallback_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockTransferAbilityResultFunc, Call(_, _)).Times(0);
-    result = extensionSession_->TransferAbilityResult(test, want);
+    WSError result = extensionSession_.TransferAbilityResult(test01, want);
     ASSERT_EQ(result, WSError::WS_OK);
 }
 
@@ -150,25 +137,32 @@ HWTEST_F(ExtensionSessionTest, TransferAbilityResult, Function | SmallTest | Lev
  */
 HWTEST_F(ExtensionSessionTest, TransferExtensionData, Function | SmallTest | Level1)
 {
-    MockFunction<void(const AAFwk::WantParams&)> mockTransferExtensionDataFunc;
-    extSessionEventCallback_->transferExtensionDataFunc_ = mockTransferExtensionDataFunc.AsStdFunction();
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    extSessionEventCallback->transferExtensionDataFunc_= TransferExtensionDataTest;
+    extensionSession_.RegisterExtensionSessionEventCallback(extSessionEventCallback);
     AAFwk::WantParams wantParams;
-    EXPECT_CALL(mockTransferExtensionDataFunc, Call(_)).Times(1);
-    WSError result = extensionSession_->TransferExtensionData(wantParams);
+    WSError result = extensionSession_.TransferExtensionData(wantParams);
     ASSERT_EQ(result, WSError::WS_OK);
+}
 
-    extSessionEventCallback_->transferExtensionDataFunc_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockTransferExtensionDataFunc, Call(_)).Times(0);
-    result = extensionSession_->TransferExtensionData(wantParams);
-    ASSERT_EQ(result, WSError::WS_OK);
-
-    extSessionEventCallback_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockTransferExtensionDataFunc, Call(_)).Times(0);
-    result = extensionSession_->TransferExtensionData(wantParams);
-    ASSERT_EQ(result, WSError::WS_OK);
+/**
+ * @tc.name: NotifyRemoteReady
+ * @tc.desc: test function : NotifyRemoteReady
+ * @tc.type: FUNC
+ */
+HWTEST_F(ExtensionSessionTest, NotifyRemoteReady, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    extSessionEventCallback->notifyRemoteReadyFunc_= NotifyRemoteReadyTest;
+    ASSERT_TRUE(extensionSession_ != nullptr);
+    extensionSession_.RegisterExtensionSessionEventCallback(extSessionEventCallback);
+    extensionSession_.NotifyRemoteReady();
 }
 
 /**
@@ -178,40 +172,14 @@ HWTEST_F(ExtensionSessionTest, TransferExtensionData, Function | SmallTest | Lev
  */
 HWTEST_F(ExtensionSessionTest, TransferComponentData, Function | SmallTest | Level1)
 {
-    extensionSession_->sessionStage_ = mockSessionStage_;
-
-    extensionSession_->state_ = SessionState::STATE_DISCONNECT;
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    info.isSystem_ = true;
+    ExtensionSession extensionSession_(info);
     AAFwk::WantParams wantParams;
-    EXPECT_CALL(*mockSessionStage_, NotifyTransferComponentData).Times(0);
-    WSError result = extensionSession_->TransferComponentData(wantParams);
+    WSError result = extensionSession_.TransferComponentData(wantParams);
     ASSERT_EQ(result, WSError::WS_ERROR_INVALID_SESSION);
-
-    extensionSession_->state_ = SessionState::STATE_CONNECT;
-    EXPECT_CALL(*mockSessionStage_, NotifyTransferComponentData).Times(1);
-    result = extensionSession_->TransferComponentData(wantParams);
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
- * @tc.name: TransferComponentDataSync
- * @tc.desc: test function : TransferComponentDataSync
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, TransferComponentDataSync, Function | SmallTest | Level1)
-{
-    extensionSession_->sessionStage_ = mockSessionStage_;
-
-    extensionSession_->state_ = SessionState::STATE_DISCONNECT;
-    AAFwk::WantParams wantParams;
-    AAFwk::WantParams reWantParams;
-    EXPECT_CALL(*mockSessionStage_, NotifyTransferComponentDataSync).Times(0);
-    auto res = extensionSession_->TransferComponentDataSync(wantParams, reWantParams);
-    ASSERT_EQ(res, WSErrorCode::WS_ERROR_TRANSFER_DATA_FAILED);
-
-    extensionSession_->state_ = SessionState::STATE_CONNECT;
-    EXPECT_CALL(*mockSessionStage_, NotifyTransferComponentDataSync).Times(1).WillOnce(Return(WSErrorCode::WS_OK));
-    res = extensionSession_->TransferComponentDataSync(wantParams, reWantParams);
-    ASSERT_EQ(res, WSErrorCode::WS_OK);
 }
 
 /**
@@ -221,21 +189,14 @@ HWTEST_F(ExtensionSessionTest, TransferComponentDataSync, Function | SmallTest |
  */
 HWTEST_F(ExtensionSessionTest, NotifySyncOn, Function | SmallTest | Level1)
 {
-    MockFunction<void()> mockNotifySyncOnFunc;
-    extSessionEventCallback_->notifySyncOnFunc_ = mockNotifySyncOnFunc.AsStdFunction();
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifySyncOnFunc, Call()).Times(1);
-    extensionSession_->NotifySyncOn();
-
-    extSessionEventCallback_->notifySyncOnFunc_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifySyncOnFunc, Call()).Times(0);
-    extensionSession_->NotifySyncOn();
-
-    extSessionEventCallback_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifySyncOnFunc, Call()).Times(0);
-    extensionSession_->NotifySyncOn();
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    ASSERT_TRUE(extensionSession_ != nullptr);
+    extSessionEventCallback->notifyAsyncOnFunc_ = NotifySyncOnTest;
+    extensionSession_.RegisterExtensionSessionEventCallback(extSessionEventCallback);
+    extensionSession_.NotifySyncOn();
 }
 
 /**
@@ -245,67 +206,14 @@ HWTEST_F(ExtensionSessionTest, NotifySyncOn, Function | SmallTest | Level1)
  */
 HWTEST_F(ExtensionSessionTest, NotifyAsyncOn, Function | SmallTest | Level1)
 {
-    MockFunction<void()> mockNotifyAsyncOnFunc;
-    extSessionEventCallback_->notifyAsyncOnFunc_ = mockNotifyAsyncOnFunc.AsStdFunction();
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifyAsyncOnFunc, Call()).Times(1);
-    extensionSession_->NotifyAsyncOn();
-
-    extSessionEventCallback_->notifyAsyncOnFunc_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifyAsyncOnFunc, Call()).Times(0);
-    extensionSession_->NotifyAsyncOn();
-
-    extSessionEventCallback_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifyAsyncOnFunc, Call()).Times(0);
-    extensionSession_->NotifyAsyncOn();
-}
-
-/**
- * @tc.name: NotifyDensityFollowHost01
- * @tc.desc: normal test
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, NotifyDensityFollowHost01, Function | SmallTest | Level1)
-{
-    extensionSession_->state_ = SessionState::STATE_CONNECT;
-    extensionSession_->sessionStage_ = mockSessionStage_;
-
-    bool isFollowHost = true;
-    float densityValue = 1.0f;
-    EXPECT_CALL(*mockSessionStage_, NotifyDensityFollowHost(isFollowHost, densityValue));
-    WSError res = extensionSession_->NotifyDensityFollowHost(isFollowHost, densityValue);
-    ASSERT_EQ(WSError::WS_OK, res);
-}
-
-/**
- * @tc.name: NotifyDensityFollowHost02
- * @tc.desc: session is invalid
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, NotifyDensityFollowHost02, Function | SmallTest | Level1)
-{
-    bool isFollowHost = true;
-    float densityValue = 1.0f;
-    WSError res = extensionSession_->NotifyDensityFollowHost(isFollowHost, densityValue);
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, res);
-}
-
-/**
- * @tc.name: NotifyDensityFollowHost03
- * @tc.desc: sessionStage_ is invalid
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, NotifyDensityFollowHost03, Function | SmallTest | Level1)
-{
-    extensionSession_->state_ = SessionState::STATE_CONNECT;
-    extensionSession_->sessionStage_ = nullptr;
-
-    bool isFollowHost = true;
-    float densityValue = 1.0f;
-    WSError res = extensionSession_->NotifyDensityFollowHost(isFollowHost, densityValue);
-    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, res);
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    ASSERT_TRUE(extensionSession_ != nullptr);
+    extSessionEventCallback->notifyAsyncOnFunc_ = NotifyAsyncOnTest;
+    extensionSession_.RegisterExtensionSessionEventCallback(extSessionEventCallback);
+    extensionSession_.NotifyAsyncOn();
 }
 
 /**
@@ -315,26 +223,14 @@ HWTEST_F(ExtensionSessionTest, NotifyDensityFollowHost03, Function | SmallTest |
  */
 HWTEST_F(ExtensionSessionTest, TriggerBindModalUIExtension, Function | SmallTest | Level1)
 {
-    extensionSession_->isFirstTriggerBindModal_ = false;
-    MockFunction<void()> mockNotifyBindModalFunc;
-    extSessionEventCallback_->notifyBindModalFunc_ = mockNotifyBindModalFunc.AsStdFunction();
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifyBindModalFunc, Call()).Times(0);
-    extensionSession_->TriggerBindModalUIExtension();
-
-    extensionSession_->isFirstTriggerBindModal_ = true;
-    EXPECT_CALL(mockNotifyBindModalFunc, Call()).Times(1);
-    extensionSession_->TriggerBindModalUIExtension();
-
-    extSessionEventCallback_->notifyBindModalFunc_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifyBindModalFunc, Call()).Times(0);
-    extensionSession_->TriggerBindModalUIExtension();
-
-    extSessionEventCallback_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifyBindModalFunc, Call()).Times(0);
-    extensionSession_->TriggerBindModalUIExtension();
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    ASSERT_TRUE(extensionSession_ != nullptr);
+    extSessionEventCallback->notifyBindModalFunc_ = NotifyBindModalTest;
+    extensionSession_.RegisterExtensionSessionEventCallback(extSessionEventCallback);
+    extensionSession_.TriggerBindModalUIExtension();
 }
 
 /**
@@ -344,9 +240,14 @@ HWTEST_F(ExtensionSessionTest, TriggerBindModalUIExtension, Function | SmallTest
  */
 HWTEST_F(ExtensionSessionTest, TransferAccessibilityEvent, Function | SmallTest | Level1)
 {
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    ASSERT_TRUE(extensionSession_ != nullptr);
     OHOS::Accessibility::AccessibilityEventInfo info1;
     int64_t uiExtensionIdLevel = 6;
-    WSError result = extensionSession_->TransferAccessibilityEvent(info1, uiExtensionIdLevel);
+    WSError result = extensionSession_.TransferAccessibilityEvent(info1, uiExtensionIdLevel);
     ASSERT_EQ(result, WSError::WS_OK);
 }
 
@@ -357,15 +258,22 @@ HWTEST_F(ExtensionSessionTest, TransferAccessibilityEvent, Function | SmallTest 
  */
 HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed01, Function | SmallTest | Level1)
 {
-    extensionSession_->windowEventChannel_ = mockEventChannel_;
-    extensionSession_->channelListener_ = new (std::nothrow) WindowEventChannelListener();
-    ASSERT_NE(extensionSession_->channelListener_, nullptr);
-    EXPECT_CALL(*mockEventChannel_, TransferKeyEventForConsumedAsync)
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<WindowEventChannelMocker> mockEventChannel = new (std::nothrow) WindowEventChannelMocker(mockSessionStage);
+    extensionSession.windowEventChannel_ = mockEventChannel;
+    extensionSession.channelListener_ = new WindowEventChannelListener();
+    EXPECT_CALL(*mockEventChannel, TransferKeyEventForConsumedAsync)
         .WillOnce([](const std::shared_ptr<MMI::KeyEvent> &keyEvent,
                      bool isPreImeEvent,
                      const sptr<IRemoteObject> &listener) {
             auto channelListener = iface_cast<IWindowEventChannelListener>(listener);
-            channelListener->OnTransferKeyEventForConsumed(keyEvent->GetId(), isPreImeEvent, true, WSError::WS_OK);
+            channelListener->OnTransferKeyEventForConsumed(true, WSError::WS_OK);
             return WSError::WS_OK;
         });
 
@@ -374,7 +282,7 @@ HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed01, Function | SmallTe
     bool isConsumed = false;
     bool isTimeout = false;
     bool isPreImeEvent = false;
-    WSError result = extensionSession_->TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
+    WSError result = extensionSession.TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
     ASSERT_EQ(result, WSError::WS_OK);
     ASSERT_EQ(isTimeout, false);
 }
@@ -386,17 +294,24 @@ HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed01, Function | SmallTe
  */
 HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed02, Function | SmallTest | Level1)
 {
-    extensionSession_->windowEventChannel_ = mockEventChannel_;
-    EXPECT_CALL(*mockEventChannel_, TransferKeyEventForConsumedAsync);
-    extensionSession_->channelListener_ = new (std::nothrow) WindowEventChannelListener();
-    ASSERT_NE(extensionSession_->channelListener_, nullptr);
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<WindowEventChannelMocker> mockEventChannel = new (std::nothrow) WindowEventChannelMocker(mockSessionStage);
+    extensionSession.windowEventChannel_ = mockEventChannel;
+    EXPECT_CALL(*mockEventChannel, TransferKeyEventForConsumedAsync);
+    extensionSession.channelListener_ = new WindowEventChannelListener();
 
     auto keyEvent = MMI::KeyEvent::Create();
     ASSERT_NE(keyEvent, nullptr);
     bool isConsumed = false;
     bool isTimeout = false;
     bool isPreImeEvent = false;
-    WSError result = extensionSession_->TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
+    WSError result = extensionSession.TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
     ASSERT_EQ(result, WSError::WS_OK);
     ASSERT_EQ(isTimeout, true);
 }
@@ -408,12 +323,18 @@ HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed02, Function | SmallTe
  */
 HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed03, Function | SmallTest | Level1)
 {
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+
     auto keyEvent = MMI::KeyEvent::Create();
     ASSERT_NE(keyEvent, nullptr);
     bool isConsumed = false;
     bool isTimeout = false;
     bool isPreImeEvent = false;
-    WSError result = extensionSession_->TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
+    WSError result = extensionSession.TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
     ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
 }
 
@@ -424,54 +345,22 @@ HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed03, Function | SmallTe
  */
 HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed04, Function | SmallTest | Level1)
 {
-    extensionSession_->windowEventChannel_ = mockEventChannel_;
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession(info);
+    ASSERT_NE(extensionSession, nullptr);
+
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<WindowEventChannelMocker> mockEventChannel = new (std::nothrow) WindowEventChannelMocker(mockSessionStage);
+    extensionSession.windowEventChannel_ = mockEventChannel;
 
     auto keyEvent = nullptr;
     bool isConsumed = false;
     bool isTimeout = false;
     bool isPreImeEvent = false;
-    WSError result = extensionSession_->TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
+    WSError result = extensionSession.TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
     ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-}
-
-/**
- * @tc.name: TransferKeyEventForConsumed05
- * @tc.desc: TransferKeyEventForConsumed channelListener_ nullptr
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed05, Function | SmallTest | Level1)
-{
-    extensionSession_->windowEventChannel_ = mockEventChannel_;
-    extensionSession_->channelListener_ = nullptr;
-
-    auto keyEvent = MMI::KeyEvent::Create();
-    ASSERT_NE(keyEvent, nullptr);
-    bool isConsumed = false;
-    bool isTimeout = false;
-    bool isPreImeEvent = false;
-    WSError result = extensionSession_->TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-}
-
-/**
- * @tc.name: TransferKeyEventForConsumed06
- * @tc.desc: TransferKeyEventForConsumed not return OK
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, TransferKeyEventForConsumed06, Function | SmallTest | Level1)
-{
-    extensionSession_->windowEventChannel_ = mockEventChannel_;
-    extensionSession_->channelListener_ = new (std::nothrow) WindowEventChannelListener();
-    ASSERT_NE(extensionSession_->channelListener_, nullptr);
-    EXPECT_CALL(*mockEventChannel_, TransferKeyEventForConsumedAsync).WillOnce(Return(WSError::WS_DO_NOTHING));
-
-    auto keyEvent = MMI::KeyEvent::Create();
-    ASSERT_NE(keyEvent, nullptr);
-    bool isConsumed = false;
-    bool isTimeout = false;
-    bool isPreImeEvent = false;
-    WSError result = extensionSession_->TransferKeyEventForConsumed(keyEvent, isConsumed, isTimeout, isPreImeEvent);
-    ASSERT_EQ(result, WSError::WS_DO_NOTHING);
 }
 
 /**
@@ -525,7 +414,6 @@ HWTEST_F(ExtensionSessionTest, ChannelDeathRecipientOnRemoteDied01, Function | S
     EXPECT_NE(nullptr, deathRecipient);
     sptr<IRemoteObject> wptrDeath = nullptr;
     wptrDeath = new (std::nothrow) WindowEventChannel(nullptr);
-    ASSERT_NE(nullptr, wptrDeath);
     deathRecipient->OnRemoteDied(wptrDeath);
     EXPECT_NE(nullptr, deathRecipient);
 }
@@ -547,113 +435,21 @@ HWTEST_F(ExtensionSessionTest, ChannelDeathRecipientOnRemoteDied02, Function | S
 }
 
 /**
- * @tc.name: TransferKeyEventAsync
- * @tc.desc: TransferKeyEventAsync
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, TransferKeyEventAsync, Function | SmallTest | Level1)
-{
-    extensionSession_->windowEventChannel_ = mockEventChannel_;
-    extensionSession_->channelListener_ = new (std::nothrow) WindowEventChannelListener();
-    ASSERT_NE(extensionSession_->channelListener_, nullptr);
-
-    auto keyEvent = MMI::KeyEvent::Create();
-    ASSERT_NE(keyEvent, nullptr);
-    bool isPreImeEvent = false;
-    EXPECT_CALL(*mockEventChannel_, TransferKeyEventForConsumedAsync).Times(1).WillOnce(Return(WSError::WS_OK));
-    WSError result = extensionSession_->TransferKeyEventAsync(keyEvent, isPreImeEvent);
-    ASSERT_EQ(result, WSError::WS_OK);
-
-    keyEvent = nullptr;
-    EXPECT_CALL(*mockEventChannel_, TransferKeyEventForConsumedAsync).Times(0);
-    result = extensionSession_->TransferKeyEventAsync(keyEvent, isPreImeEvent);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-
-    extensionSession_->windowEventChannel_ = nullptr;
-    EXPECT_CALL(*mockEventChannel_, TransferKeyEventForConsumedAsync).Times(0);
-    result = extensionSession_->TransferKeyEventAsync(keyEvent, isPreImeEvent);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-}
-
-/**
  * @tc.name: UpdateAvoidArea
  * @tc.desc: test function : UpdateAvoidArea
  * @tc.type: FUNC
  */
 HWTEST_F(ExtensionSessionTest, UpdateAvoidArea, Function | SmallTest | Level1)
 {
-    extensionSession_->sessionStage_ = mockSessionStage_;
-
-    extensionSession_->state_ = SessionState::STATE_DISCONNECT;
-    sptr<AvoidArea> avoidArea = new (std::nothrow) AvoidArea();
-    ASSERT_NE(avoidArea, nullptr);
+    SessionInfo info;
+    info.abilityName_ = "SetBrightness";
+    info.bundleName_ = "SetBrightness1";
+    ExtensionSession extensionSession_(info);
+    ASSERT_TRUE(extensionSession_ != nullptr);
+    sptr<AvoidArea> avoidArea = new AvoidArea();
     AvoidAreaType type = AvoidAreaType::TYPE_SYSTEM;
-    EXPECT_CALL(*mockSessionStage_, UpdateAvoidArea).Times(0);
-    WSError res = extensionSession_->UpdateAvoidArea(avoidArea, type);
+    WSError res = extensionSession_.UpdateAvoidArea(avoidArea, type);
     ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, res);
-
-    extensionSession_->state_ = SessionState::STATE_CONNECT;
-    EXPECT_CALL(*mockSessionStage_, UpdateAvoidArea).Times(1).WillOnce(Return(WSError::WS_OK));
-    res = extensionSession_->UpdateAvoidArea(avoidArea, type);
-    ASSERT_EQ(WSError::WS_OK, res);
-}
-
-/**
- * @tc.name: GetAvoidAreaByType
- * @tc.desc: test function : GetAvoidAreaByType
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, GetAvoidAreaByType, Function | SmallTest | Level1)
-{
-    MockFunction<AvoidArea(AvoidAreaType type)> mockNotifyGetAvoidAreaByTypeFunc;
-    extSessionEventCallback_->notifyGetAvoidAreaByTypeFunc_ = mockNotifyGetAvoidAreaByTypeFunc.AsStdFunction();
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    AvoidAreaType type = AvoidAreaType::TYPE_SYSTEM;
-    EXPECT_CALL(mockNotifyGetAvoidAreaByTypeFunc, Call(_)).Times(1).WillOnce([](AvoidAreaType type) {
-        return AvoidArea();
-    });
-    auto res = extensionSession_->GetAvoidAreaByType(type);
-    ASSERT_EQ(res, AvoidArea());
-
-    extSessionEventCallback_->notifyGetAvoidAreaByTypeFunc_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifyGetAvoidAreaByTypeFunc, Call(_)).Times(0);
-    res = extensionSession_->GetAvoidAreaByType(type);
-    ASSERT_EQ(res, AvoidArea());
-
-    extSessionEventCallback_ = nullptr;
-    extensionSession_->RegisterExtensionSessionEventCallback(extSessionEventCallback_);
-    EXPECT_CALL(mockNotifyGetAvoidAreaByTypeFunc, Call(_)).Times(0);
-    res = extensionSession_->GetAvoidAreaByType(type);
-    ASSERT_EQ(res, AvoidArea());
-}
-
-/**
- * @tc.name: Background
- * @tc.desc: test function : Background
- * @tc.type: FUNC
- */
-HWTEST_F(ExtensionSessionTest, Background, Function | SmallTest | Level1)
-{
-    ASSERT_NE(extensionSession_->property_, nullptr);
-    extensionSession_->state_ = SessionState::STATE_DISCONNECT;
-    extensionSession_->property_->type_ = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW;
-    auto res = extensionSession_->Background();
-    ASSERT_EQ(res, WSError::WS_ERROR_INVALID_SESSION);
-
-    extensionSession_->state_ = SessionState::STATE_ACTIVE;
-    res = extensionSession_->Background();
-    ASSERT_EQ(res, WSError::WS_ERROR_INVALID_SESSION);
-
-    extensionSession_->property_->type_ = WindowType::WINDOW_TYPE_UI_EXTENSION;
-    res = extensionSession_->Background();
-    ASSERT_EQ(res, WSError::WS_OK);
-    ASSERT_FALSE(extensionSession_->isActive_);
-    ASSERT_EQ(extensionSession_->state_, SessionState::STATE_BACKGROUND);
-
-    extensionSession_->state_ = SessionState::STATE_DISCONNECT;
-    res = extensionSession_->Background();
-    ASSERT_EQ(res, WSError::WS_ERROR_INVALID_SESSION);
 }
 
 }

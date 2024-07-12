@@ -26,7 +26,6 @@
 #include "session/container/include/zidl/window_event_channel_interface.h"
 #include "window_property.h"
 #include "window_transition_info.h"
-#include "mission_snapshot.h"
 #include "zidl/window_interface.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "interfaces/include/ws_common.h"
@@ -84,12 +83,8 @@ public:
         TRANS_ID_SET_MAXIMIZE_MODE,
         TRANS_ID_GET_MAXIMIZE_MODE,
         TRANS_ID_GET_FOCUS_WINDOW_INFO,
-        TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB,
-        TRANS_ID_UPDATE_MODALEXTENSION_RECT_TO_SCB,
-        TRANS_ID_PROCESS_MODALEXTENSION_POINTDOWN_TO_SCB,
         TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS,
         TRANS_ID_GET_HOST_WINDOW_RECT,
-        TRANS_ID_GET_UNRELIABLE_WINDOW_INFO_ID,
     };
     virtual WMError CreateWindow(sptr<IWindow>& window, sptr<WindowProperty>& property,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode,
@@ -115,7 +110,6 @@ public:
     virtual WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) = 0;
     virtual WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) = 0;
-    virtual WMError GetUnreliableWindowInfo(int32_t windowId, std::vector<sptr<UnreliableWindowInfo>>& infos) = 0;
     virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) = 0;
     virtual WMError SetWindowAnimationController(const sptr<RSIWindowAnimationController>& controller) = 0;
     virtual WMError GetSystemConfig(SystemConfig& systemConfig) = 0;
@@ -137,10 +131,6 @@ public:
     virtual void NotifyDumpInfoResult(const std::vector<std::string>& info) {};
     virtual WSError DumpSessionAll(std::vector<std::string> &infos) { return WSError::WS_OK; }
     virtual WSError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos) { return WSError::WS_OK; }
-    virtual WSError GetUIContentRemoteObj(int32_t persistentId, sptr<IRemoteObject>& uiContentRemoteObj)
-    {
-        return WSError::WS_OK;
-    }
     virtual WMError GetWindowAnimationTargets(std::vector<uint32_t> missionIds,
         std::vector<sptr<RSWindowAnimationTarget>>& targets) = 0;
     virtual void SetMaximizeMode(MaximizeMode maximizeMode) = 0;
@@ -171,6 +161,10 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual WMError UpdateSessionProperty(const sptr<WindowSessionProperty>& property, WSPropertyChangeAction action)
+    {
+        return WMError::WM_OK;
+    }
     virtual WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken)
     {
         return WSError::WS_OK;
@@ -179,8 +173,7 @@ public:
     {
         return WSError::WS_OK;
     }
-    virtual WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true,
-        FocusChangeReason reason = FocusChangeReason::DEFAULT)
+    virtual WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true)
     {
         return WMError::WM_OK;
     }
@@ -188,10 +181,6 @@ public:
     virtual WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)
     {
         return WSError::WS_OK;
-    }
-    virtual WMError GetSnapshotByWindowId(int32_t persistentId, std::shared_ptr<Media::PixelMap>& pixelMap)
-    {
-        return WMError::WM_OK;
     }
     virtual WSError UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener)
     {
@@ -201,16 +190,17 @@ public:
     {
         return WSError::WS_ERROR_DEVICE_NOT_SUPPORT;
     }
-    virtual void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage,
-        const sptr<IRemoteObject>& token, uint64_t surfaceNodeId) {}
-    virtual void UpdateModalExtensionRect(const sptr<IRemoteObject>& token, Rect rect) {}
-    virtual void ProcessModalExtensionPointDown(const sptr<IRemoteObject>& token, int32_t posX, int32_t posY) {}
+    virtual void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage, int32_t persistentId,
+        int32_t parentId) {}
     virtual WSError AddOrRemoveSecureSession(int32_t persistentId, bool shouldHide)
     {
         return WSError::WS_OK;
     }
-    virtual WSError UpdateExtWindowFlags(const sptr<IRemoteObject>& token, uint32_t extWindowFlags,
-        uint32_t extWindowActions)
+    virtual WSError AddOrRemoveSecureExtSession(int32_t persistentId, int32_t parentId, bool shouldHide)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags)
     {
         return WSError::WS_OK;
     }
@@ -226,7 +216,7 @@ public:
     {
         return WMError::WM_OK;
     }
-    virtual WMError GetWindowModeType(WindowModeType& windowModeType)
+    virtual WMError GetWindowBackHomeStatus(bool &isBackHome)
     {
         return WMError::WM_OK;
     };

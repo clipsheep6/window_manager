@@ -19,7 +19,6 @@
 #include <event_handler.h>
 #include "window_manager_hilog.h"
 #include "wm_common_inner.h"
-#include "gtx_input_event_sender.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,20 +36,16 @@ InputTransferStation::~InputTransferStation()
 void InputEventListener::OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) const
 {
     if (keyEvent == nullptr) {
-        TLOGE(WmsLogTag::WMS_INPUT_KEY_FLOW, "KeyEvent is nullptr");
+        TLOGE(WmsLogTag::WMS_EVENT, "KeyEvent is nullptr");
         return;
     }
     uint32_t windowId = static_cast<uint32_t>(keyEvent->GetAgentWindowId());
-    static uint32_t eventId = 0;
-    TLOGI(WmsLogTag::WMS_INPUT_KEY_FLOW, "eventId:%{public}d, InputTracking id:%{public}d, Receive keyEvent,"
-        " windowId:%{public}u",
-        eventId++, keyEvent->GetId(), windowId);
+    TLOGI(WmsLogTag::WMS_EVENT, "InputTracking id:%{public}d, Receive keyEvent, windowId:%{public}u",
+        keyEvent->GetId(), windowId);
     auto channel = InputTransferStation::GetInstance().GetInputChannel(windowId);
     if (channel == nullptr) {
         keyEvent->MarkProcessed();
-        TLOGE(WmsLogTag::WMS_INPUT_KEY_FLOW,
-            "WindowInputChannel is nullptr InputTracking id:%{public}d windowId:%{public}u",
-            keyEvent->GetId(), windowId);
+        TLOGE(WmsLogTag::WMS_EVENT, "WindowInputChannel is nullptr");
         return;
     }
     channel->HandleKeyEvent(keyEvent);
@@ -59,17 +54,17 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::KeyEvent> keyEvent) c
 void InputEventListener::OnInputEvent(std::shared_ptr<MMI::AxisEvent> axisEvent) const
 {
     if (axisEvent == nullptr) {
-        TLOGE(WmsLogTag::WMS_INPUT_KEY_FLOW, "AxisEvent is nullptr");
+        TLOGE(WmsLogTag::WMS_EVENT, "AxisEvent is nullptr");
         return;
     }
-    TLOGD(WmsLogTag::WMS_INPUT_KEY_FLOW, "Receive axisEvent, windowId: %{public}d", axisEvent->GetAgentWindowId());
+    TLOGD(WmsLogTag::WMS_EVENT, "Receive axisEvent, windowId: %{public}d", axisEvent->GetAgentWindowId());
     axisEvent->MarkProcessed();
 }
 
 void InputEventListener::OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointerEvent) const
 {
     if (pointerEvent == nullptr) {
-        TLOGE(WmsLogTag::WMS_INPUT_KEY_FLOW, "PointerEvent is nullptr");
+        TLOGE(WmsLogTag::WMS_EVENT, "PointerEvent is nullptr");
         return;
     }
     // If handling input event at server, client will receive pointEvent that the winId is -1, intercept log error
@@ -77,23 +72,19 @@ void InputEventListener::OnInputEvent(std::shared_ptr<MMI::PointerEvent> pointer
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetAgentWindowId());
     int32_t action = pointerEvent->GetPointerAction();
     if (action != MMI::PointerEvent::POINTER_ACTION_MOVE) {
-        static uint32_t eventId = 0;
-        TLOGI(WmsLogTag::WMS_INPUT_KEY_FLOW, "eventId:%{public}d, InputTracking id:%{public}d, "
-            "windowId:%{public}u action = %{public}d", eventId++, pointerEvent->GetId(), windowId,
+        TLOGI(WmsLogTag::WMS_EVENT, "id:%{public}d, Receive pointerEvent, "
+            "windowId:%{public}u action = %{public}d", pointerEvent->GetId(), windowId,
             pointerEvent->GetPointerAction());
     }
     auto channel = InputTransferStation::GetInstance().GetInputChannel(windowId);
     if (channel == nullptr) {
         if (windowId != invalidId) {
-            TLOGE(WmsLogTag::WMS_INPUT_KEY_FLOW, "WindowInputChannel is nullptr InputTracking id:%{public}d "
-                "windowId:%{public}u",
-                pointerEvent->GetId(), windowId);
+            TLOGE(WmsLogTag::WMS_EVENT, "WindowInputChannel is nullptr");
         }
         pointerEvent->MarkProcessed();
         return;
     }
     channel->HandlePointerEvent(pointerEvent);
-    GtxInputEventSender::GetInstance().SetTouchEvent(channel->GetWindowRect(), pointerEvent);
 }
 
 void InputTransferStation::AddInputWindow(const sptr<Window>& window)
@@ -137,7 +128,6 @@ void InputTransferStation::AddInputWindow(const sptr<Window>& window)
             }
         }
         MMI::InputManager::GetInstance()->SetWindowInputEventConsumer(listener, eventHandler_);
-        TLOGI(WmsLogTag::WMS_EVENT, "SetWindowInputEventConsumer success, windowid:%{public}u", windowId);
         inputListener_ = listener;
     }
 }

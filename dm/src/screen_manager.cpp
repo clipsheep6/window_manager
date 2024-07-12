@@ -25,6 +25,7 @@
 #include "singleton_delegator.h"
 #include "window_manager_hilog.h"
 
+
 namespace OHOS::Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM, "ScreenManager"};
@@ -34,7 +35,6 @@ class ScreenManager::Impl : public RefBase {
 public:
     Impl() = default;
     ~Impl();
-    
     static inline SingletonDelegator<ScreenManager> delegator;
     ScreenId CreateVirtualScreen(VirtualScreenOption option);
     sptr<Screen> GetScreen(ScreenId screenId);
@@ -56,7 +56,6 @@ private:
     void NotifyScreenChange(const sptr<ScreenInfo>& screenInfo);
     void NotifyScreenChange(const std::vector<sptr<ScreenInfo>>& screenInfos);
     bool UpdateScreenInfoLocked(sptr<ScreenInfo>);
-    std::string GetScreenInfoSrting(sptr<ScreenInfo> screenInfo);
 
     bool isAllListenersRemoved() const;
 
@@ -201,12 +200,10 @@ WM_IMPLEMENT_SINGLE_INSTANCE(ScreenManager)
 ScreenManager::ScreenManager()
 {
     pImpl_ = new Impl();
-    WLOGFD("Create screenmanager instance");
 }
 
 ScreenManager::~ScreenManager()
 {
-    WLOGFD("Destroy screenmanager instance");
 }
 
 ScreenManager::Impl::~Impl()
@@ -299,6 +296,10 @@ DMError ScreenManager::RegisterScreenListener(sptr<IScreenListener> listener)
 DMError ScreenManager::Impl::UnregisterScreenListener(sptr<IScreenListener> listener)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("unregister display manager agent permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
     auto iter = std::find(screenListeners_.begin(), screenListeners_.end(), listener);
     if (iter == screenListeners_.end()) {
         WLOGFE("could not find this listener");
@@ -428,7 +429,7 @@ DMError ScreenManager::Impl::UnregisterDisplayManagerAgent()
 
 DMError ScreenManager::MakeExpand(const std::vector<ExpandOption>& options, ScreenId& screenGroupId)
 {
-    WLOGFD("Make expand");
+    WLOGFI("Make expand");
     if (options.empty()) {
         return DMError::DM_ERROR_INVALID_PARAM;
     }
@@ -447,16 +448,16 @@ DMError ScreenManager::MakeExpand(const std::vector<ExpandOption>& options, Scre
     }
     DMError ret = SingletonContainer::Get<ScreenManagerAdapter>().MakeExpand(screenIds, startPoints, screenGroupId);
     if (screenGroupId == SCREEN_ID_INVALID) {
-        WLOGFE("Make expand failed");
+        WLOGFI("Make expand failed");
     }
     return ret;
 }
 
 DMError ScreenManager::MakeUniqueScreen(const std::vector<ScreenId>& screenIds)
 {
-    WLOGFD("start Make UniqueScreen");
+    WLOGFI("start Make UniqueScreen");
     if (screenIds.empty()) {
-        WLOGFE("screenIds is null");
+        WLOGFI("screenIds is null");
         return DMError::DM_ERROR_INVALID_PARAM;
     }
     if (screenIds.size() > MAX_SCREEN_SIZE) {
@@ -477,14 +478,14 @@ DMError ScreenManager::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> m
     DMError ret = SingletonContainer::Get<ScreenManagerAdapter>().MakeMirror(mainScreenId, mirrorScreenId,
                                                                              screenGroupId);
     if (screenGroupId == SCREEN_ID_INVALID) {
-        WLOGFE("create mirror failed");
+        WLOGFI("create mirror failed");
     }
     return ret;
 }
 
 DMError ScreenManager::StopExpand(const std::vector<ScreenId>& expandScreenIds)
 {
-    WLOGFD("Stop expand");
+    WLOGFI("Stop expand");
     if (expandScreenIds.empty()) {
         return DMError::DM_OK;
     }
@@ -493,7 +494,7 @@ DMError ScreenManager::StopExpand(const std::vector<ScreenId>& expandScreenIds)
 
 DMError ScreenManager::StopMirror(const std::vector<ScreenId>& mirrorScreenIds)
 {
-    WLOGFD("Stop mirror");
+    WLOGFI("Stop mirror");
     if (mirrorScreenIds.empty()) {
         return DMError::DM_OK;
     }
@@ -597,11 +598,6 @@ DMError ScreenManager::SetScreenRotationLocked(bool isLocked)
     return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenRotationLocked(isLocked);
 }
 
-DMError ScreenManager::SetScreenRotationLockedFromJs(bool isLocked)
-{
-    return SingletonContainer::Get<ScreenManagerAdapter>().SetScreenRotationLockedFromJs(isLocked);
-}
-
 DMError ScreenManager::IsScreenRotationLocked(bool& isLocked)
 {
     return SingletonContainer::Get<ScreenManagerAdapter>().IsScreenRotationLocked(isLocked);
@@ -648,30 +644,13 @@ bool ScreenManager::Impl::UpdateScreenInfoLocked(sptr<ScreenInfo> screenInfo)
     }
     auto iter = screenMap_.find(screenId);
     if (iter != screenMap_.end() && iter->second != nullptr) {
-        WLOGFD("Screen Info Updated: %{public}s",
-            GetScreenInfoSrting(screenInfo).c_str());
+        WLOGFD("get screen in screen map");
         iter->second->UpdateScreenInfo(screenInfo);
         return true;
     }
     sptr<Screen> screen = new Screen(screenInfo);
     screenMap_[screenId] = screen;
     return true;
-}
-
-std::string ScreenManager::Impl::GetScreenInfoSrting(sptr<ScreenInfo> screenInfo)
-{
-    if (screenInfo == nullptr) {
-        WLOGFE("screenInfo nullptr.");
-        return "";
-    }
-    std::ostringstream oss;
-    oss <<  "Screen ID: " << screenInfo->GetScreenId() << ", ";
-    oss <<  "Name: " << screenInfo->GetName() << ", ";
-    oss <<  "VirtualWidth: " << screenInfo->GetVirtualWidth() << ", ";
-    oss <<  "VirtualHeight: " << screenInfo->GetVirtualHeight() << ", ";
-    oss <<  "VirtualPixelRatio: " << screenInfo->GetVirtualPixelRatio() << ", ";
-    oss <<  "Rotation: " << static_cast<int32_t>(screenInfo->GetRotation());
-    return oss.str();
 }
 
 bool ScreenManager::Impl::isAllListenersRemoved() const

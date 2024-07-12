@@ -16,6 +16,7 @@
 #ifndef OHOS_ROSEN_DISPLAY_MANAGER_AGENT_STUB_H
 #define OHOS_ROSEN_DISPLAY_MANAGER_AGENT_STUB_H
 
+
 #include <cstdint>
 #include <iremote_stub.h>
 #include <message_option.h>
@@ -42,7 +43,6 @@ private:
     int32_t ProcDisplayChanged(MessageParcel& data);
     int32_t ProcScreenShot(MessageParcel& data);
     int32_t ProcPrivateWindow(MessageParcel& data);
-    int32_t ProcPrivateWindowList(MessageParcel& data);
     int32_t ProcFoldStatusChanged(MessageParcel& data);
     int32_t ProcDisplayChangeInfoChanged(MessageParcel& data);
     int32_t ProcDisplayModechanged(MessageParcel& data);
