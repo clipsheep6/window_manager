@@ -32,7 +32,7 @@
 namespace OHOS {
 namespace Rosen {
 napi_value CreateJsWindowObject(napi_env env, sptr<Window>& window);
-std::shared_ptr<NativeReference> FindJsWindowObject(const std::string& windowName);
+std::shared_ptr<NativeReference> FindJsWindowObject(std::string windowName);
 void BindFunctions(napi_env env, napi_value object, const char *moduleName);
 napi_value NapiGetUndefined(napi_env env);
 napi_valuetype GetType(napi_env env, napi_value value);
@@ -152,8 +152,6 @@ public:
     static napi_value SetTitleButtonVisible(napi_env env, napi_callback_info info);
     static napi_value SetWindowMask(napi_env env, napi_callback_info info);
     static napi_value SetWindowGrayScale(napi_env env, napi_callback_info info);
-    static napi_value SetImmersiveModeEnabledState(napi_env env, napi_callback_info info);
-    static napi_value GetImmersiveModeEnabledState(napi_env env, napi_callback_info info);
 
 private:
     std::string GetWindowName();
@@ -161,7 +159,6 @@ private:
     static bool ParseRotateOption(napi_env env, napi_value jsObject, Transform& trans);
     static bool ParseTranslateOption(napi_env env, napi_value jsObject, Transform& trans);
     static bool ParseWindowLimits(napi_env env, napi_value jsObject, WindowLimits& windowLimits);
-    bool CheckWindowMaskParams(napi_env env, napi_value jsObject);
     napi_value LoadContentScheduleOld(napi_env env, napi_callback_info info, bool isLoadedByName);
     napi_value LoadContentScheduleNew(napi_env env, napi_callback_info info, bool isLoadedByName);
     napi_value HideWindowFunction(napi_env env, napi_callback_info info);
@@ -217,8 +214,6 @@ private:
     napi_value OnGetWindowDecorHeight(napi_env env, napi_callback_info info);
     napi_value OnGetTitleButtonRect(napi_env env, napi_callback_info info);
     napi_value OnSetTitleButtonVisible(napi_env env, napi_callback_info info);
-    napi_value OnSetImmersiveModeEnabledState(napi_env env, napi_callback_info info);
-    napi_value OnGetImmersiveModeEnabledState(napi_env env, napi_callback_info info);
 
     // colorspace, gamut
     napi_value OnIsSupportWideGamut(napi_env env, napi_callback_info info);

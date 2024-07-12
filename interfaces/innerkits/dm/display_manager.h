@@ -19,7 +19,6 @@
 #include <vector>
 #include <mutex>
 #include <pixel_map.h>
-#include <set>
 
 #include "display.h"
 #include "dm_common.h"
@@ -69,28 +68,6 @@ public:
          * @param hasPrivate True means the display has private window, false means the opposite.
          */
         virtual void OnPrivateWindow([[maybe_unused]]bool hasPrivate) {}
-    };
-
-    class IPrivateWindowListChangeListener : public virtual RefBase {
-    public:
-        /**
-         * @brief Monitor whether the existence of privacy window list has changed.
-         *
-         * @param displayId Id of the target display.
-         *
-         * @param privacyWindowList privacywindow bundlename list of the target display.
-         */
-        virtual void OnPrivateWindowListChange([[maybe_unused]]DisplayId displayId,
-            [[maybe_unused]]std::vector<std::string> privacyWindowList) {}
-
-        /**
-         * @brief only for UT to compare privacy window list.
-         *
-         * @param callback callback.
-         */
-        virtual void setCallback([[maybe_unused]]std::function<void(std::vector<std::string>)> callback) {}
-    private:
-        std::function<void(std::vector<std::string>)> callback_;
     };
 
     class IFoldStatusListener : public virtual RefBase {
@@ -396,22 +373,6 @@ public:
     DMError UnregisterPrivateWindowListener(sptr<IPrivateWindowListener> listener);
 
     /**
-     * @brief Register a listener for the event of private window.
-     *
-     * @param listener IPrivateWindowListChangeListener.
-     * @return DM_OK means register success, others means register failed.
-     */
-    DMError RegisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
-
-    /**
-     * @brief Unregister an existed listener for the event of private window.
-     *
-     * @param listener IPrivateWindowListChangeListener.
-     * @return DM_OK means unregister success, others means unregister failed.
-     */
-    DMError UnregisterPrivateWindowListChangeListener(sptr<IPrivateWindowListChangeListener> listener);
-
-    /**
      * @brief Register a listener for the event of screen fold status changed.
      *
      * @param listener IFoldStatusListener.
@@ -584,44 +545,6 @@ public:
      */
     bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId);
 
-    /**
-     * @brief Set virtual screen black list to RS.
-     *
-     * @param screenId ScreenId used in virtual screen.
-     * @param windowIdList The windowId list to shield on cast screen.
-    */
-    void SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList);
-
-    /**
-     * @brief When casting the screen, the display not be skipped after the physical screen is turned off.
-     *
-     * @param screenId ScreenId used in virtual screen.
-    */
-    void DisablePowerOffRenderControl(ScreenId screenId);
-
-    /**
-     * @brief get to freeze status with specified pid list
-     *
-     * @param pidList Indicates the calling pid
-     * @param isProxy value is true indicates process status is freeze
-     * @param DM_OK means process status update success, others means update failed.
-    */
-    DMError ProxyForFreeze(std::set<int32_t> pidList, bool isProxy);
-
-    /**
-     * @brief reset all process freeze status
-     *
-     * @param DM_OK means process status update success, others means update failed.
-    */
-    DMError ResetAllFreezeStatus();
-
-    /**
-     * @brief get all display physical resolution
-     *
-     * @return all physical resolution
-     */
-    std::vector<DisplayPhysicalResolution> GetAllDisplayPhysicalResolution();
-
     constexpr static int32_t MAX_RESOLUTION_SIZE_SCREENSHOT = 3840; // max resolution, 4K
 
 private:
@@ -631,6 +554,7 @@ private:
 
     class Impl;
     std::recursive_mutex mutex_;
+    bool destroyed_ = false;
     sptr<Impl> pImpl_;
 };
 } // namespace OHOS::Rosen

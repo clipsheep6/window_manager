@@ -30,7 +30,6 @@ public:
     MOCK_METHOD3(UpdateRect, WSError(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction));
     MOCK_METHOD0(UpdateDensity, void(void));
-    MOCK_METHOD0(UpdateOrientation, WSError(void));
     MOCK_METHOD0(HandleBackEvent, WSError(void));
     MOCK_METHOD0(NotifyDestroy, WSError(void));
     MOCK_METHOD1(UpdateFocus, WSError(bool isFocused));
@@ -38,8 +37,7 @@ public:
     MOCK_METHOD2(NotifyTransferComponentDataSync, WSErrorCode(const AAFwk::WantParams& wantParams,
         AAFwk::WantParams& reWantParams));
     MOCK_METHOD1(MarkProcessed, WSError(int32_t eventId));
-    MOCK_METHOD2(NotifyOccupiedAreaChangeInfo, void(sptr<OccupiedAreaChangeInfo> info,
-        const std::shared_ptr<RSTransaction>& rsTransaction));
+    MOCK_METHOD1(NotifyOccupiedAreaChangeInfo, void(sptr<OccupiedAreaChangeInfo> info));
     MOCK_METHOD2(UpdateAvoidArea, WSError(const sptr<AvoidArea>& avoidArea, AvoidAreaType type));
     MOCK_METHOD1(DumpSessionElementInfo, void(const std::vector<std::string>& params));
     MOCK_METHOD0(NotifyScreenshot, void(void));
@@ -51,17 +49,14 @@ public:
     MOCK_METHOD2(NotifySessionForeground, void(uint32_t reason, bool withAnimation));
     MOCK_METHOD3(NotifySessionBackground, void(uint32_t reason, bool withAnimation, bool isFromInnerkits));
     MOCK_METHOD2(UpdateTitleInTargetPos, WSError(bool isShow, int32_t height));
-    MOCK_METHOD2(NotifyDensityFollowHost, WSError(bool isFollowHost, float densityValue));
     MOCK_METHOD1(UpdateWindowDrawingContentInfo, void(const WindowDrawingContentInfo& info));
     MOCK_METHOD1(NotifyWindowVisibility, WSError(bool isVisible));
     MOCK_METHOD1(NotifyTransformChange, void(const Transform& transform));
     MOCK_METHOD1(NotifyDialogStateChange, WSError(bool isForeground));
     MOCK_METHOD2(SetPipActionEvent, WSError(const std::string& action, int32_t status));
-    MOCK_METHOD2(SetPiPControlEvent, WSError(WsPiPControlType controlType, WsPiPControlStatus status));
     MOCK_METHOD1(UpdateDisplayId, WSError(uint64_t displayId));
     MOCK_METHOD2(NotifyDisplayMove, void(DisplayId from, DisplayId to));
     MOCK_METHOD1(SwitchFreeMultiWindow, WSError(bool enable));
-    MOCK_METHOD1(GetUIContentRemoteObj, WSError(sptr<IRemoteObject>& uiContentRemoteObj));
 };
 } // namespace Rosen
 } // namespace OHOS

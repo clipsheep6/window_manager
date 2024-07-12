@@ -28,7 +28,6 @@
 #include "session_manager/include/zidl/scene_session_manager_interface.h"
 #include "window_manager.h"
 #include "window_manager_agent.h"
-#include "ws_common.h"
 #include "zidl/window_manager_agent_interface.h"
 #include "window_manager_hilog.h"
 
@@ -343,19 +342,6 @@ HWTEST_F(SessionStageStubTest, HandleUpdateDensity, Function | SmallTest | Level
 }
 
 /**
- * @tc.name: HandleUpdateOrientation
- * @tc.desc: test function : HandleUpdateOrientation
- * @tc.type: FUNC
- */
-HWTEST_F(SessionStageStubTest, HandleUpdateOrientation, Function | SmallTest | Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    ASSERT_TRUE((sessionStageStub_ != nullptr));
-    ASSERT_EQ(0, sessionStageStub_->HandleUpdateOrientation(data, reply));
-}
-
-/**
  * @tc.name: HandleNotifyCloseExistPipWindow
  * @tc.desc: test function : HandleNotifyCloseExistPipWindow
  * @tc.type: FUNC
@@ -395,32 +381,6 @@ HWTEST_F(SessionStageStubTest, HandleUpdateTitleInTargetPos, Function | SmallTes
 }
 
 /**
- * @tc.name: HandleNotifyDensityFollowHost
- * @tc.desc: test function : HandleNotifyDensityFollowHost
- * @tc.type: FUNC
- */
-HWTEST_F(SessionStageStubTest, HandleNotifyDensityFollowHost, Function | SmallTest | Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    ASSERT_TRUE((sessionStageStub_ != nullptr));
-    ASSERT_EQ(0, sessionStageStub_->HandleNotifyDensityFollowHost(data, reply));
-}
-
-/**
- * @tc.name: HandleGetUIContentRemoteObj
- * @tc.desc: test function : HandleGetUIContentRemoteObj
- * @tc.type: FUNC
- */
-HWTEST_F(SessionStageStubTest, HandleGetUIContentRemoteObj, Function | SmallTest | Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    ASSERT_NE(sessionStageStub_, nullptr);
-    ASSERT_EQ(0, sessionStageStub_->HandleGetUIContentRemoteObj(data, reply));
-}
-
-/**
  * @tc.name: HandleSetPipActionEvent
  * @tc.desc: test function : HandleSetPipActionEvent
  * @tc.type: FUNC
@@ -433,23 +393,6 @@ HWTEST_F(SessionStageStubTest, HandleSetPipActionEvent, Function | SmallTest | L
     data.WriteInt32(1);
     ASSERT_TRUE((sessionStageStub_ != nullptr));
     ASSERT_EQ(0, sessionStageStub_->HandleSetPipActionEvent(data, reply));
-}
-
-/**
- * @tc.name: HandleSetPiPControlEvent
- * @tc.desc: test function : HandleSetPiPControlEvent
- * @tc.type: FUNC
- */
-HWTEST_F(SessionStageStubTest, HandleSetPiPControlEvent, Function | SmallTest | Level1)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = WsPiPControlStatus::PLAY;
-    data.WriteUint32(static_cast<uint32_t>(controlType));
-    data.WriteInt32(static_cast<int32_t>(status));
-    ASSERT_TRUE(sessionStageStub_ != nullptr);
-    ASSERT_EQ(0, sessionStageStub_->HandleSetPiPControlEvent(data, reply));
 }
 }
 }

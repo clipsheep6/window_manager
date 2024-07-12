@@ -33,8 +33,8 @@ class JsDisplayListener : public DisplayManager::IDisplayListener,
                           public DisplayManager::IDisplayModeListener,
                           public DisplayManager::IAvailableAreaListener {
 public:
-    explicit JsDisplayListener(napi_env env);
-    ~JsDisplayListener() override;
+    explicit JsDisplayListener(napi_env env) : env_(env) {}
+    ~JsDisplayListener() override = default;
     void AddCallback(const std::string& type, napi_value jsListenerObject);
     void RemoveAllCallback();
     void RemoveCallback(napi_env env, const std::string& type, napi_value jsListenerObject);
@@ -54,7 +54,6 @@ private:
     std::mutex mtx_;
     std::map<std::string, std::vector<std::unique_ptr<NativeReference>>> jsCallBack_;
     napi_value CreateDisplayIdArray(napi_env env, const std::vector<DisplayId>& data);
-    static void CleanEnv(void* obj);
 };
 const std::string EVENT_ADD = "add";
 const std::string EVENT_REMOVE = "remove";

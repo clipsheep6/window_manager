@@ -20,7 +20,6 @@
 #include "window_manager_hilog.h"
 #include "window_option.h"
 #include "js_window.h"
-#include "permission.h"
 namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
@@ -28,20 +27,20 @@ namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "JsTransitionController"};
 }
 
-static int g_jsTransCxtCtorCnt = 0;
-static int g_jsTransCxtDtorCnt = 0;
-static int g_jsTransCtrlCtorCnt = 0;
-static int g_jsTransCtrlDtorCnt = 0;
+static int jsTransCxtCtorCnt = 0;
+static int jsTransCxtDtorCnt = 0;
+static int jsTransCtrlCtorCnt = 0;
+static int jsTransCtrlDtorCnt = 0;
 
 JsTransitionContext::JsTransitionContext(sptr<Window> window, bool isShownTransContext)
     : windowToken_(window), isShownTransContext_(isShownTransContext)
 {
-    WLOGI("[NAPI] JsTransitionContext constructorCnt: %{public}d", ++g_jsTransCxtCtorCnt);
+    WLOGI("[NAPI] JsTransitionContext constructorCnt: %{public}d", ++jsTransCxtCtorCnt);
 }
 
 JsTransitionContext::~JsTransitionContext()
 {
-    WLOGI("[NAPI] ~JsTransitionContext deConstructorCnt: %{public}d", ++g_jsTransCxtDtorCnt);
+    WLOGI("[NAPI] ~JsTransitionContext deConstructorCnt: %{public}d", ++jsTransCxtDtorCnt);
 }
 
 void JsTransitionContext::Finalizer(napi_env env, void* data, void* hint)
@@ -59,22 +58,20 @@ napi_value JsTransitionContext::CompleteTransition(napi_env env, napi_callback_i
 
 napi_value JsTransitionContext::OnCompleteTransition(napi_env env, napi_callback_info info)
 {
-    if (!Permission::IsSystemCalling()) {
-        TLOGE(WmsLogTag::WMS_SYSTEM, "not system app, permission denied!");
-        return NapiThrowError(env, WmErrorCode::WM_ERROR_NOT_SYSTEM_APP);
-    }
-
+    WmErrorCode errCode = WmErrorCode::WM_OK;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 1) {
-        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
     bool transitionCompleted = false;
-    if (!ConvertFromJsValue(env, argv[0], transitionCompleted)) {
+    if (errCode == WmErrorCode::WM_OK && !ConvertFromJsValue(env, argv[0], transitionCompleted)) {
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
-
     WMError ret = WMError::WM_OK;
     auto window = windowToken_.promote();
     if (window == nullptr) {
@@ -138,12 +135,12 @@ JsTransitionController::JsTransitionController(napi_env env, std::shared_ptr<Nat
     sptr<Window> window)
     : env_(env), jsWin_(jsWin), windowToken_(window), weakRef_(wptr<JsTransitionController> (this))
 {
-    WLOGI("[NAPI] JsTransitionController constructorCnt: %{public}d", ++g_jsTransCtrlCtorCnt);
+    WLOGI("[NAPI] JsTransitionController constructorCnt: %{public}d", ++jsTransCtrlCtorCnt);
 }
 
 JsTransitionController::~JsTransitionController()
 {
-    WLOGI("[NAPI] ~JsTransitionController deConstructorCnt: %{public}d", ++g_jsTransCtrlDtorCnt);
+    WLOGI("[NAPI] ~JsTransitionController deConstructorCnt: %{public}d", ++jsTransCtrlDtorCnt);
 }
 
 void JsTransitionController::AnimationForShown()

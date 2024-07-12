@@ -500,8 +500,7 @@ WMError WindowManagerProxy::SetWindowGravity(uint32_t windowId, WindowGravity gr
     return static_cast<WMError>(ret);
 }
 
-__attribute__((no_sanitize("cfi"))) WMError WindowManagerProxy::GetTopWindowId(
-    uint32_t mainWinId, uint32_t& topWinId)
+WMError WindowManagerProxy::GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -545,32 +544,6 @@ WMError WindowManagerProxy::GetAccessibilityWindowInfo(std::vector<sptr<Accessib
     return static_cast<WMError>(reply.ReadInt32());
 }
 
-WMError WindowManagerProxy::GetUnreliableWindowInfo(int32_t windowId,
-    std::vector<sptr<UnreliableWindowInfo>>& infos)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteInt32(windowId)) {
-        WLOGFE("Write windowId failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (Remote()->SendRequest(
-        static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_GET_UNRELIABLE_WINDOW_INFO_ID),
-        data, reply, option) != ERR_NONE) {
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<UnreliableWindowInfo>(reply, infos)) {
-        WLOGFE("read unreliable window infos failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    return static_cast<WMError>(reply.ReadInt32());
-}
-
 WMError WindowManagerProxy::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
 {
     MessageParcel data;
@@ -605,10 +578,6 @@ WMError WindowManagerProxy::GetSystemConfig(SystemConfig& systemConfig)
         return WMError::WM_ERROR_IPC_FAILED;
     }
     sptr<SystemConfig> config = reply.ReadParcelable<SystemConfig>();
-    if (config == nullptr) {
-        WLOGFE("Read SystemConfig failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
     systemConfig = *config;
     int32_t ret = reply.ReadInt32();
     return static_cast<WMError>(ret);
@@ -896,35 +865,28 @@ std::shared_ptr<Media::PixelMap> WindowManagerProxy::GetSnapshot(int32_t windowI
     MessageParcel reply;
     MessageOption option;
 
+    Media::InitializationOptions opts;
+    opts.size.width = 200;  // 200：default width
+    opts.size.height = 300; // 300：default height
+    std::shared_ptr<Media::PixelMap> pixelMap(Media::PixelMap::Create(opts).release());
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
-        return nullptr;
+        return pixelMap;
     }
     if (!data.WriteUint32(windowId)) {
         WLOGFE("Write windowId failed");
-        return nullptr;
+        return pixelMap;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(WindowManagerMessage::TRANS_ID_GET_SNAPSHOT),
         data, reply, option) != ERR_NONE) {
-        return nullptr;
+        return pixelMap;
     }
 
     std::shared_ptr<Media::PixelMap> map(reply.ReadParcelable<Media::PixelMap>());
     if (map == nullptr) {
-        WLOGFE("Read pixelMap is null");
-        return nullptr;
+        return pixelMap;
     }
     return map;
-}
-
-WMError WindowManagerProxy::GetSnapshotByWindowId(int32_t persistentId, std::shared_ptr<Media::PixelMap>& pixelMap)
-{
-    pixelMap = GetSnapshot(persistentId);
-    if (pixelMap == nullptr) {
-        WLOGFE("Get snapshot is nullptr");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-    return WMError::WM_OK;
 }
 
 WMError WindowManagerProxy::SetGestureNavigaionEnabled(bool enable)
@@ -1074,9 +1036,7 @@ void WindowManagerProxy::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
         return;
     }
     sptr<FocusChangeInfo> info = reply.ReadParcelable<FocusChangeInfo>();
-    if (info != nullptr) {
-        focusInfo = *info;
-    }
+    focusInfo = *info;
 }
 } // namespace Rosen
 } // namespace OHOS

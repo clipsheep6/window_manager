@@ -52,7 +52,7 @@ void SCBSystemSessionTest::SetUp()
     info.abilityName_ = "testSCBSystemSession1";
     info.moduleName_ = "testSCBSystemSession2";
     info.bundleName_ = "testSCBSystemSession3";
-    scbSystemSession_ = new (std::nothrow) SCBSystemSession(info, specificCallback);
+    scbSystemSession_ = new SCBSystemSession(info, specificCallback);
     EXPECT_NE(nullptr, scbSystemSession_);
 }
 
@@ -123,64 +123,6 @@ HWTEST_F(SCBSystemSessionTest, UpdateFocus02, Function | SmallTest | Level1)
     bool isFocused = scbSystemSession_->isFocused_;
 
     ASSERT_EQ(WSError::WS_OK, scbSystemSession_->UpdateFocus(!isFocused));
-}
-
-/**
- * @tc.name: UpdateWindowMode
- * @tc.desc: check func UpdateWindowMode
- * @tc.type: FUNC
- */
-HWTEST_F(SCBSystemSessionTest, UpdateWindowMode, Function | SmallTest | Level1)
-{
-    scbSystemSession_->PresentFocusIfPointDown();
-    scbSystemSession_->PresentFoucusIfNeed(2);
-    ASSERT_EQ(WSError::WS_OK, scbSystemSession_->SetSystemSceneBlockingFocus(true));
-    WSRect rect = {0, 0, 0, 0};
-    scbSystemSession_->UpdatePointerArea(rect);
-    auto ret = scbSystemSession_->UpdateWindowMode(WindowMode::WINDOW_MODE_UNDEFINED);
-    ASSERT_EQ(WSError::WS_ERROR_INVALID_SESSION, ret);
-}
-
-/**
- * @tc.name: RegisterBufferAvailableCallback
- * @tc.desc: check func RegisterBufferAvailableCallback
- * @tc.type: FUNC
- */
-HWTEST_F(SCBSystemSessionTest, RegisterBufferAvailableCallback, Function | SmallTest | Level3)
-{
-    ASSERT_NE(scbSystemSession_, nullptr);
-    scbSystemSession_->RegisterBufferAvailableCallback([]() {});
-}
-
-/**
- * @tc.name: BindKeyboardSession01
- * @tc.desc: check func BindKeyboardSession
- * @tc.type: FUNC
- */
-HWTEST_F(SCBSystemSessionTest, BindKeyboardSession01, Function | SmallTest | Level3)
-{
-    scbSystemSession_->BindKeyboardSession(nullptr);
-    int ret = 0;
-    ASSERT_EQ(0, ret);
-}
-
-/**
- * @tc.name: BindKeyboardSession02
- * @tc.desc: check func BindKeyboardSession
- * @tc.type: FUNC
- */
-HWTEST_F(SCBSystemSessionTest, BindKeyboardSession02, Function | SmallTest | Level3)
-{
-    SessionInfo info;
-    info.bundleName_ = "IntentionEventManager";
-    info.moduleName_ = "InputEventListener";
-    info.isSystem_ = true;
-    sptr<SceneSession::SpecificSessionCallback> callback =
-        new (std::nothrow) SceneSession::SpecificSessionCallback();
-    sptr<SceneSession> session = new (std::nothrow) SceneSession(info, callback);
-    scbSystemSession_->BindKeyboardSession(session);
-    int ret = 0;
-    ASSERT_EQ(0, ret);
 }
 }
 }

@@ -20,7 +20,6 @@
 #include <locale>
 #include <codecvt>
 #include <vector>
-#include <set>
 #include <refbase.h>
 
 #include "event_tracker.h"
@@ -38,12 +37,10 @@ public:
 
     void ExcuteDumpCmd();
     void DumpEventTracker(EventTracker& tracker);
-    void DumpFreezedPidList(std::set<int32_t> pidList);
 
 private:
     void ShowHelpInfo();
     void ShowAllScreenInfo();
-    void DumpFoldStatus();
     void OutputDumpInfo();
     void DumpScreenSessionById(ScreenId id);
     void DumpRsInfoById(ScreenId id);

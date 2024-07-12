@@ -24,7 +24,6 @@ namespace OHOS {
 namespace Rosen {
 using DisplayId = uint64_t;
 using ScreenId = uint64_t;
-
 namespace {
     constexpr DisplayId DISPLAY_ID_INVALID = -1ULL;
     constexpr ScreenId SCREEN_ID_INVALID = -1ULL;
@@ -34,17 +33,6 @@ namespace {
     constexpr int DOT_PER_INCH_MINIMUM_VALUE = 80;
     constexpr uint32_t BASELINE_DENSITY = 160;
 }
-
-/**
- * @struct HookInfo.
- *
- * @brief hook diaplayinfo deepending on the window size.
- */
-struct DMHookInfo {
-    uint32_t width_;
-    uint32_t height_;
-    float_t density_;
-};
 
 /**
  * @brief Power state change reason.
@@ -79,9 +67,6 @@ enum class PowerStateChangeReason : uint32_t {
     STATE_CHANGE_REASON_PRE_BRIGHT_AUTH_FAIL_SCREEN_ON = 28,
     STATE_CHANGE_REASON_PRE_BRIGHT_AUTH_FAIL_SCREEN_OFF = 29,
     STATE_CHANGE_REASON_DISPLAY_SWITCH = 30,
-    STATE_CHANGE_REASON_PROXIMITY = 32,
-    STATE_CHANGE_REASON_AOD_SLIDING = 40,
-    STATE_CHANGE_REASON_PEN = 41,
     STATE_CHANGE_REASON_REMOTE = 100,
     STATE_CHANGE_REASON_UNKNOWN = 1000,
 };
@@ -119,7 +104,6 @@ enum class DisplayEvent : uint32_t {
     KEYGUARD_DRAWN,
     SCREEN_LOCK_SUSPEND,
     SCREEN_LOCK_OFF,
-    SCREEN_LOCK_FINGERPRINT,
 };
 
 /**
@@ -266,8 +250,7 @@ enum class Orientation : uint32_t {
     USER_ROTATION_LANDSCAPE = 15,
     USER_ROTATION_PORTRAIT_INVERTED = 16,
     USER_ROTATION_LANDSCAPE_INVERTED = 17,
-    FOLLOW_DESKTOP = 18,
-    END = FOLLOW_DESKTOP,
+    END = USER_ROTATION_LANDSCAPE_INVERTED,
 };
 
 /**
@@ -376,15 +359,6 @@ struct ExpandOption {
     ScreenId screenId_;
     uint32_t startX_;
     uint32_t startY_;
-};
-
-/**
- * @brief fold display physical resolution
- */
-struct DisplayPhysicalResolution {
-    FoldDisplayMode foldDisplayMode_;
-    uint32_t physicalWidth_;
-    uint32_t physicalHeight_;
 };
 
 /**

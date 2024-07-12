@@ -133,7 +133,7 @@ std::vector<AppExecFwk::SupportWindowMode> WindowTransitionInfo::GetWindowSuppor
     return supportWindowModes_;
 }
 
-WindowLimits WindowTransitionInfo::GetWindowSizeLimits() const
+WindowSizeLimits WindowTransitionInfo::GetWindowSizeLimits() const
 {
     return sizeLimits_;
 }
@@ -262,11 +262,7 @@ WindowTransitionInfo* WindowTransitionInfo::Unmarshalling(Parcel& parcel)
     windowTransitionInfo->windowRect_.width_  = parcel.ReadUint32();
     windowTransitionInfo->windowRect_.height_  = parcel.ReadUint32();
     if (parcel.ReadBool()) {
-        auto readObject = parcel.ReadObject<IRemoteObject>();
-        if (readObject == nullptr) {
-            return nullptr;
-        }
-        windowTransitionInfo->abilityToken_ = readObject;
+        windowTransitionInfo->abilityToken_ = parcel.ReadObject<IRemoteObject>();
     }
     windowTransitionInfo->displayId_ = parcel.ReadUint64();
     windowTransitionInfo->windowType_ = static_cast<WindowType>(parcel.ReadUint32());

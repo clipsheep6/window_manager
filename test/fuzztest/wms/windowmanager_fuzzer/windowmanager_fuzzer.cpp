@@ -117,31 +117,21 @@ bool DoSomethingForWindowManagerImpl(WindowManager& windowManager, const uint8_t
 void CheckAccessibilityWindowInfo(WindowManager& windowManager, const uint8_t* data, size_t size)
 {
     Parcel accessibilityWindowInfosParcel;
-    if (!accessibilityWindowInfosParcel.WriteBuffer(data, size)) {
-        return;
+    if (accessibilityWindowInfosParcel.WriteBuffer(data, size)) {
+        std::vector<sptr<AccessibilityWindowInfo>> windowInfos;
+        MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(accessibilityWindowInfosParcel,
+            windowInfos);
+        windowManager.GetAccessibilityWindowInfo(windowInfos);
+        WindowUpdateType type;
+        GetObject<WindowUpdateType>(type, data, size);
+        windowManager.NotifyAccessibilityWindowInfo(windowInfos, type);
     }
-    std::vector<sptr<AccessibilityWindowInfo>> windowInfos;
-    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<AccessibilityWindowInfo>(
-        accessibilityWindowInfosParcel, windowInfos)) {
-        return;
-    }
-    windowManager.GetAccessibilityWindowInfo(windowInfos);
-    WindowUpdateType type;
-    GetObject<WindowUpdateType>(type, data, size);
-    windowManager.NotifyAccessibilityWindowInfo(windowInfos, type);
-}
-
-void CheckVisibilityInfo(WindowManager& windowManager, const uint8_t* data, size_t size)
-{
+    
     Parcel windowVisibilityInfosParcel;
-    if (!windowVisibilityInfosParcel.WriteBuffer(data, size)) {
-        return;
-    }
+    windowVisibilityInfosParcel.WriteBuffer(data, size);
     std::vector<sptr<WindowVisibilityInfo>> visibilitynfos;
-    if (!MarshallingHelper::UnmarshallingVectorParcelableObj<WindowVisibilityInfo>(windowVisibilityInfosParcel,
-            visibilitynfos)) {
-        return;
-    }
+    MarshallingHelper::UnmarshallingVectorParcelableObj<WindowVisibilityInfo>(windowVisibilityInfosParcel,
+            visibilitynfos);
     windowManager.GetVisibilityWindowInfo(visibilitynfos);
     windowManager.UpdateWindowVisibilityInfo(visibilitynfos);
     bool enable = false;
@@ -150,9 +140,11 @@ void CheckVisibilityInfo(WindowManager& windowManager, const uint8_t* data, size
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
+    if (data == nullptr || size < DATA_MIN_SIZE) {
+        return false;
+    }
     WindowManager& windowManager = WindowManager::GetInstance();
     CheckAccessibilityWindowInfo(windowManager, data, size);
-    CheckVisibilityInfo(windowManager, data, size);
     Parcel focusChangeInfoParcel;
     if (focusChangeInfoParcel.WriteBuffer(data, size)) {
         FocusChangeInfo::Unmarshalling(focusChangeInfoParcel);
@@ -203,9 +195,6 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    if (data == nullptr || size < OHOS::DATA_MIN_SIZE) {
-        return 0;
-    }
     OHOS::DoSomethingInterestingWithMyAPI(data, size);
     return 0;
 }

@@ -55,8 +55,7 @@ void WindowInputChannel::DispatchKeyEventCallback(std::shared_ptr<MMI::KeyEvent>
     }
 }
 
-__attribute__((no_sanitize("cfi"))) void WindowInputChannel::HandleKeyEvent(
-    std::shared_ptr<MMI::KeyEvent>& keyEvent)
+void WindowInputChannel::HandleKeyEvent(std::shared_ptr<MMI::KeyEvent>& keyEvent)
 {
     if (keyEvent == nullptr) {
         WLOGFE("keyEvent is nullptr");
@@ -113,41 +112,45 @@ void WindowInputChannel::HandlePointerEvent(std::shared_ptr<MMI::PointerEvent>& 
         return;
     }
     if (window_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_EVENT, "window_ is nullptr, id:%{public}d", pointerEvent->GetId());
+        TLOGE(WmsLogTag::WMS_EVENT, "window_ is nullptr");
         return;
     }
-    auto action = pointerEvent->GetPointerAction();
     TLOGD(WmsLogTag::WMS_EVENT, "Receive pointer event, Id: %{public}u, action: %{public}d",
-        window_->GetWindowId(), action);
-
-    bool isPointDown = action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
-        action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN;
-    MMI::PointerEvent::PointerItem pointerItem;
-    bool isValidPointItem = pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
+        window_->GetWindowId(), pointerEvent->GetPointerAction());
     if ((window_->GetType() == WindowType::WINDOW_TYPE_DIALOG) &&
         (pointerEvent->GetAgentWindowId() != pointerEvent->GetTargetWindowId())) {
-        if (isPointDown && isValidPointItem) {
-            window_->NotifyTouchDialogTarget(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+        if (pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_DOWN ||
+            pointerEvent->GetPointerAction() == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN) {
+            MMI::PointerEvent::PointerItem pointerItem;
+            if (pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem)) {
+                window_->NotifyTouchDialogTarget(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
+            }
         }
         pointerEvent->MarkProcessed();
         return;
     }
 
-    if (WindowHelper::IsModalSubWindow(window_->GetType(), window_->GetWindowFlags()) && isValidPointItem) {
+    bool isModal = window_->GetWindowFlags() & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_IS_MODAL);
+    bool isSubWindow = WindowHelper::IsSubWindow(window_->GetType());
+    if (isModal && isSubWindow) {
+        MMI::PointerEvent::PointerItem pointerItem;
+        bool validPointItem = pointerEvent->GetPointerItem(pointerEvent->GetPointerId(), pointerItem);
         bool outsideWindow = !WindowHelper::IsPointInTargetRectWithBound(pointerItem.GetDisplayX(),
             pointerItem.GetDisplayY(), window_->GetRect());
-        bool needIntercept = isPointDown || action == MMI::PointerEvent::POINTER_ACTION_MOVE;
-        if (outsideWindow && needIntercept) {
-            if (isPointDown) {
+        auto action = pointerEvent->GetPointerAction();
+        bool isTargetAction = (action == MMI::PointerEvent::POINTER_ACTION_DOWN ||
+            action == MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
+        bool isInterceptAction = isTargetAction || action == MMI::PointerEvent::POINTER_ACTION_MOVE;
+        if (validPointItem && outsideWindow && isInterceptAction) {
+            if (isTargetAction) {
                 window_->NotifyTouchDialogTarget(pointerItem.GetDisplayX(), pointerItem.GetDisplayY());
             }
-            
             pointerEvent->MarkProcessed();
             return;
         }
     }
     TLOGD(WmsLogTag::WMS_EVENT, "Dispatch move event, windowId: %{public}u, action: %{public}d",
-        window_->GetWindowId(), action);
+        window_->GetWindowId(), pointerEvent->GetPointerAction());
     window_->ConsumePointerEvent(pointerEvent);
 }
 
@@ -156,14 +159,6 @@ void WindowInputChannel::Destroy()
     std::lock_guard<std::mutex> lock(mtx_);
     WLOGI("Destroy WindowInputChannel, windowId:%{public}u", window_->GetWindowId());
     isAvailable_ = false;
-}
-
-Rect WindowInputChannel::GetWindowRect()
-{
-    if (window_ == nullptr) {
-        return { 0, 0, 0, 0 };
-    }
-    return window_->GetRect();
 }
 
 bool WindowInputChannel::IsKeyboardEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) const

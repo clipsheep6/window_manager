@@ -275,7 +275,7 @@ void WindowLayoutPolicyCascade::InitCascadeRect(DisplayId displayId)
 }
 
 bool WindowLayoutPolicyCascade::CheckAspectRatioBySizeLimits(const sptr<WindowNode>& node,
-    WindowLimits& newLimits) const
+    WindowSizeLimits& newLimits) const
 {
     // get new limit config with the settings of system and app
     const auto& sizeLimits = node->GetWindowUpdatedSizeLimits();
@@ -320,7 +320,7 @@ void WindowLayoutPolicyCascade::ComputeRectByAspectRatio(const sptr<WindowNode>&
     }
 
     // 1. check ratio by size limits
-    WindowLimits newLimits;
+    WindowSizeLimits newLimits;
     if (!CheckAspectRatioBySizeLimits(node, newLimits)) {
         return;
     }
@@ -753,7 +753,7 @@ void WindowLayoutPolicyCascade::UpdateFloatingWindowSizeForStretchableWindow(con
     const auto& sizeLimits = node->GetWindowUpdatedSizeLimits();
     float scale = std::min(static_cast<float>(winRect.width_) / sizeLimits.minWidth_,
         static_cast<float>(winRect.height_) / sizeLimits.minHeight_);
-    if (MathHelper::NearZero(scale)) {
+    if (scale == 0) {
         WLOGE("invalid sizeLimits");
         return;
     }

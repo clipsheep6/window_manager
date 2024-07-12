@@ -28,12 +28,12 @@ extern "C" {
  */
 typedef enum {
     /** succ. */
-    OK = 0,
+    WS_OK = 0,
     /** window id is invaild. */
-    INVAILD_WINDOW_ID = 1000,
+    WS_INVAILD_WINID = 1000,
     /** failed. */
-    SERVICE_ERROR = 2000,
-} WindowManager_ErrorCode;
+    WS_ERR = 2000,
+} OH_WMErrCode;
 
 #ifdef __cplusplus
 }

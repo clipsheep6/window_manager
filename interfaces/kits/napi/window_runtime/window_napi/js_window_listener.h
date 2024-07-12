@@ -49,7 +49,6 @@ const std::string WINDOW_VISIBILITY_CHANGE_CB = "windowVisibilityChange";
 const std::string WINDOW_TITLE_BUTTON_RECT_CHANGE_CB = "windowTitleButtonRectChange";
 const std::string WINDOW_NO_INTERACTION_DETECT_CB = "noInteractionDetected";
 const std::string WINDOW_RECT_CHANGE_CB = "windowRectChange";
-const std::string SUB_WINDOW_CLOSE_CB = "subWindowClose";
 
 class JsWindowListener : public IWindowChangeListener,
                          public ISystemBarChangedListener,
@@ -66,11 +65,10 @@ class JsWindowListener : public IWindowChangeListener,
                          public IWindowTitleButtonRectChangedListener,
                          public IWindowStatusChangeListener,
                          public IWindowNoInteractionListener,
-                         public IWindowRectChangeListener,
-                         public ISubWindowCloseListener {
+                         public IWindowRectChangeListener {
 public:
-    JsWindowListener(napi_env env, std::shared_ptr<NativeReference> callback, CaseType caseType)
-        : env_(env), jsCallBack_(callback), caseType_(caseType), weakRef_(wptr<JsWindowListener> (this)) {}
+    JsWindowListener(napi_env env, std::shared_ptr<NativeReference> callback)
+        : env_(env), jsCallBack_(callback), weakRef_(wptr<JsWindowListener> (this)) {}
     ~JsWindowListener();
     void OnSystemBarPropertyChange(DisplayId displayId, const SystemBarRegionTints& tints) override;
     void OnSizeChange(Rect rect, WindowSizeChangeReason reason,
@@ -92,7 +90,7 @@ public:
     void OnDialogDeathRecipient() const override;
     void OnGestureNavigationEnabledUpdate(bool enable) override;
     void OnWaterMarkFlagUpdate(bool showWaterMark) override;
-    napi_value CallJsMethod(const char* methodName, napi_value const * argv = nullptr, size_t argc = 0);
+    void CallJsMethod(const char* methodName, napi_value const * argv = nullptr, size_t argc = 0);
     void SetMainEventHandler();
     void OnWindowStatusChange(WindowStatus windowstatus) override;
     void OnWindowVisibilityChangedCallback(const bool isVisible) override;
@@ -101,7 +99,6 @@ public:
     void SetTimeout(int64_t timeout) override;
     int64_t GetTimeout() const override;
     void OnRectChange(Rect rect, WindowSizeChangeReason reason) override;
-    void OnSubWindowClose(bool& terminateCloseProcess) override;
 
 private:
     uint32_t currentWidth_ = 0;
@@ -111,11 +108,9 @@ private:
     int64_t noInteractionTimeout_ = 0;
     napi_env env_ = nullptr;
     std::shared_ptr<NativeReference> jsCallBack_;
-    CaseType caseType_ = CaseType::CASE_WINDOW;
     wptr<JsWindowListener> weakRef_  = nullptr;
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_ = nullptr;
     DEFINE_VAR_DEFAULT_FUNC_SET(bool, IsDeprecatedInterface, isDeprecatedInterface, false)
-    RectChangeReason currentReason_ = RectChangeReason::UNDEFINED;
 };
 }  // namespace Rosen
 }  // namespace OHOS

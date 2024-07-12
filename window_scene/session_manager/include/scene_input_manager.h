@@ -28,19 +28,14 @@
 namespace OHOS {
 namespace Rosen {
 class SceneSessionDirtyManager;
-struct SecSurfaceInfo;
+
 class SceneInputManager : public std::enable_shared_from_this<SceneInputManager> {
 WM_DECLARE_SINGLE_INSTANCE_BASE(SceneInputManager)
 public:
-    void FlushDisplayInfoToMMI(const bool forceFlush = false);
-    void FlushEmptyInfoToMMI();
+    void FlushDisplayInfoToMMI();
     void NotifyWindowInfoChange(const sptr<SceneSession>& scenenSession, const WindowUpdateType& type);
     void NotifyWindowInfoChangeFromSession(const sptr<SceneSession>& sceneSession);
     void NotifyMMIWindowPidChange(const sptr<SceneSession>& sceneSession, const bool startMoving);
-    void SetUserBackground(bool userBackground);
-    bool IsUserBackground();
-    void SetCurrentUserId(int32_t userId);
-    void UpdateSecSurfaceInfo(const std::map<uint64_t, std::vector<SecSurfaceInfo>>& secSurfaceInfoMap);
 
 protected:
     SceneInputManager() = default;
@@ -48,7 +43,6 @@ protected:
 
 private:
     void Init();
-    void UpdateFocusedSessionId(int32_t focusedSessionId);
     void FlushFullInfoToMMI(const std::vector<MMI::DisplayInfo>& displayInfos,
         const std::vector<MMI::WindowInfo>& windowInfoList);
     void FlushChangeInfoToMMI(const std::map<uint64_t, std::vector<MMI::WindowInfo>>& screenId2Windows);
@@ -56,17 +50,12 @@ private:
     bool CheckNeedUpdate(const std::vector<MMI::DisplayInfo>& displayInfos,
         const std::vector<MMI::WindowInfo>& windowInfoList);
     void PrintWindowInfo(const std::vector<MMI::WindowInfo>& windowInfoList);
-    void UpdateDisplayAndWindowInfo(const std::vector<MMI::DisplayInfo>& displayInfos,
-        std::vector<MMI::WindowInfo>& windowInfoList);
     std::shared_ptr<SceneSessionDirtyManager> sceneSessionDirty_;
     std::shared_ptr<AppExecFwk::EventRunner> eventLoop_;
     std::shared_ptr<AppExecFwk::EventHandler> eventHandler_;
     std::vector<MMI::DisplayInfo> lastDisplayInfos_;
     std::vector<MMI::WindowInfo> lastWindowInfoList_;
     int32_t lastFocusId_ { -1 };
-    int32_t currentUserId_ { -1 };
-    int32_t focusedSessionId_ { -1 };
-    std::atomic<bool> isUserBackground_ = false;
 };
 }//Rosen
 }//OHOS

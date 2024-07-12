@@ -41,9 +41,6 @@ public:
     MOCK_METHOD1(NotifyDisplayEvent, void(DisplayEvent event));
     MOCK_METHOD1(GetDisplayInfo, sptr<DisplayInfo>(DisplayId displayId));
     MOCK_METHOD1(GetCutoutInfo, sptr<CutoutInfo>(DisplayId displayId));
-    MOCK_METHOD2(GetAvailableArea, DMError(ScreenId screenId, DMRect& area));
-    MOCK_METHOD2(GetSupportedHDRFormats, DMError(ScreenId screenId, std::vector<uint32_t>& hdrFormats));
-    MOCK_METHOD2(GetSupportedColorSpaces, DMError(ScreenId screenId, std::vector<uint32_t>& colorSpaces));
 };
 
 class MockScreenManagerAdapter : public ScreenManagerAdapter {
@@ -76,7 +73,6 @@ public:
     MOCK_METHOD2(SetScreenGamutMap, DMError(ScreenId screenId, ScreenGamutMap gamutMap));
     MOCK_METHOD1(SetScreenColorTransform, DMError(ScreenId screenId));
     MOCK_METHOD2(SetOrientation, DMError(ScreenId screenId, Orientation orientation));
-    MOCK_METHOD2(GetDensityInCurResolution, DMError(ScreenId screenId, float& virtualPixelRatio));
     MOCK_METHOD2(GetPixelFormat, DMError(ScreenId screenId, GraphicPixelFormat& pixelFormat));
     MOCK_METHOD2(SetPixelFormat, DMError(ScreenId screenId, GraphicPixelFormat pixelFormat));
     MOCK_METHOD2(GetSupportedHDRFormats, DMError(ScreenId screenId, std::vector<ScreenHDRFormat>& hdrFormats));
@@ -90,7 +86,6 @@ public:
     MOCK_METHOD1(RemoveVirtualScreenFromGroup, void(std::vector<ScreenId> screens));
     MOCK_METHOD1(SetScreenRotationLocked, DMError(bool isLocked));
     MOCK_METHOD1(IsScreenRotationLocked, DMError(bool& isLocked));
-    MOCK_METHOD4(SetResolution, DMError(ScreenId screenId, uint32_t width, uint32_t height, float virtualPixelRatio));
 };
 }
 } // namespace OHOS

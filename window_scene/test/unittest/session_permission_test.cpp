@@ -74,18 +74,6 @@ HWTEST_F(SessionPermissionTest, IsSACalling, Function | SmallTest | Level1)
 }
 
 /**
- * @tc.name: IsSACallingByCallerToken
- * @tc.desc: test function : IsSACallingByCallerToken
- * @tc.type: FUNC
- */
-HWTEST_F(SessionPermissionTest, IsSACallingByCallerToken, Function | SmallTest | Level1)
-{
-    const uint32_t callerToken = 1000;
-    bool result = SessionPermission::IsSACallingByCallerToken(callerToken);
-    ASSERT_EQ(false, result);
-}
-
-/**
  * @tc.name: VerifyCallingPermission
  * @tc.desc: test function : VerifyCallingPermission1
  * @tc.type: FUNC
@@ -94,19 +82,6 @@ HWTEST_F(SessionPermissionTest, VerifyCallingPermission, Function | SmallTest | 
 {
     const std::string *permissionNode = new string;
     bool result = SessionPermission::VerifyCallingPermission(*permissionNode);
-    ASSERT_EQ(false, result);
-}
-
-/**
- * @tc.name: VerifyPermissionByCallerToken
- * @tc.desc: test function : VerifyPermissionByCallerToken
- * @tc.type: FUNC
-*/
-HWTEST_F(SessionPermissionTest, VerifyPermissionByCallerToken, Function | SmallTest | Level1)
-{
-    const uint32_t callerToken = 1000;
-    const std::string *permissionNode = new string;
-    bool result = SessionPermission::VerifyPermissionByCallerToken(callerToken, *permissionNode);
     ASSERT_EQ(false, result);
 }
 
@@ -120,10 +95,6 @@ HWTEST_F(SessionPermissionTest, IsSameBundleNameAsCalling, Function | SmallTest 
     const std::string *bundleName = new string;
     bool result = SessionPermission::IsSameBundleNameAsCalling(*bundleName);
     ASSERT_EQ(false, result);
-
-    const std::string *bundleName2 = new string("test");
-    bool result2 = SessionPermission::IsSameBundleNameAsCalling(*bundleName2);
-    ASSERT_EQ(false, result2);
 }
 
 /**
@@ -205,17 +176,6 @@ HWTEST_F(SessionPermissionTest, session_permission_test002, Function | SmallTest
     bool result = SessionPermission::IsStartedByInputMethod();
     ASSERT_EQ(result, false);
     GTEST_LOG_(INFO) << "SessionPermissionTest: session_permission_test002 end";
-}
-
-/**
- * @tc.name: IsStartedByUIExtension
- * @tc.desc: test function : IsStartedByUIExtension
- * @tc.type: FUNC
-*/
-HWTEST_F(SessionPermissionTest, IsStartedByUIExtension, Function | SmallTest | Level1)
-{
-    bool result = SessionPermission::IsStartedByUIExtension();
-    ASSERT_EQ(result, false);
 }
 } // namespacecd
 } // namespace Rosen

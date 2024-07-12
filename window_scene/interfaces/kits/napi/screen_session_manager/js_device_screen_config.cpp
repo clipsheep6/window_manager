@@ -30,7 +30,6 @@ napi_value JsDeviceScreenConfig::CreateDeviceScreenConfig(napi_env env, const De
         return NapiGetUndefined(env);
     }
     napi_set_named_property(env, objValue, "rotationPolicy", CreateJsValue(env, config.rotationPolicy_));
-    napi_set_named_property(env, objValue, "isRightPowerButton", CreateJsValue(env, config.isRightPowerButton_));
     return objValue;
 }
 

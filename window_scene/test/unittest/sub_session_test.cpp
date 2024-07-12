@@ -23,17 +23,117 @@
 #include "session/host/include/main_session.h"
 #include "session/host/include/system_session.h"
 #include <ui/rs_surface_node.h>
-#include "window_event_channel_base.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
-#include "window_property.h"
-#include "window_session_property.h"
 
 using namespace testing;
 using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+class TestWindowEventChannel : public IWindowEventChannel {
+public:
+    WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
+    WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
+    WSError TransferFocusActiveEvent(bool isFocusActive) override;
+    WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed,
+        bool isPreImeEvent = false) override;
+    WSError TransferKeyEventForConsumedAsync(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool isPreImeEvent,
+        const sptr<IRemoteObject>& listener) override;
+    WSError TransferFocusState(bool focusState) override;
+    WSError TransferBackpressedEventForConsumed(bool& isConsumed) override;
+    WSError TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
+        std::list<Accessibility::AccessibilityElementInfo>& infos) override;
+    WSError TransferSearchElementInfosByText(int64_t elementId, const std::string& text, int64_t baseParent,
+        std::list<Accessibility::AccessibilityElementInfo>& infos) override;
+    WSError TransferFindFocusedElementInfo(int64_t elementId, int32_t focusType, int64_t baseParent,
+        Accessibility::AccessibilityElementInfo& info) override;
+    WSError TransferFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
+        Accessibility::AccessibilityElementInfo& info) override;
+    WSError TransferExecuteAction(int64_t elementId, const std::map<std::string, std::string>& actionArguments,
+        int32_t action, int64_t baseParent) override;
+    WSError TransferAccessibilityHoverEvent(float pointX, float pointY, int32_t sourceType, int32_t eventType,
+        int64_t timeMs) override;
+
+    sptr<IRemoteObject> AsObject() override
+    {
+        return nullptr;
+    };
+};
+
+WSError TestWindowEventChannel::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferFocusActiveEvent(bool isFocusActive)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferKeyEventForConsumed(
+    const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed, bool isPreImeEvent)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferKeyEventForConsumedAsync(const std::shared_ptr<MMI::KeyEvent>& keyEvent,
+    bool isPreImeEvent, const sptr<IRemoteObject>& listener)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferFocusState(bool foucsState)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferBackpressedEventForConsumed(bool& isConsumed)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
+    std::list<Accessibility::AccessibilityElementInfo>& infos)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferSearchElementInfosByText(int64_t elementId, const std::string& text,
+    int64_t baseParent, std::list<Accessibility::AccessibilityElementInfo>& infos)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferFindFocusedElementInfo(int64_t elementId, int32_t focusType, int64_t baseParent,
+    Accessibility::AccessibilityElementInfo& info)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
+    Accessibility::AccessibilityElementInfo& info)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferExecuteAction(int64_t elementId,
+    const std::map<std::string, std::string>& actionArguments, int32_t action, int64_t baseParent)
+{
+    return WSError::WS_OK;
+}
+
+WSError TestWindowEventChannel::TransferAccessibilityHoverEvent(float pointX, float pointY, int32_t sourceType,
+    int32_t eventType, int64_t timeMs)
+{
+    return WSError::WS_OK;
+}
+
 class SubSessionTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -42,10 +142,9 @@ public:
     void TearDown() override;
     SessionInfo info;
     sptr<SubSession::SpecificSessionCallback> specificCallback = nullptr;
+    sptr<SubSession> subSession_;
 private:
     RSSurfaceNode::SharedPtr CreateRSSurfaceNode();
-    sptr<SubSession> subSession_;
-    SystemSessionConfig systemConfig_;
 };
 
 void SubSessionTest::SetUpTestCase()
@@ -108,22 +207,6 @@ HWTEST_F(SubSessionTest, Reconnect01, Function | SmallTest | Level1)
     ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
 
     result = subSession_->Reconnect(mockSessionStage, testWindowEventChannel, surfaceNode, property);
-    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PARAM);
-    
-    property->SetWindowState(WindowState::STATE_INITIAL);
-    result = subSession_->Reconnect(mockSessionStage, testWindowEventChannel, surfaceNode, property);
-    ASSERT_EQ(result, WSError::WS_ERROR_INVALID_PARAM);
- 
-    property->SetWindowState(WindowState::STATE_CREATED);
-    result = subSession_->Reconnect(mockSessionStage, testWindowEventChannel, surfaceNode, property);
-    ASSERT_EQ(result, WSError::WS_OK);
- 
-    property->SetWindowState(WindowState::STATE_SHOWN);
-    result = subSession_->Reconnect(mockSessionStage, testWindowEventChannel, surfaceNode, property);
-    ASSERT_EQ(result, WSError::WS_OK);
- 
-    property->SetWindowState(WindowState::STATE_HIDDEN);
-    result = subSession_->Reconnect(mockSessionStage, testWindowEventChannel, surfaceNode, property);
     ASSERT_EQ(result, WSError::WS_OK);
 }
 
@@ -150,256 +233,6 @@ HWTEST_F(SubSessionTest, TransferKeyEvent02, Function | SmallTest | Level1)
     std::shared_ptr<MMI::KeyEvent> keyEvent = nullptr;
 
     ASSERT_EQ(WSError::WS_ERROR_NULLPTR, subSession_->TransferKeyEvent(keyEvent));
-}
-
-/**
- * @tc.name: TransferKeyEvent03
- * @tc.desc: check func TransferKeyEvent
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, TransferKeyEvent03, Function | SmallTest | Level1)
-{
-    ASSERT_NE(subSession_, nullptr);
-    subSession_->state_ = SessionState::STATE_CONNECT;
-    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
-    ASSERT_NE(keyEvent, nullptr);
-    subSession_->SetParentSession(nullptr);
-    ASSERT_EQ(WSError::WS_ERROR_NULLPTR, subSession_->TransferKeyEvent(keyEvent));
-}
-
-/**
- * @tc.name: IsTopmost01
- * @tc.desc: check func IsTopmost
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, IsTopmost01, Function | SmallTest | Level1)
-{
-    subSession_->GetSessionProperty()->SetTopmost(false);
-    ASSERT_EQ(false, subSession_->IsTopmost());
-
-    subSession_->GetSessionProperty()->SetTopmost(true);
-    ASSERT_EQ(true, subSession_->IsTopmost());
-}
-
-/**
- * @tc.name: Hide01
- * @tc.desc: check func Hide
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, Hide01, Function | SmallTest | Level1)
-{
-    subSession_->Hide();
-    subSession_->GetMissionId();
-
-    WSRect rect;
-    subSession_->UpdatePointerArea(rect);
-    subSession_->RectCheck(50, 100);
-    ASSERT_EQ(WSError::WS_OK, subSession_->ProcessPointDownSession(50, 100));
-}
-
-/**
- * @tc.name: Hide02
- * @tc.desc: check func Hide
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, Hide02, Function | SmallTest | Level1)
-{
-    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
-    ASSERT_NE(nullptr, property);
-    property->SetWindowType(WindowType::APP_MAIN_WINDOW_BASE);
-    ASSERT_TRUE(subSession_ != nullptr);
-    subSession_->SetSessionProperty(property);
-    auto result = subSession_->Hide();
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
- * @tc.name: Hide03
- * @tc.desc: check func Hide
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, Hide03, Function | SmallTest | Level1)
-{
-    sptr<WindowSessionProperty> property = nullptr;
-    ASSERT_TRUE(subSession_ != nullptr);
-    subSession_->SetSessionProperty(property);
-    auto result = subSession_->Hide();
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
- * @tc.name: Hide04
- * @tc.desc: check func Hide
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, Hide04, Function | SmallTest | Level1)
-{
-    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
-    ASSERT_NE(nullptr, property);
-    sptr<WindowProperty> winPropSrc = new (std::nothrow) WindowProperty();
-    ASSERT_NE(nullptr, winPropSrc);
-    uint32_t animationFlag = 1;
-    winPropSrc->SetAnimationFlag(animationFlag);
-    uint32_t res = winPropSrc->GetAnimationFlag();
-    ASSERT_NE(res, static_cast<uint32_t>(WindowAnimation::CUSTOM));
-    ASSERT_TRUE(subSession_ != nullptr);
-    auto result = subSession_->Hide();
-    ASSERT_EQ(result, WSError::WS_OK);
-
-    animationFlag = 3;
-    winPropSrc->SetAnimationFlag(animationFlag);
-    res = winPropSrc->GetAnimationFlag();
-    ASSERT_EQ(res, static_cast<uint32_t>(WindowAnimation::CUSTOM));
-    ASSERT_TRUE(subSession_ != nullptr);
-    result = subSession_->Hide();
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
- * @tc.name: Show01
- * @tc.desc: check func Show
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, Show01, Function | SmallTest | Level1)
-{
-    sptr<WindowSessionProperty> property = nullptr;
-    ASSERT_EQ(nullptr, property);
-    
-    ASSERT_TRUE(subSession_ != nullptr);
-    ASSERT_EQ(WSError::WS_OK, subSession_->Show(property));
-}
-
-/**
- * @tc.name: Show02
- * @tc.desc: check func Show
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, Show02, Function | SmallTest | Level1)
-{
-    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
-    ASSERT_NE(nullptr, property);
-
-    sptr<WindowProperty> winPropSrc = new (std::nothrow) WindowProperty();
-    ASSERT_NE(nullptr, winPropSrc);
-    uint32_t animationFlag = 1;
-    winPropSrc->SetAnimationFlag(animationFlag);
-    uint32_t res = winPropSrc->GetAnimationFlag();
-    ASSERT_NE(res, static_cast<uint32_t>(WindowAnimation::CUSTOM));
-
-    ASSERT_TRUE(subSession_ != nullptr);
-    auto result = subSession_->Show(property);
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
- * @tc.name: Show03
- * @tc.desc: check func Show
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, Show03, Function | SmallTest | Level1)
-{
-    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
-    ASSERT_NE(nullptr, property);
-
-    sptr<WindowProperty> winPropSrc = new (std::nothrow) WindowProperty();
-    ASSERT_NE(nullptr, winPropSrc);
-    uint32_t animationFlag = 3;
-    winPropSrc->SetAnimationFlag(animationFlag);
-    uint32_t res = winPropSrc->GetAnimationFlag();
-    ASSERT_EQ(res, static_cast<uint32_t>(WindowAnimation::CUSTOM));
-
-    ASSERT_TRUE(subSession_ != nullptr);
-    auto result = subSession_->Show(property);
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
- * @tc.name: CheckPointerEventDispatch01
- * @tc.desc: check func CheckPointerEventDispatch
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, CheckPointerEventDispatch01, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(nullptr, pointerEvent);
-    systemConfig_.uiType_ = "phone";
-
-    ASSERT_TRUE(subSession_ != nullptr);
-    auto result = subSession_->CheckPointerEventDispatch(pointerEvent);
-    ASSERT_TRUE(result);
-}
-
-/**
- * @tc.name: CheckPointerEventDispatch02
- * @tc.desc: check func CheckPointerEventDispatch
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, CheckPointerEventDispatch02, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(nullptr, pointerEvent);
-    systemConfig_.uiType_ = "pc";
-
-    ASSERT_TRUE(subSession_ != nullptr);
-    subSession_->SetSessionState(SessionState::STATE_FOREGROUND);
-    auto result = subSession_->CheckPointerEventDispatch(pointerEvent);
-    ASSERT_TRUE(result);
-}
-
-/**
- * @tc.name: CheckPointerEventDispatch03
- * @tc.desc: check func CheckPointerEventDispatch
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, CheckPointerEventDispatch03, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(nullptr, pointerEvent);
-    systemConfig_.uiType_ = "pc";
-
-    ASSERT_TRUE(subSession_ != nullptr);
-    subSession_->SetSessionState(SessionState::STATE_BACKGROUND);
-    subSession_->UpdateSessionState(SessionState::STATE_ACTIVE);
-    auto result = subSession_->CheckPointerEventDispatch(pointerEvent);
-    ASSERT_TRUE(result);
-}
-
-/**
- * @tc.name: CheckPointerEventDispatch04
- * @tc.desc: check func CheckPointerEventDispatch
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, CheckPointerEventDispatch04, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(nullptr, pointerEvent);
-    systemConfig_.uiType_ = "pc";
-
-    ASSERT_TRUE(subSession_ != nullptr);
-    subSession_->SetSessionState(SessionState::STATE_BACKGROUND);
-    subSession_->UpdateSessionState(SessionState::STATE_INACTIVE);
-    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW);
-    auto result = subSession_->CheckPointerEventDispatch(pointerEvent);
-    ASSERT_TRUE(result);
-}
-
-/**
- * @tc.name: CheckPointerEventDispatch05
- * @tc.desc: check func CheckPointerEventDispatch
- * @tc.type: FUNC
- */
-HWTEST_F(SubSessionTest, CheckPointerEventDispatch05, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(nullptr, pointerEvent);
-    systemConfig_.uiType_ = "pc";
-
-    ASSERT_TRUE(subSession_ != nullptr);
-    subSession_->SetSessionState(SessionState::STATE_BACKGROUND);
-    subSession_->UpdateSessionState(SessionState::STATE_INACTIVE);
-    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_DOWN);
-    auto result = subSession_->CheckPointerEventDispatch(pointerEvent);
-    ASSERT_TRUE(result);
 }
 }
 }

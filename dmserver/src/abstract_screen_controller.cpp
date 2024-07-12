@@ -40,8 +40,6 @@ namespace OHOS::Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM_SERVER, "AbstractScreenController"};
     const std::string CONTROLLER_THREAD_ID = "AbstractScreenControllerThread";
-    const static uint32_t MAX_RETRY_NUM = 3;
-    const static uint32_t RETRY_WAIT_MS = 100;
 }
 
 AbstractScreenController::AbstractScreenController(std::recursive_mutex& mutex)
@@ -55,13 +53,13 @@ AbstractScreenController::~AbstractScreenController() = default;
 
 void AbstractScreenController::Init()
 {
-    WLOGFI("screen controller init");
+    WLOGFD("screen controller init");
     RegisterRsScreenConnectionChangeListener();
 }
 
 void AbstractScreenController::RegisterRsScreenConnectionChangeListener()
 {
-    WLOGFI("RegisterRsScreenConnectionChangeListener");
+    WLOGFD("RegisterRsScreenConnectionChangeListener");
     auto res = rsInterface_.SetScreenChangeCallback(
         [this](ScreenId rsScreenId, ScreenEvent screenEvent) { OnRsScreenConnectionChange(rsScreenId, screenEvent); });
     if (res != StatusCode::SUCCESS) {
@@ -299,7 +297,6 @@ void AbstractScreenController::ProcessDefaultScreenReconnected(ScreenId rsScreen
 
 void AbstractScreenController::ProcessScreenConnected(ScreenId rsScreenId)
 {
-    WLOGFI("start");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (screenIdManager_.HasRsScreenId(rsScreenId)) {
         WLOGFD("reconnect screen, screenId=%{public}" PRIu64"", rsScreenId);
@@ -352,7 +349,7 @@ sptr<AbstractScreen> AbstractScreenController::InitAndGetScreen(ScreenId rsScree
 {
     ScreenId dmsScreenId = screenIdManager_.CreateAndGetNewScreenId(rsScreenId);
     RSScreenCapability screenCapability = rsInterface_.GetScreenCapability(rsScreenId);
-    WLOGFI("Screen name is %{public}s, phyWidth is %{public}u, phyHeight is %{public}u",
+    WLOGFD("Screen name is %{public}s, phyWidth is %{public}u, phyHeight is %{public}u",
         screenCapability.GetName().c_str(), screenCapability.GetPhyWidth(), screenCapability.GetPhyHeight());
 
     sptr<AbstractScreen> absScreen =
@@ -487,9 +484,6 @@ void AbstractScreenController::RemoveDefaultScreenFromGroupLocked(sptr<AbstractS
 sptr<AbstractScreenGroup> AbstractScreenController::RemoveFromGroupLocked(sptr<AbstractScreen> screen)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
-    if (screen == nullptr) {
-        return nullptr;
-    }
     auto groupDmsId = screen->groupDmsId_;
     auto iter = dmsScreenGroupMap_.find(groupDmsId);
     if (iter == dmsScreenGroupMap_.end()) {
@@ -832,17 +826,20 @@ void AbstractScreenController::SetScreenRotateAnimation(
     sptr<AbstractScreen>& screen, ScreenId screenId, Rotation rotationAfter, bool withAnimation)
 {
     sptr<SupportedScreenModes> abstractScreenModes = screen->GetActiveScreenMode();
-    struct ScreenRect srect = {0, 0, 0, 0};
+    float w = 0;
+    float h = 0;
+    float x = 0;
+    float y = 0;
     if (abstractScreenModes != nullptr) {
-        srect.h = abstractScreenModes->height_;
-        srect.w = abstractScreenModes->width_;
+        h = abstractScreenModes->height_;
+        w = abstractScreenModes->width_;
     }
     if (!IsVertical(rotationAfter)) {
-        std::swap(srect.w, srect.h);
-        srect.x = (srect.h - srect.w) / 2; // 2: used to calculate offset to center display node
-        srect.y = (srect.w - srect.h) / 2; // 2: used to calculate offset to center display node
+        std::swap(w, h);
+        x = (h - w) / 2; // 2: used to calculate offset to center display node
+        y = (w - h) / 2; // 2: used to calculate offset to center display node
     }
-    const std::shared_ptr<RSDisplayNode>& displayNode = GetRSDisplayNodeByScreenId(screenId);
+    auto displayNode = GetRSDisplayNodeByScreenId(screenId);
     if (displayNode == nullptr) {
         return;
     }
@@ -859,20 +856,22 @@ void AbstractScreenController::SetScreenRotateAnimation(
         WLOGFD("[FixOrientation] display rotate with animation %{public}u", rotationAfter);
         std::weak_ptr<RSDisplayNode> weakNode = GetRSDisplayNodeByScreenId(screenId);
         static const RSAnimationTimingProtocol timingProtocol(600); // animation time
-        // animation curve: cubic [0.2, 0.0, 0.2, 1.0]
-        static const RSAnimationTimingCurve curve = RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0);
+        static const RSAnimationTimingCurve curve =
+            RSAnimationTimingCurve::CreateCubicCurve(0.2, 0.0, 0.2, 1.0); // animation curve: cubic [0.2, 0.0, 0.2, 1.0]
     #ifdef SOC_PERF_ENABLE
         // Increase frequency to improve windowRotation perf
         // 10027 means "gesture" level that setting duration: 800, lit_cpu_min_freq: 1421000, mid_cpu_min_feq: 1882000
         OHOS::SOCPERF::SocPerfClient::GetInstance().PerfRequest(10027, "");
     #endif
-        RSNode::Animate(timingProtocol, curve, [weakNode, srect, rotationAfter, this]() {
+        RSNode::Animate(timingProtocol, curve, [weakNode, x, y, w, h, rotationAfter]() {
             auto displayNode = weakNode.lock();
             if (displayNode == nullptr) {
                 WLOGFE("error, cannot get DisplayNode");
                 return;
             }
-            SetDisplayNode(rotationAfter, displayNode, srect);
+            displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
+            displayNode->SetFrame(x, y, w, h);
+            displayNode->SetBounds(x, y, w, h);
         }, []() {
     #ifdef SOC_PERF_ENABLE
             // ClosePerf in finishCallBack
@@ -881,16 +880,10 @@ void AbstractScreenController::SetScreenRotateAnimation(
         });
     } else {
         WLOGFD("[FixOrientation] display rotate without animation %{public}u", rotationAfter);
-        SetDisplayNode(rotationAfter, displayNode, srect);
+        displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
+        displayNode->SetFrame(x, y, w, h);
+        displayNode->SetBounds(x, y, w, h);
     }
-}
-
-void AbstractScreenController::SetDisplayNode(Rotation rotationAfter,
-    const std::shared_ptr<RSDisplayNode>& displayNode, struct ScreenRect srect)
-{
-    displayNode->SetRotation(-90.f * static_cast<uint32_t>(rotationAfter)); // 90.f is base degree
-    displayNode->SetFrame(srect.x, srect.y, srect.w, srect.h);
-    displayNode->SetBounds(srect.x, srect.y, srect.w, srect.h);
 }
 
 void AbstractScreenController::OpenRotationSyncTransaction()
@@ -1479,24 +1472,12 @@ bool AbstractScreenController::SetScreenPowerForAll(ScreenPowerState state,
 
 ScreenPowerState AbstractScreenController::GetScreenPower(ScreenId dmsScreenId) const
 {
-    uint32_t retryTimes = 0;
-    bool res = false;
-    while (retryTimes < MAX_RETRY_NUM) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(mutex_);
-            if (dmsScreenMap_.find(dmsScreenId) != dmsScreenMap_.end()) {
-                WLOGFI("find screen %{public}" PRIu64"", dmsScreenId);
-                res = true;
-                break;
-            }
+    {
+        std::lock_guard<std::recursive_mutex> lock(mutex_);
+        if (dmsScreenMap_.find(dmsScreenId) == dmsScreenMap_.end()) {
+            WLOGFE("cannot find screen %{public}" PRIu64"", dmsScreenId);
+            return ScreenPowerState::INVALID_STATE;
         }
-        retryTimes++;
-        WLOGFW("not find screen, retry %{public}u times", retryTimes);
-        std::this_thread::sleep_for(std::chrono::milliseconds(RETRY_WAIT_MS));
-    }
-    if (retryTimes >= MAX_RETRY_NUM || !res) {
-        WLOGFE("cannot find screen %{public}" PRIu64"", dmsScreenId);
-        return ScreenPowerState::INVALID_STATE;
     }
 
     ScreenId rsId = ConvertToRsScreenId(dmsScreenId);

@@ -33,17 +33,10 @@ config("window_native_kit_config") {
   include_dirs = [
     "window_napi",
     "../../../innerkits/wm",
-    "../../../innerkits/dm",
     "../../../../utils/include",
     "../../../../wm/include",
     "../../../../wmserver/include",
   ]
-}
-
-config("window_native_kit_public_config") {
-  visibility = [ ":*" ]
-
-  include_dirs = [ "window_napi" ]
 }
 
 ohos_shared_library("window_native_kit") {
@@ -51,7 +44,7 @@ ohos_shared_library("window_native_kit") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
   }
   sources = [
@@ -62,8 +55,6 @@ ohos_shared_library("window_native_kit") {
     "window_napi/js_window_utils.cpp",
   ]
 
-  public_configs = [ ":window_native_kit_public_config" ]
-
   configs = [
     ":window_native_kit_config",
     "../../../../resources/config/build:coverage_flags",
@@ -71,7 +62,6 @@ ohos_shared_library("window_native_kit") {
 
   deps = [
     "../../../../utils:libwmutil",
-    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
   ]
 
@@ -88,7 +78,6 @@ ohos_shared_library("window_native_kit") {
     "ability_runtime:extensionkit_native",
     "ability_runtime:runtime",
     "access_token:libaccesstoken_sdk",
-    "access_token:libtokenid_sdk",
     "ace_engine:ace_uicontent",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
@@ -112,7 +101,7 @@ ohos_shared_library("window_napi") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
   }
   sources = [
@@ -129,7 +118,6 @@ ohos_shared_library("window_napi") {
     ":window_native_kit",
     "../../../../dm:libdm",
     "../../../../utils:libwmutil",
-    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
   ]
 
@@ -157,7 +145,7 @@ ohos_shared_library("windowstage_kit") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
   }
   sources = [ "window_stage_napi/js_window_stage.cpp" ]
@@ -171,7 +159,6 @@ ohos_shared_library("windowstage_kit") {
   deps = [
     ":window_native_kit",
     "../../../../utils:libwmutil",
-    "../../../../utils:libwmutil_base",
     "../../../../wm:libwm",
   ]
 

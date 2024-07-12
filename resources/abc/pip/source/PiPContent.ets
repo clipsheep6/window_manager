@@ -14,7 +14,6 @@
  */
 
 import pip from '@ohos.pip';
-import { NodeController } from '@kit.ArkUI';
 
 const TAG: string = 'PiPContent';
 
@@ -22,13 +21,8 @@ const TAG: string = 'PiPContent';
 @Component
 export struct PiPContent {
   private xComponentController: XComponentController = new XComponentController();
-  private nodeController: NodeController | null = null;
   xComponentId: string = 'pipContent';
   xComponentType: string = 'surface';
-
-  aboutToAppear(): void {
-    this.nodeController = pip.getCustomUIController();
-  }
 
   build() {
     Stack() {
@@ -37,12 +31,7 @@ export struct PiPContent {
           pip.initXComponentController(this.xComponentController);
           console.debug(TAG, 'XComponent onLoad done');
         })
-        .size({ width: '100%', height: '100%' })
-        .backgroundColor(Color.Transparent);
-      if (this.nodeController !== null) {
-        NodeContainer(this.nodeController)
-          .size({ width: '100%', height: '100%' });
-      }  
+        .size({ width: '100%', height: '100%' });
     }
     .size({ width: '100%', height: '100%' });
   }

@@ -23,7 +23,6 @@
 #include "wm_common.h"
 #include "extension_window.h"
 #include "ui_content.h"
-#include "permission.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -41,7 +40,7 @@ JsExtensionWindow::JsExtensionWindow(
 
 JsExtensionWindow::JsExtensionWindow(const std::shared_ptr<Rosen::ExtensionWindow> extensionWindow,
     sptr<AAFwk::SessionInfo> sessionInfo)
-    : extensionWindow_(extensionWindow), hostWindowId_(-1), sessionInfo_(sessionInfo),
+    : extensionWindow_(extensionWindow), sessionInfo_(sessionInfo),
     extensionRegisterManager_(std::make_unique<JsExtensionWindowRegisterManager>()) {
 }
 
@@ -301,7 +300,7 @@ static void LoadContentTask(std::shared_ptr<NativeReference> contentStorage, std
     if (isLoadedByName) {
         ret = windowImpl->SetUIContentByName(contextUrl, env, nativeStorage);
     } else {
-        ret = windowImpl->NapiSetUIContent(contextUrl, env, nativeStorage, BackupAndRestoreType::NONE, parentToken);
+        ret = windowImpl->NapiSetUIContent(contextUrl, env, nativeStorage, false, parentToken);
     }
     if (ret == WMError::WM_OK) {
         task.Resolve(env, NapiGetUndefined(env));
@@ -623,7 +622,7 @@ napi_value JsExtensionWindow::OnLoadContent(napi_env env, napi_callback_info inf
         napi_create_reference(env, storage, 1, &result);
         contentStorage = std::shared_ptr<NativeReference>(reinterpret_cast<NativeReference*>(result));
     }
-
+    
     sptr<IRemoteObject> parentToken = sessionInfo_->parentToken;
     NapiAsyncTask::CompleteCallback complete =
         [extwin = extensionWindow_, contentStorage, contextUrl, parentToken, isLoadedByName](
@@ -871,11 +870,6 @@ napi_value JsExtensionWindow::OnCreateSubWindowWithOptions(napi_env env, napi_ca
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_INVALID_PARAM)));
         return NapiGetUndefined(env);
     }
-    if (option.GetWindowTopmost() && !Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        TLOGE(WmsLogTag::WMS_SUB, "Modal subwindow has topmost, but no system permission");
-        napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_NOT_SYSTEM_APP)));
-        return NapiGetUndefined(env);
-    }
     NapiAsyncTask::CompleteCallback complete =
         [weak = extensionWindow_, windowName, option](napi_env env, NapiAsyncTask& task, int32_t status) {
             if (weak == nullptr) {
@@ -936,15 +930,6 @@ bool JsExtensionWindow::ParseSubWindowOptions(napi_env env, napi_value jsObject,
             option.AddWindowFlag(WindowFlag::WINDOW_FLAG_IS_MODAL);
         }
     }
-    bool isTopmost = false;
-    if (ParseJsValue(jsObject, env, "isTopmost", isTopmost)) {
-        if (!isModal && isTopmost) {
-            TLOGE(WmsLogTag::WMS_SUB, "Normal subwindow is topmost");
-            return false;
-        }
-        option.SetWindowTopmost(isTopmost);
-    }
-
     option.SetSubWindowTitle(title);
     option.SetSubWindowDecorEnable(decorEnabled);
     option.SetParentId(hostWindowId_);

@@ -26,18 +26,14 @@ namespace OHOS::Rosen {
 class WindowEventChannelListener : public IRemoteStub<IWindowEventChannelListener> {
 public:
     explicit WindowEventChannelListener() = default;
-    void SetTransferKeyEventForConsumedParams(int32_t keyEventId, bool isPreImeEvent,
-        const std::shared_ptr<std::promise<bool>>& isConsumedPromise, const std::shared_ptr<WSError>& retCode);
+    void SetTransferKeyEventForConsumedParams(const std::shared_ptr<std::promise<bool>>& isConsumedPromise,
+        const std::shared_ptr<WSError>& retCode);
     void ResetTransferKeyEventForConsumedParams();
-    void ResetTransferKeyEventForConsumedParams(bool isConsumed, WSError retCode);
-    void OnTransferKeyEventForConsumed(int32_t keyEventId, bool isPreImeEvent,
-                                       bool isConsumed, WSError retCode) override;
+    void OnTransferKeyEventForConsumed(bool isConsumed, WSError retCode) override;
     int32_t OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
 
 private:
     std::mutex transferKeyEventForConsumedMutex_;
-    int32_t keyEventId_ = 0;
-    bool isPreImeEvent_ = false;
     std::shared_ptr<std::promise<bool>> isConsumedPromise_ = nullptr;
     std::shared_ptr<WSError> retCode_ = nullptr;
 };
@@ -74,12 +70,7 @@ public:
 
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
-        sptr<WindowSessionProperty> property, sptr<IRemoteObject> token,
-        const std::string& identityToken = "") override;
-    WSError ConnectInner(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
-        const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
-        sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid,
-        const std::string& identityToken = "") override;
+        sptr<WindowSessionProperty> property, sptr<IRemoteObject> token, int32_t pid, int32_t uid) override;
 
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
 
@@ -91,21 +82,15 @@ public:
                                           AAFwk::WantParams& reWantParams);
     WSError TransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
         int64_t uiExtensionIdLevel) override;
-    WSError TransferAccessibilityHoverEvent(float pointX, float pointY, int32_t sourceType, int32_t eventType,
-        int64_t timeMs);
-    WSError TransferAccessibilityChildTreeRegister(uint32_t windowId, int32_t treeId, int64_t accessibilityId);
-    WSError TransferAccessibilityChildTreeUnregister();
-    WSError TransferAccessibilityDumpChildInfo(const std::vector<std::string>& params, std::vector<std::string>& info);
+    void NotifyRemoteReady() override;
     void NotifySyncOn() override;
     void NotifyAsyncOn() override;
-    WSError NotifyDensityFollowHost(bool isFollowHost, float densityValue = 1.0f);
     void TriggerBindModalUIExtension() override;
     void RegisterExtensionSessionEventCallback(const sptr<ExtensionSessionEventCallback>& extSessionEventCallback);
     WSError TransferKeyEventForConsumed(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed,
         bool& isTimeOut, bool isPreImeEvent = false);
-    WSError TransferKeyEventAsync(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool isPreImeEvent = false);
     sptr<ExtensionSessionEventCallback> GetExtensionSessionEventCallback();
-    WSError Background(bool isFromClient = false) override;
+    WSError Background() override;
 
 private:
     sptr<ExtensionSessionEventCallback> extSessionEventCallback_ = nullptr;

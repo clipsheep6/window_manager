@@ -65,7 +65,6 @@ std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetDisplaySnapshot(Displ
 std::shared_ptr<Media::PixelMap> DisplayManagerAdapter::GetSnapshotByPicker(Media::Rect &rect, DmErrorCode* errorCode)
 {
     INIT_PROXY_CHECK_RETURN(nullptr);
-
     return displayManagerServiceProxy_->GetSnapshotByPicker(rect, errorCode);
 }
 
@@ -115,7 +114,6 @@ DMError ScreenManagerAdapter::SetScreenColorTransform(ScreenId screenId)
 DMError ScreenManagerAdapter::GetPixelFormat(ScreenId screenId, GraphicPixelFormat& pixelFormat)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     WLOGFI("ScreenManagerAdapter::GetPixelFormat");
     return displayManagerServiceProxy_->GetPixelFormat(screenId, pixelFormat);
 }
@@ -123,7 +121,6 @@ DMError ScreenManagerAdapter::GetPixelFormat(ScreenId screenId, GraphicPixelForm
 DMError ScreenManagerAdapter::SetPixelFormat(ScreenId screenId, GraphicPixelFormat pixelFormat)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     WLOGFI("ScreenManagerAdapter::SetPixelFormat");
     return displayManagerServiceProxy_->SetPixelFormat(screenId, pixelFormat);
 }
@@ -132,7 +129,6 @@ DMError ScreenManagerAdapter::GetSupportedHDRFormats(ScreenId screenId,
     std::vector<ScreenHDRFormat>& hdrFormats)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     WLOGFI("ScreenManagerAdapter::GetSupportedHDRFormats");
     return displayManagerServiceProxy_->GetSupportedHDRFormats(screenId, hdrFormats);
 }
@@ -140,7 +136,6 @@ DMError ScreenManagerAdapter::GetSupportedHDRFormats(ScreenId screenId,
 DMError ScreenManagerAdapter::GetScreenHDRFormat(ScreenId screenId, ScreenHDRFormat& hdrFormat)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     WLOGFI("ScreenManagerAdapter::GetScreenHDRFormat");
     return displayManagerServiceProxy_->GetScreenHDRFormat(screenId, hdrFormat);
 }
@@ -148,7 +143,6 @@ DMError ScreenManagerAdapter::GetScreenHDRFormat(ScreenId screenId, ScreenHDRFor
 DMError ScreenManagerAdapter::SetScreenHDRFormat(ScreenId screenId, int32_t modeIdx)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     WLOGFI("ScreenManagerAdapter::SetScreenHDRFormat");
     return displayManagerServiceProxy_->SetScreenHDRFormat(screenId, modeIdx);
 }
@@ -157,7 +151,6 @@ DMError ScreenManagerAdapter::GetSupportedColorSpaces(ScreenId screenId,
     std::vector<GraphicCM_ColorSpaceType>& colorSpaces)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     WLOGFI("ScreenManagerAdapter::GetSupportedColorSpaces");
     return displayManagerServiceProxy_->GetSupportedColorSpaces(screenId, colorSpaces);
 }
@@ -166,7 +159,6 @@ DMError ScreenManagerAdapter::GetScreenColorSpace(ScreenId screenId,
     GraphicCM_ColorSpaceType& colorSpace)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     WLOGFI("ScreenManagerAdapter::GetScreenColorSpace");
     return displayManagerServiceProxy_->GetScreenColorSpace(screenId, colorSpace);
 }
@@ -175,7 +167,6 @@ DMError ScreenManagerAdapter::SetScreenColorSpace(ScreenId screenId,
     GraphicCM_ColorSpaceType colorSpace)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     WLOGFI("ScreenManagerAdapter::SetScreenColorSpace");
     return displayManagerServiceProxy_->SetScreenColorSpace(screenId, colorSpace);
 }
@@ -183,7 +174,6 @@ DMError ScreenManagerAdapter::SetScreenColorSpace(ScreenId screenId,
 DMError ScreenManagerAdapter::GetSupportedHDRFormats(ScreenId screenId, std::vector<uint32_t>& hdrFormats)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     std::vector<ScreenHDRFormat> hdrFormatsVec;
     DMError ret = GetSupportedHDRFormats(screenId, hdrFormatsVec);
     for (auto value : hdrFormatsVec) {
@@ -196,7 +186,6 @@ DMError ScreenManagerAdapter::GetSupportedHDRFormats(ScreenId screenId, std::vec
 DMError ScreenManagerAdapter::GetSupportedColorSpaces(ScreenId screenId, std::vector<uint32_t>& colorSpaces)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-
     std::vector<GraphicCM_ColorSpaceType> colorSpacesVec;
     DMError ret = GetSupportedColorSpaces(screenId, colorSpacesVec);
     for (auto value : colorSpacesVec) {
@@ -254,13 +243,6 @@ DMError ScreenManagerAdapter::SetScreenRotationLocked(bool isLocked)
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
     WLOGFI("DisplayManagerAdapter::SetScreenRotationLocked");
     return displayManagerServiceProxy_->SetScreenRotationLocked(isLocked);
-}
-
-DMError ScreenManagerAdapter::SetScreenRotationLockedFromJs(bool isLocked)
-{
-    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-    WLOGFI("DisplayManagerAdapter::SetScreenRotationLockedFromJs");
-    return displayManagerServiceProxy_->SetScreenRotationLockedFromJs(isLocked);
 }
 
 DMError ScreenManagerAdapter::IsScreenRotationLocked(bool& isLocked)
@@ -363,7 +345,6 @@ void DisplayManagerAdapter::NotifyDisplayEvent(DisplayEvent event)
 bool DisplayManagerAdapter::SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze)
 {
     INIT_PROXY_CHECK_RETURN(false);
-
     return displayManagerServiceProxy_->SetFreeze(displayIds, isFreeze);
 }
 
@@ -425,7 +406,7 @@ void DMSDeathRecipient::OnRemoteDied(const wptr<IRemoteObject>& wptrDeath)
         WLOGFE("object is null");
         return;
     }
-    WLOGFI("dms OnRemoteDied");
+    WLOGFD("dms OnRemoteDied");
     adapter_.Clear();
     SingletonContainer::Get<DisplayManager>().OnRemoteDied();
     SingletonContainer::Get<ScreenManager>().OnRemoteDied();
@@ -486,7 +467,7 @@ sptr<ScreenInfo> ScreenManagerAdapter::GetScreenInfo(ScreenId screenId)
 
 std::vector<DisplayId> DisplayManagerAdapter::GetAllDisplayIds()
 {
-    WLOGFD("DisplayManagerAdapter::GetAllDisplayIds enter");
+    WLOGFI("DisplayManagerAdapter::GetAllDisplayIds enter");
     INIT_PROXY_CHECK_RETURN(std::vector<DisplayId>());
 
     return displayManagerServiceProxy_->GetAllDisplayIds();
@@ -517,7 +498,7 @@ sptr<DisplayInfo> DisplayManagerAdapter::GetDisplayInfo(DisplayId displayId)
 {
     WLOGFD("DisplayManagerAdapter::GetDisplayInfo enter, displayId: %{public}" PRIu64" ", displayId);
     if (displayId == DISPLAY_ID_INVALID) {
-        WLOGFE("screen id is invalid");
+        WLOGFW("screen id is invalid");
         return nullptr;
     }
     INIT_PROXY_CHECK_RETURN(nullptr);
@@ -568,7 +549,6 @@ bool DisplayManagerAdapter::IsFoldable()
 bool DisplayManagerAdapter::IsCaptured()
 {
     INIT_PROXY_CHECK_RETURN(false);
-
     return displayManagerServiceProxy_->IsCaptured();
 }
 
@@ -737,35 +717,5 @@ DMError ScreenManagerAdapter::SetVirtualScreenRefreshRate(ScreenId screenId, uin
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
 
     return displayManagerServiceProxy_->SetVirtualScreenRefreshRate(screenId, refreshInterval);
-}
-
-void DisplayManagerAdapter::SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList)
-{
-    INIT_PROXY_CHECK_RETURN();
-    displayManagerServiceProxy_->SetVirtualScreenBlackList(screenId, windowIdList);
-}
-
-void DisplayManagerAdapter::DisablePowerOffRenderControl(ScreenId screenId)
-{
-    INIT_PROXY_CHECK_RETURN();
-    displayManagerServiceProxy_->DisablePowerOffRenderControl(screenId);
-}
-
-DMError DisplayManagerAdapter::ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy)
-{
-    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-    return displayManagerServiceProxy_->ProxyForFreeze(pidList, isProxy);
-}
-
-DMError DisplayManagerAdapter::ResetAllFreezeStatus()
-{
-    INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
-    return displayManagerServiceProxy_->ResetAllFreezeStatus();
-}
-
-std::vector<DisplayPhysicalResolution> DisplayManagerAdapter::GetAllDisplayPhysicalResolution()
-{
-    INIT_PROXY_CHECK_RETURN(std::vector<DisplayPhysicalResolution>{});
-    return displayManagerServiceProxy_->GetAllDisplayPhysicalResolution();
 }
 } // namespace OHOS::Rosen

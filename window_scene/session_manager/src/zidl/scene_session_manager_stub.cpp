@@ -29,6 +29,132 @@ constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSe
 constexpr uint32_t MAX_VECTOR_SIZE = 100;
 }
 
+const std::map<uint32_t, SceneSessionManagerStubFunc> SceneSessionManagerStub::stubFuncMap_{
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_CREATE_AND_CONNECT_SPECIFIC_SESSION),
+        &SceneSessionManagerStub::HandleCreateAndConnectSpecificSession),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_RECOVER_AND_CONNECT_SPECIFIC_SESSION),
+        &SceneSessionManagerStub::HandleRecoverAndConnectSpecificSession),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_RECOVER_AND_RECONNECT_SCENE_SESSION),
+        &SceneSessionManagerStub::HandleRecoverAndReconnectSceneSession),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION),
+        &SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSession),
+    std::make_pair(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION_WITH_DETACH_CALLBACK),
+        &SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSessionWithDetachCallback),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_PROPERTY),
+        &SceneSessionManagerStub::HandleUpdateProperty),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REQUEST_FOCUS),
+        &SceneSessionManagerStub::HandleRequestFocusStatus),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT),
+        &SceneSessionManagerStub::HandleRegisterWindowManagerAgent),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT),
+        &SceneSessionManagerStub::HandleUnregisterWindowManagerAgent),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_FOCUS_SESSION_INFO),
+        &SceneSessionManagerStub::HandleGetFocusSessionInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_SESSION_LABEL),
+        &SceneSessionManagerStub::HandleSetSessionLabel),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_SESSION_ICON),
+        &SceneSessionManagerStub::HandleSetSessionIcon),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_IS_VALID_SESSION_IDS),
+        &SceneSessionManagerStub::HandleIsValidSessionIds),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_SESSION_CHANGE_LISTENER),
+        &SceneSessionManagerStub::HandleRegisterSessionChangeListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_SESSION_CHANGE_LISTENER),
+        &SceneSessionManagerStub::HandleUnRegisterSessionChangeListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_PENDING_SESSION_TO_FOREGROUND),
+        &SceneSessionManagerStub::HandlePendingSessionToForeground),
+    std::make_pair(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR),
+        &SceneSessionManagerStub::HandlePendingSessionToBackgroundForDelegator),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_FOCUS_SESSION_TOKEN),
+        &SceneSessionManagerStub::HandleGetFocusSessionToken),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_FOCUS_SESSION_ELEMENT),
+        &SceneSessionManagerStub::HandleGetFocusSessionElement),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_CHECK_WINDOW_ID),
+        &SceneSessionManagerStub::HandleCheckWindowId),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED),
+        &SceneSessionManagerStub::HandleSetGestureNavigationEnabled),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO),
+        &SceneSessionManagerStub::HandleGetAccessibilityWindowInfo),
+
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_SESSION_LISTENER),
+        &SceneSessionManagerStub::HandleRegisterSessionListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_SESSION_LISTENER),
+        &SceneSessionManagerStub::HandleUnRegisterSessionListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_MISSION_INFOS),
+        &SceneSessionManagerStub::HandleGetSessionInfos),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_MISSION_INFO_BY_ID),
+        &SceneSessionManagerStub::HandleGetSessionInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_INFO_BY_CONTINUE_SESSION_ID),
+        &SceneSessionManagerStub::HandleGetSessionInfoByContinueSessionId),
+
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_DUMP_SESSION_ALL),
+        &SceneSessionManagerStub::HandleDumpSessionAll),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_DUMP_SESSION_WITH_ID),
+        &SceneSessionManagerStub::HandleDumpSessionWithId),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_TERMINATE_SESSION_NEW),
+        &SceneSessionManagerStub::HandleTerminateSessionNew),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER),
+        &SceneSessionManagerStub::HandleUpdateSessionAvoidAreaListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO),
+        &SceneSessionManagerStub::HandleGetSessionDump),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_SNAPSHOT),
+        &SceneSessionManagerStub::HandleGetSessionSnapshot),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET),
+        &SceneSessionManagerStub::HandleBindDialogTarget),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT),
+        &SceneSessionManagerStub::HandleNotifyDumpInfoResult),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_SESSION_CONTINUE_STATE),
+        &SceneSessionManagerStub::HandleSetSessionContinueState),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_CLEAR_SESSION),
+        &SceneSessionManagerStub::HandleClearSession),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_CLEAR_ALL_SESSIONS),
+        &SceneSessionManagerStub::HandleClearAllSessions),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_LOCK_SESSION),
+        &SceneSessionManagerStub::HandleLockSession),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNLOCK_SESSION),
+        &SceneSessionManagerStub::HandleUnlockSession),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_MOVE_MISSIONS_TO_FOREGROUND),
+        &SceneSessionManagerStub::HandleMoveSessionsToForeground),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_MOVE_MISSIONS_TO_BACKGROUND),
+        &SceneSessionManagerStub::HandleMoveSessionsToBackground),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_COLLABORATOR),
+        &SceneSessionManagerStub::HandleRegisterCollaborator),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_COLLABORATOR),
+        &SceneSessionManagerStub::HandleUnregisterCollaborator),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER),
+        &SceneSessionManagerStub::HandleUpdateSessionTouchOutsideListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_RAISE_WINDOW_TO_TOP),
+        &SceneSessionManagerStub::HandleRaiseWindowToTop),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID),
+        &SceneSessionManagerStub::HandleGetTopWindowId),
+    std::make_pair(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_NOTIFY_WINDOW_EXTENSION_VISIBILITY_CHANGE),
+        &SceneSessionManagerStub::HandleNotifyWindowExtensionVisibilityChange),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_WINDOW_VISIBILITY_LISTENER),
+        &SceneSessionManagerStub::HandleUpdateSessionWindowVisibilityListener),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SHIFT_APP_WINDOW_FOCUS),
+        &SceneSessionManagerStub::HandleShiftAppWindowFocus),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID),
+        &SceneSessionManagerStub::HandleGetVisibilityWindowInfo),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB),
+        &SceneSessionManagerStub::HandleAddExtensionWindowStageToSCB),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_OR_REMOVE_SECURE_SESSION),
+        &SceneSessionManagerStub::HandleAddOrRemoveSecureSession),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_OR_REMOVE_SECURE_EXT_SESSION),
+        &SceneSessionManagerStub::HandleAddOrRemoveSecureExtSession),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS),
+        &SceneSessionManagerStub::HandleUpdateExtWindowFlags),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_HOST_WINDOW_RECT),
+        &SceneSessionManagerStub::HandleGetHostWindowRect),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_STATUS),
+        &SceneSessionManagerStub::HandleGetCallingWindowWindowStatus),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_RECT),
+        &SceneSessionManagerStub::HandleGetCallingWindowRect),
+    std::make_pair(static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_BACK_HOME_STATUS),
+        &SceneSessionManagerStub::HandleGetWindowBackHomeStatus),
+};
+
 int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
     MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
@@ -37,134 +163,14 @@ int SceneSessionManagerStub::OnRemoteRequest(uint32_t code,
         WLOGFE("Failed to check interface token!");
         return ERR_INVALID_STATE;
     }
-    return ProcessRemoteRequest(code, data, reply, option);
-}
 
-int SceneSessionManagerStub::ProcessRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply,
-    MessageOption& option)
-{
-    switch (code) {
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_CREATE_AND_CONNECT_SPECIFIC_SESSION):
-            return HandleCreateAndConnectSpecificSession(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_RECOVER_AND_CONNECT_SPECIFIC_SESSION):
-            return HandleRecoverAndConnectSpecificSession(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_RECOVER_AND_RECONNECT_SCENE_SESSION):
-            return HandleRecoverAndReconnectSceneSession(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION):
-            return HandleDestroyAndDisconnectSpcificSession(data, reply);
-        case static_cast<uint32_t>(
-            SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION_WITH_DETACH_CALLBACK):
-            return HandleDestroyAndDisconnectSpcificSessionWithDetachCallback(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REQUEST_FOCUS):
-            return HandleRequestFocusStatus(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_WINDOW_MANAGER_AGENT):
-            return HandleRegisterWindowManagerAgent(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_WINDOW_MANAGER_AGENT):
-            return HandleUnregisterWindowManagerAgent(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_FOCUS_SESSION_INFO):
-            return HandleGetFocusSessionInfo(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_SESSION_LABEL):
-            return HandleSetSessionLabel(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_SESSION_ICON):
-            return HandleSetSessionIcon(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_IS_VALID_SESSION_IDS):
-            return HandleIsValidSessionIds(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_PENDING_SESSION_TO_FOREGROUND):
-            return HandlePendingSessionToForeground(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_PENDING_SESSION_TO_BACKGROUND_FOR_DELEGATOR):
-            return HandlePendingSessionToBackgroundForDelegator(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_FOCUS_SESSION_TOKEN):
-            return HandleGetFocusSessionToken(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_FOCUS_SESSION_ELEMENT):
-            return HandleGetFocusSessionElement(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_CHECK_WINDOW_ID):
-            return HandleCheckWindowId(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_GESTURE_NAVIGATION_ENABLED):
-            return HandleSetGestureNavigationEnabled(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_INFO):
-            return HandleGetAccessibilityWindowInfo(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_UNRELIABLE_WINDOW_INFO):
-            return HandleGetUnreliableWindowInfo(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_SESSION_LISTENER):
-            return HandleRegisterSessionListener(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_SESSION_LISTENER):
-            return HandleUnRegisterSessionListener(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_MISSION_INFOS):
-            return HandleGetSessionInfos(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_MISSION_INFO_BY_ID):
-            return HandleGetSessionInfo(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_INFO_BY_CONTINUE_SESSION_ID):
-            return HandleGetSessionInfoByContinueSessionId(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_DUMP_SESSION_ALL):
-            return HandleDumpSessionAll(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_DUMP_SESSION_WITH_ID):
-            return HandleDumpSessionWithId(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_TERMINATE_SESSION_NEW):
-            return HandleTerminateSessionNew(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_AVOIDAREA_LISTENER):
-            return HandleUpdateSessionAvoidAreaListener(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_DUMP_INFO):
-            return HandleGetSessionDump(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_SNAPSHOT):
-            return HandleGetSessionSnapshot(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_SESSION_SNAPSHOT_BY_ID):
-            return HandleGetSessionSnapshotById(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_UI_CONTENT_REMOTE_OBJ):
-            return HandleGetUIContentRemoteObj(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_BIND_DIALOG_TARGET):
-            return HandleBindDialogTarget(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_NOTIFY_DUMP_INFO_RESULT):
-            return HandleNotifyDumpInfoResult(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SET_SESSION_CONTINUE_STATE):
-            return HandleSetSessionContinueState(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_CLEAR_SESSION):
-            return HandleClearSession(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_CLEAR_ALL_SESSIONS):
-            return HandleClearAllSessions(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_LOCK_SESSION):
-            return HandleLockSession(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNLOCK_SESSION):
-            return HandleUnlockSession(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_MOVE_MISSIONS_TO_FOREGROUND):
-            return HandleMoveSessionsToForeground(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_MOVE_MISSIONS_TO_BACKGROUND):
-            return HandleMoveSessionsToBackground(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REGISTER_COLLABORATOR):
-            return HandleRegisterCollaborator(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UNREGISTER_COLLABORATOR):
-            return HandleUnregisterCollaborator(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_TOUCHOUTSIDE_LISTENER):
-            return HandleUpdateSessionTouchOutsideListener(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_RAISE_WINDOW_TO_TOP):
-            return HandleRaiseWindowToTop(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID):
-            return HandleGetTopWindowId(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_NOTIFY_WINDOW_EXTENSION_VISIBILITY_CHANGE):
-            return HandleNotifyWindowExtensionVisibilityChange(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_WINDOW_VISIBILITY_LISTENER):
-            return HandleUpdateSessionWindowVisibilityListener(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_SHIFT_APP_WINDOW_FOCUS):
-            return HandleShiftAppWindowFocus(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID):
-            return HandleGetVisibilityWindowInfo(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB):
-            return HandleAddExtensionWindowStageToSCB(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_OR_REMOVE_SECURE_SESSION):
-            return HandleAddOrRemoveSecureSession(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS):
-            return HandleUpdateExtWindowFlags(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_HOST_WINDOW_RECT):
-            return HandleGetHostWindowRect(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_STATUS):
-            return HandleGetCallingWindowWindowStatus(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_RECT):
-            return HandleGetCallingWindowRect(data, reply);
-        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_MODE_TYPE):
-            return HandleGetWindowModeType(data, reply);
-        default:
-            WLOGFE("Failed to find function handler!");
-            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    const auto& func = stubFuncMap_.find(code);
+    if (func == stubFuncMap_.end()) {
+        WLOGFE("Failed to find function handler!");
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
+
+    return (this->*(func->second))(data, reply);
 }
 
 int SceneSessionManagerStub::HandleCreateAndConnectSpecificSession(MessageParcel &data, MessageParcel &reply)
@@ -211,14 +217,14 @@ int SceneSessionManagerStub::HandleCreateAndConnectSpecificSession(MessageParcel
 
 int SceneSessionManagerStub::HandleRecoverAndConnectSpecificSession(MessageParcel &data, MessageParcel &reply)
 {
-    TLOGI(WmsLogTag::WMS_RECOVER, "run!");
+    WLOGFI("[WMSRecover] run HandleCreateAndConnectSpecificSession!");
     sptr<IRemoteObject> sessionStageObject = data.ReadRemoteObject();
     sptr<ISessionStage> sessionStage = iface_cast<ISessionStage>(sessionStageObject);
     sptr<IRemoteObject> eventChannelObject = data.ReadRemoteObject();
     sptr<IWindowEventChannel> eventChannel = iface_cast<IWindowEventChannel>(eventChannelObject);
     std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
     if (sessionStage == nullptr || eventChannel == nullptr || surfaceNode == nullptr) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "Failed to read scene session stage object or event channel object!");
+        WLOGFE("[WMSRecover] Failed to read scene session stage object or event channel object!");
         return ERR_INVALID_DATA;
     }
 
@@ -226,14 +232,14 @@ int SceneSessionManagerStub::HandleRecoverAndConnectSpecificSession(MessageParce
     if (data.ReadBool()) {
         property = data.ReadStrongParcelable<WindowSessionProperty>();
     } else {
-        TLOGW(WmsLogTag::WMS_RECOVER, "Property not exist!");
+        WLOGFW("Property not exist!");
     }
 
     sptr<IRemoteObject> token = nullptr;
     if (property && property->GetTokenState()) {
         token = data.ReadRemoteObject();
     } else {
-        TLOGI(WmsLogTag::WMS_RECOVER, "accept token is nullptr");
+        WLOGI("accept token is nullptr");
     }
 
     sptr<ISession> sceneSession;
@@ -248,14 +254,14 @@ int SceneSessionManagerStub::HandleRecoverAndConnectSpecificSession(MessageParce
 
 int SceneSessionManagerStub::HandleRecoverAndReconnectSceneSession(MessageParcel& data, MessageParcel& reply)
 {
-    TLOGI(WmsLogTag::WMS_RECOVER, "run");
+    WLOGFI("run HandleRecoverAndReconnectSceneSession!");
     sptr<IRemoteObject> sessionStageObject = data.ReadRemoteObject();
     sptr<ISessionStage> sessionStage = iface_cast<ISessionStage>(sessionStageObject);
     sptr<IRemoteObject> eventChannelObject = data.ReadRemoteObject();
     sptr<IWindowEventChannel> eventChannel = iface_cast<IWindowEventChannel>(eventChannelObject);
     std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Unmarshalling(data);
     if (sessionStage == nullptr || eventChannel == nullptr || surfaceNode == nullptr) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "Failed to read scene session stage object or event channel object!");
+        WLOGFE("Failed to read scene session stage object or event channel object!");
         return ERR_INVALID_DATA;
     }
 
@@ -263,14 +269,14 @@ int SceneSessionManagerStub::HandleRecoverAndReconnectSceneSession(MessageParcel
     if (data.ReadBool()) {
         property = data.ReadStrongParcelable<WindowSessionProperty>();
     } else {
-        TLOGW(WmsLogTag::WMS_RECOVER, "Property not exist!");
+        WLOGFW("Property not exist!");
     }
 
     sptr<IRemoteObject> token = nullptr;
     if (property && property->GetTokenState()) {
         token = data.ReadRemoteObject();
     } else {
-        TLOGI(WmsLogTag::WMS_RECOVER, "accept token is nullptr");
+        WLOGI("accept token is nullptr");
     }
 
     sptr<ISession> sceneSession;
@@ -285,8 +291,8 @@ int SceneSessionManagerStub::HandleRecoverAndReconnectSceneSession(MessageParcel
 
 int SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSession(MessageParcel& data, MessageParcel& reply)
 {
+    TLOGI(WmsLogTag::WMS_LIFE, "run HandleDestroyAndDisconnectSpcificSession!");
     auto persistentId = data.ReadInt32();
-    TLOGI(WmsLogTag::WMS_LIFE, "id:%{public}d", persistentId);
     const WSError& ret = DestroyAndDisconnectSpecificSession(persistentId);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
@@ -296,10 +302,25 @@ int SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSessionWithDetachC
     MessageParcel& reply)
 {
     auto persistentId = data.ReadInt32();
-    TLOGI(WmsLogTag::WMS_LIFE, "id:%{public}d", persistentId);
+    TLOGI(WmsLogTag::WMS_LIFE, "persistentId:%{public}d", persistentId);
     sptr<IRemoteObject> callback = data.ReadRemoteObject();
     const WSError ret = DestroyAndDisconnectSpecificSessionWithDetachCallback(persistentId, callback);
     reply.WriteUint32(static_cast<uint32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleUpdateProperty(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFD("run HandleUpdateProperty!");
+    auto action = static_cast<WSPropertyChangeAction>(data.ReadUint32());
+    sptr<WindowSessionProperty> property = nullptr;
+    if (data.ReadBool()) {
+        property = data.ReadStrongParcelable<WindowSessionProperty>();
+    } else {
+        WLOGFW("Property not exist!");
+    }
+    const WMError& ret = UpdateSessionProperty(property, action);
+    reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
 
@@ -308,7 +329,7 @@ int SceneSessionManagerStub::HandleRequestFocusStatus(MessageParcel &data, Messa
     WLOGFI("run HandleRequestFocusStatus!");
     int32_t persistentId = data.ReadInt32();
     bool isFocused = data.ReadBool();
-    WMError ret = RequestFocusStatus(persistentId, isFocused, false, FocusChangeReason::CLIENT_REQUEST);
+    const WMError& ret = RequestFocusStatus(persistentId, isFocused, false);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
@@ -376,6 +397,25 @@ int SceneSessionManagerStub::HandleIsValidSessionIds(MessageParcel &data, Messag
     return ERR_NONE;
 }
 
+int SceneSessionManagerStub::HandleRegisterSessionChangeListener(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleRegisterSessionChangeListener!");
+    sptr<ISessionChangeListener> listener = iface_cast<ISessionChangeListener>(data.ReadRemoteObject());
+    if (listener == nullptr) {
+        return ERR_INVALID_DATA;
+    }
+    WSError errCode = RegisterSessionListener(listener);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleUnRegisterSessionChangeListener(MessageParcel &data, MessageParcel &reply)
+{
+    WLOGFI("run HandleUnRegisterSessionChangeListener!");
+    UnregisterSessionListener();
+    return ERR_NONE;
+}
+
 int SceneSessionManagerStub::HandlePendingSessionToForeground(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandlePendingSessionToForeground!");
@@ -399,8 +439,7 @@ int SceneSessionManagerStub::HandleRegisterSessionListener(MessageParcel& data, 
     WLOGFI("run HandleRegisterSessionListener!");
     sptr<ISessionListener> listener = iface_cast<ISessionListener>(data.ReadRemoteObject());
     if (listener == nullptr) {
-        reply.WriteInt32(static_cast<int32_t>(WSError::WS_ERROR_INVALID_PARAM));
-        return ERR_NONE;
+        return ERR_INVALID_DATA;
     }
     WSError errCode = RegisterSessionListener(listener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
@@ -412,8 +451,7 @@ int SceneSessionManagerStub::HandleUnRegisterSessionListener(MessageParcel& data
     WLOGFI("run HandleUnRegisterSessionListener!");
     sptr<ISessionListener> listener = iface_cast<ISessionListener>(data.ReadRemoteObject());
     if (listener == nullptr) {
-        reply.WriteInt32(static_cast<int32_t>(WSError::WS_OK));
-        return ERR_NONE;
+        return ERR_INVALID_DATA;
     }
     WSError errCode = UnRegisterSessionListener(listener);
     reply.WriteInt32(static_cast<int32_t>(errCode));
@@ -518,8 +556,7 @@ int SceneSessionManagerStub::HandleTerminateSessionNew(MessageParcel& data, Mess
     WLOGFD("run HandleTerminateSessionNew");
     sptr<AAFwk::SessionInfo> abilitySessionInfo = data.ReadParcelable<AAFwk::SessionInfo>();
     bool needStartCaller = data.ReadBool();
-    bool isFromBroker = data.ReadBool();
-    const WSError& errCode = TerminateSessionNew(abilitySessionInfo, needStartCaller, isFromBroker);
+    const WSError& errCode = TerminateSessionNew(abilitySessionInfo, needStartCaller);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -586,24 +623,6 @@ int SceneSessionManagerStub::HandleGetAccessibilityWindowInfo(MessageParcel &dat
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleGetUnreliableWindowInfo(MessageParcel& data, MessageParcel& reply)
-{
-    TLOGD(WmsLogTag::DEFAULT, "run!");
-    std::vector<sptr<UnreliableWindowInfo>> infos;
-    int32_t windowId = INVALID_WINDOW_ID;
-    if (!data.ReadInt32(windowId)) {
-        TLOGE(WmsLogTag::DEFAULT, "Failed to readInt32 windowId");
-        return ERR_INVALID_DATA;
-    }
-    WMError errCode = GetUnreliableWindowInfo(windowId, infos);
-    if (!MarshallingHelper::MarshallingVectorParcelableObj<UnreliableWindowInfo>(reply, infos)) {
-        TLOGE(WmsLogTag::DEFAULT, "Write unreliable window infos failed.");
-        return ERR_TRANSACTION_FAILED;
-    }
-    reply.WriteInt32(static_cast<int32_t>(errCode));
-    return ERR_NONE;
-}
-
 int SceneSessionManagerStub::HandleSetSessionContinueState(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("HandleSetSessionContinueState");
@@ -655,28 +674,6 @@ int SceneSessionManagerStub::HandleGetSessionSnapshot(MessageParcel &data, Messa
     std::shared_ptr<SessionSnapshot> snapshot = std::make_shared<SessionSnapshot>();
     const WSError& ret = GetSessionSnapshot(deviceId, persistentId, *snapshot, isLowResolution);
     reply.WriteParcelable(snapshot.get());
-    reply.WriteUint32(static_cast<uint32_t>(ret));
-    return ERR_NONE;
-}
-
-int SceneSessionManagerStub::HandleGetSessionSnapshotById(MessageParcel& data, MessageParcel& reply)
-{
-    TLOGI(WmsLogTag::WMS_SYSTEM, "Handled!");
-    int32_t persistentId = data.ReadInt32();
-    std::shared_ptr<SessionSnapshot> snapshot = std::make_shared<SessionSnapshot>();
-    const WMError ret = GetSessionSnapshotById(persistentId, *snapshot);
-    reply.WriteParcelable(snapshot.get());
-    reply.WriteInt32(static_cast<int32_t>(ret));
-    return ERR_NONE;
-}
-
-int SceneSessionManagerStub::HandleGetUIContentRemoteObj(MessageParcel& data, MessageParcel& reply)
-{
-    TLOGD(WmsLogTag::DEFAULT, "Called");
-    int32_t persistentId = data.ReadInt32();
-    sptr<IRemoteObject> uiContentRemoteObj;
-    const WSError& ret = GetUIContentRemoteObj(persistentId, uiContentRemoteObj);
-    reply.WriteRemoteObject(uiContentRemoteObj);
     reply.WriteUint32(static_cast<uint32_t>(ret));
     return ERR_NONE;
 }
@@ -858,41 +855,20 @@ int SceneSessionManagerStub::HandleGetVisibilityWindowInfo(MessageParcel& data, 
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleAddExtensionWindowStageToSCB(MessageParcel& data, MessageParcel& reply)
+int SceneSessionManagerStub::HandleAddExtensionWindowStageToSCB(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> sessionStageObject = data.ReadRemoteObject();
     sptr<ISessionStage> sessionStage = iface_cast<ISessionStage>(sessionStageObject);
     if (sessionStage == nullptr) {
         return ERR_INVALID_DATA;
     }
-    sptr<IRemoteObject> token = data.ReadRemoteObject();
-    uint64_t surfaceNodeId = data.ReadUint64();
-    AddExtensionWindowStageToSCB(sessionStage, token, surfaceNodeId);
+    int32_t persistentId = data.ReadInt32();
+    int32_t parentId = data.ReadInt32();
+    AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId);
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleUpdateModalExtensionRect(MessageParcel& data, MessageParcel& reply)
-{
-    sptr<IRemoteObject> token = data.ReadRemoteObject();
-    int32_t rectX = data.ReadInt32();
-    int32_t rectY = data.ReadInt32();
-    int32_t rectWidth = data.ReadInt32();
-    int32_t rectHeight = data.ReadInt32();
-    Rect windowRect{rectX, rectY, rectWidth, rectHeight};
-    UpdateModalExtensionRect(token, windowRect);
-    return ERR_NONE;
-}
-
-int SceneSessionManagerStub::HandleProcessModalExtensionPointDown(MessageParcel& data, MessageParcel& reply)
-{
-    sptr<IRemoteObject> token = data.ReadRemoteObject();
-    int32_t posX = data.ReadInt32();
-    int32_t posY = data.ReadInt32();
-    ProcessModalExtensionPointDown(token, posX, posY);
-    return ERR_NONE;
-}
-
-int SceneSessionManagerStub::HandleAddOrRemoveSecureSession(MessageParcel& data, MessageParcel& reply)
+int SceneSessionManagerStub::HandleAddOrRemoveSecureSession(MessageParcel &data, MessageParcel &reply)
 {
     int32_t persistentId = data.ReadInt32();
     bool shouldHide = data.ReadBool();
@@ -901,12 +877,23 @@ int SceneSessionManagerStub::HandleAddOrRemoveSecureSession(MessageParcel& data,
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleUpdateExtWindowFlags(MessageParcel& data, MessageParcel& reply)
+int SceneSessionManagerStub::HandleAddOrRemoveSecureExtSession(MessageParcel &data, MessageParcel &reply)
 {
-    sptr<IRemoteObject> token = data.ReadRemoteObject();
+    int32_t persistentId = data.ReadInt32();
+    int32_t parentId = data.ReadInt32();
+    bool shouldHide = data.ReadBool();
+    WSError ret = AddOrRemoveSecureExtSession(persistentId, parentId, shouldHide);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleUpdateExtWindowFlags(MessageParcel &data, MessageParcel &reply)
+{
+    TLOGI(WmsLogTag::WMS_UIEXT, "run HandleRemoveExtensionSessionInfo!");
+    int32_t parentId = data.ReadInt32();
+    int32_t persistentId = data.ReadInt32();
     uint32_t extWindowFlags = data.ReadUint32();
-    uint32_t extWindowActions = data.ReadUint32();
-    WSError ret = UpdateExtWindowFlags(token, extWindowFlags, extWindowActions);
+    WSError ret = UpdateExtWindowFlags(parentId, persistentId, extWindowFlags);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
@@ -958,12 +945,12 @@ int SceneSessionManagerStub::HandleGetCallingWindowRect(MessageParcel&data, Mess
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleGetWindowModeType(MessageParcel &data, MessageParcel &reply)
+int SceneSessionManagerStub::HandleGetWindowBackHomeStatus(MessageParcel &data, MessageParcel &reply)
 {
-    WindowModeType windowModeType = Rosen::WindowModeType::WINDOW_MODE_OTHER;
-    WMError errCode = GetWindowModeType(windowModeType);
-    WLOGFI("run HandleGetWindowModeType, windowModeType:%{public}d!", static_cast<int32_t>(windowModeType));
-    if (!reply.WriteUint32(static_cast<int32_t>(windowModeType))) {
+    bool isBackHome = false;
+    WMError errCode = GetWindowBackHomeStatus(isBackHome);
+    WLOGFI("run HandleGetWindowBackHomeStatus, isBackHome:%{public}d!", isBackHome);
+    if (!reply.WriteBool(isBackHome)) {
         WLOGE("Failed to WriteBool");
         return ERR_INVALID_DATA;
     }

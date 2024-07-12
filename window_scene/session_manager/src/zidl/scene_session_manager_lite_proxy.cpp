@@ -22,17 +22,14 @@
 
 #include "marshalling_helper.h"
 #include "window_manager_hilog.h"
-#ifndef USE_ADAPTER_LITE
 #include "window_session_property.h"
-#endif
 
 namespace OHOS::Rosen {
 namespace {
 constexpr int32_t CYCLE_LIMIT = 1000;
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSessionManagerLiteProxy"};
-constexpr int32_t MAX_TOPN_INFO_SIZE = 200;
 }
-#ifndef USE_ADAPTER_LITE
+
 WSError SceneSessionManagerLiteProxy::SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label)
 {
     WLOGFD("run SceneSessionManagerLiteProxy::SetSessionLabel");
@@ -313,9 +310,28 @@ WSError SceneSessionManagerLiteProxy::GetSessionInfoByContinueSessionId(
     return static_cast<WSError>(reply.ReadInt32());
 }
 
+template<typename T>
+WSError SceneSessionManagerLiteProxy::GetParcelableInfos(MessageParcel& reply, std::vector<T>& parcelableInfos)
+{
+    int32_t infoSize = reply.ReadInt32();
+    if (infoSize > CYCLE_LIMIT) {
+        WLOGFE("infoSize is too large");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    for (int32_t i = 0; i < infoSize; i++) {
+        std::unique_ptr<T> info(reply.ReadParcelable<T>());
+        if (!info) {
+            WLOGFE("Read Parcelable infos failed.");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+        parcelableInfos.emplace_back(*info);
+    }
+    return WSError::WS_OK;
+}
 
 WSError SceneSessionManagerLiteProxy::TerminateSessionNew(const sptr<AAFwk::SessionInfo> abilitySessionInfo,
-    bool needStartCaller, bool isFromBroker)
+    bool needStartCaller)
 {
     if (abilitySessionInfo == nullptr) {
         WLOGFE("abilitySessionInfo is null");
@@ -333,10 +349,6 @@ WSError SceneSessionManagerLiteProxy::TerminateSessionNew(const sptr<AAFwk::Sess
     }
     if (!data.WriteBool(needStartCaller)) {
         WLOGFE("Write needStartCaller failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteBool(isFromBroker)) {
-        WLOGFE("Write isFromBroker failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(SceneSessionManagerLiteMessage::TRANS_ID_TERMINATE_SESSION_NEW),
@@ -604,27 +616,6 @@ WSError SceneSessionManagerLiteProxy::ClearAllSessions()
     }
     return static_cast<WSError>(reply.ReadInt32());
 }
-#endif
-
-template<typename T>
-WSError SceneSessionManagerLiteProxy::GetParcelableInfos(MessageParcel& reply, std::vector<T>& parcelableInfos)
-{
-    int32_t infoSize = reply.ReadInt32();
-    if (infoSize > CYCLE_LIMIT) {
-        WLOGFE("infoSize is too large");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-
-    for (int32_t i = 0; i < infoSize; i++) {
-        std::unique_ptr<T> info(reply.ReadParcelable<T>());
-        if (!info) {
-            WLOGFE("Read Parcelable infos failed.");
-            return WSError::WS_ERROR_IPC_FAILED;
-        }
-        parcelableInfos.emplace_back(*info);
-    }
-    return WSError::WS_OK;
-}
 
 void SceneSessionManagerLiteProxy::GetFocusWindowInfo(FocusChangeInfo& focusInfo)
 {
@@ -777,9 +768,9 @@ WMError SceneSessionManagerLiteProxy::GetVisibilityWindowInfo(std::vector<sptr<W
     return static_cast<WMError>(reply.ReadInt32());
 }
 
-WMError SceneSessionManagerLiteProxy::GetWindowModeType(WindowModeType& windowModeType)
+WMError SceneSessionManagerLiteProxy::GetWindowBackHomeStatus(bool &isBackHome)
 {
-    WLOGFI("get Window mode type proxy");
+    WLOGFI("get Window back home proxy");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         WLOGFE("WriteInterfaceToken failed");
@@ -789,179 +780,12 @@ WMError SceneSessionManagerLiteProxy::GetWindowModeType(WindowModeType& windowMo
     MessageParcel reply;
     MessageOption option;
     if (Remote()->SendRequest(static_cast<uint32_t>(
-        SceneSessionManagerLiteMessage::TRANS_ID_GET_WINDOW_MODE_TYPE), data, reply, option) != ERR_NONE) {
+        SceneSessionManagerLiteMessage::TRANS_ID_GET_WINDOW_BACK_HOME_STATUS), data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
         return WMError::WM_ERROR_IPC_FAILED;
     }
 
-    windowModeType = static_cast<WindowModeType>(reply.ReadUint32());
+    isBackHome = reply.ReadBool();
     return static_cast<WMError>(reply.ReadInt32());
 }
-
-WMError SceneSessionManagerLiteProxy::GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo)
-{
-    TLOGI(WmsLogTag::WMS_MAIN, "get main info in %{public}d", topNum);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_MAIN, "WriteInterfaceToken failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-
-    if ((topNum <= 0) || (topNum >= MAX_TOPN_INFO_SIZE)) {
-        return WMError::WM_ERROR_INVALID_PARAM;
-    }
-
-    if (!data.WriteInt32(topNum)) {
-        TLOGE(WmsLogTag::WMS_MAIN, "topNum write fail");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-
-    if (Remote()->SendRequest(static_cast<int32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_TOPN_MAIN_WINDOW_INFO),
-                              data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_MAIN, "send request fail");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-
-    WMError error = static_cast<WMError>(GetParcelableInfos(reply, topNInfo));
-    if (error != WMError::WM_OK) {
-        TLOGE(WmsLogTag::WMS_MAIN, "get info error");
-        return error;
-    }
-
-    return static_cast<WMError>(reply.ReadInt32());
-}
-
-WMError SceneSessionManagerLiteProxy::GetAllMainWindowInfos(std::vector<MainWindowInfo>& infos)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_MAIN, "WriteInterfaceToken failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (Remote()->SendRequest(static_cast<int32_t>(
-        SceneSessionManagerLiteMessage::TRANS_ID_GET_ALL_MAIN_WINDOW_INFO), data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_MAIN, "send request fail");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-
-    WMError error = static_cast<WMError>(GetParcelableInfos(reply, infos));
-    if (error != WMError::WM_OK) {
-        TLOGE(WmsLogTag::WMS_MAIN, "get info error");
-        return error;
-    }
-
-    return static_cast<WMError>(reply.ReadInt32());
-}
-
-WMError SceneSessionManagerLiteProxy::ClearMainSessions(const std::vector<int32_t>& persistentIds,
-    std::vector<int32_t>& clearFailedIds)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_MAIN, "WriteInterfaceToken failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteInt32Vector(persistentIds)) {
-        TLOGE(WmsLogTag::WMS_MAIN, "Write persistentIds failed");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    if (Remote()->SendRequest(static_cast<int32_t>(
-        SceneSessionManagerLiteMessage::TRANS_ID_CLEAR_MAIN_SESSIONS), data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_MAIN, "send request fail");
-        return WMError::WM_ERROR_IPC_FAILED;
-    }
-    reply.ReadInt32Vector(&clearFailedIds);
-    return static_cast<WMError>(reply.ReadInt32());
-}
-
-WSError SceneSessionManagerLiteProxy::RaiseWindowToTop(int32_t persistentId)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_MAIN, "WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteInt32(persistentId)) {
-        TLOGE(WmsLogTag::WMS_MAIN, "Write persistentId failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-
-    if (Remote()->SendRequest(static_cast<uint32_t>(
-        SceneSessionManagerLiteMessage::TRANS_ID_RAISE_WINDOW_TO_TOP),
-        data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_MAIN, "SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WSError>(ret);
-}
-
-#ifndef USE_ADAPTER_LITE
-WSError SceneSessionManagerLiteProxy::RegisterIAbilityManagerCollaborator(int32_t type,
-    const sptr<AAFwk::IAbilityManagerCollaborator>& impl)
-{
-    TLOGI(WmsLogTag::WMS_MAIN, "type:%{public}d", type);
-    if (!impl) {
-        TLOGE(WmsLogTag::WMS_MAIN, "impl is nullptr");
-        return WSError::WS_ERROR_INVALID_PARAM;
-    }
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_MAIN, "WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteInt32(type)) {
-        TLOGE(WmsLogTag::WMS_MAIN, "Write type failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteRemoteObject(impl->AsObject())) {
-        TLOGE(WmsLogTag::WMS_MAIN, "Write impl failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-
-    if (Remote()->SendRequest(static_cast<uint32_t>(
-        SceneSessionManagerLiteMessage::TRANS_ID_REGISTER_COLLABORATOR),
-        data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_MAIN, "SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    return static_cast<WSError>(reply.ReadInt32());
-}
-
-WSError SceneSessionManagerLiteProxy::UnregisterIAbilityManagerCollaborator(int32_t type)
-{
-    TLOGI(WmsLogTag::WMS_MAIN, "type:%{public}d", type);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_MAIN, "WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteInt32(type)) {
-        TLOGE(WmsLogTag::WMS_MAIN, "Write type failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-
-    if (Remote()->SendRequest(static_cast<uint32_t>(
-        SceneSessionManagerLiteMessage::TRANS_ID_UNREGISTER_COLLABORATOR),
-        data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_MAIN, "SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    return static_cast<WSError>(reply.ReadInt32());
-}
-#endif
 } // namespace OHOS::Rosen

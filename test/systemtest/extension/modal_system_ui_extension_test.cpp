@@ -68,18 +68,6 @@ HWTEST_F(ModalSystemUiExtensionTest, ModalSystemUiExtensionConnection01, Functio
     }
     delete connection;
 }
-
-/**
- * @tc.name: ToString
- * @tc.desc: ToString
- * @tc.type: FUNC
- */
-HWTEST_F(ModalSystemUiExtensionTest, ToString, Function | SmallTest | Level2)
-{
-    AAFwk::WantParams wantParams_;
-    std::string ret = ModalSystemUiExtension::ToString(wantParams_);
-    ASSERT_EQ("{}", ret);
-}
 }
 } // Rosen
 } // OHOS

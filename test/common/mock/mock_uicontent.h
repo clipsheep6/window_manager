@@ -39,9 +39,9 @@ public:
     MOCK_METHOD0(UnFocus, void());
     MOCK_METHOD0(Destroy, void());
     MOCK_METHOD1(OnNewWant, void(const OHOS::AAFwk::Want& want));
-    MOCK_METHOD4(Restore, UIContentErrorCode(OHOS::Rosen::Window* window, const std::string& contentInfo,
-                 napi_value storage, ContentInfoType type));
-    MOCK_CONST_METHOD1(GetContentInfo, std::string(ContentInfoType type));
+    MOCK_METHOD3(Restore, UIContentErrorCode(OHOS::Rosen::Window* window, const std::string& contentInfo,
+                 napi_value storage));
+    MOCK_CONST_METHOD0(GetContentInfo, std::string());
     MOCK_METHOD0(DestroyUIDirector, void());
     MOCK_METHOD0(ProcessBackPressed, bool());
     MOCK_METHOD1(ProcessPointerEvent, bool(const std::shared_ptr<OHOS::MMI::PointerEvent>& pointerEvent));
@@ -104,9 +104,6 @@ public:
     MOCK_METHOD1(SetUIExtensionAbilityProcess, void(bool isUIExtensionAbilityProcess));
     MOCK_METHOD0(IsUIExtensionSubWindow, bool());
     MOCK_METHOD0(IsUIExtensionAbilityProcess, bool());
-    MOCK_METHOD4(NotifyExecuteAction, bool(int64_t elementId, const std::map<std::string, std::string>& actionAguments,
-        int32_t action, int64_t baseParent));
-    MOCK_METHOD1(SetForceSplitEnable, void(bool isForceSplit));
 };
 } // namespace Ace
 } // namespace OHOS

@@ -34,23 +34,13 @@ public:
     static napi_value StopPictureInPicture(napi_env env, napi_callback_info info);
     static napi_value SetAutoStartEnabled(napi_env env, napi_callback_info info);
     static napi_value UpdateContentSize(napi_env env, napi_callback_info info);
-    static napi_value UpdatePiPControlStatus(napi_env env, napi_callback_info info);
-    static napi_value SetPiPControlEnabled(napi_env env, napi_callback_info info);
     static napi_value RegisterCallback(napi_env env, napi_callback_info info);
     static napi_value UnregisterCallback(napi_env env, napi_callback_info info);
 private:
-    enum class ListenerType : uint32_t {
-        STATE_CHANGE_CB,
-        CONTROL_PANEL_ACTION_EVENT_CB,
-        CONTROL_EVENT_CB,
-    };
-
     napi_value OnStartPictureInPicture(napi_env env, napi_callback_info info);
     napi_value OnStopPictureInPicture(napi_env env, napi_callback_info info);
     napi_value OnSetAutoStartEnabled(napi_env env, napi_callback_info info);
     napi_value OnUpdateContentSize(napi_env env, napi_callback_info info);
-    napi_value OnUpdatePiPControlStatus(napi_env env, napi_callback_info info);
-    napi_value OnSetPiPControlEnabled(napi_env env, napi_callback_info info);
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnUnregisterCallback(napi_env env, napi_callback_info info);
 
@@ -60,15 +50,17 @@ private:
 
     void ProcessStateChangeRegister();
     void ProcessActionEventRegister();
-    void ProcessControlEventRegister();
     void ProcessStateChangeUnRegister();
     void ProcessActionEventUnRegister();
-    void ProcessControlEventUnRegister();
 
     sptr<PictureInPictureController> pipController_;
     napi_env env_;
-    std::map<std::string, ListenerType> listenerCodeMap_;
+    using Func = void(JsPipController::*)();
+    std::map<std::string, Func> registerFunc_;
+    std::map<std::string, Func> unRegisterFunc_;
     std::map<std::string, std::shared_ptr<NativeReference>> jsCbMap_;
+    std::mutex mtx_;
+    static std::mutex pipMutex_;
 
 public:
     class PiPLifeCycleImpl : public IPiPLifeCycle {
@@ -87,6 +79,7 @@ public:
         void OnPipListenerCallback(PiPState state, int32_t errorCode);
         napi_env engine_ = nullptr;
         std::shared_ptr<NativeReference> jsCallBack_ = nullptr;
+        std::mutex mtx_;
     };
 
     class PiPActionObserverImpl : public IPiPActionObserver {
@@ -94,21 +87,11 @@ public:
         PiPActionObserverImpl(napi_env env, std::shared_ptr<NativeReference> callback)
             : engine_(env), jsCallBack_(callback) {}
         ~PiPActionObserverImpl() {}
-        void OnActionEvent(const std::string& actionEvent, int32_t statusCode) override;
+        void OnActionEvent(const std::string& actionEvent, int32_t status) override;
     private:
         napi_env engine_ = nullptr;
         std::shared_ptr<NativeReference> jsCallBack_ = nullptr;
-    };
-
-    class PiPControlObserverImpl : public IPiPControlObserver {
-    public:
-        PiPControlObserverImpl(napi_env env, std::shared_ptr<NativeReference> callback)
-            : engine_(env), jsCallBack_(callback) {}
-        ~PiPControlObserverImpl() {}
-        void OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode) override;
-    private:
-        napi_env engine_ = nullptr;
-        std::shared_ptr<NativeReference> jsCallBack_ = nullptr;
+        std::mutex mtx_;
     };
 };
 } // namespace Rosen

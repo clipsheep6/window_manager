@@ -33,7 +33,6 @@
 #include "display_manager_service_inner.h"
 #include "minimize_app.h"
 #include "persistent_storage.h"
-#include "surface_capture_future.h"
 #include "remote_animation.h"
 #include "starting_window.h"
 #include "window_inner_manager.h"
@@ -48,7 +47,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "Controller"};
-    constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 50;
+    constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
     constexpr float MASKING_SURFACE_NODE_Z_ORDER = 9999;
 }
 
@@ -251,6 +250,10 @@ WMError WindowController::CreateWindow(sptr<IWindow>& window, sptr<WindowPropert
 {
     if (!CheckParentWindowValid(property)) {
         return WMError::WM_ERROR_INVALID_PARENT;
+    }
+
+    if (windowRoot_->CheckMultiDialogWindows(property->GetWindowType(), token)) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
     }
 
     if (!surfaceNode) {
@@ -988,22 +991,6 @@ void WindowController::RecordBootAnimationEvent() const
     }
 }
 
-std::shared_ptr<Media::PixelMap> WindowController::GetSnapshot(int32_t windowId)
-{
-    auto node = windowRoot_->GetWindowNode(windowId);
-    if (node == nullptr) {
-        WLOGFE("could not find window");
-        return nullptr;
-    }
-    auto callback = std::make_shared<SurfaceCaptureFuture>();
-    bool ret = RSInterfaces::GetInstance().TakeSurfaceCapture(node->surfaceNode_, callback);
-    if (!ret) {
-        WLOGFE("takeSurfaceCapture failed");
-        return nullptr;
-    }
-    return callback->GetResult(SNAPSHOT_TIMEOUT_MS);
-}
-
 WMError WindowController::SetWindowType(uint32_t windowId, WindowType type)
 {
     auto node = windowRoot_->GetWindowNode(windowId);
@@ -1686,13 +1673,6 @@ WMError WindowController::GetAccessibilityWindowInfo(std::vector<sptr<Accessibil
     return WMError::WM_OK;
 }
 
-WMError WindowController::GetUnreliableWindowInfo(int32_t windowId,
-    std::vector<sptr<UnreliableWindowInfo>>& infos) const
-{
-    windowRoot_->GetUnreliableWindowInfo(windowId, infos);
-    return WMError::WM_OK;
-}
-
 WMError WindowController::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) const
 {
     windowRoot_->GetVisibilityWindowInfo(infos);
@@ -1874,6 +1854,9 @@ WMError WindowController::BindDialogTarget(uint32_t& windowId, sptr<IRemoteObjec
     if (node == nullptr) {
         WLOGFE("could not find window");
         return WMError::WM_ERROR_NULLPTR;
+    }
+    if (windowRoot_->CheckMultiDialogWindows(node->GetWindowType(), targetToken)) {
+        return WMError::WM_ERROR_INVALID_WINDOW;
     }
 
     node->dialogTargetToken_ = targetToken;

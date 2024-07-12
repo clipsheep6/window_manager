@@ -22,14 +22,12 @@
 #include "window.h"
 #include "picture_in_picture_manager.h"
 #include "xcomponent_controller.h"
-#include <algorithm>
 
 namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;
 using namespace Ace;
 namespace {
-    constexpr uint32_t MAX_CONTROL_GROUP_NUM = 3;
     const std::set<PiPControlGroup> VIDEO_PLAY_CONTROLS {
         PiPControlGroup::VIDEO_PREVIOUS_NEXT,
         PiPControlGroup::FAST_FORWARD_BACKWARD,
@@ -38,23 +36,17 @@ namespace {
         PiPControlGroup::VIDEO_CALL_MICROPHONE_SWITCH,
         PiPControlGroup::VIDEO_CALL_HANG_UP_BUTTON,
         PiPControlGroup::VIDEO_CALL_CAMERA_SWITCH,
-        PiPControlGroup::VIDEO_CALL_MUTE_SWITCH,
     };
     const std::set<PiPControlGroup> VIDEO_MEETING_CONTROLS {
         PiPControlGroup::VIDEO_MEETING_HANG_UP_BUTTON,
         PiPControlGroup::VIDEO_MEETING_CAMERA_SWITCH,
         PiPControlGroup::VIDEO_MEETING_MUTE_SWITCH,
-        PiPControlGroup::VIDEO_MEETING_MICROPHONE_SWITCH,
-    };
-    const std::set<PiPControlGroup> VIDEO_LIVE_CONTROLS {
-        PiPControlGroup::VIDEO_PLAY_PAUSE,
-        PiPControlGroup::VIDEO_LIVE_MUTE_SWITCH,
     };
     const std::map<PiPTemplateType, std::set<PiPControlGroup>> TEMPLATE_CONTROL_MAP {
         {PiPTemplateType::VIDEO_PLAY, VIDEO_PLAY_CONTROLS},
         {PiPTemplateType::VIDEO_CALL, VIDEO_CALL_CONTROLS},
         {PiPTemplateType::VIDEO_MEETING, VIDEO_MEETING_CONTROLS},
-        {PiPTemplateType::VIDEO_LIVE, VIDEO_LIVE_CONTROLS},
+        {PiPTemplateType::VIDEO_LIVE, {}},
     };
 }
 
@@ -64,12 +56,9 @@ static int32_t checkControlsRules(uint32_t pipTemplateType, std::vector<std::uin
 {
     auto iter = TEMPLATE_CONTROL_MAP.find(static_cast<PiPTemplateType>(pipTemplateType));
     auto controls = iter->second;
-    if (controlGroups.size() > MAX_CONTROL_GROUP_NUM) {
-        return -1;
-    }
     for (auto control : controlGroups) {
         if (controls.find(static_cast<PiPControlGroup>(control)) == controls.end()) {
-            TLOGE(WmsLogTag::WMS_PIP, "pipOption param error, controlGroup not matches, controlGroup: %{public}u",
+            TLOGE(WmsLogTag::WMS_PIP, "pipoption param error, controlGroup not matches, controlGroup: %{public}u",
                 control);
             return -1;
         }
@@ -80,7 +69,7 @@ static int32_t checkControlsRules(uint32_t pipTemplateType, std::vector<std::uin
         auto iterSecond = std::find(controlGroups.begin(), controlGroups.end(),
             static_cast<uint32_t>(PiPControlGroup::FAST_FORWARD_BACKWARD));
         if (iterFirst != controlGroups.end() && iterSecond != controlGroups.end()) {
-            TLOGE(WmsLogTag::WMS_PIP, "pipOption param error, %{public}u conflicts with %{public}u in controlGroups",
+            TLOGE(WmsLogTag::WMS_PIP, "pipoption param error, %{public}u conflicts with %{public}u in controlGroups",
                 static_cast<uint32_t>(PiPControlGroup::VIDEO_PREVIOUS_NEXT),
                 static_cast<uint32_t>(PiPControlGroup::FAST_FORWARD_BACKWARD));
             return -1;
@@ -92,33 +81,26 @@ static int32_t checkControlsRules(uint32_t pipTemplateType, std::vector<std::uin
 static int32_t checkOptionParams(PipOption& option)
 {
     if (option.GetContext() == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "pipOption param error, context is nullptr.");
+        TLOGE(WmsLogTag::WMS_PIP, "pipoption param error, context is nullptr.");
         return -1;
     }
     if (option.GetXComponentController() == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "pipOption param error, XComponentController is nullptr.");
+        TLOGE(WmsLogTag::WMS_PIP, "pipoption param error, XComponentController is nullptr.");
         return -1;
     }
     uint32_t pipTemplateType = option.GetPipTemplate();
     if (TEMPLATE_CONTROL_MAP.find(static_cast<PiPTemplateType>(pipTemplateType)) ==
         TEMPLATE_CONTROL_MAP.end()) {
-        TLOGE(WmsLogTag::WMS_PIP, "pipOption param error, pipTemplateType not exists.");
+        TLOGE(WmsLogTag::WMS_PIP, "pipoption param error, pipTemplateType not exists.");
         return -1;
     }
     return checkControlsRules(pipTemplateType, option.GetControlGroup());
 }
 
-static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::vector<std::uint32_t>& controls,
-    uint32_t templateType)
+static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::vector<std::uint32_t> &controls)
 {
     if (controlGroup == nullptr) {
         return false;
-    }
-    napi_valuetype type;
-    napi_typeof(env, controlGroup, &type);
-    if (type == napi_undefined && templateType == static_cast<uint32_t>(PiPTemplateType::VIDEO_LIVE)) {
-        TLOGI(WmsLogTag::WMS_PIP, "controls is undefined");
-        controls.push_back(static_cast<uint32_t>(PiPControlGroup::VIDEO_PLAY_PAUSE));
     }
     uint32_t size = 0;
     napi_get_array_length(env, controlGroup, &size);
@@ -128,14 +110,9 @@ static bool GetControlGroupFromJs(napi_env env, napi_value controlGroup, std::ve
         napi_get_element(env, controlGroup, i, &getElementValue);
         if (!ConvertFromJsValue(env, getElementValue, controlType)) {
             TLOGE(WmsLogTag::WMS_PIP, "Failed to convert parameter to controlType");
-            continue;
+            return false;
         }
-        auto iter = std::find(controls.begin(), controls.end(), controlType);
-        if (iter != controls.end()) {
-            TLOGI(WmsLogTag::WMS_PIP, "The controlType already exists. controlType: %{public}u", controlType);
-        } else {
-            controls.push_back(controlType);
-        }
+        controls.push_back(controlType);
     }
     return true;
 }
@@ -149,8 +126,6 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     napi_value heightValue = nullptr;
     napi_value xComponentControllerValue = nullptr;
     napi_value controlGroup = nullptr;
-    napi_value nodeController = nullptr;
-    napi_ref nodeControllerRef = nullptr;
     void* contextPtr = nullptr;
     std::string navigationId = "";
     uint32_t templateType = static_cast<uint32_t>(PiPTemplateType::VIDEO_PLAY);
@@ -165,23 +140,20 @@ static int32_t GetPictureInPictureOptionFromJs(napi_env env, napi_value optionOb
     napi_get_named_property(env, optionObject, "contentHeight", &heightValue);
     napi_get_named_property(env, optionObject, "componentController", &xComponentControllerValue);
     napi_get_named_property(env, optionObject, "controlGroups", &controlGroup);
-    napi_get_named_property(env, optionObject, "customUIController", &nodeController);
-    napi_create_reference(env, nodeController, 1, &nodeControllerRef);
     napi_unwrap(env, contextPtrValue, &contextPtr);
     ConvertFromJsValue(env, navigationIdValue, navigationId);
     ConvertFromJsValue(env, templateTypeValue, templateType);
     ConvertFromJsValue(env, widthValue, width);
     ConvertFromJsValue(env, heightValue, height);
-    GetControlGroupFromJs(env, controlGroup, controls, templateType);
+    GetControlGroupFromJs(env, controlGroup, controls);
     std::shared_ptr<XComponentController> xComponentControllerResult =
-        XComponentController::GetXComponentControllerFromNapiValue(env, xComponentControllerValue);
+        XComponentController::GetXComponentControllerFromNapiValue(xComponentControllerValue);
     option.SetContext(contextPtr);
     option.SetNavigationId(navigationId);
     option.SetPipTemplate(templateType);
     option.SetContentSize(width, height);
     option.SetControlGroup(controls);
     option.SetXComponentController(xComponentControllerResult);
-    option.SetNodeControllerRef(nodeControllerRef);
     return checkOptionParams(option);
 }
 
@@ -225,19 +197,18 @@ napi_value JsPipWindowManager::OnCreatePipController(napi_env env, napi_callback
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < 1) {
-        return NapiThrowInvalidParam(env, "Missing args when creating pipController");
+        TLOGE(WmsLogTag::WMS_PIP, "Missing args when creating pipController");
+        return NapiThrowInvalidParam(env);
     }
     napi_value config = argv[0];
     if (config == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "config is null");
-        return NapiThrowInvalidParam(env, "Failed to convert object to pipConfiguration or pipConfiguration is null");
+        TLOGE(WmsLogTag::WMS_PIP, "Failed to convert object to pip Configuration");
+        return NapiThrowInvalidParam(env);
     }
     PipOption pipOption;
     if (GetPictureInPictureOptionFromJs(env, config, pipOption) == -1) {
-        std::string errMsg = "Invalid parameters in config, please check if context/xComponentController is null,"
-            " or controlGroup mismatch the corresponding pipTemplateType";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
+        TLOGE(WmsLogTag::WMS_PIP, "Configuration is invalid: %{public}zu", argc);
+        return NapiThrowInvalidParam(env);
     }
     napi_value callback = argc > 1 ? (GetType(env, argv[1]) == napi_function ? argv[1] : nullptr) : nullptr;
     NapiAsyncTask::CompleteCallback complete = [=](napi_env env, NapiAsyncTask& task, int32_t status) {

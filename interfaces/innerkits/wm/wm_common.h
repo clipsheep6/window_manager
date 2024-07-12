@@ -19,8 +19,6 @@
 #include <parcel.h>
 #include <map>
 #include <float.h>
-#include <sstream>
-#include <string>
 
 namespace OHOS {
 namespace Rosen {
@@ -81,9 +79,6 @@ enum class WindowType : uint32_t {
     WINDOW_TYPE_THEME_EDITOR,
     WINDOW_TYPE_NAVIGATION_INDICATOR,
     WINDOW_TYPE_HANDWRITE,
-    WINDOW_TYPE_SCENE_BOARD,
-    WINDOW_TYPE_KEYBOARD_PANEL,
-    WINDOW_TYPE_SCB_DEFAULT,
     ABOVE_APP_SYSTEM_WINDOW_END,
 
     SYSTEM_SUB_WINDOW_BASE = 2500,
@@ -92,7 +87,9 @@ enum class WindowType : uint32_t {
 
     SYSTEM_WINDOW_END = SYSTEM_SUB_WINDOW_END,
 
-    WINDOW_TYPE_UI_EXTENSION = 3000
+    WINDOW_TYPE_UI_EXTENSION = 3000,
+    WINDOW_TYPE_SCENE_BOARD,
+    WINDOW_TYPE_KEYBOARD_PANEL
 };
 
 /**
@@ -114,20 +111,7 @@ enum class WindowModeType : uint8_t {
     WINDOW_MODE_SPLIT_FLOATING = 0,
     WINDOW_MODE_SPLIT = 1,
     WINDOW_MODE_FLOATING = 2,
-    WINDOW_MODE_FULLSCREEN = 3,
-    WINDOW_MODE_FULLSCREEN_FLOATING = 4,
-    WINDOW_MODE_OTHER = 5
-};
-
-/**
- * @brief Enumerates modal of sub session.
- */
-enum class SubWindowModalType : uint32_t {
-    TYPE_UNDEFINED = 0,
-    TYPE_NORMAL,
-    TYPE_DIALOG,
-    TYPE_WINDOW_MODALITY,
-    TYPE_APPLICATION_MODALITY,
+    WINDOW_MODE_OTHER = 3
 };
 
 /**
@@ -240,7 +224,7 @@ enum class WmErrorCode : int32_t {
 enum class WindowStatus : uint32_t {
     WINDOW_STATUS_UNDEFINED = 0,
     WINDOW_STATUS_FULLSCREEN = 1,
-    WINDOW_STATUS_MAXIMIZE,
+    WINDOW_STATUS_MAXMIZE,
     WINDOW_STATUS_MINIMIZE,
     WINDOW_STATUS_FLOATING,
     WINDOW_STATUS_SPLITSCREEN
@@ -305,25 +289,11 @@ enum class WindowFlag : uint32_t {
 };
 
 /**
- * @brief Flag of uiextension window.
+ * @brief Enumerates flag of uiextension window.
  */
-union ExtensionWindowFlags {
-    uint32_t bitData;
-    struct {
-        // Each flag should be false default, true when active
-        bool hideNonSecureWindowsFlag : 1;
-        bool waterMarkFlag : 1;
-        bool privacyModeFlag : 1;
-    };
-    ExtensionWindowFlags() : bitData(0) {}
-    ExtensionWindowFlags(uint32_t bits) : bitData(bits) {}
-    ~ExtensionWindowFlags() {}
-    void SetAllActive()
-    {
-        hideNonSecureWindowsFlag = true;
-        waterMarkFlag = true;
-        privacyModeFlag = true;
-    }
+enum class ExtensionWindowFlag : uint32_t {
+    EXTENSION_WINDOW_FLAG_WATER_MARK = 1,
+    EXTENSION_WINDOW_FLAG_END = 1 << 1,
 };
 
 /**
@@ -348,9 +318,7 @@ enum class WindowSizeChangeReason : uint32_t {
     FLOATING_TO_FULL,
     PIP_START,
     PIP_SHOW,
-    PIP_AUTO_START,
     PIP_RATIO_CHANGE,
-    UPDATE_DPI_SYNC,
     END,
 };
 
@@ -397,27 +365,16 @@ enum class WindowSessionType : uint32_t {
 enum class WindowGravity : uint32_t {
     WINDOW_GRAVITY_FLOAT = 0,
     WINDOW_GRAVITY_BOTTOM,
-    WINDOW_GRAVITY_DEFAULT,
 };
 
 /**
  * @brief Enumerates window setuicontent type.
  */
-enum class WindowSetUIContentType : uint32_t {
+enum class WindowSetUIContentType: uint32_t {
     DEFAULT,
-    RESTORE,
+    DISTRIBUTE,
     BY_NAME,
     BY_ABC,
-};
-
-/**
- * @brief Enumerates restore type.
- */
-enum class BackupAndRestoreType : int32_t {
-    NONE = 0,                       // no backup and restore
-    CONTINUATION = 1,               // distribute
-    APP_RECOVERY = 2,               // app recovery
-    RESOURCESCHEDULE_RECOVERY = 3,  // app is killed due to resource schedule
 };
 
 /**
@@ -428,48 +385,6 @@ enum class BackupAndRestoreType : int32_t {
 struct PointInfo {
     int32_t x;
     int32_t y;
-};
-
-/**
- * @struct MainWindowInfo.
- *
- * @brief topN main window info.
- */
-struct MainWindowInfo : public Parcelable {
-    virtual bool Marshalling(Parcel &parcel) const override
-    {
-        if (!parcel.WriteInt32(pid_)) {
-            return false;
-        }
-
-        if (!parcel.WriteString(bundleName_)) {
-            return false;
-        }
-
-        if (!parcel.WriteInt32(persistentId_)) {
-            return false;
-        }
-
-        if (!parcel.WriteInt32(bundleType_)) {
-            return false;
-        }
-        return true;
-    }
-
-    static MainWindowInfo* Unmarshalling(Parcel& parcel)
-    {
-        MainWindowInfo* mainWindowInfo = new MainWindowInfo;
-        mainWindowInfo->pid_ = parcel.ReadInt32();
-        mainWindowInfo->bundleName_ = parcel.ReadString();
-        mainWindowInfo->persistentId_ = parcel.ReadInt32();
-        mainWindowInfo->bundleType_ = parcel.ReadInt32();
-        return mainWindowInfo;
-    }
-
-    int32_t pid_ = 0;
-    std::string bundleName_ = "";
-    int32_t persistentId_ = 0;
-    int32_t bundleType_ = 0;
 };
 
 namespace {
@@ -603,18 +518,6 @@ struct SystemBarProperty {
 };
 
 /**
- * @struct SystemBarPropertyFlag
- *
- * @brief Flag of system bar
- */
-struct SystemBarPropertyFlag {
-    bool enableFlag = false;
-    bool backgroundColorFlag = false;
-    bool contentColorFlag = false;
-    bool enableAnimationFlag = false;
-};
-
-/**
  * @struct Rect
  *
  * @brief Window Rect
@@ -644,79 +547,6 @@ struct Rect {
     {
         return (posX_ >= a.posX_ && posY_ >= a.posY_ &&
             posX_ + width_ <= a.posX_ + a.width_ && posY_ + height_ <= a.posY_ + a.height_);
-    }
-
-    inline std::string ToString() const
-    {
-        std::stringstream ss;
-        ss << "[" << posX_ << " " << posY_ << " " << width_ << " " << height_ << "]";
-        return ss.str();
-    }
-};
-
-/**
- * @brief UIExtension usage
- */
-enum class UIExtensionUsage : uint32_t {
-    MODAL = 0,
-    EMBEDDED,
-    CONSTRAINED_EMBEDDED,
-    UIEXTENSION_USAGE_END
-};
-
-/**
- * @brief UIExtension info for event
- */
-struct ExtensionWindowEventInfo {
-    int32_t persistentId  = 0;
-    int32_t pid = -1;
-    Rect windowRect {0, 0, 0, 0};
-};
-
-/**
- * @brief UIExtension info from ability
- */
-struct ExtensionWindowAbilityInfo {
-    int32_t persistentId  { 0 };
-    int32_t parentId { 0 };
-    UIExtensionUsage usage { UIExtensionUsage::UIEXTENSION_USAGE_END };
-};
-
-/**
- * @struct KeyboardPanelInfo
- *
- * @brief Info of keyboard panel
- */
-struct KeyboardPanelInfo : public Parcelable {
-    Rect rect_ = {0, 0, 0, 0};
-    WindowGravity gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
-    bool isShowing_ = false;
-
-    bool Marshalling(Parcel& parcel) const
-    {
-        return parcel.WriteInt32(rect_.posX_) && parcel.WriteInt32(rect_.posY_) &&
-               parcel.WriteUint32(rect_.width_) && parcel.WriteUint32(rect_.height_) &&
-               parcel.WriteUint32(static_cast<uint32_t>(gravity_)) &&
-               parcel.WriteBool(isShowing_);
-    }
-
-    static KeyboardPanelInfo* Unmarshalling(Parcel& parcel)
-    {
-        KeyboardPanelInfo* keyboardPanelInfo = new(std::nothrow)KeyboardPanelInfo;
-        if (keyboardPanelInfo == nullptr) {
-            return nullptr;
-        }
-        bool res = parcel.ReadInt32(keyboardPanelInfo->rect_.posX_) &&
-            parcel.ReadInt32(keyboardPanelInfo->rect_.posY_) && parcel.ReadUint32(keyboardPanelInfo->rect_.width_) &&
-            parcel.ReadUint32(keyboardPanelInfo->rect_.height_);
-        if (!res) {
-            delete keyboardPanelInfo;
-            return nullptr;
-        }
-        keyboardPanelInfo->gravity_ = static_cast<WindowGravity>(parcel.ReadUint32());
-        keyboardPanelInfo->isShowing_ = parcel.ReadBool();
-
-        return keyboardPanelInfo;
     }
 };
 
@@ -849,7 +679,6 @@ enum class PiPWindowState : uint32_t {
     STATE_STARTED = 2,
     STATE_STOPPING = 3,
     STATE_STOPPED = 4,
-    STATE_RESTORING = 5,
 };
 
 /**
@@ -876,20 +705,13 @@ enum class PiPControlGroup : uint32_t {
     VIDEO_CALL_MICROPHONE_SWITCH = 201,
     VIDEO_CALL_HANG_UP_BUTTON = 202,
     VIDEO_CALL_CAMERA_SWITCH = 203,
-    VIDEO_CALL_MUTE_SWITCH = 204,
     VIDEO_CALL_END,
 
     VIDEO_MEETING_START = 300,
     VIDEO_MEETING_HANG_UP_BUTTON = 301,
     VIDEO_MEETING_CAMERA_SWITCH = 302,
     VIDEO_MEETING_MUTE_SWITCH = 303,
-    VIDEO_MEETING_MICROPHONE_SWITCH = 304,
     VIDEO_MEETING_END,
-
-    VIDEO_LIVE_START = 400,
-    VIDEO_PLAY_PAUSE = 401,
-    VIDEO_LIVE_MUTE_SWITCH = 402,
-    VIDEO_LIVE_END,
     END,
 };
 
@@ -905,53 +727,13 @@ enum class PiPState : int32_t {
     ERROR = 6,
 };
 
-/**
- * @brief Enumerates picture in picture control status.
- */
-enum class PiPControlStatus : int32_t {
-    PLAY = 1,
-    PAUSE = 0,
-    OPEN = 1,
-    CLOSE = 0,
-    ENABLED = -2,
-    DISABLED = -3,
-};
-
-/**
- * @brief Enumerates picture in picture control type.
- */
-enum class PiPControlType : uint32_t {
-    VIDEO_PLAY_PAUSE = 0,
-    VIDEO_PREVIOUS = 1,
-    VIDEO_NEXT = 2,
-    FAST_FORWARD = 3,
-    FAST_BACKWARD = 4,
-    HANG_UP_BUTTON = 5,
-    MICROPHONE_SWITCH = 6,
-    CAMERA_SWITCH = 7,
-    MUTE_SWITCH = 8,
-    END,
-};
-
-struct PiPControlStatusInfo {
-    PiPControlType controlType;
-    PiPControlStatus status;
-};
-
-struct PiPControlEnableInfo {
-    PiPControlType controlType;
-    PiPControlStatus enabled;
-};
-
 struct PiPTemplateInfo {
     uint32_t pipTemplateType;
     uint32_t priority;
     std::vector<uint32_t> controlGroup;
-    std::vector<PiPControlStatusInfo> pipControlStatusInfoList;
-    std::vector<PiPControlEnableInfo> pipControlEnableInfoList;
 };
 
-using OnCallback = std::function<void(int64_t, int64_t)>;
+using OnCallback = std::function<void(int64_t)>;
 
 /**
  * @struct VsyncCallback
@@ -963,21 +745,17 @@ struct VsyncCallback {
 };
 
 struct WindowLimits {
-    uint32_t maxWidth_ = UINT32_MAX;
-    uint32_t maxHeight_ = UINT32_MAX;
-    uint32_t minWidth_ = 0;
-    uint32_t minHeight_ = 0;
-    float maxRatio_ = FLT_MAX;
-    float minRatio_ = 0.0f;
-    float vpRatio_ = 1.0f;
-
-    WindowLimits() {}
+    uint32_t maxWidth_;
+    uint32_t maxHeight_;
+    uint32_t minWidth_;
+    uint32_t minHeight_;
+    float maxRatio_;
+    float minRatio_;
+    WindowLimits() : maxWidth_(UINT32_MAX), maxHeight_(UINT32_MAX), minWidth_(0), minHeight_(0), maxRatio_(FLT_MAX),
+        minRatio_(0.0f) {}
     WindowLimits(uint32_t maxWidth, uint32_t maxHeight, uint32_t minWidth, uint32_t minHeight, float maxRatio,
         float minRatio) : maxWidth_(maxWidth), maxHeight_(maxHeight), minWidth_(minWidth), minHeight_(minHeight),
         maxRatio_(maxRatio), minRatio_(minRatio) {}
-    WindowLimits(uint32_t maxWidth, uint32_t maxHeight, uint32_t minWidth, uint32_t minHeight, float maxRatio,
-        float minRatio, float vpRatio) : maxWidth_(maxWidth), maxHeight_(maxHeight), minWidth_(minWidth),
-        minHeight_(minHeight), maxRatio_(maxRatio), minRatio_(minRatio), vpRatio_(vpRatio) {}
 
     bool IsEmpty() const
     {
@@ -1078,88 +856,20 @@ enum class CaseType {
     CASE_STAGE
 };
 
-enum class MaximizePresentation {
-    FOLLOW_APP_IMMERSIVE_SETTING = 0,  // follow app set imersiveStateEnable
-    EXIT_IMMERSIVE = 1,       // imersiveStateEnable will be set as false
-    ENTER_IMMERSIVE = 2,       // imersiveStateEnable will be set as true
-};
-
-enum ForceHideState : uint32_t {
-    NOT_HIDDEN = 0,
-    HIDDEN_WHEN_FOCUSED,
-    HIDDEN_WHEN_UNFOCUSED
-};
-
 /**
- * @class KeyboardLayoutParams
- *
- * @brief Keyboard need adjust layout
+ * maximize layout show type
  */
-class KeyboardLayoutParams : public Parcelable {
-public:
-    WindowGravity gravity_ = WindowGravity::WINDOW_GRAVITY_BOTTOM;
-    Rect LandscapeKeyboardRect_ { 0, 0, 0, 0 };
-    Rect PortraitKeyboardRect_ { 0, 0, 0, 0 };
-    Rect LandscapePanelRect_ { 0, 0, 0, 0 };
-    Rect PortraitPanelRect_ { 0, 0, 0, 0 };
-
-    bool operator==(const KeyboardLayoutParams& params) const
-    {
-        return (gravity_ == params.gravity_ && LandscapeKeyboardRect_ == params.LandscapeKeyboardRect_ &&
-            PortraitKeyboardRect_ == params.PortraitKeyboardRect_ &&
-            LandscapePanelRect_ == params.LandscapePanelRect_ &&
-            PortraitPanelRect_ == params.PortraitPanelRect_);
-    }
-
-    bool operator!=(const KeyboardLayoutParams& params) const
-    {
-        return !this->operator==(params);
-    }
-
-    bool isEmpty() const
-    {
-        return LandscapeKeyboardRect_.IsUninitializedRect() && PortraitKeyboardRect_.IsUninitializedRect() &&
-            LandscapePanelRect_.IsUninitializedRect() && PortraitPanelRect_.IsUninitializedRect();
-    }
-
-    static inline bool WriteParcel(Parcel& parcel, const Rect& rect)
-    {
-        return parcel.WriteInt32(rect.posX_) && parcel.WriteInt32(rect.posY_) &&
-            parcel.WriteUint32(rect.width_) && parcel.WriteUint32(rect.height_);
-    }
-
-    static inline bool ReadParcel(Parcel& parcel, Rect& rect)
-    {
-        return parcel.ReadInt32(rect.posX_) && parcel.ReadInt32(rect.posY_) &&
-            parcel.ReadUint32(rect.width_) && parcel.ReadUint32(rect.height_);
-    }
-
-    virtual bool Marshalling(Parcel& parcel) const override
-    {
-        return (parcel.WriteUint32(static_cast<uint32_t>(gravity_)) &&
-            WriteParcel(parcel, LandscapeKeyboardRect_) &&
-            WriteParcel(parcel, PortraitKeyboardRect_) &&
-            WriteParcel(parcel, LandscapePanelRect_) &&
-            WriteParcel(parcel, PortraitPanelRect_));
-    }
-
-    static KeyboardLayoutParams* Unmarshalling(Parcel& parcel)
-    {
-        KeyboardLayoutParams *params = new(std::nothrow) KeyboardLayoutParams();
-        if (params == nullptr) {
-            return nullptr;
-        }
-        params->gravity_ = static_cast<WindowGravity>(parcel.ReadUint32());
-        if (ReadParcel(parcel, params->LandscapeKeyboardRect_) &&
-            ReadParcel(parcel, params->PortraitKeyboardRect_) &&
-            ReadParcel(parcel, params->LandscapePanelRect_) &&
-            ReadParcel(parcel, params->PortraitPanelRect_)) {
-            return params;
-        }
-        delete params;
-        return nullptr;
-    }
+enum ShowType : int32_t {
+    SHOW, // normally show
+    HIDE, // show when hover, but hide normally
+    FORBIDDEN // hide always
 };
+
+struct MaximizeLayoutOption {
+    ShowType decor = ShowType::HIDE;
+    ShowType dock = ShowType::HIDE;
+};
+
 }
 }
 #endif // OHOS_ROSEN_WM_COMMON_H

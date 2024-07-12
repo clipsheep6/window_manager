@@ -185,12 +185,12 @@ void WindowNode::SetPointerHotAreas(const std::vector<Rect>& rects)
     pointerHotAreas_ = rects;
 }
 
-void WindowNode::SetWindowSizeLimits(const WindowLimits& sizeLimits)
+void WindowNode::SetWindowSizeLimits(const WindowSizeLimits& sizeLimits)
 {
     property_->SetSizeLimits(sizeLimits);
 }
 
-void WindowNode::SetWindowUpdatedSizeLimits(const WindowLimits& sizeLimits)
+void WindowNode::SetWindowUpdatedSizeLimits(const WindowSizeLimits& sizeLimits)
 {
     property_->SetUpdatedSizeLimits(sizeLimits);
 }
@@ -219,12 +219,12 @@ void WindowNode::UpdateZoomTransform(const Transform& trans, bool isDisplayZoomO
     }
 }
 
-WindowLimits WindowNode::GetWindowSizeLimits() const
+WindowSizeLimits WindowNode::GetWindowSizeLimits() const
 {
     return property_->GetSizeLimits();
 }
 
-WindowLimits WindowNode::GetWindowUpdatedSizeLimits() const
+WindowSizeLimits WindowNode::GetWindowUpdatedSizeLimits() const
 {
     return property_->GetUpdatedSizeLimits();
 }
@@ -430,11 +430,6 @@ void WindowNode::SetVisibilityState(WindowVisibilityState state)
 WindowVisibilityState WindowNode::GetVisibilityState() const
 {
     return visibilityState_;
-}
-
-bool WindowNode::GetTouchable() const
-{
-    return property_->GetTouchable();
 }
 } // namespace Rosen
 } // namespace OHOS

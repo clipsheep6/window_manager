@@ -19,6 +19,7 @@
 #include <iremote_broker.h>
 
 #include "interfaces/include/ws_common.h"
+#include "window_property.h"
 #include "window_transition_info.h"
 #include "zidl/window_manager_agent_interface.h"
 
@@ -39,12 +40,7 @@ public:
     virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) { return WMError::WM_OK; };
     virtual void GetFocusWindowInfo(FocusChangeInfo& focusInfo) = 0;
     virtual WMError CheckWindowId(int32_t windowId, int32_t &pid) = 0;
-    virtual WMError GetWindowModeType(WindowModeType& windowModeType) { return WMError::WM_OK; }
-    virtual WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo) = 0;
-    virtual WMError GetAllMainWindowInfos(std::vector<MainWindowInfo>& infos) = 0;
-    virtual WMError ClearMainSessions(const std::vector<int32_t>& persistentIds,
-        std::vector<int32_t>& clearFailedIds) = 0;
-    virtual WSError RaiseWindowToTop(int32_t persistentId) { return WSError::WS_OK; }
+    virtual WMError GetWindowBackHomeStatus(bool &isBackHome) { return WMError::WM_OK; };
 };
 }
 }

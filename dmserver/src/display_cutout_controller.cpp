@@ -264,11 +264,17 @@ void DisplayCutoutController::TransferBoundingRectsByRotation(DisplayId displayI
 
     switch (currentRotation) {
         case Rotation::ROTATION_90: {
-            CurrentRotation90(resultVec, displayBoundingRects, displayHeight);
+            for (DMRect rect : displayBoundingRects) {
+                resultVec.emplace_back(DMRect {.posX_ = displayHeight - rect.posY_ - rect.height_,
+                    .posY_ = rect.posX_, .width_ = rect.height_, .height_ = rect.width_});
+            }
             break;
         }
         case Rotation::ROTATION_180: {
-            CurrentRotation180(resultVec, displayBoundingRects, displayHeight, displayWidth);
+            for (DMRect rect : displayBoundingRects) {
+                resultVec.emplace_back(DMRect {displayWidth - rect.posX_ - rect.width_,
+                    displayHeight - rect.posY_ - rect.height_, rect.width_, rect.height_});
+            }
             break;
         }
         case Rotation::ROTATION_270: {
@@ -282,24 +288,6 @@ void DisplayCutoutController::TransferBoundingRectsByRotation(DisplayId displayI
         }
     }
     boundingRects = resultVec;
-}
-
-void DisplayCutoutController::CurrentRotation90(std::vector<DMRect> resultVec,
-    std::vector<DMRect> displayBoundingRects, uint32_t displayHeight)
-{
-    for (DMRect rect : displayBoundingRects) {
-        resultVec.emplace_back(DMRect {.posX_ = displayHeight - rect.posY_ - rect.height_,
-            .posY_ = rect.posX_, .width_ = rect.height_, .height_ = rect.width_});
-    }
-}
-
-void DisplayCutoutController::CurrentRotation180(std::vector<DMRect> resultVec,
-    std::vector<DMRect> displayBoundingRects, uint32_t displayHeight, uint32_t displayWidth)
-{
-    for (DMRect rect : displayBoundingRects) {
-        resultVec.emplace_back(DMRect {displayWidth - rect.posX_ - rect.width_,
-            displayHeight - rect.posY_ - rect.height_, rect.width_, rect.height_});
-    }
 }
 
 DMRect DisplayCutoutController::CreateWaterfallRect(uint32_t left, uint32_t top, uint32_t width, uint32_t height)

@@ -27,7 +27,6 @@ public:
         : IRemoteProxy<IScreenSessionManagerClient>(impl) {}
     virtual ~ScreenSessionManagerClientProxy() = default;
 
-    void SwitchUserCallback(std::vector<int32_t> oldScbPids, int32_t currentScbPid) override;
     void OnScreenConnectionChanged(ScreenId screenId, ScreenEvent screenEvent,
         ScreenId rsId, const std::string& name) override;
     void OnPropertyChanged(ScreenId screenId,
@@ -46,7 +45,6 @@ public:
         std::vector<uint64_t>& surfaceNodeIds) override;
     void OnUpdateFoldDisplayMode(FoldDisplayMode displayMode) override;
     void SetVirtualPixelRatioSystem(ScreenId screenId, float virtualPixelRatio) override;
-    void OnFoldStatusChangedReportUE(const std::vector<std::string>& screenFoldInfo) override;
 
 private:
     static inline BrokerDelegator<ScreenSessionManagerClientProxy> delegator_;

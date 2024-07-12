@@ -364,7 +364,7 @@ HWTEST_F(WindowPropertyTest, SetSizeLimits, Function | SmallTest | Level2)
     WindowProperty winPropSrc;
     winPropSrc.SetPrivacyMode(true);
     winPropSrc.SetTransparent(true);
-    WindowLimits sizeLimits;
+    WindowSizeLimits sizeLimits;
     int resultValue = 0;
     std::function<void()> func = [&]() {
         winPropSrc.SetSizeLimits(sizeLimits);
@@ -384,7 +384,7 @@ HWTEST_F(WindowPropertyTest, SetUpdatedSizeLimits, Function | SmallTest | Level2
     WindowProperty winPropSrc;
     winPropSrc.SetPrivacyMode(true);
     winPropSrc.SetTransparent(true);
-    WindowLimits sizeLimits;
+    WindowSizeLimits sizeLimits;
     int resultValue = 0;
     std::function<void()> func = [&]() {
         winPropSrc.SetUpdatedSizeLimits(sizeLimits);

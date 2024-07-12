@@ -33,19 +33,9 @@ public:
         return (type >= WindowType::APP_MAIN_WINDOW_BASE && type < WindowType::APP_MAIN_WINDOW_END);
     }
 
-    static inline bool IsMainWindowAndNotShown(WindowType type, WindowState state)
-    {
-        return (IsMainWindow(type) && state != WindowState::STATE_SHOWN);
-    }
-
     static inline bool IsSubWindow(WindowType type)
     {
         return (type >= WindowType::APP_SUB_WINDOW_BASE && type < WindowType::APP_SUB_WINDOW_END);
-    }
-
-    static inline bool IsModalSubWindow(WindowType type, uint32_t windowFlags)
-    {
-        return IsSubWindow(type) && (windowFlags & static_cast<uint32_t>(WindowFlag::WINDOW_FLAG_IS_MODAL));
     }
 
     static inline bool IsDialogWindow(WindowType type)
@@ -401,25 +391,21 @@ public:
     {
         TransformHelper::Matrix4 ret = TransformHelper::Matrix4::Identity;
         // set scale
-        if (MathHelper::LessNotEqual(transform.scaleX_, 1.0) ||
-            MathHelper::LessNotEqual(transform.scaleY_, 1.0) ||
-            MathHelper::LessNotEqual(transform.scaleZ_, 1.0)) {
+        if ((transform.scaleX_ - 1) || (transform.scaleY_ - 1) || (transform.scaleY_ - 1)) {
             ret *= TransformHelper::CreateScale(transform.scaleX_, transform.scaleY_, transform.scaleZ_);
         }
         // set rotation
-        if (MathHelper::LessNotEqual(transform.rotationX_, 0.0)) {
+        if (transform.rotationX_) {
             ret *= TransformHelper::CreateRotationX(MathHelper::ToRadians(transform.rotationX_));
         }
-        if (MathHelper::LessNotEqual(transform.rotationY_, 0.0)) {
+        if (transform.rotationY_) {
             ret *= TransformHelper::CreateRotationY(MathHelper::ToRadians(transform.rotationY_));
         }
-        if (MathHelper::LessNotEqual(transform.rotationZ_, 0.0)) {
+        if (transform.rotationZ_) {
             ret *= TransformHelper::CreateRotationZ(MathHelper::ToRadians(transform.rotationZ_));
         }
         // set translation
-        if (MathHelper::LessNotEqual(transform.translateX_, 0.0) ||
-            MathHelper::LessNotEqual(transform.translateY_, 0.0) ||
-            MathHelper::LessNotEqual(transform.translateZ_, 0.0)) {
+        if (transform.translateX_ || transform.translateY_ || transform.translateZ_) {
             ret *= TransformHelper::CreateTranslation(TransformHelper::Vector3(transform.translateX_,
                 transform.translateY_, transform.translateZ_));
         }
@@ -494,7 +480,7 @@ public:
         return isOk;
     }
 
-    static bool IsRectSatisfiedWithSizeLimits(const Rect& rect, const WindowLimits& sizeLimits)
+    static bool IsRectSatisfiedWithSizeLimits(const Rect& rect, const WindowSizeLimits& sizeLimits)
     {
         if (rect.height_ == 0) {
             return false;
@@ -541,7 +527,7 @@ public:
         return true;
     }
 
-    static bool IsAspectRatioSatisfiedWithSizeLimits(const WindowLimits& sizeLimits, float ratio, float vpr)
+    static bool IsAspectRatioSatisfiedWithSizeLimits(const WindowSizeLimits& sizeLimits, float ratio, float vpr)
     {
         /*
          * 1) Usually the size limits won't be empty after show window.

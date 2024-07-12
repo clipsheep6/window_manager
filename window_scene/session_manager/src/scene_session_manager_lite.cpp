@@ -93,11 +93,10 @@ WSError SceneSessionManagerLite::UnRegisterSessionListener(const sptr<ISessionLi
     return SceneSessionManager::GetInstance().UnRegisterSessionListener(listener);
 }
 
-WSError SceneSessionManagerLite::TerminateSessionNew(
-    const sptr<AAFwk::SessionInfo> info, bool needStartCaller, bool isFromBroker)
+WSError SceneSessionManagerLite::TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller)
 {
     WLOGFD("run TerminateSessionNew");
-    return SceneSessionManager::GetInstance().TerminateSessionNew(info, needStartCaller, isFromBroker);
+    return SceneSessionManager::GetInstance().TerminateSessionNew(info, needStartCaller);
 }
 
 WSError SceneSessionManagerLite::GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
@@ -200,40 +199,9 @@ WSError SceneSessionManagerLite::UpdateWindowMode(int32_t persistentId, int32_t 
     return SceneSessionManager::GetInstance().UpdateWindowMode(persistentId, windowMode);
 }
 
-WMError SceneSessionManagerLite::GetWindowModeType(WindowModeType& windowModeType)
+WMError SceneSessionManagerLite::GetWindowBackHomeStatus(bool &isBackHome)
 {
-    return SceneSessionManager::GetInstance().GetWindowModeType(windowModeType);
+    return SceneSessionManager::GetInstance().GetWindowBackHomeStatus(isBackHome);
 }
 
-WMError SceneSessionManagerLite::GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo)
-{
-    return SceneSessionManager::GetInstance().GetMainWindowInfos(topNum, topNInfo);
-}
-
-WMError SceneSessionManagerLite::GetAllMainWindowInfos(std::vector<MainWindowInfo>& infos)
-{
-    return SceneSessionManager::GetInstance().GetAllMainWindowInfos(infos);
-}
-
-WMError SceneSessionManagerLite::ClearMainSessions(const std::vector<int32_t>& persistentIds,
-    std::vector<int32_t>& clearFailedIds)
-{
-    return SceneSessionManager::GetInstance().ClearMainSessions(persistentIds, clearFailedIds);
-}
-
-WSError SceneSessionManagerLite::RaiseWindowToTop(int32_t persistentId)
-{
-    return SceneSessionManager::GetInstance().RaiseWindowToTop(persistentId);
-}
-
-WSError SceneSessionManagerLite::RegisterIAbilityManagerCollaborator(int32_t type,
-    const sptr<AAFwk::IAbilityManagerCollaborator>& impl)
-{
-    return SceneSessionManager::GetInstance().RegisterIAbilityManagerCollaborator(type, impl);
-}
-
-WSError SceneSessionManagerLite::UnregisterIAbilityManagerCollaborator(int32_t type)
-{
-    return SceneSessionManager::GetInstance().UnregisterIAbilityManagerCollaborator(type);
-}
 } // namespace OHOS::Rosen

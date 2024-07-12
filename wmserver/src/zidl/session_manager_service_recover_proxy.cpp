@@ -29,25 +29,24 @@ void SessionManagerServiceRecoverProxy::OnSessionManagerServiceRecover(
     MessageParcel reply;
     MessageOption option = { MessageOption::TF_ASYNC };
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteInterfaceToken failed");
+        WLOGFE("[WMSRecover] WriteInterfaceToken failed");
         return;
     }
 
     if (!data.WriteRemoteObject(sessionManagerService)) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "WriteRemoteObject failed");
+        WLOGFE("[WMSRecover] WriteRemoteObject failed");
         return;
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(
         SessionManagerServiceRecoverMessage::TRANS_ID_ON_SESSION_MANAGER_SERVICE_RECOVER),
         data, reply, option) != ERR_NONE) {
-        TLOGE(WmsLogTag::WMS_RECOVER, "SendRequest failed");
+        WLOGFE("[WMSRecover] SendRequest failed");
         return;
     }
 }
 
-void SessionManagerServiceRecoverProxy::OnWMSConnectionChanged(
-    int32_t userId, int32_t screenId, bool isConnected, const sptr<IRemoteObject>& sessionManagerService)
+void SessionManagerServiceRecoverProxy::OnWMSConnectionChanged(int32_t userId, int32_t screenId, bool isConnected)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -66,11 +65,6 @@ void SessionManagerServiceRecoverProxy::OnWMSConnectionChanged(
     }
     if (!data.WriteBool(isConnected)) {
         WLOGFE("Write isConnected failed");
-        return;
-    }
-
-    if (isConnected && !data.WriteRemoteObject(sessionManagerService)) {
-        WLOGFE("WriteRemoteObject failed");
         return;
     }
 

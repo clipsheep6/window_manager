@@ -15,7 +15,6 @@
 
 #include "screen_scene.h"
 
-#include <event_handler.h>
 #include <ui_content.h>
 #include <viewport_config.h>
 
@@ -38,35 +37,11 @@ ScreenScene::ScreenScene(std::string name) : name_(name)
     orientation_ = static_cast<int32_t>(DisplayOrientation::PORTRAIT);
     NodeId nodeId = 0;
     vsyncStation_ = std::make_shared<VsyncStation>(nodeId);
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
 }
 
 ScreenScene::~ScreenScene()
 {
-    Destroy();
-}
-
-WMError ScreenScene::Destroy()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (!uiContent_) {
-        TLOGD(WmsLogTag::DMS, "Destroy uiContent_ is nullptr!");
-        return WMError::WM_OK;
-    }
-    std::shared_ptr<Ace::UIContent> uiContent = std::move(uiContent_);
     uiContent_ = nullptr;
-    auto task = [uiContent]() {
-        if (uiContent != nullptr) {
-            uiContent->Destroy();
-            TLOGD(WmsLogTag::DMS, "ScreenScene: uiContent destroy success!");
-        }
-    };
-    if (handler_) {
-        handler_->PostSyncTask(task, "ScreenScene:Destroy");
-    } else {
-        task();
-    }
-    return WMError::WM_OK;
 }
 
 void ScreenScene::LoadContent(const std::string& contentUrl, napi_env env, napi_value storage,
@@ -152,14 +127,14 @@ int64_t ScreenScene::GetVSyncPeriod()
     return vsyncStation_->GetVSyncPeriod();
 }
 
-void ScreenScene::FlushFrameRate(uint32_t rate, int32_t animatorExpectedFrameRate, uint32_t rateType)
+void ScreenScene::FlushFrameRate(uint32_t rate)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (vsyncStation_ == nullptr) {
         TLOGE(WmsLogTag::DMS, "FlushFrameRate failed, vsyncStation is nullptr");
         return;
     }
-    vsyncStation_->FlushFrameRate(rate, animatorExpectedFrameRate, rateType);
+    vsyncStation_->FlushFrameRate(rate);
 }
 
 void ScreenScene::OnBundleUpdated(const std::string& bundleName)

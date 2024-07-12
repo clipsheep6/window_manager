@@ -16,33 +16,33 @@
 import Ability from '@ohos.app.ability.UIAbility';
 
 export default class MainAbility extends Ability {
-  onCreate(want, launchParam): void {
+  onCreate(want, launchParam) {
     console.log("[Demo] MainAbility onCreate");
     globalThis.abilityWant = want;
   }
 
-  onDestroy(): void {
+  onDestroy() {
     console.log("[Demo] MainAbility onDestroy");
   }
 
-  onWindowStageCreate(windowStage): void {
+  onWindowStageCreate(windowStage) {
     // Main window is created, set main page for this ability
     console.log("[Demo] MainAbility onWindowStageCreate");
 
     windowStage.setUIContent(this.context, "pages/index", null);
   }
 
-  onWindowStageDestroy(): void {
+  onWindowStageDestroy() {
     // Main window is destroyed, release UI related resources
     console.log("[Demo] MainAbility onWindowStageDestroy");
   }
 
-  onForeground(): void {
+  onForeground() {
     // Ability has brought to foreground
     console.log("[Demo] MainAbility onForeground");
   }
 
-  onBackground(): void {
+  onBackground() {
     // Ability has back to background
     console.log("[Demo] MainAbility onBackground");
   }

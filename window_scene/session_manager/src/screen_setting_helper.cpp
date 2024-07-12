@@ -20,20 +20,23 @@
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "ScreenSettingHelper" };
+}
+
 sptr<SettingObserver> ScreenSettingHelper::dpiObserver_;
-sptr<SettingObserver> ScreenSettingHelper::castObserver_;
 
 void ScreenSettingHelper::RegisterSettingDpiObserver(SettingObserver::UpdateFunc func)
 {
     if (dpiObserver_) {
-        TLOGD(WmsLogTag::DMS, "setting dpi observer is already registered");
+        WLOGFD("setting dpi observer is already registered");
         return;
     }
     SettingProvider& provider = SettingProvider::GetInstance(DISPLAY_MANAGER_SERVICE_SA_ID);
     dpiObserver_ = provider.CreateObserver(SETTING_DPI_KEY, func);
     ErrCode ret = provider.RegisterObserver(dpiObserver_);
     if (ret != ERR_OK) {
-        TLOGW(WmsLogTag::DMS, "register setting dpi observer failed, ret=%{public}d", ret);
+        WLOGFW("register setting dpi observer failed, ret=%{public}d", ret);
         dpiObserver_ = nullptr;
     }
 }
@@ -41,13 +44,13 @@ void ScreenSettingHelper::RegisterSettingDpiObserver(SettingObserver::UpdateFunc
 void ScreenSettingHelper::UnregisterSettingDpiObserver()
 {
     if (dpiObserver_ == nullptr) {
-        TLOGD(WmsLogTag::DMS, "dpiObserver_ is nullptr, no need to unregister");
+        WLOGFD("dpiObserver_ is nullptr, no need to unregister");
         return;
     }
     SettingProvider& provider = SettingProvider::GetInstance(DISPLAY_MANAGER_SERVICE_SA_ID);
     ErrCode ret = provider.UnregisterObserver(dpiObserver_);
     if (ret != ERR_OK) {
-        TLOGW(WmsLogTag::DMS, "unregister setting dpi observer failed, ret=%{public}d", ret);
+        WLOGFW("unregister setting dpi observer failed, ret=%{public}d", ret);
     }
     dpiObserver_ = nullptr;
 }
@@ -58,63 +61,10 @@ bool ScreenSettingHelper::GetSettingDpi(uint32_t& dpi, const std::string& key)
     int32_t value;
     ErrCode ret = provider.GetIntValue(key, value);
     if (ret != ERR_OK) {
-        TLOGW(WmsLogTag::DMS, "get setting dpi failed, ret=%{public}d", ret);
+        WLOGFW("get setting dpi failed, ret=%{public}d", ret);
         return false;
     }
     dpi = static_cast<uint32_t>(value);
-    return true;
-}
-
-bool ScreenSettingHelper::GetSettingValue(uint32_t& value, const std::string& key)
-{
-    SettingProvider& settingData = SettingProvider::GetInstance(DISPLAY_MANAGER_SERVICE_SA_ID);
-    int32_t getValue;
-    ErrCode ret = settingData.GetIntValue(key, getValue);
-    if (ret != ERR_OK) {
-        TLOGW(WmsLogTag::DMS, "get setting value failed, ret=%{public}d", ret);
-        return false;
-    }
-    value = static_cast<uint32_t>(getValue);
-    return true;
-}
-
-void ScreenSettingHelper::RegisterSettingCastObserver(SettingObserver::UpdateFunc func)
-{
-    if (castObserver_) {
-        TLOGD(WmsLogTag::DMS, "setting cast observer is already registered");
-        return;
-    }
-    SettingProvider& castProvider = SettingProvider::GetInstance(DISPLAY_MANAGER_SERVICE_SA_ID);
-    castObserver_ = castProvider.CreateObserver(SETTING_CAST_KEY, func);
-    ErrCode ret = castProvider.RegisterObserver(castObserver_);
-    if (ret != ERR_OK) {
-        TLOGW(WmsLogTag::DMS, "register setting cast observer failed, ret=%{public}d", ret);
-        castObserver_ = nullptr;
-    }
-}
-
-void ScreenSettingHelper::UnregisterSettingCastObserver()
-{
-    if (castObserver_ == nullptr) {
-        TLOGD(WmsLogTag::DMS, "castObserver_ is nullptr, no need to unregister");
-        return;
-    }
-    SettingProvider& castProvider = SettingProvider::GetInstance(DISPLAY_MANAGER_SERVICE_SA_ID);
-    ErrCode ret = castProvider.UnregisterObserver(castObserver_);
-    if (ret != ERR_OK) {
-        TLOGW(WmsLogTag::DMS, "unregister setting cast observer failed, ret=%{public}d", ret);
-    }
-    castObserver_ = nullptr;
-}
-
-bool ScreenSettingHelper::GetSettingCast(bool& enable, const std::string& key)
-{
-    SettingProvider& castProvider = SettingProvider::GetInstance(DISPLAY_MANAGER_SERVICE_SA_ID);
-    ErrCode ret = castProvider.GetBoolValue(key, enable);
-    if (ret != ERR_OK) {
-        TLOGW(WmsLogTag::DMS, "get setting dpi failed, ret=%{public}d", ret);
-        return false;
-    }
     return true;
 }
 } // namespace Rosen

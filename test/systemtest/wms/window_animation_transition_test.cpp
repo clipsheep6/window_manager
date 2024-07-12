@@ -103,13 +103,11 @@ namespace {
 HWTEST_F(WindowAnimationTransitionTest, AnimationTransitionTest01, Function | MediumTest | Level3)
 {
     const sptr<Window>& window = Utils::CreateTestWindow(windowInfo_);
-    if (window == nullptr) {
-        return;
-    }
+    ASSERT_NE(nullptr, window);
     sptr<TestAnimationTransitionController> testAnimationTransitionListener =
         new TestAnimationTransitionController(window);
     window->RegisterAnimationTransitionController(testAnimationTransitionListener);
-    window->Show(0, true);
+    ASSERT_EQ(WMError::WM_OK, window->Show(0, true));
     usleep(500000); // 500000us = 0.5s
     ASSERT_EQ(WMError::WM_OK, window->Hide(0, true));
     usleep(500000); // 500000us = 0.5s
@@ -126,13 +124,11 @@ HWTEST_F(WindowAnimationTransitionTest, AnimationTransitionTest01, Function | Me
 HWTEST_F(WindowAnimationTransitionTest, AnimationTransitionTest02, Function | MediumTest | Level3)
 {
     const sptr<Window>& window = Utils::CreateTestWindow(windowInfo_);
-    if (window == nullptr) {
-        return;
-    }
+    ASSERT_NE(nullptr, window);
     sptr<TestAnimationTransitionController> testAnimationTransitionListener =
         new TestAnimationTransitionController(window);
     window->RegisterAnimationTransitionController(testAnimationTransitionListener);
-    window->Show(0, true);
+    ASSERT_EQ(WMError::WM_OK, window->Show(0, true));
     usleep(500000); // 500000us = 0.5s
     ASSERT_TRUE(defaultTrans_ == window->GetTransform());
     ASSERT_EQ(WMError::WM_OK, window->Destroy());
@@ -147,9 +143,7 @@ HWTEST_F(WindowAnimationTransitionTest, AnimationTransitionTest02, Function | Me
 HWTEST_F(WindowAnimationTransitionTest, AnimationTransitionTest03, Function | MediumTest | Level3)
 {
     const sptr<Window>& window = Utils::CreateTestWindow(windowInfo_);
-    if (window == nullptr) {
-        return;
-    }
+    ASSERT_NE(nullptr, window);
     ASSERT_EQ(WMError::WM_OK, window->Hide(0, true));
     usleep(500000); // 500000us = 0.5s
     ASSERT_TRUE(defaultTrans_ == window->GetTransform());
@@ -165,13 +159,11 @@ HWTEST_F(WindowAnimationTransitionTest, AnimationTransitionTest03, Function | Me
 HWTEST_F(WindowAnimationTransitionTest, AnimationTransitionTest04, Function | MediumTest | Level3)
 {
     const sptr<Window>& window = Utils::CreateTestWindow(windowInfo_);
-    if (window == nullptr) {
-        return;
-    }
+    ASSERT_NE(nullptr, window);
     sptr<TestAnimationTransitionController> testAnimationTransitionListener =
         new TestAnimationTransitionController(window);
     window->RegisterAnimationTransitionController(testAnimationTransitionListener);
-    window->Show(0, true);
+    ASSERT_EQ(WMError::WM_OK, window->Show(0, true));
     usleep(500000); // 500000us = 0.5s
     ASSERT_EQ(WMError::WM_OK, window->Hide());
     ASSERT_TRUE(defaultTrans_ == window->GetTransform());

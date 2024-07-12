@@ -169,26 +169,13 @@ HWTEST_F(MoveDragControllerTest, UpdateGravityWhenDrag, Function | SmallTest | L
     std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Create(config);
 
     std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    if (!surfaceNode || pointerEvent) {
-        return;
-    }
     pointerEvent->SetButtonId(MMI::PointerEvent::MOUSE_BUTTON_LEFT);
     pointerEvent->SetSourceType(MMI::PointerEvent::SOURCE_TYPE_MOUSE);
     pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
-    auto tempPointerEvent = pointerEvent;
-    pointerEvent = nullptr;
-    moveDragController->UpdateGravityWhenDrag(pointerEvent, surfaceNode);
-    pointerEvent = tempPointerEvent;
-    auto tempSurfaceNode = surfaceNode;
-    surfaceNode = nullptr;
-    moveDragController->UpdateGravityWhenDrag(pointerEvent, surfaceNode);
-    surfaceNode = tempSurfaceNode;
-    moveDragController->type_ = AreaType::UNDEFINED;
-    moveDragController->UpdateGravityWhenDrag(pointerEvent, surfaceNode);
-    moveDragController->type_ = AreaType::RIGHT;
     moveDragController->UpdateGravityWhenDrag(pointerEvent, surfaceNode);
     ASSERT_EQ(0, res);
-    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
+
+    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_BUTTON_UP);
     moveDragController->UpdateGravityWhenDrag(pointerEvent, surfaceNode);
     ASSERT_EQ(0, res);
 
@@ -290,10 +277,6 @@ HWTEST_F(MoveDragControllerTest, CalcFreeformTargetRect, Function | SmallTest | 
     int32_t tranY = 30;
     ASSERT_TRUE((moveDragController != nullptr));
     moveDragController->CalcFreeformTargetRect(type, tranX, tranY, originalRect);
-    type = AreaType::LEFT;
-    moveDragController->CalcFreeformTargetRect(type, tranX, tranY, originalRect);
-    type = AreaType::RIGHT;
-    moveDragController->CalcFreeformTargetRect(type, tranX, tranY, originalRect);
     type = AreaType::BOTTOM;
     ASSERT_TRUE((moveDragController != nullptr));
     moveDragController->CalcFreeformTargetRect(type, tranX, tranY, originalRect);
@@ -335,18 +318,8 @@ HWTEST_F(MoveDragControllerTest, CalcFixedAspectRatioTargetRect02, Function | Sm
     int32_t tranX = 20;
     int32_t tranY = 20;
     ASSERT_TRUE((moveDragController != nullptr));
-    type = AreaType::UNDEFINED;
-    moveDragController->mainMoveAxis_ = MoveDragController::AxisType::UNDEFINED;
-    tranX = 0;
-    tranY = 0;
-    moveDragController->CalcFixedAspectRatioTargetRect(type, tranX, tranY, aspectRatio, originalRect);
-    type = AreaType::RIGHT;
-    moveDragController->CalcFixedAspectRatioTargetRect(type, tranX, tranY, aspectRatio, originalRect);
-    moveDragController->mainMoveAxis_ = MoveDragController::AxisType::X_AXIS;
     moveDragController->CalcFixedAspectRatioTargetRect(type, tranX, tranY, aspectRatio, originalRect);
     type = AreaType::LEFT_TOP;
-    moveDragController->CalcFixedAspectRatioTargetRect(type, tranX, tranY, aspectRatio, originalRect);
-    type = AreaType::RIGHT_TOP;
     moveDragController->CalcFixedAspectRatioTargetRect(type, tranX, tranY, aspectRatio, originalRect);
     type = AreaType::RIGHT_BOTTOM;
     moveDragController->CalcFixedAspectRatioTargetRect(type, tranX, tranY, aspectRatio, originalRect);
@@ -374,10 +347,6 @@ HWTEST_F(MoveDragControllerTest, CalcFreeformTranslateLimits01, Function | Small
     moveDragController->CalcFreeformTranslateLimits(type);
     type = AreaType::BOTTOM;
     moveDragController->CalcFreeformTranslateLimits(type);
-    type = AreaType::TOP;
-    moveDragController->CalcFreeformTranslateLimits(type);
-    type = AreaType::LEFT;
-    moveDragController->CalcFreeformTranslateLimits(type);
 }
 
 /**
@@ -392,7 +361,6 @@ HWTEST_F(MoveDragControllerTest, CalcFixedAspectRatioTranslateLimits01, Function
     MoveDragController::AxisType axis = MoveDragController::AxisType::X_AXIS;
     AreaType type = AreaType::RIGHT;
     ASSERT_TRUE((moveDragController != nullptr));
-    moveDragController->isDecorEnable_ = true;
     moveDragController->CalcFixedAspectRatioTranslateLimits(type, axis);
     moveDragController->isDecorEnable_ = false;
     moveDragController->CalcFixedAspectRatioTranslateLimits(type, axis);
@@ -402,9 +370,6 @@ HWTEST_F(MoveDragControllerTest, CalcFixedAspectRatioTranslateLimits01, Function
     moveDragController->CalcFixedAspectRatioTranslateLimits(type, axis);
     axis = MoveDragController::AxisType::Y_AXIS;
     type = AreaType::BOTTOM;
-    moveDragController->CalcFixedAspectRatioTranslateLimits(type, axis);
-    axis = MoveDragController::AxisType::X_AXIS;
-    type = AreaType::TOP;
     moveDragController->CalcFixedAspectRatioTranslateLimits(type, axis);
 }
 
@@ -421,10 +386,6 @@ HWTEST_F(MoveDragControllerTest, FixTranslateByLimits01, Function | SmallTest | 
     moveDragController->maxTranY_ = 50;
     ASSERT_TRUE((moveDragController != nullptr));
     moveDragController->FixTranslateByLimits(tranX, tranY);
-    tranX = 10;
-    moveDragController->FixTranslateByLimits(tranX, tranY);
-    tranY = 10;
-    moveDragController->FixTranslateByLimits(tranX, tranY);
 }
 
 /**
@@ -439,17 +400,11 @@ HWTEST_F(MoveDragControllerTest, InitMainAxis01, Function | SmallTest | Level1)
     int32_t tranY = 100;
     ASSERT_TRUE((moveDragController != nullptr));
     moveDragController->InitMainAxis(type, tranX, tranY);
-    type = AreaType::RIGHT;
-    moveDragController->InitMainAxis(type, tranX, tranY);
     type = AreaType::TOP;
-    moveDragController->InitMainAxis(type, tranX, tranY);
-    type = AreaType::BOTTOM;
     moveDragController->InitMainAxis(type, tranX, tranY);
     type = AreaType::UNDEFINED;
     tranX = 0;
     tranY = 0;
-    moveDragController->InitMainAxis(type, tranX, tranY);
-    tranY = 1;
     moveDragController->InitMainAxis(type, tranX, tranY);
 }
 
@@ -465,8 +420,6 @@ HWTEST_F(MoveDragControllerTest, ConvertXYByAspectRatio01, Function | SmallTest 
     int32_t ty = 100;
     moveDragController->mainMoveAxis_ = MoveDragController::AxisType::X_AXIS;
     ASSERT_TRUE((moveDragController != nullptr));
-    moveDragController->ConvertXYByAspectRatio(tx, ty, aspectRatio);
-    moveDragController->mainMoveAxis_ = MoveDragController::AxisType::Y_AXIS;
     moveDragController->ConvertXYByAspectRatio(tx, ty, aspectRatio);
 }
 
@@ -491,18 +444,9 @@ HWTEST_F(MoveDragControllerTest, InitDecorValue01, Function | SmallTest | Level1
 HWTEST_F(MoveDragControllerTest, ConsumeMoveEvent, Function | SmallTest | Level1)
 {
     std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    if (!pointerEvent) {
-        return;
-    }
     WSRect originalRect = { 100, 100, 1000, 1000 };
     ASSERT_EQ(false, moveDragController->ConsumeMoveEvent(nullptr, originalRect));
-    moveDragController->SetStartMoveFlag(true);
-    ASSERT_EQ(false, moveDragController->ConsumeMoveEvent(pointerEvent, originalRect));
-    moveDragController->SetStartMoveFlag(false);
-    ASSERT_EQ(false, moveDragController->ConsumeMoveEvent(pointerEvent, originalRect));
-    moveDragController->moveDragProperty_.pointerId_ = -2;
-    moveDragController->moveDragProperty_.pointerType_ = -2;
-    pointerEvent->SetSourceType(MMI::PointerEvent::SOURCE_TYPE_TOUCHSCREEN);
+
     ASSERT_EQ(false, moveDragController->ConsumeMoveEvent(pointerEvent, originalRect));
 }
 
@@ -528,334 +472,24 @@ HWTEST_F(MoveDragControllerTest, ProcessWindowDragHotAreaFunc, Function | SmallT
 HWTEST_F(MoveDragControllerTest, ConsumeDragEvent, Function | SmallTest | Level1)
 {
     std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    if (!pointerEvent) {
-        return;
-    }
     WSRect originalRect = { 100, 100, 1000, 1000 };
     sptr<WindowSessionProperty> property = new WindowSessionProperty();
-    if (!property) {
-        return;
-    }
     SystemSessionConfig sysConfig;
-    moveDragController->GetVirtualPixelRatio();
     ASSERT_EQ(false, moveDragController->ConsumeDragEvent(nullptr, originalRect, property, sysConfig));
     ASSERT_EQ(false, moveDragController->ConsumeDragEvent(pointerEvent, originalRect, nullptr, sysConfig));
     ASSERT_EQ(false, moveDragController->ConsumeDragEvent(pointerEvent, originalRect, property, sysConfig));
-    moveDragController->SetStartMoveFlag(true);
-    ASSERT_EQ(false, moveDragController->ConsumeDragEvent(pointerEvent, originalRect, property, sysConfig));
-    moveDragController->SetStartMoveFlag(false);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_DOWN));
-    ASSERT_EQ(false, moveDragController->ConsumeDragEvent(pointerEvent, originalRect, property, sysConfig));
-    MMI::PointerEvent::PointerItem pointerItem;
-    pointerItem.SetPointerId(0);
-    pointerEvent->AddPointerItem(pointerItem);
-    pointerEvent->SetPointerId(0);
-    moveDragController->SetStartMoveFlag(true);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_DOWN));
-    ASSERT_EQ(true, moveDragController->ConsumeDragEvent(pointerEvent, originalRect, property, sysConfig));
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_UP));
-    ASSERT_EQ(true, moveDragController->ConsumeDragEvent(pointerEvent, originalRect, property, sysConfig));
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_BUTTON_UP));
 }
 
 /**
- * @tc.name: UpdateDragType01
- * @tc.desc: test function : UpdateDragType
+ * @tc.name: GetVirtualPixelRatio
+ * @tc.desc: test function : GetVirtualPixelRatio
  * @tc.type: FUNC
  */
-HWTEST_F(MoveDragControllerTest, UpdateDragType01, Function | SmallTest | Level1)
+HWTEST_F(MoveDragControllerTest, GetVirtualPixelRatio, Function | SmallTest | Level1)
 {
-    moveDragController->rectExceptCorner_.posX_ = 2;
-    moveDragController->rectExceptCorner_.width_ = 2;
-    moveDragController->rectExceptCorner_.posY_ = 0;
-    moveDragController->rectExceptCorner_.height_ = 0;
-    moveDragController->UpdateDragType(3, 3);
-    ASSERT_EQ(moveDragController->dragType_, MoveDragController::DragType::DRAG_BOTTOM_OR_TOP);
-}
-
-/**
- * @tc.name: UpdateDragType02
- * @tc.desc: test function : UpdateDragType
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, UpdateDragType02, Function | SmallTest | Level1)
-{
-    moveDragController->rectExceptCorner_.posX_ = 0;
-    moveDragController->rectExceptCorner_.width_ = 0;
-    moveDragController->rectExceptCorner_.posY_ = 2;
-    moveDragController->rectExceptCorner_.height_ = 2;
-    moveDragController->UpdateDragType(3, 3);
-    ASSERT_EQ(moveDragController->dragType_, MoveDragController::DragType::DRAG_LEFT_OR_RIGHT);
-}
-
-/**
- * @tc.name: UpdateDragType03
- * @tc.desc: test function : UpdateDragType
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, UpdateDragType03, Function | SmallTest | Level1)
-{
-    moveDragController->rectExceptCorner_.posX_ = 1;
-    moveDragController->rectExceptCorner_.width_ = 0;
-    moveDragController->rectExceptCorner_.posY_ = 1;
-    moveDragController->rectExceptCorner_.height_ = 0;
-    moveDragController->UpdateDragType(1, 1);
-    ASSERT_EQ(moveDragController->dragType_, MoveDragController::DragType::DRAG_LEFT_TOP_CORNER);
-}
-
-/**
- * @tc.name: IsPointInDragHotZone01
- * @tc.desc: test function : IsPointInDragHotZone
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, IsPointInDragHotZone01, Function | SmallTest | Level1)
-{
-    WSRect winRect = { 10, 10, 10, 10 };
-    int32_t sourceType = MMI::PointerEvent::SOURCE_TYPE_MOUSE;
-    int32_t startPointPosX = 1;
-    int32_t startPointPosY = 1;
-    bool res = moveDragController->IsPointInDragHotZone(startPointPosX, startPointPosY, sourceType, winRect);
-    ASSERT_EQ(res, false);
-}
-
-/**
- * @tc.name: IsPointInDragHotZone02
- * @tc.desc: test function : IsPointInDragHotZone
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, IsPointInDragHotZone02, Function | SmallTest | Level1)
-{
-    WSRect winRect = { 5, 5, 0, 0 };
-    int32_t startPointPosX = 1;
-    int32_t startPointPosY = 1;
-    bool res = moveDragController->IsPointInDragHotZone(startPointPosX, startPointPosY, 0, winRect);
-    ASSERT_EQ(res, true);
-}
-
-/**
- * @tc.name: CalculateStartRectExceptHotZone
- * @tc.desc: test function : CalculateStartRectExceptHotZone
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, CalculateStartRectExceptHotZone, Function | SmallTest | Level1)
-{
-    float vpr = 1.0f;
-    WSRect winRect;
-    winRect.posX_ = 100;
-    winRect.posY_ = 100;
-    winRect.width_ = 100;
-    winRect.height_ = 100;
-    moveDragController->CalculateStartRectExceptHotZone(vpr, winRect);
-
-    EXPECT_EQ(moveDragController->rectExceptFrame_.posX_, 105);
-    EXPECT_EQ(moveDragController->rectExceptFrame_.posY_, 105);
-    EXPECT_EQ(moveDragController->rectExceptFrame_.width_, 90);
-    EXPECT_EQ(moveDragController->rectExceptFrame_.height_, 90);
-
-    EXPECT_EQ(moveDragController->rectExceptCorner_.posX_, 116);
-    EXPECT_EQ(moveDragController->rectExceptCorner_.posY_, 116);
-    EXPECT_EQ(moveDragController->rectExceptCorner_.width_, 68);
-    EXPECT_EQ(moveDragController->rectExceptCorner_.height_, 68);
-}
-
-/**
- * @tc.name: CalcFirstMoveTargetRect
- * @tc.desc: test function : CalcFirstMoveTargetRect
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, CalcFirstMoveTargetRect, Function | SmallTest | Level1)
-{
-    int res = 0;
-    WSRect windowRect = { 0, 0, 0, 0 };
-    moveDragController->CalcFirstMoveTargetRect(windowRect, false);
-    res++;
-    moveDragController->moveTempProperty_.pointerId_ = 0;
-    moveDragController->CalcFirstMoveTargetRect(windowRect, false);
-    ASSERT_EQ(res, 1);
-}
-
-/**
- * @tc.name: CalcFirstMoveTargetRect001
- * @tc.desc: test function : CalcFirstMoveTargetRect001
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, CalcFirstMoveTargetRect001, Function | SmallTest | Level1)
-{
-    WSRect windowRect = { 1, 2, 3, 4 };
-    moveDragController->InitMoveDragProperty();
-    moveDragController->SetStartMoveFlag(true);
-    moveDragController->CalcFirstMoveTargetRect(windowRect, true);
-    WSRect targetRect = moveDragController->GetTargetRect();
-    ASSERT_EQ(targetRect.posX_, 0);
-}
-
-/**
- * @tc.name: GetFullScreenToFloatingRect
- * @tc.desc: test function : GetFullScreenToFloatingRect
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, GetFullScreenToFloatingRect, Function | SmallTest | Level1)
-{
-    WSRect originalRect = { 1, 2, 3, 4 };
-    WSRect windowRect = { 5, 6, 7, 8 };
-    WSRect rect = moveDragController->GetFullScreenToFloatingRect(originalRect, windowRect);
-    ASSERT_EQ(originalRect.posX_, rect.posX_);
-}
-
-/**
- * @tc.name: CheckDragEventLegal
- * @tc.desc: test function : CheckDragEventLegal
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, CheckDragEventLegal, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(pointerEvent, nullptr);
-    sptr<WindowSessionProperty> property = new(std::nothrow) WindowSessionProperty();
-    ASSERT_NE(property, nullptr);
-    auto tempPointerEvent = pointerEvent;
-    pointerEvent = nullptr;
-    auto result = moveDragController->CheckDragEventLegal(pointerEvent, property);
-    ASSERT_EQ(result, false);
-    pointerEvent = tempPointerEvent;
-    result = moveDragController->CheckDragEventLegal(pointerEvent, nullptr);
-    ASSERT_EQ(result, false);
-    moveDragController->isStartMove_ = true;
-    result = moveDragController->CheckDragEventLegal(pointerEvent, property);
-    ASSERT_EQ(result, false);
-    moveDragController->isStartMove_ = false;
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_UP));
-    result = moveDragController->CheckDragEventLegal(pointerEvent, property);
-    ASSERT_EQ(result, false);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_DOWN));
-    result = moveDragController->CheckDragEventLegal(pointerEvent, property);
-    ASSERT_EQ(result, true);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN));
-    result = moveDragController->CheckDragEventLegal(pointerEvent, property);
-    ASSERT_EQ(result, true);
-}
-
-/**
- * @tc.name: HandleMouseStyle
- * @tc.desc: test function : HandleMouseStyle
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, HandleMouseStyle, Function | SmallTest | Level1)
-{
-    int res = 0;
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(pointerEvent, nullptr);
-    WSRect winRect;
-    res++;
-    moveDragController->HandleMouseStyle(nullptr, winRect);
-    ASSERT_EQ(res, 1);
-
-    pointerEvent->SetSourceType(MMI::PointerEvent::SOURCE_TYPE_TOUCHSCREEN);
-    moveDragController->HandleMouseStyle(pointerEvent, winRect);
-    ASSERT_EQ(res, 1);
-
-    pointerEvent->SetSourceType(MMI::PointerEvent::SOURCE_TYPE_MOUSE);
-    moveDragController->mouseStyleID_ = MMI::MOUSE_ICON::NORTH_SOUTH;
-    moveDragController->isStartDrag_ = true;
-    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_MOVE);
-    moveDragController->HandleMouseStyle(pointerEvent, winRect);
-    ASSERT_EQ(res, 1);
-    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_BUTTON_UP);
-    moveDragController->HandleMouseStyle(pointerEvent, winRect);
-    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN);
-    moveDragController->HandleMouseStyle(pointerEvent, winRect);
-    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_MOVE);
-    moveDragController->HandleMouseStyle(pointerEvent, winRect);
-    MMI::PointerEvent::PointerItem pointerItem;
-    pointerItem.SetPointerId(0);
-    pointerEvent->AddPointerItem(pointerItem);
-    pointerEvent->SetPointerId(0);
-    moveDragController->HandleMouseStyle(pointerEvent, winRect);
-    pointerEvent->SetPointerAction(MMI::PointerEvent::POINTER_ACTION_BUTTON_UP);
-    moveDragController->HandleMouseStyle(pointerEvent, winRect);
-}
-
-/**
- * @tc.name: UpdateMoveTempProperty
- * @tc.desc: test function : UpdateMoveTempProperty
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, UpdateMoveTempProperty, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(pointerEvent, nullptr);
-    pointerEvent->SetSourceType(MMI::PointerEvent::SOURCE_TYPE_TOUCHSCREEN);
-    pointerEvent->SetButtonId(MMI::PointerEvent::MOUSE_BUTTON_RIGHT);
-    auto result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-    MMI::PointerEvent::PointerItem pointerItem;
-    pointerItem.SetPointerId(0);
-    pointerEvent->AddPointerItem(pointerItem);
-    pointerEvent->SetPointerId(0);
-    pointerEvent->SetSourceType(MMI::PointerEvent::SOURCE_TYPE_MOUSE);
-    result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-    pointerEvent->SetSourceType(MMI::PointerEvent::SOURCE_TYPE_MOUSE);
-    pointerEvent->SetButtonId(MMI::PointerEvent::MOUSE_BUTTON_RIGHT);
-    result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-    pointerEvent->SetButtonId(MMI::PointerEvent::MOUSE_BUTTON_LEFT);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_BUTTON_DOWN));
-    result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_OK);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_DOWN));
-    result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_OK);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_MOVE));
-    result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_OK);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_UP));
-    result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_OK);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_BUTTON_UP));
-    result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_OK);
-    pointerEvent->SetPointerAction(static_cast<int32_t>(MMI::PointerEvent::POINTER_ACTION_CANCEL));
-    result = moveDragController->UpdateMoveTempProperty(pointerEvent);
-    ASSERT_EQ(result, WSError::WS_OK);
-}
-
-/**
- * @tc.name: UpdateHotAreaType
- * @tc.desc: UpdateHotAreaType
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, UpdateHotAreaType, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(pointerEvent, nullptr);
-    moveDragController->UpdateHotAreaType(pointerEvent);
-    MMI::PointerEvent::PointerItem pointerItem;
-    pointerItem.SetPointerId(0);
-    pointerEvent->AddPointerItem(pointerItem);
-    pointerEvent->SetPointerId(0);
-    moveDragController->UpdateHotAreaType(pointerEvent);
-}
-
-/**
- * @tc.name: OnLostFocus
- * @tc.desc: OnLostFocus
- * @tc.type: FUNC
- */
-HWTEST_F(MoveDragControllerTest, OnLostFocus, Function | SmallTest | Level1)
-{
-    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
-    ASSERT_NE(pointerEvent, nullptr);
-    moveDragController->isStartMove_ = true;
-    moveDragController->isStartDrag_ = false;
-    moveDragController->OnLostFocus();
-    moveDragController->isStartMove_ = false;
-    moveDragController->isStartDrag_ = true;
-    int windowHotAreaTypeOther = 1;
-    moveDragController->windowDragHotAreaType_ = windowHotAreaTypeOther;
-    moveDragController->OnLostFocus();
-    moveDragController->windowDragHotAreaType_ = WINDOW_HOT_AREA_TYPE_UNDEFINED;
-    moveDragController->OnLostFocus();
+    float vpr = 1.5;
+    float vpr01 = moveDragController->GetVirtualPixelRatio();
+    ASSERT_EQ(vpr, vpr01);
 }
 }
 }

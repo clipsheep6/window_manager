@@ -31,10 +31,6 @@ SubSession::SubSession(const SessionInfo& info, const sptr<SpecificSessionCallba
     : SceneSession(info, specificCallback)
 {
     moveDragController_ = new (std::nothrow) MoveDragController(GetPersistentId());
-    if (moveDragController_  != nullptr && specificCallback != nullptr &&
-        specificCallback->onWindowInputPidChangeCallback_ != nullptr) {
-        moveDragController_->SetNotifyWindowPidChangeCallback(specificCallback->onWindowInputPidChangeCallback_);
-    }
     SetMoveDragCallback();
     TLOGD(WmsLogTag::WMS_LIFE, "Create SubSession");
 }
@@ -55,10 +51,8 @@ WSError SubSession::Show(sptr<WindowSessionProperty> property)
         TLOGI(WmsLogTag::WMS_LIFE, "Show session, id: %{public}d", session->GetPersistentId());
 
         // use property from client
-        auto sessionProperty = session->GetSessionProperty();
-        if (property && property->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM) &&
-            sessionProperty) {
-            sessionProperty->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::CUSTOM));
+        if (property && property->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
+            session->GetSessionProperty()->SetAnimationFlag(static_cast<uint32_t>(WindowAnimation::CUSTOM));
             session->NotifyIsCustomAnimationPlaying(true);
         }
         auto ret = session->SceneSession::Foreground(property);
@@ -83,9 +77,8 @@ WSError SubSession::Hide()
         }
         // background will remove surfaceNode, custom not execute
         // not animation playing when already background; inactive may be animation playing
-        auto sessionProperty = session->GetSessionProperty();
-        if (sessionProperty &&
-            sessionProperty->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
+        if (session->GetSessionProperty() &&
+            session->GetSessionProperty()->GetAnimationFlag() == static_cast<uint32_t>(WindowAnimation::CUSTOM)) {
             session->NotifyIsCustomAnimationPlaying(true);
             return WSError::WS_OK;
         }
@@ -106,41 +99,10 @@ WSError SubSession::Reconnect(const sptr<ISessionStage>& sessionStage, const spt
             WLOGFE("session is null");
             return WSError::WS_ERROR_DESTROYED_OBJECT;
         }
-        if (property == nullptr) {
-            TLOGE(WmsLogTag::WMS_RECOVER, "property is nullptr");
-            return WSError::WS_ERROR_NULLPTR;
-        }
         WSError ret = session->Session::Reconnect(sessionStage, eventChannel, surfaceNode, property, token, pid, uid);
-        if (ret != WSError::WS_OK) {
-            return ret;
-        }
-        auto windowState = property->GetWindowState();
-        TLOGI(WmsLogTag::WMS_RECOVER, "sub session reconnect, persistentId: %{public}d, windowState: %{public}d ",
-            session->GetPersistentId(), windowState);
-        switch (windowState) {
-            case WindowState::STATE_INITIAL: {
-                TLOGE(WmsLogTag::WMS_RECOVER, "invalid window state: STATE_INITIAL");
-                ret = WSError::WS_ERROR_INVALID_PARAM;
-                break;
-            }
-            case WindowState::STATE_CREATED:
-                break;
-            case WindowState::STATE_SHOWN: {
-                session->UpdateSessionState(SessionState::STATE_FOREGROUND);
-                session->UpdateActiveStatus(true);
-                break;
-            }
-            case WindowState::STATE_HIDDEN: {
-                session->UpdateSessionState(SessionState::STATE_BACKGROUND);
-                break;
-            }
-            default:
-                TLOGE(WmsLogTag::WMS_RECOVER, "invalid window state: %{public}u", windowState);
-                ret = WSError::WS_ERROR_INVALID_PARAM;
-                break;
-        }
-        if (ret != WSError::WS_OK) {
-            session->Session::Disconnect(false);
+        if (ret == WSError::WS_OK) {
+            session->isActive_ = true;
+            session->UpdateSessionState(SessionState::STATE_FOREGROUND);
         }
         return ret;
     });
@@ -150,13 +112,11 @@ WSError SubSession::ProcessPointDownSession(int32_t posX, int32_t posY)
 {
     const auto& id = GetPersistentId();
     WLOGFI("id: %{public}d, type: %{public}d", id, GetWindowType());
-    auto parentSession = GetParentSession();
-    if (parentSession && parentSession->CheckDialogOnForeground()) {
+    if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
         WLOGFI("Has dialog foreground, id: %{public}d, type: %{public}d", id, GetWindowType());
         return WSError::WS_OK;
     }
-    auto sessionProperty = GetSessionProperty();
-    if (sessionProperty && sessionProperty->GetRaiseEnabled()) {
+    if (GetSessionProperty() && GetSessionProperty()->GetRaiseEnabled()) {
         RaiseToAppTopForPointDown();
     }
     PresentFocusIfPointDown();
@@ -172,8 +132,7 @@ WSError SubSession::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEv
         WLOGFE("KeyEvent is nullptr");
         return WSError::WS_ERROR_NULLPTR;
     }
-    auto parentSession = GetParentSession();
-    if (parentSession && parentSession->CheckDialogOnForeground()) {
+    if (parentSession_ && parentSession_->CheckDialogOnForeground()) {
         TLOGD(WmsLogTag::WMS_DIALOG, "Its main window has dialog on foreground, not transfer pointer event");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
@@ -184,8 +143,7 @@ WSError SubSession::TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEv
 
 int32_t SubSession::GetMissionId() const
 {
-    auto parentSession = GetParentSession();
-    return parentSession != nullptr ? parentSession->GetPersistentId() : SceneSession::GetMissionId();
+    return parentSession_ != nullptr ? parentSession_->GetPersistentId() : SceneSession::GetMissionId();
 }
 
 void SubSession::UpdatePointerArea(const WSRect& rect)
@@ -201,12 +159,28 @@ bool SubSession::CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEve
 {
     auto sessionState = GetSessionState();
     int32_t action = pointerEvent->GetPointerAction();
-    auto isPC = systemConfig_.uiType_ == "pc";
+    auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
     if (isPC && sessionState != SessionState::STATE_FOREGROUND &&
         sessionState != SessionState::STATE_ACTIVE &&
         action != MMI::PointerEvent::POINTER_ACTION_LEAVE_WINDOW) {
         WLOGFW("Current Session Info: [persistentId: %{public}d, "
             "state: %{public}d, action:%{public}d]", GetPersistentId(), GetSessionState(), action);
+        return false;
+    }
+    return true;
+}
+
+bool SubSession::IfNotNeedAvoidKeyBoardForSplit()
+{
+    if (ScreenSessionManagerClient::GetInstance().IsFoldable() &&
+            ScreenSessionManagerClient::GetInstance().GetFoldStatus() != OHOS::Rosen::FoldStatus::FOLDED) {
+        return false;
+    }
+    if (GetParentSession() != nullptr &&
+            GetParentSession()->GetWindowMode() != WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return false;
+    }
+    if (!Session::GetFocused() || Session::GetSessionRect().posY_ == 0) {
         return false;
     }
     return true;
@@ -218,16 +192,5 @@ void SubSession::RectCheck(uint32_t curWidth, uint32_t curHeight)
     uint32_t minHeight = GetSystemConfig().miniHeightOfSubWindow_;
     uint32_t maxFloatingWindowSize = GetSystemConfig().maxFloatingWindowSize_;
     RectSizeCheckProcess(curWidth, curHeight, minWidth, minHeight, maxFloatingWindowSize);
-}
-
-bool SubSession::IsTopmost() const
-{
-    bool isTopmost = false;
-    auto sessionProperty = GetSessionProperty();
-    if (sessionProperty) {
-        isTopmost = sessionProperty->IsTopmost();
-    }
-    TLOGI(WmsLogTag::WMS_SUB, "isTopmost: %{public}d", isTopmost);
-    return isTopmost;
 }
 } // namespace OHOS::Rosen

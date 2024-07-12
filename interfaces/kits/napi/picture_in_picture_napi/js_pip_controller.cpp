@@ -29,20 +29,18 @@ namespace Rosen {
 using namespace AbilityRuntime;
 namespace {
     constexpr int32_t NUMBER_TWO = 2;
-    constexpr int32_t NUMBER_FOUR = 4;
     const std::string STATE_CHANGE_CB = "stateChange";
     const std::string CONTROL_PANEL_ACTION_EVENT_CB = "controlPanelActionEvent";
-    const std::string CONTROL_EVENT_CB = "controlEvent";
 }
+
+std::mutex JsPipController::pipMutex_;
 
 void BindFunctions(napi_env env, napi_value object, const char *moduleName)
 {
     BindNativeFunction(env, object, "startPiP", moduleName, JsPipController::StartPictureInPicture);
     BindNativeFunction(env, object, "stopPiP", moduleName, JsPipController::StopPictureInPicture);
     BindNativeFunction(env, object, "updateContentSize", moduleName, JsPipController::UpdateContentSize);
-    BindNativeFunction(env, object, "updatePiPControlStatus", moduleName, JsPipController::UpdatePiPControlStatus);
     BindNativeFunction(env, object, "setAutoStartEnabled", moduleName, JsPipController::SetAutoStartEnabled);
-    BindNativeFunction(env, object, "setPiPControlEnabled", moduleName, JsPipController::SetPiPControlEnabled);
     BindNativeFunction(env, object, "on", moduleName, JsPipController::RegisterCallback);
     BindNativeFunction(env, object, "off", moduleName, JsPipController::UnregisterCallback);
 }
@@ -63,10 +61,13 @@ napi_value CreateJsPipControllerObject(napi_env env, sptr<PictureInPictureContro
 JsPipController::JsPipController(const sptr<PictureInPictureController>& pipController, napi_env env)
     : pipController_(pipController), env_(env)
 {
-    listenerCodeMap_ = {
-        {STATE_CHANGE_CB, ListenerType::STATE_CHANGE_CB},
-        {CONTROL_PANEL_ACTION_EVENT_CB, ListenerType::CONTROL_PANEL_ACTION_EVENT_CB},
-        {CONTROL_EVENT_CB, ListenerType::CONTROL_EVENT_CB},
+    registerFunc_ = {
+        { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeRegister},
+        { CONTROL_PANEL_ACTION_EVENT_CB, &JsPipController::ProcessActionEventRegister},
+    };
+    unRegisterFunc_ = {
+        { STATE_CHANGE_CB, &JsPipController::ProcessStateChangeUnRegister},
+        { CONTROL_PANEL_ACTION_EVENT_CB, &JsPipController::ProcessActionEventUnRegister},
     };
 }
 
@@ -89,12 +90,13 @@ napi_value JsPipController::StartPictureInPicture(napi_env env, napi_callback_in
 napi_value JsPipController::OnStartPictureInPicture(napi_env env, napi_callback_info info)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnStartPictureInPicture is called");
+    std::lock_guard<std::mutex> lock(pipMutex_);
     if (PictureInPictureManager::ShouldAbortPipStart()) {
         TLOGI(WmsLogTag::WMS_PIP, "OnStartPictureInPicture abort");
         return NapiGetUndefined(env);
     }
-    size_t argc = NUMBER_FOUR;
-    napi_value argv[NUMBER_FOUR] = {nullptr};
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     napi_value callback = nullptr;
     if (argc > 0) {
@@ -131,8 +133,9 @@ napi_value JsPipController::StopPictureInPicture(napi_env env, napi_callback_inf
 napi_value JsPipController::OnStopPictureInPicture(napi_env env, napi_callback_info info)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnStopPictureInPicture is called");
-    size_t argc = NUMBER_FOUR;
-    napi_value argv[NUMBER_FOUR] = {nullptr};
+    std::lock_guard<std::mutex> lock(pipMutex_);
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     napi_value callback = nullptr;
     if (argc > 0) {
@@ -169,8 +172,8 @@ napi_value JsPipController::SetAutoStartEnabled(napi_env env, napi_callback_info
 napi_value JsPipController::OnSetAutoStartEnabled(napi_env env, napi_callback_info info)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnSetAutoStartEnabled is called");
-    size_t argc = NUMBER_FOUR;
-    napi_value argv[NUMBER_FOUR] = {nullptr};
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc != 1) {
         TLOGE(WmsLogTag::WMS_PIP, "Argc count is invalid: %{public}zu", argc);
@@ -185,6 +188,7 @@ napi_value JsPipController::OnSetAutoStartEnabled(napi_env env, napi_callback_in
         TLOGE(WmsLogTag::WMS_PIP, "[NAPI]OnSetAutoStartEnabled error, controller is nullptr");
         return NapiGetUndefined(env);
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     pipController_->SetAutoStartEnabled(enable);
     return NapiGetUndefined(env);
 }
@@ -198,109 +202,29 @@ napi_value JsPipController::UpdateContentSize(napi_env env, napi_callback_info i
 napi_value JsPipController::OnUpdateContentSize(napi_env env, napi_callback_info info)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnUpdateContentSize is called");
-    size_t argc = NUMBER_FOUR;
-    napi_value argv[NUMBER_FOUR] = {nullptr};
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc != NUMBER_TWO) {
-        TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
-        return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
+        TLOGE(WmsLogTag::WMS_PIP, "Argc count is invalid: %{public}zu", argc);
+        return NapiThrowInvalidParam(env);
     }
     int32_t width = 0;
-    std::string errMsg = "";
     if (!ConvertFromJsValue(env, argv[0], width) || width <= 0) {
-        errMsg = "Failed to convert parameter to int or width <= 0";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
+        TLOGE(WmsLogTag::WMS_PIP, "Failed to convert parameter to uint32_t or parameter is invalid");
+        return NapiThrowInvalidParam(env);
     }
     int32_t height = 0;
     if (!ConvertFromJsValue(env, argv[1], height) || height <= 0) {
-        errMsg = "Failed to convert parameter to int or height <= 0";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
+        TLOGE(WmsLogTag::WMS_PIP, "Failed to convert parameter to uint32_t or parameter is invalid");
+        return NapiThrowInvalidParam(env);
     }
     if (pipController_ == nullptr) {
-        errMsg = "OnUpdateContentSize error, controller is nullptr";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
+        TLOGE(WmsLogTag::WMS_PIP, "OnUpdateContentSize error, controller is nullptr");
+        return NapiThrowInvalidParam(env);
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     pipController_->UpdateContentSize(width, height);
-    return NapiGetUndefined(env);
-}
-
-napi_value JsPipController::UpdatePiPControlStatus(napi_env env, napi_callback_info info)
-{
-    JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
-    return (me != nullptr) ? me->OnUpdatePiPControlStatus(env, info) : nullptr;
-}
-
-napi_value JsPipController::OnUpdatePiPControlStatus(napi_env env, napi_callback_info info)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "called");
-    size_t argc = NUMBER_FOUR;
-    napi_value argv[NUMBER_FOUR] = {nullptr};
-    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc != NUMBER_TWO) {
-        TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
-        return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
-    }
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    std::string errMsg;
-    if (!ConvertFromJsValue(env, argv[0], controlType)) {
-        errMsg = "Failed to convert parameter to int or controlType < 0";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    auto status = PiPControlStatus::PLAY;
-    if (!ConvertFromJsValue(env, argv[1], status)) {
-        errMsg = "Failed to convert parameter to int";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    if (pipController_ == nullptr) {
-        errMsg = "OnUpdatePiPControlStatus error, controller is nullptr";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    pipController_->UpdatePiPControlStatus(controlType, status);
-    return NapiGetUndefined(env);
-}
-
-napi_value JsPipController::SetPiPControlEnabled(napi_env env, napi_callback_info info)
-{
-    JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
-    return (me != nullptr) ? me->OnSetPiPControlEnabled(env, info) : nullptr;
-}
-
-napi_value JsPipController::OnSetPiPControlEnabled(napi_env env, napi_callback_info info)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "called");
-    size_t argc = NUMBER_FOUR;
-    napi_value argv[NUMBER_FOUR] = {nullptr};
-    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc != NUMBER_TWO) {
-        TLOGE(WmsLogTag::WMS_PIP, "Invalid args count, need 2 args but received: %{public}zu", argc);
-        return NapiThrowInvalidParam(env, "Invalid args count, 2 args is needed.");
-    }
-    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
-    std::string errMsg;
-    if (!ConvertFromJsValue(env, argv[0], controlType)) {
-        errMsg = "Failed to convert parameter to int";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    bool enabled = true;
-    if (!ConvertFromJsValue(env, argv[1], enabled)) {
-        errMsg = "Failed to convert parameter to int";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    if (pipController_ == nullptr) {
-        errMsg = "OnSetPiPControlEnabled error, controller is nullptr";
-        TLOGE(WmsLogTag::WMS_PIP, "%{public}s", errMsg.c_str());
-        return NapiThrowInvalidParam(env, errMsg);
-    }
-    pipController_->UpdatePiPControlStatus(controlType, enabled ?
-        PiPControlStatus::ENABLED : PiPControlStatus::DISABLED);
     return NapiGetUndefined(env);
 }
 
@@ -313,8 +237,8 @@ napi_value JsPipController::RegisterCallback(napi_env env, napi_callback_info in
 napi_value JsPipController::OnRegisterCallback(napi_env env, napi_callback_info info)
 {
     TLOGI(WmsLogTag::WMS_PIP, "OnRegisterCallback is called");
-    size_t argc = NUMBER_FOUR;
-    napi_value argv[NUMBER_FOUR] = {nullptr};
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc < NUMBER_TWO) {
         TLOGE(WmsLogTag::WMS_PIP, "JsPipController Params not match: %{public}zu", argc);
@@ -330,6 +254,7 @@ napi_value JsPipController::OnRegisterCallback(napi_env env, napi_callback_info 
         TLOGE(WmsLogTag::WMS_PIP, "Callback is nullptr or not callable");
         return NapiThrowInvalidParam(env);
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     WmErrorCode ret = RegisterListenerWithType(env, cbType, value);
     if (ret != WmErrorCode::WM_OK) {
         TLOGE(WmsLogTag::WMS_PIP, "OnRegisterCallback failed");
@@ -349,20 +274,7 @@ WmErrorCode JsPipController::RegisterListenerWithType(napi_env env, const std::s
     napi_create_reference(env, value, 1, &result);
     callbackRef.reset(reinterpret_cast<NativeReference*>(result));
     jsCbMap_[type] = callbackRef;
-
-    switch (listenerCodeMap_[type]) {
-        case ListenerType::STATE_CHANGE_CB:
-            ProcessStateChangeRegister();
-            break;
-        case ListenerType::CONTROL_PANEL_ACTION_EVENT_CB:
-            ProcessActionEventRegister();
-            break;
-        case ListenerType::CONTROL_EVENT_CB:
-            ProcessControlEventRegister();
-            break;
-        default:
-            break;
-    }
+    (this->*registerFunc_[type])();
     return WmErrorCode::WM_OK;
 }
 
@@ -413,25 +325,6 @@ void JsPipController::ProcessActionEventRegister()
     pipController_->SetPictureInPictureActionObserver(actionObserver);
 }
 
-void JsPipController::ProcessControlEventRegister()
-{
-    if (jsCbMap_.empty() || jsCbMap_.find(CONTROL_EVENT_CB) == jsCbMap_.end()) {
-        TLOGE(WmsLogTag::WMS_PIP, "Register control event error");
-        return;
-    }
-    if (pipController_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "controller is nullptr");
-        return;
-    }
-    auto controlObserver = sptr<JsPipController::PiPControlObserverImpl>::MakeSptr(env_, jsCbMap_[CONTROL_EVENT_CB]);
-    if (controlObserver == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "controlObserver is nullptr");
-        return;
-    }
-    pipController_->SetPictureInPictureControlObserver(controlObserver);
-    TLOGI(WmsLogTag::WMS_PIP, "Register control event success");
-}
-
 void JsPipController::ProcessStateChangeUnRegister()
 {
     if (pipController_ == nullptr) {
@@ -450,16 +343,6 @@ void JsPipController::ProcessActionEventUnRegister()
     pipController_->SetPictureInPictureActionObserver(nullptr);
 }
 
-void JsPipController::ProcessControlEventUnRegister()
-{
-    if (pipController_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_PIP, "controller is nullptr");
-        return;
-    }
-    pipController_->SetPictureInPictureControlObserver(nullptr);
-    TLOGI(WmsLogTag::WMS_PIP, "UnRegister control event success");
-}
-
 napi_value JsPipController::UnregisterCallback(napi_env env, napi_callback_info info)
 {
     JsPipController* me = CheckParamsAndGetThis<JsPipController>(env, info);
@@ -468,8 +351,8 @@ napi_value JsPipController::UnregisterCallback(napi_env env, napi_callback_info 
 
 napi_value JsPipController::OnUnregisterCallback(napi_env env, napi_callback_info info)
 {
-    size_t argc = NUMBER_FOUR;
-    napi_value argv[NUMBER_FOUR] = {nullptr};
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
     if (argc != 1) {
         TLOGE(WmsLogTag::WMS_PIP, "JsPipController Params not match: %{public}zu", argc);
@@ -480,6 +363,7 @@ napi_value JsPipController::OnUnregisterCallback(napi_env env, napi_callback_inf
         TLOGE(WmsLogTag::WMS_PIP, "Failed to convert parameter to string");
         return NapiThrowInvalidParam(env);
     }
+    std::lock_guard<std::mutex> lock(mtx_);
     WmErrorCode ret = UnRegisterListenerWithType(env, cbType);
     if (ret != WmErrorCode::WM_OK) {
         TLOGE(WmsLogTag::WMS_PIP, "OnUnregisterCallback failed");
@@ -495,20 +379,7 @@ WmErrorCode JsPipController::UnRegisterListenerWithType(napi_env env, const std:
         return WmErrorCode::WM_ERROR_INVALID_CALLING;
     }
     jsCbMap_.erase(type);
-    
-    switch (listenerCodeMap_[type]) {
-        case ListenerType::STATE_CHANGE_CB:
-            ProcessStateChangeUnRegister();
-            break;
-        case ListenerType::CONTROL_PANEL_ACTION_EVENT_CB:
-            ProcessActionEventUnRegister();
-            break;
-        case ListenerType::CONTROL_EVENT_CB:
-            ProcessControlEventUnRegister();
-            break;
-        default:
-            break;
-    }
+    (this->*unRegisterFunc_[type])();
     return WmErrorCode::WM_OK;
 }
 
@@ -556,6 +427,7 @@ void JsPipController::PiPLifeCycleImpl::OnPictureInPictureOperationError(int32_t
 
 void JsPipController::PiPLifeCycleImpl::OnPipListenerCallback(PiPState state, int32_t errorCode)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
     TLOGI(WmsLogTag::WMS_PIP, "OnPipListenerCallback is called, state: %{public}d", static_cast<int32_t>(state));
     auto jsCallback = jsCallBack_;
     std::string error = std::to_string(errorCode);
@@ -574,6 +446,7 @@ void JsPipController::PiPLifeCycleImpl::OnPipListenerCallback(PiPState state, in
 
 void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& actionEvent, int32_t statusCode)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
     TLOGI(WmsLogTag::WMS_PIP, "OnActionEvent is called, actionEvent: %{public}s", actionEvent.c_str());
     auto jsCallback = jsCallBack_;
     std::unique_ptr<NapiAsyncTask::CompleteCallback> complete = std::make_unique<NapiAsyncTask::CompleteCallback> (
@@ -587,31 +460,6 @@ void JsPipController::PiPActionObserverImpl::OnActionEvent(const std::string& ac
     std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
     NapiAsyncTask::Schedule("JsPipController::PiPActionObserverImpl::OnActionEvent",
         engine_, std::make_unique<NapiAsyncTask>(callback, std::move(execute), std::move(complete)));
-}
-
-void JsPipController::PiPControlObserverImpl::OnControlEvent(PiPControlType controlType, PiPControlStatus statusCode)
-{
-    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, statusCode:%{public}d", controlType, statusCode);
-    napi_value result = nullptr;
-    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(engine_, nullptr, &result);
-    auto asyncTask = [jsCallback = jsCallBack_, controlType, statusCode, env = engine_, task = napiAsyncTask.get()]() {
-        napi_value propertyValue = nullptr;
-        napi_create_object(env, &propertyValue);
-        if (propertyValue == nullptr) {
-            TLOGI(WmsLogTag::WMS_PIP, "propertyValue is nullptr");
-            return;
-        }
-        napi_set_named_property(env, propertyValue, "controlType", CreateJsValue(env, controlType));
-        napi_set_named_property(env, propertyValue, "status", CreateJsValue(env, statusCode));
-        napi_value argv[] = {propertyValue};
-        CallJsMethod(env, jsCallback->GetNapiValue(), argv, ArraySize(argv));
-        delete task;
-    };
-    if (napi_send_event(engine_, asyncTask, napi_eprio_high) != napi_status::napi_ok) {
-        napiAsyncTask->Reject(engine_, CreateJsError(engine_, 1, "send event failed"));
-    } else {
-        napiAsyncTask.release();
-    }
 }
 } // namespace Rosen
 } // namespace OHOS

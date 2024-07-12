@@ -31,7 +31,7 @@ ohos_shared_library("libdms") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
   }
   sources = [
@@ -60,7 +60,6 @@ ohos_shared_library("libdms") {
   public_configs = [ ":libdms_public_config" ]
 
   deps = [
-    "${window_base_path}/utils:libwmutil_base",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
     "../utils:libwmutil",
   ]
@@ -77,6 +76,12 @@ ohos_shared_library("libdms") {
     "libxml2:libxml2",
     "safwk:system_ability_fwk",
   ]
+
+  if (defined(use_new_skia) && use_new_skia) {
+    include_dirs = [ "//third_party/skia/src" ]
+  } else {
+    include_dirs = [ "//third_party/flutter/skia/src" ]
+  }
 
   defines = []
   if (window_manager_feature_subscribe_motion) {

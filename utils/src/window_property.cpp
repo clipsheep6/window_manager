@@ -21,7 +21,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
     constexpr uint32_t SYSTEM_BAR_PROPERTY_MAX_NUM = 2;
-    constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 50;
+    constexpr uint32_t TOUCH_HOT_AREA_MAX_NUM = 10;
 }
 WindowProperty::WindowProperty(const sptr<WindowProperty>& property)
 {
@@ -261,12 +261,12 @@ void WindowProperty::SetWindowFlags(uint32_t flags)
     flags_ = flags;
 }
 
-void WindowProperty::SetSizeLimits(const WindowLimits& sizeLimits)
+void WindowProperty::SetSizeLimits(const WindowSizeLimits& sizeLimits)
 {
     sizeLimits_ = sizeLimits;
 }
 
-void WindowProperty::SetUpdatedSizeLimits(const WindowLimits& sizeLimits)
+void WindowProperty::SetUpdatedSizeLimits(const WindowSizeLimits& sizeLimits)
 {
     updatedSizeLimits_ = sizeLimits;
 }
@@ -541,12 +541,12 @@ bool WindowProperty::GetStretchable() const
     return isStretchable_;
 }
 
-WindowLimits WindowProperty::GetSizeLimits() const
+WindowSizeLimits WindowProperty::GetSizeLimits() const
 {
     return sizeLimits_;
 }
 
-WindowLimits WindowProperty::GetUpdatedSizeLimits() const
+WindowSizeLimits WindowProperty::GetUpdatedSizeLimits() const
 {
     return updatedSizeLimits_;
 }
@@ -706,8 +706,8 @@ bool WindowProperty::MarshallingWindowSizeLimits(Parcel& parcel) const
 
 void WindowProperty::UnmarshallingWindowSizeLimits(Parcel& parcel, WindowProperty* property)
 {
-    WindowLimits sizeLimits = { parcel.ReadUint32(), parcel.ReadUint32(), parcel.ReadUint32(),
-                                parcel.ReadUint32(), parcel.ReadFloat(), parcel.ReadFloat() };
+    WindowSizeLimits sizeLimits = { parcel.ReadUint32(), parcel.ReadUint32(), parcel.ReadUint32(),
+                                    parcel.ReadUint32(), parcel.ReadFloat(), parcel.ReadFloat() };
     property->SetSizeLimits(sizeLimits);
 }
 

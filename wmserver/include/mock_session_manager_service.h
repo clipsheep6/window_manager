@@ -81,6 +81,7 @@ private:
 
     static void WriteStringToFile(int32_t pid, const char* str);
 
+    sptr<IRemoteObject> sessionManagerService_;
     sptr<IRemoteObject> screenSessionManager_;
     sptr<IRemoteObject> sceneSessionManager_;
 
@@ -95,9 +96,6 @@ private:
 
     std::shared_mutex smsLiteRecoverListenerLock_;
     std::map<int32_t, std::map<int32_t, sptr<ISessionManagerServiceRecoverListener>>> smsLiteRecoverListenerMap_;
-
-    std::mutex wmsConnectionStatusLock_;
-    std::map<int32_t, bool> wmsConnectionStatusMap_;
 
     int32_t currentWMSUserId_;
     int32_t currentScreenId_;

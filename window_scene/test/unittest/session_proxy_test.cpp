@@ -16,8 +16,6 @@
 #include "iremote_object_mocker.h"
 #include <gtest/gtest.h>
 #include "accessibility_event_info.h"
-#include "ws_common.h"
-
 // using namespace FRAME_TRACE;
 using namespace testing;
 using namespace testing::ext;
@@ -91,23 +89,6 @@ HWTEST_F(SessionProxyTest, Disconnect, Function | SmallTest | Level2)
     WSError res = sProxy->Disconnect();
     ASSERT_EQ(res, WSError::WS_OK);
     GTEST_LOG_(INFO) << "SessionProxyTest: Disconnect end";
-}
-
-/**
- * @tc.name: DrawingCompleted
- * @tc.desc: normal function
- * @tc.type: FUNC
- */
-HWTEST_F(SessionProxyTest, DrawingCompleted, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "SessionProxyTest: DrawingCompleted start";
-    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
-    ASSERT_NE(iRemoteObjectMocker, nullptr);
-    sptr<SessionProxy> sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
-    ASSERT_NE(sProxy, nullptr);
-    WSError res = sProxy->DrawingCompleted();
-    ASSERT_EQ(res, WSError::WS_OK);
-    GTEST_LOG_(INFO) << "SessionProxyTest: DrawingCompleted end";
 }
 
 /**
@@ -366,6 +347,23 @@ HWTEST_F(SessionProxyTest, GetGlobalMaximizeMode, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: SetSessionProperty
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionProxyTest, SetSessionProperty, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SessionProxyTest: SetSessionProperty start";
+    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+    sptr<WindowSessionProperty> property = new WindowSessionProperty();
+    WSError res = sProxy->SetSessionProperty(property);
+    ASSERT_EQ(res, WSError::WS_OK);
+
+    GTEST_LOG_(INFO) << "SessionProxyTest: SetSessionProperty end";
+}
+
+/**
  * @tc.name: SetAspectRatio
  * @tc.desc: normal function
  * @tc.type: FUNC
@@ -380,44 +378,6 @@ HWTEST_F(SessionProxyTest, SetAspectRatio, Function | SmallTest | Level2)
     ASSERT_EQ(res, WSError::WS_OK);
 
     GTEST_LOG_(INFO) << "SessionProxyTest: SetAspectRatio end";
-}
-
-/**
- * @tc.name: UpdateSessionPropertyByAction01
- * @tc.desc: UpdateSessionPropertyByAction
- * @tc.type: FUNC
- */
-HWTEST_F(SessionProxyTest, UpdateSessionPropertyByAction01, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "SessionProxyTest: UpdateSessionPropertyByAction01 start";
-    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
-    ASSERT_NE(iRemoteObjectMocker, nullptr);
-    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
-    ASSERT_NE(sProxy, nullptr);
-    WMError res = sProxy->UpdateSessionPropertyByAction(nullptr,
-        WSPropertyChangeAction::ACTION_UPDATE_KEEP_SCREEN_ON);
-    ASSERT_EQ(res, WMError::WM_OK);
-    delete sProxy;
-    GTEST_LOG_(INFO) << "SessionProxyTest: UpdateSessionPropertyByAction01 end";
-}
-
-/**
- * @tc.name: UpdateSessionPropertyByAction02
- * @tc.desc: UpdateSessionPropertyByAction
- * @tc.type: FUNC
- */
-HWTEST_F(SessionProxyTest, UpdateSessionPropertyByAction02, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "SessionProxyTest: UpdateSessionPropertyByAction02 start";
-    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
-    ASSERT_NE(iRemoteObjectMocker, nullptr);
-    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
-    ASSERT_NE(sProxy, nullptr);
-    WMError res = sProxy->UpdateSessionPropertyByAction(nullptr,
-        WSPropertyChangeAction::ACTION_UPDATE_TURN_SCREEN_ON);
-    ASSERT_EQ(res, WMError::WM_OK);
-    delete sProxy;
-    GTEST_LOG_(INFO) << "SessionProxyTest: UpdateSessionPropertyByAction02 end";
 }
 
 /**
@@ -518,25 +478,6 @@ HWTEST_F(SessionProxyTest, TransferAccessibilityEvent, Function | SmallTest | Le
     ASSERT_EQ(res, WSError::WS_OK);
 
     GTEST_LOG_(INFO) << "SessionProxyTest: TransferAccessibilityEvent end";
-}
-
-/**
- * @tc.name: UpdatePiPControlStatus
- * @tc.desc: normal function
- * @tc.type: FUNC
- */
-HWTEST_F(SessionProxyTest, UpdatePiPControlStatus, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "SessionProxyTest: UpdatePiPControlStatus start";
-    auto iRemoteObjectMocker = sptr<IRemoteObjectMocker>::MakeSptr();
-    ASSERT_NE(iRemoteObjectMocker, nullptr);
-    auto sProxy = sptr<SessionProxy>::MakeSptr(iRemoteObjectMocker);
-    ASSERT_NE(sProxy, nullptr);
-    auto controlType = WsPiPControlType::VIDEO_PLAY_PAUSE;
-    auto status = WsPiPControlStatus::PLAY;
-    WSError res = sProxy->UpdatePiPControlStatus(controlType, status);
-    ASSERT_EQ(res, WSError::WS_OK);
-    GTEST_LOG_(INFO) << "SessionProxyTest: UpdatePiPControlStatus end";
 }
 } // namespace
 } // namespace Rosen

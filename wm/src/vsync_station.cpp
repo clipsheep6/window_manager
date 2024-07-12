@@ -36,15 +36,6 @@ VsyncStation::VsyncStation(NodeId nodeId) : nodeId_(nodeId)
     TLOGI(WmsLogTag::WMS_MAIN, "Vsync Constructor");
 }
 
-VsyncStation::~VsyncStation()
-{
-    std::lock_guard<std::mutex> lock(mtx_);
-    destroyed_ = true;
-    if (vsyncHandler_) {
-        vsyncHandler_->RemoveTask(vsyncTimeoutTaskName_);
-    }
-}
-
 void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallback)
 {
     {
@@ -89,12 +80,12 @@ FrameRateLinkerId VsyncStation::GetFrameRateLinkerId()
     return 0;
 }
 
-void VsyncStation::FlushFrameRate(uint32_t rate, int32_t animatorExpectedFrameRate, uint32_t rateType)
+void VsyncStation::FlushFrameRate(uint32_t rate)
 {
     if (frameRateLinker_ && frameRateLinker_->IsEnable()) {
         WLOGD("VsyncStation::FlushFrameRate %{public}d, linkerID = %{public}" PRIu64, rate, frameRateLinker_->GetId());
-        FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, rate, rateType};
-        frameRateLinker_->UpdateFrameRateRange(range, animatorExpectedFrameRate);
+        FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, rate};
+        frameRateLinker_->UpdateFrameRateRange(range);
     }
 }
 
@@ -105,17 +96,11 @@ void VsyncStation::SetFrameRateLinkerEnable(bool enabled)
             FrameRateRange range = {0, RANGE_MAX_REFRESHRATE, 0};
             WLOGI("VsyncStation::FlushFrameRateImme %{public}d, linkerID = %{public}" PRIu64,
                 range.preferred_, frameRateLinker_->GetId());
-            frameRateLinker_->UpdateFrameRateRange(range, true);
-            frameRateLinker_->UpdateFrameRateRangeImme(range, true);
+            frameRateLinker_->UpdateFrameRateRange(range);
+            frameRateLinker_->UpdateFrameRateRangeImme(range);
         }
         frameRateLinker_->SetEnable(enabled);
     }
-}
-
-void VsyncStation::SetDisplaySoloistFrameRateLinkerEnable(bool enabled)
-{
-    RSDisplaySoloistManager& soloistManager = RSDisplaySoloistManager::GetInstance();
-    soloistManager.SetMainFrameRateLinkerEnable(enabled);
 }
 
 void VsyncStation::Init()
@@ -148,20 +133,14 @@ void VsyncStation::RemoveCallback()
 {
     WLOGI("Remove Vsync callback");
     std::lock_guard<std::mutex> lock(mtx_);
-    if (destroyed_) {
-        return;
-    }
     vsyncCallbacks_.clear();
 }
 
-void VsyncStation::VsyncCallbackInner(int64_t timestamp, int64_t frameCount)
+void VsyncStation::VsyncCallbackInner(int64_t timestamp)
 {
     std::unordered_set<std::shared_ptr<VsyncCallback>> vsyncCallbacks;
     {
         std::lock_guard<std::mutex> lock(mtx_);
-        if (destroyed_) {
-            return;
-        }
         hasRequestedVsync_ = false;
         vsyncCallbacks = vsyncCallbacks_;
         vsyncCallbacks_.clear();
@@ -169,16 +148,16 @@ void VsyncStation::VsyncCallbackInner(int64_t timestamp, int64_t frameCount)
     }
     for (const auto& callback: vsyncCallbacks) {
         if (callback && callback->onCallback) {
-            callback->onCallback(timestamp, frameCount);
+            callback->onCallback(timestamp);
         }
     }
 }
 
-void VsyncStation::OnVsync(int64_t timestamp, int64_t frameCount, void* client)
+void VsyncStation::OnVsync(int64_t timestamp, void* client)
 {
     auto vsyncClient = static_cast<VsyncStation*>(client);
     if (vsyncClient) {
-        vsyncClient->VsyncCallbackInner(timestamp, frameCount);
+        vsyncClient->VsyncCallbackInner(timestamp);
         WindowFrameTraceImpl::GetInstance()->VsyncStopFrameTrace();
     } else {
         WLOGFE("VsyncClient is null");
@@ -190,20 +169,6 @@ void VsyncStation::OnVsyncTimeOut()
     WLOGD("Vsync time out");
     std::lock_guard<std::mutex> lock(mtx_);
     hasRequestedVsync_ = false;
-}
-
-void VsyncStation::SetUiDvsyncSwitch(bool dvsyncSwitch)
-{
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        if (destroyed_) {
-            return;
-        }
-        Init();
-    }
-    if (receiver_ != nullptr) {
-        receiver_->SetUiDvsyncSwitch(dvsyncSwitch);
-    }
 }
 }
 }

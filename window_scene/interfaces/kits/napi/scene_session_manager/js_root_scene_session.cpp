@@ -125,10 +125,7 @@ napi_value JsRootSceneSession::OnRegisterCallback(napi_env env, napi_callback_in
     napi_ref result = nullptr;
     napi_create_reference(env, value, 1, &result);
     callbackRef.reset(reinterpret_cast<NativeReference*>(result));
-    {
-        std::unique_lock<std::shared_mutex> lock(jsCbMapMutex_);
-        jsCbMap_[cbType] = callbackRef;
-    }
+    jsCbMap_[cbType] = callbackRef;
     WLOGFD("[NAPI]Register end, type = %{public}s", cbType.c_str());
     return NapiGetUndefined(env);
 }
@@ -196,7 +193,6 @@ napi_value JsRootSceneSession::OnLoadContent(napi_env env, napi_callback_info in
 
 bool JsRootSceneSession::IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject)
 {
-    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
     if (jsCbMap_.empty() || jsCbMap_.find(type) == jsCbMap_.end()) {
         WLOGFI("[NAPI]Method %{public}s has not been registered", type.c_str());
         return false;
@@ -213,23 +209,16 @@ bool JsRootSceneSession::IsCallbackRegistered(napi_env env, const std::string& t
     return false;
 }
 
-std::shared_ptr<NativeReference> JsRootSceneSession::GetJSCallback(const std::string& functionName) const
-{
-    std::shared_ptr<NativeReference> jsCallBack = nullptr;
-    std::shared_lock<std::shared_mutex> lock(jsCbMapMutex_);
-    auto iter = jsCbMap_.find(functionName);
-    if (iter == jsCbMap_.end()) {
-        TLOGE(WmsLogTag::DEFAULT, "%{public}s callback not found!", functionName.c_str());
-    } else {
-        jsCallBack = iter->second;
-    }
-    return jsCallBack;
-}
-
 void JsRootSceneSession::PendingSessionActivationInner(std::shared_ptr<SessionInfo> sessionInfo)
 {
+    auto iter = jsCbMap_.find(PENDING_SCENE_CB);
+    if (iter == jsCbMap_.end()) {
+        WLOGFE("[NAPI]PendingSessionActivationInner find callback failed.");
+        return;
+    }
+    auto jsCallBack = iter->second;
     napi_env& env_ref = env_;
-    auto task = [sessionInfo, jsCallBack = GetJSCallback(PENDING_SCENE_CB), env_ref]() {
+    auto task = [sessionInfo, jsCallBack, env_ref]() {
         if (!jsCallBack) {
             TLOGE(WmsLogTag::WMS_LIFE, "[NAPI]jsCallBack is nullptr");
             return;
@@ -244,7 +233,7 @@ void JsRootSceneSession::PendingSessionActivationInner(std::shared_ptr<SessionIn
             return;
         }
         napi_value argv[] = {jsSessionInfo};
-        TLOGI(WmsLogTag::WMS_LIFE, "pend active success, id:%{public}d",
+        TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]PendingSessionActivationInner task success, id: %{public}d",
             sessionInfo->persistentId_);
         napi_call_function(env_ref, NapiGetUndefined(env_ref),
             jsCallBack->GetNapiValue(), ArraySize(argv), argv, nullptr);
@@ -254,8 +243,8 @@ void JsRootSceneSession::PendingSessionActivationInner(std::shared_ptr<SessionIn
 
 void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
 {
-    TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]bundleName %{public}s, moduleName %{public}s, abilityName %{public}s, "
-        "appIndex %{public}d, reuse %{public}d", info.bundleName_.c_str(), info.moduleName_.c_str(),
+    TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]bundleName %{public}s, moduleName %{public}s, abilityName %{public}s, \
+        appIndex %{public}d, reuse %{public}d", info.bundleName_.c_str(), info.moduleName_.c_str(),
         info.abilityName_.c_str(), info.appIndex_, info.reuse);
     sptr<SceneSession> sceneSession = GenSceneSession(info);
     if (sceneSession == nullptr) {
@@ -270,21 +259,17 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
         if (isNeedBackToOther) {
             int32_t realCallerSessionId = SceneSessionManager::GetInstance().GetFocusedSessionId();
             if (realCallerSessionId == sceneSession->GetPersistentId()) {
-                TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]caller is self, switch to self caller.");
+                TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]caller is self, need back to self caller.");
                 auto scnSession = SceneSessionManager::GetInstance().GetSceneSession(realCallerSessionId);
                 if (scnSession != nullptr) {
                     realCallerSessionId = scnSession->GetSessionInfo().callerPersistentId_;
                 }
             }
-            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]caller session: %{public}d.", realCallerSessionId);
+            TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]need to back to other session: %{public}d.", realCallerSessionId);
             info.callerPersistentId_ = realCallerSessionId;
-            VerifyCallerToken(info);
         } else {
             info.callerPersistentId_ = 0;
         }
-
-        auto focusedOnShow = info.want->GetBoolParam(AAFwk::Want::PARAM_RESV_WINDOW_FOCUSED, true);
-        sceneSession->SetFocusedOnShow(focusedOnShow);
 
         std::string continueSessionId = info.want->GetStringParam(Rosen::PARAM_KEY::PARAM_DMS_CONTINUE_SESSION_ID_KEY);
         if (!continueSessionId.empty()) {
@@ -298,27 +283,13 @@ void JsRootSceneSession::PendingSessionActivation(SessionInfo& info)
             TLOGI(WmsLogTag::WMS_LIFE, "[NAPI]continue app with persistentId: %{public}d", info.persistentId_);
             SingletonContainer::Get<DmsReporter>().ReportContinueApp(true, static_cast<int32_t>(WSError::WS_OK));
         }
-    } else {
-        sceneSession->SetFocusedOnShow(true);
     }
-
     sceneSession->SetSessionInfo(info);
     std::shared_ptr<SessionInfo> sessionInfo = std::make_shared<SessionInfo>(info);
     auto task = [this, sessionInfo]() {
         PendingSessionActivationInner(sessionInfo);
     };
     sceneSession->PostLifeCycleTask(task, "PendingSessionActivation", LifeCycleTaskType::START);
-}
-
-void JsRootSceneSession::VerifyCallerToken(SessionInfo& info)
-{
-    auto callerSession = SceneSessionManager::GetInstance().GetSceneSession(info.callerPersistentId_);
-    if (callerSession != nullptr) {
-        bool isCalledRightlyByCallerId = info.callerToken_ == callerSession->GetAbilityToken();
-        TLOGI(WmsLogTag::WMS_SCB,
-            "root isCalledRightlyByCallerId result is: %{public}d", isCalledRightlyByCallerId);
-        info.isCalledRightlyByCallerId_ = isCalledRightlyByCallerId;
-    }
 }
 
 sptr<SceneSession> JsRootSceneSession::GenSceneSession(SessionInfo& info)

@@ -36,7 +36,7 @@ enum class FoldScreenState : uint32_t {
 
 class TransitionCallback {
 public:
-    virtual ~TransitionCallback() = default;
+    ~TransitionCallback() = default;
 
     virtual void OnTransitionEnter(FoldScreenState current, FoldScreenState next) { }
 

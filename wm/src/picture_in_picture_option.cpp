@@ -14,7 +14,6 @@
  */
 
 #include "picture_in_picture_option.h"
-#include "window_manager_hilog.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -37,30 +36,6 @@ void PipOption::SetPipTemplate(uint32_t templateType)
     templateType_ = templateType;
 }
 
-void PipOption::SetPiPControlStatus(PiPControlType controlType, PiPControlStatus status)
-{
-    for (auto& controlStatusInfo : pipControlStatusInfoList_) {
-        if (controlType == controlStatusInfo.controlType) {
-            controlStatusInfo.status = status;
-            return;
-        }
-    }
-    PiPControlStatusInfo newPiPControlStatusInfo {controlType, status};
-    pipControlStatusInfoList_.push_back(newPiPControlStatusInfo);
-}
-
-void PipOption::SetPiPControlEnabled(PiPControlType controlType, PiPControlStatus enabled)
-{
-    for (auto& controlEnableInfo : pipControlEnableInfoList_) {
-        if (controlType == controlEnableInfo.controlType) {
-            controlEnableInfo.enabled = enabled;
-            return;
-        }
-    }
-    PiPControlEnableInfo newPiPControlEnableInfo {controlType, enabled};
-    pipControlEnableInfoList_.push_back(newPiPControlEnableInfo);
-}
-
 void PipOption::SetContentSize(uint32_t width, uint32_t height)
 {
     contentWidth_ = width;
@@ -70,16 +45,6 @@ void PipOption::SetContentSize(uint32_t width, uint32_t height)
 void PipOption::SetControlGroup(std::vector<std::uint32_t> controlGroup)
 {
     controlGroup_ = controlGroup;
-}
-
-void PipOption::SetNodeControllerRef(napi_ref ref)
-{
-    customNodeController_ = ref;
-}
-
-napi_ref PipOption::GetNodeControllerRef() const
-{
-    return customNodeController_;
 }
 
 void* PipOption::GetContext() const
@@ -106,16 +71,6 @@ void PipOption::GetContentSize(uint32_t& width, uint32_t& height)
 std::vector<std::uint32_t> PipOption::GetControlGroup()
 {
     return controlGroup_;
-}
-
-std::vector<PiPControlStatusInfo> PipOption::GetControlStatus()
-{
-    return pipControlStatusInfoList_;
-}
-
-std::vector<PiPControlEnableInfo> PipOption::GetControlEnable()
-{
-    return pipControlEnableInfoList_;
 }
 
 void PipOption::SetXComponentController(std::shared_ptr<XComponentController> xComponentController)

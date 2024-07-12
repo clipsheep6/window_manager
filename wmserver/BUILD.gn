@@ -64,6 +64,7 @@ config("libmockwms_config") {
     # for scene session manager
     "${window_base_path}/interfaces/innerkits/wm",
     "${window_base_path}/wmserver/include",
+    "${graphic_base_path}/graphic_2d/rosen/modules/platform/image_native",
 
     # for window_manager_hilog
     "${window_base_path}/utils/include",
@@ -78,7 +79,7 @@ ohos_shared_library("sms") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
-    cfi_vcall_icall_only = true
+    cfi_vcal_icall_only = true
     debug = false
   }
   sources = [
@@ -94,8 +95,6 @@ ohos_shared_library("sms") {
 
   deps = [
     "${window_base_path}/utils:libwmutil",
-    "${window_base_path}/utils:libwmutil_base",
-    "${window_base_path}/window_scene/common:window_scene_common",
     "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
     "../utils:libwmutil",
   ]
@@ -143,7 +142,7 @@ if (scene_board_enabled) {
     sanitize = {
       cfi = true
       cfi_cross_dso = true
-      cfi_vcall_icall_only = true
+      cfi_vcal_icall_only = true
       debug = false
     }
     defines = []
@@ -203,7 +202,6 @@ if (scene_board_enabled) {
       "../dmserver:libdms",
       "../etc:wms_etc",
       "../utils:libwmutil",
-      "../utils:libwmutil_base",
       "../wm:libwm",
     ]
 
@@ -228,8 +226,8 @@ if (scene_board_enabled) {
     ]
 
     if (defined(global_parts_info) &&
-        defined(global_parts_info.resourceschedule_memmgr_override)) {
-      external_deps += [ "memmgr_override:memmgrclient" ]
+        defined(global_parts_info.resourceschedule_memmgr_plugin)) {
+      external_deps += [ "memmgr_plugin:memmgrclient" ]
       defines += [ "MEMMGR_WINDOW_ENABLE" ]
     }
 

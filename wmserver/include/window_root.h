@@ -112,7 +112,6 @@ public:
     void LayoutWhenAddWindowNode(sptr<WindowNode>& node, bool afterAnimation = false);
     void GetAllAnimationPlayingNodes(std::vector<wptr<WindowNode>>& windowNodes);
     void GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) const;
-    void GetUnreliableWindowInfo(int32_t windowId, std::vector<sptr<UnreliableWindowInfo>>& infos) const;
     WMError NotifyDesktopUnfrozen();
     void UpdateDisplayOrientationWhenHideWindow(sptr<WindowNode>& node);
     bool HasMainFullScreenWindowShown(DisplayId displayId);
@@ -156,8 +155,8 @@ private:
 
     std::map<WindowManagerAgentType, std::vector<sptr<IWindowManagerAgent>>> windowManagerAgents_;
 
-    sptr<AgentDeathRecipient> windowDeath_ = new AgentDeathRecipient(
-        [this](const sptr<IRemoteObject>& remoteObject) { this->OnRemoteDied(remoteObject); });
+    sptr<AgentDeathRecipient> windowDeath_ = new AgentDeathRecipient(std::bind(&WindowRoot::OnRemoteDied,
+        this, std::placeholders::_1));
     Callback callback_;
     uint32_t maxAppWindowNumber_ = 100;
     SplitRatioConfig splitRatioConfig_ = {0.1, 0.9, {}};
