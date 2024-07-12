@@ -432,6 +432,92 @@ HWTEST_F(ScreenSceneConfigTest, SetCurvedCompressionAreaInLandscape, Function | 
     ScreenSceneConfig::SetCurvedCompressionAreaInLandscape();
     ASSERT_EQ(0, res);
 }
+
+/**
+ * @tc.name: IsSupportRotateWithSensor01
+ * @tc.desc: IsSupportRotateWithSensor
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, IsSupportRotateWithSensor01, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::enableConfig_["supportRotateWithSensor"] = true;
+    bool res = ScreenSceneConfig::IsSupportRotateWithSensor();
+    ASSERT_EQ(true, res);
+}
+
+/**
+ * @tc.name: IsSupportRotateWithSensor01
+ * @tc.desc: IsSupportRotateWithSensor
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, IsSupportRotateWithSensor02, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::enableConfig_.erase("supportRotateWithSensor");
+    bool res = ScreenSceneConfig::IsSupportRotateWithSensor();
+    ASSERT_EQ(false, res);
+}
+
+/**
+ * @tc.name: GetExternalScreenDefaultMode01
+ * @tc.desc: GetExternalScreenDefaultMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, GetExternalScreenDefaultMode01, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::stringConfig_["externalScreenDefaultMode"] = "mirror";
+    std::string res = ScreenSceneConfig::GetExternalScreenDefaultMode();
+    ASSERT_EQ("mirror", res);
+}
+
+/**
+ * @tc.name: GetExternalScreenDefaultMode02
+ * @tc.desc: GetExternalScreenDefaultMode
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, GetExternalScreenDefaultMode02, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::stringConfig_.erase("externalScreenDefaultMode");
+    std::string res = ScreenSceneConfig::GetExternalScreenDefaultMode();
+    ASSERT_EQ("", res);
+}
+
+/**
+ * @tc.name: GetCurvedCompressionAreaInLandscape01
+ * @tc.desc: GetCurvedCompressionAreaInLandscape
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, GetCurvedCompressionAreaInLandscape01, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::isWaterfallDisplay_ = false;
+    ScreenSceneConfig::isScreenCompressionEnableInLandscape_ = false;
+    auto result = ScreenSceneConfig::GetCurvedCompressionAreaInLandscape();
+    ASSERT_TRUE(result == 0);
+}
+
+/**
+ * @tc.name: GetCurvedCompressionAreaInLandscape02
+ * @tc.desc: GetCurvedCompressionAreaInLandscape
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, GetCurvedCompressionAreaInLandscape02, Function | SmallTest | Level3)
+{
+    ScreenSceneConfig::isWaterfallDisplay_ = true;
+    ScreenSceneConfig::isScreenCompressionEnableInLandscape_ = false;
+    auto result = ScreenSceneConfig::GetCurvedCompressionAreaInLandscape();
+    ASSERT_TRUE(result == 0);
+}
+
+/**
+ * @tc.name: ReadStringListConfigInfo
+ * @tc.desc: ReadStringListConfigInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSceneConfigTest, ReadStringListConfigInfo, Function | SmallTest | Level3)
+{
+    xmlNodePtr rootNode = nullptr;
+    ScreenSceneConfig::ReadStringListConfigInfo(nullptr, "");
+    EXPECT_EQ(rootNode, nullptr);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
