@@ -95,6 +95,11 @@ sptr<Window> WindowScene::CreateWindow(const std::string& windowName, sptr<Windo
     return nullptr;
 }
 
+sptr<Window> CreateWindow(const std::string& windowName, sptr<WindowOption>& option, WMError& errorCode) const
+{
+    return nullptr;
+}
+
 const sptr<Window>& WindowScene::GetMainWindow() const
 {
     return mainWindow_;

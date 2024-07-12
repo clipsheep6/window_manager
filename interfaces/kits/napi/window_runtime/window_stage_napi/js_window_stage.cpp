@@ -617,7 +617,7 @@ napi_value JsWindowStage::OnSetDefaultDensityEnabled(napi_env env, napi_callback
     }
 
     WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(window->SetDefaultDensityEnabled(enabled));
-    TLOGI(WmsLogTag::WMS_LAYOUT, "Window [%{public}u,%{public}s] SetDefaultDensityEnabled=%{public}u ret=%{public}u",
+    TLOGI(WmsLogTag::WMS_LAYOUT, "Window [%{public}u, %{public}s] SetDefaultDensityEnabled=%{public}u, ret=%{public}u",
         window->GetWindowId(), window->GetWindowName().c_str(), enabled, ret);
 
     return CreateJsValue(env, static_cast<int32_t>(ret));
@@ -659,7 +659,13 @@ napi_value JsWindowStage::OnCreateSubWindowWithOptions(napi_env env, napi_callba
             windowOption->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
             windowOption->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
             windowOption->SetOnlySupportSceneBoard(true);
-            auto window = weakScene->CreateWindow(windowName, windowOption);
+            WMError errorCode = WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+            auto window = weakScene->CreateWindow(windowName, windowOption, errorCode);
+            if (errorCode == WMError::WM_ERROR_DEVICE_NOT_SUPPORT) {
+                WLOGFE("[NAPI]Get window failed");
+                task.Reject(env, JsErrUtils::CreateJsError(env, errorCode, "Get window failed"));
+                return;
+            }
             if (window == nullptr) {
                 WLOGFE("[NAPI]Get window failed");
                 task.Reject(env, JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY,

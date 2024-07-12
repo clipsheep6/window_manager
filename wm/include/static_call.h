@@ -21,6 +21,7 @@
 #include "wm_single_instance.h"
 #include "window.h"
 #include "window_option.h"
+#include "wm_common.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -33,6 +34,8 @@ public:
     virtual sptr<Window> CreateWindow(sptr<WindowOption>& option, std::shared_ptr<AbilityRuntime::Context> context,
         const sptr<IRemoteObject>& iSession, const std::string& identityToken = "");
     virtual std::vector<sptr<Window>> GetSubWindow(uint32_t parentId);
+    virtual sptr<Window> CreateWindow(const std::string& windowName,
+        sptr<WindowOption>& option, std::shared_ptr<AbilityRuntime::Context> context, WMError& errorCode);
 protected:
     StaticCall() = default;
 private:
