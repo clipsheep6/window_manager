@@ -1949,12 +1949,7 @@ WSError SceneSessionManager::DestroyDialogWithMainWindow(const sptr<SceneSession
             if (dialogSceneSession != nullptr) {
                 dialogSceneSession->ClearSpecificSessionCbMap();
             }
-            {
-                std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
-                sceneSessionMap_.erase(dialog->GetPersistentId());
-                systemTopSceneSessionMap_.erase(dialog->GetPersistentId());
-                nonSystemFloatSceneSessionMap_.erase(dialog->GetPersistentId());
-            }
+            EraseSceneSessionMapById(dialog->GetPersistentId());
         }
         scnSession->ClearDialogVector();
         return WSError::WS_OK;
@@ -1994,6 +1989,7 @@ void SceneSessionManager::DestroyToastSession(const sptr<SceneSession>& sceneSes
 
 void SceneSessionManager::EraseSceneSessionMapById(int32_t persistentId)
 {
+    TLOGI(WmsLogTag::WMS_LIFE, "erase session id: %{public}d", persistentId);
     std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
     sceneSessionMap_.erase(persistentId);
     systemTopSceneSessionMap_.erase(persistentId);
@@ -2867,10 +2863,8 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSessionInner(const int3
         }
     }
     {
+        EraseSceneSessionMapById(persistentId);
         std::unique_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
-        sceneSessionMap_.erase(persistentId);
-        systemTopSceneSessionMap_.erase(persistentId);
-        nonSystemFloatSceneSessionMap_.erase(persistentId);
         UnregisterCreateSubSessionListener(persistentId);
     }
     TLOGI(WmsLogTag::WMS_LIFE, "Destroy specific session end, id: %{public}d", persistentId);

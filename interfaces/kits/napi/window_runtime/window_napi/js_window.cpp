@@ -1412,7 +1412,7 @@ napi_value JsWindow::OnResize(napi_env env, napi_callback_info info)
             } else {
                 task.Reject(env, JsErrUtils::CreateJsError(env, ret, "Window resize failed"));
             }
-            WLOGFD("Window [%{public}u, %{public}s] resize end, ret = %{public}d",
+            WLOGFI("Window [%{public}u, %{public}s] resize end, ret = %{public}d",
                 weakWindow->GetWindowId(), weakWindow->GetWindowName().c_str(), ret);
         };
     // 2: params num; 2: index of callback
@@ -2092,6 +2092,7 @@ napi_value JsWindow::OnSetFullScreen(napi_env env, napi_callback_info info)
                 TLOGE(WmsLogTag::WMS_IMMS, "SetFullScreen failed, ret = %{public}d", ret);
                 task.Reject(env, JsErrUtils::CreateJsError(env, ret, "Window SetFullScreen failed."));
             }
+            TLOGI(WmsLogTag::WMS_IMMS, "SetFullScreen end, ret = %{public}d", ret);
         };
 
     napi_value lastParam = (argc <= 1) ? nullptr : (GetType(env, argv[1]) == napi_function ? argv[1] : nullptr);
@@ -2143,6 +2144,7 @@ napi_value JsWindow::OnSetLayoutFullScreen(napi_env env, napi_callback_info info
                 task.Reject(env, JsErrUtils::CreateJsError(env,
                     ret, "Window OnSetLayoutFullScreen failed."));
             }
+            TLOGI(WmsLogTag::WMS_IMMS, "SetLayoutFullScreen end, ret = %{public}d", ret);
         };
     napi_value lastParam = (argc <= 1) ? nullptr : (GetType(env, argv[1]) == napi_function ? argv[1] : nullptr);
     napi_value result = nullptr;
@@ -2193,6 +2195,7 @@ napi_value JsWindow::OnSetWindowLayoutFullScreen(napi_env env, napi_callback_inf
                 TLOGE(WmsLogTag::WMS_IMMS, "SetWindowLayoutFullScreen failed, ret = %{public}d", ret);
                 task.Reject(env, JsErrUtils::CreateJsError(env, ret, "Window OnSetLayoutFullScreen failed."));
             }
+            TLOGI(WmsLogTag::WMS_IMMS, "SetLayoutFullScreen end, ret = %{public}d", ret);
         };
 
     napi_value lastParam = (argc <= 1) ? nullptr :
