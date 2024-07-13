@@ -16,6 +16,8 @@
 #include "js_screen.h"
 
 #include <cinttypes>
+#include <hitrace_meter.h>
+
 #include "screen.h"
 #include "screen_info.h"
 #include "window_manager_hilog.h"
@@ -84,6 +86,18 @@ napi_valuetype GetType(napi_env env, napi_value value)
     return res;
 }
 
+void NapiSendDmsEvent(napi_env env, std::function<void> asyncTask,
+    std::unique_ptr<AbilityRuntime::NapiAsyncTask>& napiAsyncTask);
+{
+    if (napi_status::napi_ok != napi_send_event(env, asyncTask, napi_eprio_immediate)) {
+        napiAsyncTask->Reject(env, CreateJsError(env,
+                static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_SCREEN), "Send event failed!"));
+    } else {
+        napiAsyncTask.release();
+        WLOGFE("send event success");
+    }
+}
+
 napi_value JsScreen::OnSetOrientation(napi_env env, napi_callback_info info)
 {
     WLOGI("OnSetOrientation is called");
@@ -113,27 +127,26 @@ napi_value JsScreen::OnSetOrientation(napi_env env, napi_callback_info info)
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetOrientation(orientation));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("OnSetOrientation success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
-                                                  "JsScreen::OnSetOrientation failed."));
-                WLOGFE("OnSetOrientation failed");
-            }
-        };
     napi_value lastParam = nullptr;
     if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr &&
         GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
         lastParam = argv[ARGC_TWO - 1];
     }
     napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreen::OnSetOrientation",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [this, orientation, env, task = napiAsyncTask.get()]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsScreen::OnSetOrientation");
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetOrientation(orientation));
+        if (ret == DmErrorCode::DM_OK) {
+            task->Resolve(env, NapiGetUndefined(env));
+            WLOGI("OnSetOrientation success");
+        } else {
+            task->Reject(env, CreateJsError(env, static_cast<int32_t>(ret), "JsScreen::OnSetOrientation failed."));
+            WLOGFE("OnSetOrientation failed");
+        }
+        delete task;
+    };
+    NapiSendDmsEvent(env, asyncTask, napiAsyncTask);
     return result;
 }
 
@@ -173,29 +186,27 @@ napi_value JsScreen::OnSetScreenActiveMode(napi_env env, napi_callback_info info
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetScreenActiveMode(modeId));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("OnSetScreenActiveMode success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
-                                                "JsScreen::OnSetScreenActiveMode failed."));
-                WLOGFE("OnSetScreenActiveMode failed");
-            }
-        };
-
     napi_value lastParam = nullptr;
     if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr &&
         GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
         lastParam = argv[ARGC_TWO - 1];
     }
-
     napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreen::OnSetScreenActiveMode",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [this, modeId, env, task = napiAsyncTask.get()]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsScreen::OnSetScreenActiveMode");
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetScreenActiveMode(modeId));
+        if (ret == DmErrorCode::DM_OK) {
+            task->Resolve(env, NapiGetUndefined(env));
+            WLOGI("OnSetScreenActiveMode success");
+        } else {
+            task->Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                            "JsScreen::OnSetScreenActiveMode failed."));
+            WLOGFE("OnSetScreenActiveMode failed");
+        }
+        delete task;
+    };
+    NapiSendDmsEvent(env, asyncTask, napiAsyncTask);
     return result;
 }
 
@@ -231,27 +242,27 @@ napi_value JsScreen::OnSetDensityDpi(napi_env env, napi_callback_info info)
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(DmErrorCode::DM_ERROR_INVALID_PARAM), errMsg));
         return NapiGetUndefined(env);
     }
-
-    NapiAsyncTask::CompleteCallback complete =
-        [=](napi_env env, NapiAsyncTask& task, int32_t status) {
-            DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetDensityDpi(densityDpi));
-            if (ret == DmErrorCode::DM_OK) {
-                task.Resolve(env, NapiGetUndefined(env));
-                WLOGI("OnSetDensityDpi success");
-            } else {
-                task.Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
-                                                "JsScreen::OnSetDensityDpi failed."));
-                WLOGFE("OnSetDensityDpi failed");
-            }
-        };
     napi_value lastParam = nullptr;
     if (argc >= ARGC_TWO && argv[ARGC_TWO - 1] != nullptr &&
         GetType(env, argv[ARGC_TWO - 1]) == napi_function) {
         lastParam = argv[ARGC_TWO - 1];
     }
     napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsScreen::OnSetDensityDpi",
-        env, CreateAsyncTaskWithLastParam(env, lastParam, nullptr, std::move(complete), &result));
+    std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
+    auto asyncTask = [this, densityDpi, env, task = napiAsyncTask.get()]() {
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsScreen::OnSetDensityDpi");
+        DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(screen_->SetDensityDpi(densityDpi));
+        if (ret == DmErrorCode::DM_OK) {
+            task->Resolve(env, NapiGetUndefined(env));
+            WLOGI("OnSetDensityDpi success");
+        } else {
+            task->Reject(env, CreateJsError(env, static_cast<int32_t>(ret),
+                                            "JsScreen::OnSetDensityDpi failed."));
+            WLOGFE("OnSetDensityDpi failed");
+        }
+        delete task;
+    };
+    NapiSendDmsEvent(env, asyncTask, napiAsyncTask);
     return result;
 }
 

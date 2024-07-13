@@ -29,6 +29,8 @@ napi_value CreateJsScreenModeArrayObject(napi_env env, std::vector<sptr<Supporte
 napi_value CreateJsScreenModeObject(napi_env env, const sptr<SupportedScreenModes>& mode);
 napi_value NapiGetUndefined(napi_env env);
 napi_valuetype GetType(napi_env env, napi_value value);
+void NapiSendDmsEvent(napi_env env, std::function<void> asyncTask,
+    std::unique_ptr<AbilityRuntime::NapiAsyncTask>& napiAsyncTask);
 class JsScreen final {
 public:
     explicit JsScreen(const sptr<Screen>& screen);
