@@ -39,8 +39,6 @@
 #include "permission.h"
 #include "request_info.h"
 #include "ui_content.h"
-#include "foundation/communication/ipc/interfaces/innerkits/ipc_core/include/ipc_skeleton.h"
-#include "base/security/access_token/interfaces/innerkits/accesstoken/include/tokenid_kit.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -1764,22 +1762,12 @@ napi_value JsWindow::OnUnregisterWindowCallback(napi_env env, napi_callback_info
     return NapiGetUndefined(env);
 }
 
-static napi_value CheckBindDialogWindow(sptr<Window> weakWindow, napi_env env)
-{
-    if (weakWindow == nullptr) {
-        return JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY);
-    }
-    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    if (!isSystemApp) {
-        return JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_NOT_SYSTEM_APP,
-            "Permission verification failed. A non-system application calls a system API.");
-    }
-    return nullptr;
-}
-
 napi_value JsWindow::OnBindDialogTarget(napi_env env, napi_callback_info info)
 {
+    if (!Permission::IsSystemCalling()) {
+        TLOGE(WmsLogTag::WMS_DIALOG, "permission denied, require system application!");
+        return NapiThrowError(env, WmErrorCode::WM_ERROR_NOT_SYSTEM_APP);
+    }
     WmErrorCode errCode = WmErrorCode::WM_OK;
     errCode = (windowToken_ == nullptr) ? WmErrorCode::WM_ERROR_STATE_ABNORMALLY : WmErrorCode::WM_OK;
 
@@ -1813,10 +1801,8 @@ napi_value JsWindow::OnBindDialogTarget(napi_env env, napi_callback_info info)
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, token](napi_env env, NapiAsyncTask& task, int32_t status) mutable {
             auto weakWindow = weakToken.promote();
-            napi_value checkResult = CheckBindDialogWindow(weakWindow, env);
-            if (checkResult != nullptr) {
-                task.Reject(env, checkResult);
-                return;
+            if (weakWindow == nullptr) {
+                task.Reject(env, JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY));
             }
 
             WmErrorCode ret = WM_JS_TO_ERROR_CODE_MAP.at(weakWindow->BindDialogTarget(token));
