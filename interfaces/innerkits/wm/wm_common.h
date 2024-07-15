@@ -492,6 +492,11 @@ inline int32_t GetUserIdByUid(int32_t uid)
     return uid / BASE_USER_RANGE;
 }
 
+inline int32_t GetUserIdByUidTest(int32_t uid)
+{
+    return uid / BASE_USER_RANGE;
+}
+
 /**
  * @class Transform
  *
