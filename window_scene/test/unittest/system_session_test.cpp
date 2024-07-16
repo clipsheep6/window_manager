@@ -431,6 +431,16 @@ HWTEST_F(SystemSessionTest, RectCheck, Function | SmallTest | Level1)
     systemSession_->RectCheck(curWidth, curHeight);
 }
 
+/**
+ * @tc.name: 
+ * @tc.desc: test function : 
+ * @tc.type: FUNC
+ */
+HWTEST_F(SystemSessionTest, , Function | SmallTest | Level1)
+{
+
+}
+
 } // namespace
 } // namespace Rosen
 } // namespace OHOS
