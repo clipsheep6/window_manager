@@ -465,7 +465,7 @@ napi_value OnMakeExpand(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     std::unique_ptr<NapiAsyncTask> napiAsyncTask = CreateEmptyAsyncTask(env, lastParam, &result);
     auto asyncTask = [options, env, task = napiAsyncTask.get()]() {
-        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsScreenManager::OnMakeMirror");
+        HITRACE_METER_FMT(HITRACE_TAG_WINDOW_MANAGER, "JsScreenManager::OnMakeExpand");
         ScreenId screenGroupId = INVALID_SCREEN_ID;
         DmErrorCode ret = DM_JS_TO_ERROR_CODE_MAP.at(
             SingletonContainer::Get<ScreenManager>().MakeExpand(options, screenGroupId));
