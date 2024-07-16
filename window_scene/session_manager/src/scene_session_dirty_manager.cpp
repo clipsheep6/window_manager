@@ -644,12 +644,12 @@ MMI::Rect CalRectInScreen(const Matrix3f& transform, const SecRectInfo& secRectI
         secRectInfo.relativeCoords.GetHeight(), 1.0);
     auto left = std::min(topLeft[0], bottomRight[0]);
     auto top = std::min(topLeft[1], bottomRight[1]);
-    if (INT32_MIN + bottomRight[0] > topLeft[0]) {
+    if (INT32_MIN + static_cast<int32_t>(bottomRight[0]) > static_cast<int32_t>(topLeft[0])) {
         TLOGE(WmsLogTag::WMS_EVENT, "data overflows topLeft:%{public}d bottomRight:%{public}d",
             static_cast<int32_t>(topLeft[0]), static_cast<int32_t>(bottomRight[0]));
         return {};
     }
-    if (INT32_MAX + bottomRight[0] < topLeft[0]) {
+    if (INT32_MAX + static_cast<int32_t>(bottomRight[0]) < static_cast<int32_t>(topLeft[0]>) {
         TLOGE(WmsLogTag::WMS_EVENT, "data overflows topLeft:%{public}d bottomRight:%{public}d",
             static_cast<int32_t>(topLeft[0]), static_cast<int32_t>(bottomRight[0]));
         return {};
