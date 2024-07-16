@@ -13,8 +13,7 @@
       "name": "window_manager",
       "subsystem": "window",
       "syscap": [
-        "SystemCapability.WindowManager.WindowManager.Core",
-        "SystemCapability.Window.SessionManager"
+        "SystemCapability.WindowManager.WindowManager.Core"
       ],
       "features": [
         "window_manager_feature_coverage = false",
@@ -64,11 +63,9 @@
           "soc_perf",
           "resource_management",
           "resource_schedule_service",
-          "efficiency_manager",
-          "frame_aware_sched_override",
           "imf",
           "frame_aware_sched",
-          "memmgr_override",
+          "memmgr",
           "data_share",
           "accessibility",
           "security_component_manager",
