@@ -520,11 +520,11 @@ HWTEST_F(SystemSessionTest, ProcessPointDownSession02, Function | SmallTest | Le
 }
 
 /**
- * @tc.name: TransferKeyEvent03
+ * @tc.name: TransferKeyEvent04
  * @tc.desc: test function : TransferKeyEvent
  * @tc.type: FUNC
  */
-HWTEST_F(SystemSessionTest, TransferKeyEvent03, Function | SmallTest | Level1)
+HWTEST_F(SystemSessionTest, TransferKeyEvent04, Function | SmallTest | Level1)
 {
     ASSERT_TRUE(systemSession_ != nullptr);
 
