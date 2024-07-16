@@ -22,6 +22,7 @@
 #include "common_test_utils.h"
 #include "mock_rs_display_node.h"
 #include "scene_board_judgement.h"
+#include "iremote_object_mocker.h"
 
 
 using namespace testing;
@@ -170,7 +171,7 @@ HWTEST_F(DisplayManagerServiceTest, DisplayChange, Function | SmallTest | Level3
  * @tc.desc: DMS has private window
  * @tc.type: FUNC
  */
-HWTEST_F(DisplayManagerServiceTest, HasPrivateWindow, Function | SmallTest | Level3)
+HWTEST_F(DisplayManagerServiceTest, HasPrivateWindow01, Function | SmallTest | Level3)
 {
     bool hasPrivateWindow = false;
     dms_->abstractDisplayController_->abstractDisplayMap_.clear();
@@ -181,6 +182,24 @@ HWTEST_F(DisplayManagerServiceTest, HasPrivateWindow, Function | SmallTest | Lev
 
     dms_->RegisterWindowInfoQueriedListener(nullptr);
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms_->HasPrivateWindow(1, hasPrivateWindow));
+}
+
+/**
+ * @tc.name: HasPrivateWindow
+ * @tc.desc: HasPrivateWindow
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, HasPrivateWindow02, Function | SmallTest | Level3)
+{
+    DisplayManagerService dms1 = DisplayManagerService();
+    bool hasPrivateWindow = false;
+    dms1.abstractDisplayController_->abstractDisplayMap_.clear();
+    dms1.abstractDisplayController_->abstractDisplayMap_ = {
+        {1, nullptr}
+    };
+    sptr<IWindowInfoQueriedListener> listener = new WindowInfoQueriedListenerTest();
+    dms1.RegisterWindowInfoQueriedListener(listener);
+    ASSERT_EQ(DMError::DM_OK, dms1.HasPrivateWindow(1, hasPrivateWindow));
 }
 
 /**
@@ -327,12 +346,26 @@ HWTEST_F(DisplayManagerServiceTest, ScreenColor, Function | SmallTest | Level3)
  * @tc.desc: DMS rigister display manager agent
  * @tc.type: FUNC
  */
-HWTEST_F(DisplayManagerServiceTest, RegisterDisplayManagerAgent, Function | SmallTest | Level3)
+HWTEST_F(DisplayManagerServiceTest, RegisterDisplayManagerAgent01, Function | SmallTest | Level3)
 {
     DisplayManagerAgentType type = DisplayManagerAgentType::DISPLAY_STATE_LISTENER;
 
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms_->RegisterDisplayManagerAgent(nullptr, type));
     ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms_->UnregisterDisplayManagerAgent(nullptr, type));
+}
+
+/**
+ * @tc.name: RegisterDisplayManagerAgent
+ * @tc.desc: DMS rigister display manager agent
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, RegisterDisplayManagerAgent02, Function | SmallTest | Level3)
+{
+    DisplayManagerService dms1 = DisplayManagerService();
+    DisplayManagerAgentType type = DisplayManagerAgentType::DISPLAY_STATE_LISTENER;
+    sptr<IDisplayManagerAgent> displayManagerAgent = new DisplayManagerAgentDefault();
+    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms1.RegisterDisplayManagerAgent(displayManagerAgent, type));
+    ASSERT_EQ(DMError::DM_ERROR_NULLPTR, dms1.UnregisterDisplayManagerAgent(displayManagerAgent, type));
 }
 
 /**
@@ -443,6 +476,87 @@ HWTEST_F(DisplayManagerServiceTest, OnStop, Function | SmallTest | Level3)
 {
     dms_->OnStop();
     ASSERT_TRUE(true);
+}
+
+/**
+ * @tc.name: CreateVirtualScreen
+ * @tc.desc: CreateVirtualScreen
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, CreateVirtualScreen, Function | SmallTest | Level3)
+{
+    DisplayManagerService dms1 = DisplayManagerService();
+    VirtualScreenOption option;
+    sptr<IRemoteObject> displayManagerAgent = new IRemoteObjectMocker();
+    ScreenId screenId = dms1.CreateVirtualScreen(option, displayManagerAgent);
+    ASSERT_NE(SCREEN_ID_INVALID, screenId);
+    auto ret = dms1.DestroyVirtualScreen(screenId);
+    ASSERT_EQ(DMError::DM_OK, ret);
+}
+
+/**
+ * @tc.name: IsScreenRotationLocked
+ * @tc.desc: IsScreenRotationLocked
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, IsScreenRotationLocked, Function | SmallTest | Level3)
+{
+    DisplayManagerService dms1 = DisplayManagerService();
+    bool isLocked = true;
+    auto ret = dms1.IsScreenRotationLocked(isLocked);
+    ASSERT_EQ(DMError::DM_OK, ret);
+}
+
+/**
+ * @tc.name: SetScreenRotationLocked
+ * @tc.desc: SetScreenRotationLocked
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, SetScreenRotationLocked, Function | SmallTest | Level3)
+{
+    DisplayManagerService dms1 = DisplayManagerService();
+    bool isLocked = true;
+    auto ret = dms1.SetScreenRotationLocked(isLocked);
+    ASSERT_EQ(DMError::DM_OK, ret);
+}
+
+/**
+ * @tc.name: SetScreenRotationLockedFromJs
+ * @tc.desc: SetScreenRotationLockedFromJs
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, SetScreenRotationLockedFromJs, Function | SmallTest | Level3)
+{
+    DisplayManagerService dms1 = DisplayManagerService();
+    bool isLocked = true;
+    auto ret = dms1.SetScreenRotationLockedFromJs(isLocked);
+    ASSERT_EQ(DMError::DM_OK, ret);
+}
+
+/**
+ * @tc.name: GetCutoutInfo
+ * @tc.desc: GetCutoutInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, GetCutoutInfo, Function | SmallTest | Level3)
+{
+    DisplayManagerService dms1 = DisplayManagerService();
+    DisplayId displayId = 1001;
+    auto ret = dms1.GetCutoutInfo(displayId);
+    ASSERT_EQ(nullptr, ret);
+}
+
+/**
+ * @tc.name: SetGravitySensorSubscriptionEnabled
+ * @tc.desc: SetGravitySensorSubscriptionEnabled
+ * @tc.type: FUNC
+ */
+HWTEST_F(DisplayManagerServiceTest, SetGravitySensorSubscriptionEnabled, Function | SmallTest | Level3)
+{
+    DisplayManagerService dms1 = DisplayManagerService();
+    auto ret = dms1.isAutoRotationOpen_ ;
+    dms1.SetGravitySensorSubscriptionEnabled();
+    ASSERT_EQ(ret, dms1.isAutoRotationOpen_);
 }
 }
 } // namespace Rosen
