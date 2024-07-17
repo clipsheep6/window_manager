@@ -47,6 +47,21 @@ bool Permission::IsSystemServiceCalling(bool needPrintLog)
     return false;
 }
 
+bool Permission::IsLocalSystemServiceCalling()
+{
+    const unit32_t tokenId = static_cast<unit32_t>(IPCSkeleton::GetSelfTokenID());
+    const auto flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        flag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        TLOGD(WmsLogTag::WMS_LIFE, "system service calling, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
+        return true;
+    }
+    if (needPrintLog) {
+        TLOGE(WmsLogTag::WMS_LIFE, "not system service calling, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
+    }
+    return false;
+}
+
 bool Permission::IsSystemCalling()
 {
     if (IsSystemServiceCalling(false)) {
@@ -55,6 +70,15 @@ bool Permission::IsSystemCalling()
     uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
     bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
     return isSystemApp;
+}
+
+bool Permission::IsLocalSystemCalling()
+{
+    if (IsLocalSystemServiceCalling()) {
+        return true;
+    }
+    unit32_t tokenId = static_cast<unit32_t>(IPCSkeleton::GetSelfTokenID());
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
 }
 
 bool Permission::CheckCallingPermission(const std::string& permission)
@@ -74,6 +98,18 @@ bool Permission::IsStartByHdcd()
 {
     OHOS::Security::AccessToken::NativeTokenInfo info;
     if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(IPCSkeleton::GetCallingTokenID(), info) != 0) {
+        return false;
+    }
+    if (info.processName.compare("hdcd") == 0) {
+        return true;
+    }
+    return false;
+}
+
+bool Permission::IsLocalStartByHdcd()
+{
+    OHOS::Security::AccessToken::NativeTokenInfo info;
+    if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(static_cast<unit32_t>(IPCSkeleton::GetSelfTokenID()), info) != 0) {
         return false;
     }
     if (info.processName.compare("hdcd") == 0) {
