@@ -16,16 +16,17 @@
 #include "scene_session_manager_interface.h"
 
 #include "permission.h"
+#include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
 
 WMError ISceneSessionManager::MinimizeAllAppWindows(DisplayId displayId)
 {
     if (!Permission::IsLocalSystemCalling() && !Permission::IsLocalStartByHdcd()) {
-        TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right, displayId %{public}ld", displayId);
+        TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right, displayId %{public}" PRIu64, displayId);
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
-    TLOGE(WmsLogTag::WMS_LIFE, "Not support minimize, displayId %{public}ld", displayId);
+    TLOGE(WmsLogTag::WMS_LIFE, "Not support minimize, displayId %{public}" PRIu64, displayId);
     return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
 }
 
