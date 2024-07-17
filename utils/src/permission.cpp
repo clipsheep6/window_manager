@@ -49,15 +49,13 @@ bool Permission::IsSystemServiceCalling(bool needPrintLog)
 
 bool Permission::IsLocalSystemServiceCalling()
 {
-    const unit32_t tokenId = static_cast<unit32_t>(IPCSkeleton::GetSelfTokenID());
+    const uint32_t tokenId = static_cast<uint32_t>(IPCSkeleton::GetSelfTokenID());
     const auto flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
         flag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        TLOGD(WmsLogTag::WMS_LIFE, "system service calling, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
+        TLOGD(WmsLogTag::WMS_LIFE,
+            "local system service calling, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
         return true;
-    }
-    if (needPrintLog) {
-        TLOGE(WmsLogTag::WMS_LIFE, "not system service calling, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
     }
     return false;
 }
@@ -77,7 +75,7 @@ bool Permission::IsLocalSystemCalling()
     if (IsLocalSystemServiceCalling()) {
         return true;
     }
-    unit32_t tokenId = static_cast<unit32_t>(IPCSkeleton::GetSelfTokenID());
+    auto tokenId = IPCSkeleton::GetSelfTokenID();
     return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
 }
 
@@ -109,7 +107,8 @@ bool Permission::IsStartByHdcd()
 bool Permission::IsLocalStartByHdcd()
 {
     OHOS::Security::AccessToken::NativeTokenInfo info;
-    if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(static_cast<unit32_t>(IPCSkeleton::GetSelfTokenID()), info) != 0) {
+    if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(
+        static_cast<uint32_t>(IPCSkeleton::GetSelfTokenID()), info) != 0) {
         return false;
     }
     if (info.processName.compare("hdcd") == 0) {

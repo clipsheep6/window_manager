@@ -19,7 +19,8 @@
 
 namespace OHOS::Rosen {
 
-WMError ISceneSessionManager::MinimizeAllAppWindows(DisplayId displayId){
+WMError ISceneSessionManager::MinimizeAllAppWindows(DisplayId displayId)
+{
     if (!Permission::IsLocalSystemCalling() && !Permission::IsLocalStartByHdcd()) {
         TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right, displayId %{public}ld", displayId);
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
@@ -28,7 +29,8 @@ WMError ISceneSessionManager::MinimizeAllAppWindows(DisplayId displayId){
     return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
 }
 
-WMError ISceneSessionManager::ToggleShownStateForAllAppWindows(){
+WMError ISceneSessionManager::ToggleShownStateForAllAppWindows()
+{
     if (!Permission::IsLocalSystemCalling() && !Permission::IsLocalStartByHdcd()) {
         TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
         return WMError::WM_ERROR_NOT_SYSTEM_APP;
