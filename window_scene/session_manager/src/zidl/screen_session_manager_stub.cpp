@@ -24,7 +24,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DMS_SCREEN_SESSION_MANAGER,
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DISPLAY,
                                           "ScreenSessionManagerStub" };
 const static uint32_t MAX_SCREEN_SIZE = 32;
 const static int32_t ERR_INVALID_DATA = -1;
