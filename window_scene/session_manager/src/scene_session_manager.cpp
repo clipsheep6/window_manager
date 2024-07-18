@@ -4392,7 +4392,7 @@ sptr<SceneSession> SceneSessionManager::GetTopNearestBlockingFocusSession(uint32
 
 sptr<SceneSession> SceneSessionManager::GetTopFocusableNonAppSession()
 {
-    TLOGD(WmsLogTag::WMS_FOCUS, "GetTopFocusableNonAppSession.");
+    TLOGI(WmsLogTag::WMS_FOCUS, "Called.");
     sptr<SceneSession> ret = nullptr;
     auto func = [this, &ret](sptr<SceneSession> session) {
         if (session == nullptr) {
