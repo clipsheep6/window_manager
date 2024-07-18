@@ -920,6 +920,39 @@ HWTEST_F(KeyboardSessionTest, RelayoutKeyBoard01, Function | SmallTest | Level1)
     keyboardSession->property_->sessionGravitySizePercent_ = 100;
     keyboardSession->RelayoutKeyBoard();
 }
+
+/**
+ * @tc.name: Hide01
+ * @tc.desc: test function : Hide
+ * @tc.type: FUNC
+ */
+HWTEST_F(KeyboardSessionTest, Hide01, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "Hide";
+    info.bundleName_ = "Hide";
+    sptr<SceneSession::SpecificSessionCallback> specificCb = sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
+    ASSERT_NE(specificCb, nullptr);
+    sptr<KeyboardSession::KeyboardSessionCallback> keyboardCb =
+        sptr<KeyboardSession::KeyboardSessionCallback>::MakeSptr();
+    ASSERT_NE(keyboardCb, nullptr);
+    sptr<KeyboardSession> keyboardSession = sptr<KeyboardSession>::MakeSptr(info, specificCb, keyboardCb);
+    ASSERT_NE(keyboardSession, nullptr);
+    keyboardSession->state_ = SessionState::STATE_DISCONNECT;
+    EXPECT_EQ(WSError::WS_OK, keyboardSession->Hide());
+    keyboardSession->state_ = SessionState::STATE_CONNECT;
+    keyboardSession->isActive_ = true;
+    keyboardSession->systemConfig_.uiType_ = "phone";
+    EXPECT_EQ(WSError::WS_OK, keyboardSession->Hide());
+    keyboardSession->systemConfig_.uiType_ = "pc";
+    keyboardSession->property_ = nullptr;
+    EXPECT_EQ(WSError::WS_OK, keyboardSession->Hide());
+    sptr<WindowSessionProperty> windowSessionProperty = sptr<WindowSessionProperty>::MakeSptr();
+    ASSERT_NE(windowSessionProperty, nullptr);
+    keyboardSession->property_ = windowSessionProperty;
+    ASSERT_NE(keyboardSession->property_, nullptr);
+    EXPECT_EQ(WSError::WS_OK, keyboardSession->Hide());
+}
 }  // namespace
 }  // namespace Rosen
 }  // namespace OHOS
