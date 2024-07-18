@@ -341,7 +341,6 @@ HWTEST_F(MainSessionTest, SetExitSplitOnBackground, Function | SmallTest | Level
     ASSERT_EQ(true, mainSession_->IsExitSplitOnBackground());
     mainSession_->SetExitSplitOnBackground(false);
     ASSERT_EQ(false, mainSession_->IsExitSplitOnBackground());
-
 }
 }
 }
