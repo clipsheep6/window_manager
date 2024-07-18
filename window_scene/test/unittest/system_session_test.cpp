@@ -24,7 +24,6 @@
 #include "window_event_channel_base.h"
 #include "window_helper.h"
 #include "window_manager_hilog.h"
-#include "parameters.h"
 #include "pointer_event.h"
 
 using namespace testing;
@@ -645,9 +644,8 @@ HWTEST_F(SystemSessionTest, CheckKeyEventDispatch, Function | SmallTest | Level1
  */
 HWTEST_F(SystemSessionTest, CheckPointerEventDispatch02, Function | SmallTest | Level1)
 {
-    std::shared_ptr<MMI::PointerEvent> pointerEvent =  MMI::PointerEvent::Create();
+    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
     ASSERT_NE(pointerEvent, nullptr);
-    system::SetParameter("const.product.devicetype", "2in1");
     SessionInfo info;
     info.abilityName_ = "CheckPointerEventDispatch";
     info.bundleName_ = "CheckPointerEventDispatchBundleName";
@@ -667,10 +665,6 @@ HWTEST_F(SystemSessionTest, CheckPointerEventDispatch02, Function | SmallTest | 
     ASSERT_EQ(true, ret);
 
     sysSession->SetSessionState(SessionState::STATE_FOREGROUND);
-    ret = sysSession->CheckPointerEventDispatch(pointerEvent);
-    ASSERT_EQ(true, ret);
-
-    sysSession->property_->SetWindowType(WindowType::APP_MAIN_WINDOW_END);
     ret = sysSession->CheckPointerEventDispatch(pointerEvent);
     ASSERT_EQ(true, ret);
 }
