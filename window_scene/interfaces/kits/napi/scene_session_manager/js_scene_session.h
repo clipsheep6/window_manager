@@ -115,6 +115,8 @@ private:
     static void BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName);
     static napi_value SetSkipSelfWhenShowOnVirtualScreen(napi_env env, napi_callback_info info);
     static napi_value SetCompatibleModeInPc(napi_env env, napi_callback_info info);
+    static napi_value SetBlankFlag(napi_env env, napi_callback_info info);
+    static napi_value SetBufferAvailableCallbackEnable(napi_env env, napi_callback_info info);
 
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
     napi_value OnUpdateNativeVisibility(napi_env env, napi_callback_info info);
@@ -144,6 +146,8 @@ private:
     napi_value OnSetSkipDraw(napi_env env, napi_callback_info info);
     napi_value OnSetSkipSelfWhenShowOnVirtualScreen(napi_env env, napi_callback_info info);
     napi_value OnSetCompatibleModeInPc(napi_env env, napi_callback_info info);
+    napi_value OnSetBlankFlag(napi_env env, napi_callback_info info);
+    napi_value OnSetBufferAvailableCallbackEnable(napi_env env, napi_callback_info info);
 
     bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
     void ProcessChangeSessionVisibilityWithStatusBarRegister();
@@ -188,7 +192,7 @@ private:
     void ProcessKeyboardGravityChangeRegister();
     void ProcessAdjustKeyboardLayoutRegister();
     void ProcessLayoutFullScreenChangeRegister();
-    void ProcessRegisterCallback(ListenerFuncType listenerFunctionType);
+    void ProcessRegisterCallback(ListenerFuncType listenerFuncType);
 
     void ChangeSessionVisibilityWithStatusBar(SessionInfo& info, bool visible);
     void ChangeSessionVisibilityWithStatusBarInner(std::shared_ptr<SessionInfo> sessionInfo, bool visible);
