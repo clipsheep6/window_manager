@@ -1830,20 +1830,20 @@ WMError SceneSessionManagerProxy::GetWindowModeType(WindowModeType& windowModeTy
 WMError SceneSessionManagerProxy::MinimizeAllAppWindows(DisplayId displayId)
 {
     if (!Permission::IsLocalSystemCallingOrStartByHdcd()) {
-        TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
-        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+        TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right, displayId %{public}" PRIu64, displayId);
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     TLOGE(WmsLogTag::WMS_LIFE, "Not support minimize, displayId %{public}" PRIu64, displayId);
-    return WSError::WS_ERROR_DEVICE_NOT_SUPPORT;
+    return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
 }
 
 WMError SceneSessionManagerProxy::ToggleShownStateForAllAppWindows()
 {
     if (!Permission::IsLocalSystemCallingOrStartByHdcd()) {
         TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
-        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     TLOGE(WmsLogTag::WMS_LIFE, "Not support call toggleShownState");
-    return WSError::WS_ERROR_DEVICE_NOT_SUPPORT;
+    return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
 }
 } // namespace OHOS::Rosen
