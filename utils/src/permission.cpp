@@ -114,7 +114,6 @@ bool Permission::IsLocalStartByHdcd()
     return false;
 }
 
-
 bool Permission::IsStartByHdcd()
 {
     OHOS::Security::AccessToken::NativeTokenInfo info;
