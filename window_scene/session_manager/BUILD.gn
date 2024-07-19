@@ -76,6 +76,7 @@ ohos_shared_library("scene_session_manager") {
     "src/session_manager_agent_controller.cpp",
     "src/window_scene_config.cpp",
     "src/zidl/scene_session_manager_lite_stub.cpp",
+    "src/zidl/scene_session_manager_interface.cpp",
     "src/zidl/scene_session_manager_stub.cpp",
   ]
 
@@ -317,6 +318,7 @@ ohos_shared_library("session_manager") {
     "../../wmserver/src/zidl/mock_session_manager_service_proxy.cpp",
     "../session_manager_service/src/session_manager_service_proxy.cpp",
     "src/session_manager.cpp",
+    "src/zidl/scene_session_manager_interface.cpp",
     "src/zidl/scene_session_manager_proxy.cpp",
   ]
 

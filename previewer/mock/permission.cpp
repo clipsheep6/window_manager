@@ -23,7 +23,17 @@ bool Permission::IsSystemServiceCalling(bool needPrintLog)
     return true;
 }
 
+bool Permission::IsLocalSystemServiceCalling()
+{
+    return true;
+}
+
 bool Permission::IsSystemCalling()
+{
+    return true;
+}
+
+bool Permission::IsLocalSystemCalling()
 {
     return true;
 }
@@ -34,6 +44,11 @@ bool Permission::CheckCallingPermission(const std::string& permission)
 }
 
 bool Permission::IsStartByHdcd()
+{
+    return true;
+}
+
+bool Permission::IsLocalStartByHdcd()
 {
     return true;
 }
