@@ -69,6 +69,7 @@ ClientAgentContainer<T1, T2>::ClientAgentContainer() : deathRecipient_(
 template<typename T1, typename T2>
 bool ClientAgentContainer<T1, T2>::RegisterAgent(const sptr<T1>& agent, T2 type)
 {
+    WLOGFI("Enter");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (agent == nullptr) {
         WLOGFE("agent is invalid");
@@ -79,12 +80,14 @@ bool ClientAgentContainer<T1, T2>::RegisterAgent(const sptr<T1>& agent, T2 type)
     if (deathRecipient_ == nullptr || !agent->AsObject()->AddDeathRecipient(deathRecipient_)) {
         WLOGFI("failed to add death recipient");
     }
+    WLOGFI("End");
     return true;
 }
 
 template<typename T1, typename T2>
 bool ClientAgentContainer<T1, T2>::UnregisterAgent(const sptr<T1>& agent, T2 type)
 {
+    WLOGFI("Enter");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (agent == nullptr) {
         WLOGFE("agent is invalid");
@@ -97,6 +100,7 @@ bool ClientAgentContainer<T1, T2>::UnregisterAgent(const sptr<T1>& agent, T2 typ
     auto& agents = agentMap_.at(type);
     UnregisterAgentLocked(agents, agent->AsObject());
     agent->AsObject()->RemoveDeathRecipient(deathRecipient_);
+    WLOGFI("End");
     return true;
 }
 
@@ -145,6 +149,7 @@ void ClientAgentContainer<T1, T2>::RemoveAgent(const sptr<IRemoteObject>& remote
         }
     }
     remoteObject->RemoveDeathRecipient(deathRecipient_);
+    WLOGFI("End");
 }
 
 template<typename T1, typename T2>
@@ -156,6 +161,7 @@ void ClientAgentContainer<T1, T2>::SetAgentDeathCallback(std::function<void(cons
 template<typename T1, typename T2>
 int32_t ClientAgentContainer<T1, T2>::GetAgentPid(const sptr<T1>& agent)
 {
+    WLOGFI("Enter");
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     if (agent == nullptr) {
         WLOGFE("agent is invalid");
@@ -165,6 +171,7 @@ int32_t ClientAgentContainer<T1, T2>::GetAgentPid(const sptr<T1>& agent)
         WLOGFE("agent pid not found");
         return INVALID_PID_ID;
     }
+    WLOGFI("End");
     return agentPidMap_[agent];
 }
 }

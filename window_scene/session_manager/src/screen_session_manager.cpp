@@ -255,7 +255,7 @@ void ScreenSessionManager::OnStart()
 DMError ScreenSessionManager::RegisterDisplayManagerAgent(
     const sptr<IDisplayManagerAgent>& displayManagerAgent, DisplayManagerAgentType type)
 {
-    TLOGI(WmsLogTag::DMS, " called type: %{public}u", type);
+    TLOGD(WmsLogTag::DMS, " called type: %{public}u", type);
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
         && !SessionPermission::IsStartByHdcd()) {
         TLOGE(WmsLogTag::DMS, "register display manager agent permission denied!");
@@ -272,7 +272,7 @@ DMError ScreenSessionManager::RegisterDisplayManagerAgent(
         TLOGE(WmsLogTag::DMS, "displayManagerAgent invalid");
         return DMError::DM_ERROR_NULLPTR;
     }
-    TLOGD(WmsLogTag::DMS, "Register display listener type: %{public}u, clientName: %{public}s",
+    TLOGI(WmsLogTag::DMS, "Register display listener type: %{public}u, clientName: %{public}s",
         type, SysCapUtil::GetClientName().c_str());
     return dmAgentContainer_.RegisterAgent(displayManagerAgent, type) ? DMError::DM_OK :DMError::DM_ERROR_NULLPTR;
 }
@@ -280,7 +280,7 @@ DMError ScreenSessionManager::RegisterDisplayManagerAgent(
 DMError ScreenSessionManager::UnregisterDisplayManagerAgent(
     const sptr<IDisplayManagerAgent>& displayManagerAgent, DisplayManagerAgentType type)
 {
-    TLOGI(WmsLogTag::DMS, " called type: %{public}u", type);
+    TLOGD(WmsLogTag::DMS, " called type: %{public}u", type);
     if (type == DisplayManagerAgentType::SCREEN_EVENT_LISTENER && !SessionPermission::IsSystemCalling()
         && !SessionPermission::IsStartByHdcd()) {
         TLOGE(WmsLogTag::DMS, "unregister display manager agent permission denied!");
@@ -293,7 +293,7 @@ DMError ScreenSessionManager::UnregisterDisplayManagerAgent(
         return DMError::DM_ERROR_NULLPTR;
     }
 
-    TLOGD(WmsLogTag::DMS, "UnRegister display listener type: %{public}u, clientName: %{public}s",
+    TLOGI(WmsLogTag::DMS, "UnRegister display listener type: %{public}u, clientName: %{public}s",
         type, SysCapUtil::GetClientName().c_str());
     return dmAgentContainer_.UnregisterAgent(displayManagerAgent, type) ? DMError::DM_OK :DMError::DM_ERROR_NULLPTR;
 }
