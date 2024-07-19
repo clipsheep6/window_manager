@@ -20,7 +20,7 @@
 #include <message_parcel.h>
 #include <ui/rs_surface_node.h>
 
-#include "common/include/session_permission.h"
+#include "permission.h"
 #include "marshalling_helper.h"
 #include "window_manager.h"
 #include "window_manager_hilog.h"
@@ -1829,7 +1829,7 @@ WMError SceneSessionManagerProxy::GetWindowModeType(WindowModeType& windowModeTy
 
 WMError SceneSessionManagerProxy::MinimizeAllAppWindows(DisplayId displayId)
 {
-    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+    if (!Permission::IsLocalSystemCallingOrStartByHdcd()) {
         TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
@@ -1839,7 +1839,7 @@ WMError SceneSessionManagerProxy::MinimizeAllAppWindows(DisplayId displayId)
 
 WMError SceneSessionManagerProxy::ToggleShownStateForAllAppWindows()
 {
-    if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+    if (!Permission::IsLocalSystemCallingOrStartByHdcd()) {
         TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
     }
