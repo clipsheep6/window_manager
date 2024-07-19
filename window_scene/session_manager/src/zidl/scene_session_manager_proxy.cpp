@@ -20,6 +20,7 @@
 #include <message_parcel.h>
 #include <ui/rs_surface_node.h>
 
+#include "common/include/session_permission.h"
 #include "marshalling_helper.h"
 #include "window_manager.h"
 #include "window_manager_hilog.h"
