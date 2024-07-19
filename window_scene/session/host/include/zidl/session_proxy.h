@@ -84,10 +84,11 @@ public:
     WSError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
     WMError UpdateSessionPropertyByAction(const sptr<WindowSessionProperty>& property,
         WSPropertyChangeAction action) override;
-    int32_t GetAppForceLandscapeMode(const std::string& bundleName) override;
     WSError ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation) override;
     WSError HideWithAnimation(bool withAnimation) override;
-    
+    int32_t GetAppForceLandscapeMode(const std::string& bundleName) override;
+    int32_t GetStatusBarHeight() override;
+
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };
