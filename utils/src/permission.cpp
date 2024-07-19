@@ -49,7 +49,7 @@ bool Permission::IsSystemServiceCalling(bool needPrintLog)
 
 bool Permission::IsLocalSystemServiceCalling()
 {
-    const auto tokenId = IPCSkeleton::GetSelfTokenID();
+    const auto tokenId = static_cast<uint32_t>(IPCSkeleton::GetSelfTokenID());
     const auto flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
     if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
         flag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
@@ -63,7 +63,7 @@ bool Permission::IsLocalSystemServiceCalling()
 bool Permission::IsLocalSystemCallingOrStartByHdcd()
 {
     if (!IsLocalSystemCalling() && !IsLocalStartByHdcd()) {
-        TLOGD(WmsLogTag::DEFAULT, "not system calling, not start by hdcd");
+        TLOGE(WmsLogTag::DEFAULT, "not system calling, not start by hdcd");
         return false;
     }
     return true;
