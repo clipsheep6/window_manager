@@ -53,6 +53,7 @@ WMError ScreenScene::Destroy()
         return WMError::WM_OK;
     }
     std::shared_ptr<Ace::UIContent> uiContent = std::move(uiContent_);
+    vsyncStation_ = nullptr;
     uiContent_ = nullptr;
     auto task = [uiContent]() {
         if (uiContent != nullptr) {
