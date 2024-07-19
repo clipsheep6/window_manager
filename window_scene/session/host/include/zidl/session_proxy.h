@@ -85,7 +85,9 @@ public:
     WMError UpdateSessionPropertyByAction(const sptr<WindowSessionProperty>& property,
         WSPropertyChangeAction action) override;
     int32_t GetAppForceLandscapeMode(const std::string& bundleName) override;
-
+    WSError ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation) override;
+    WSError HideWithAnimation(bool withAnimation) override;
+    
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
 };

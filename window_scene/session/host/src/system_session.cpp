@@ -73,6 +73,28 @@ void SystemSession::UpdateCameraWindowStatus(bool isShowing)
     }
 }
 
+WSError SystemSession::ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation)
+{
+    if (withAnimation) {
+        if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+            TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
+            return WSError::WS_ERROR_NOT_SYSTEM_APP;
+        }
+    }
+    return Show(property);
+}
+
+WSError SystemSession::HideWithAnimation(bool withAnimation)
+{
+    if (withAnimation) {
+        if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+            TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
+            return WSError::WS_ERROR_NOT_SYSTEM_APP;
+        }
+    }
+    return Hide();
+}
+
 WSError SystemSession::Show(sptr<WindowSessionProperty> property)
 {
     auto type = GetWindowType();

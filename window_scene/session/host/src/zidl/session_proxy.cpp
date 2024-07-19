@@ -90,6 +90,65 @@ WSError SessionProxy::Background(bool isFromClient)
     return static_cast<WSError>(ret);
 }
 
+WSError SessionProxy::ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_LIFE, "WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (property) {
+        if (!data.WriteBool(true) || !data.WriteParcelable(property.GetRefPtr())) {
+            TLOGE(WmsLogTag::WMS_LIFE, "Write property failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            TLOGE(WmsLogTag::WMS_LIFE, "Write property failed");
+            return WSError::WS_ERROR_IPC_FAILED;
+        }
+    }
+    if (!data.WriteBool(withAnimation)) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Write withAnimation failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SHOW_WITH_ANIMATION),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_LIFE, "SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
+}
+
+WSError SessionProxy::HideWithAnimation(bool withAnimation)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_LIFE, "WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteBool(withAnimation)) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Write withAnimation failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_HIDE_WITH_ANIMATION),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_LIFE, "SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
+}
+
 WSError SessionProxy::Show(sptr<WindowSessionProperty> property)
 {
     MessageParcel data;

@@ -112,6 +112,8 @@ public:
     WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override;
     WMError GetCallingWindowRect(int32_t persistentId, Rect& rect) override;
     WMError GetWindowModeType(WindowModeType& windowModeType) override;
+    WMError MinimizeAllAppWindows(DisplayId displayId) override;
+    WMError ToggleShownStateForAllAppWindows() override;
 
 private:
     template<typename T>

@@ -130,6 +130,8 @@ public:
     WSError Background(bool isFromClient = false) override;
     WSError Disconnect(bool isFromClient = false) override;
     WSError Show(sptr<WindowSessionProperty> property) override;
+    WSError ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation) override;
+    WSError HideWithAnimation(bool withAnimation) override;
     WSError Hide() override;
     WSError DrawingCompleted() override;
     void ResetSessionConnectState();

@@ -1068,6 +1068,18 @@ WSError Session::Show(sptr<WindowSessionProperty> property)
     return WSError::WS_OK;
 }
 
+WSError Session::ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation)
+{
+    TLOGD(WmsLogTag::WMS_LIFE, "ShowWithAnimation session, id: %{public}d", GetPersistentId());
+    return WSError::WS_OK;
+}
+
+WSError Session::HideWithAnimation(bool withAnimation)
+{
+    TLOGD(WmsLogTag::WMS_LIFE, "HideWithAnimation session, id: %{public}d", GetPersistentId());
+    return WSError::WS_OK;
+}
+
 WSError Session::Hide()
 {
     TLOGD(WmsLogTag::WMS_LIFE, "Hide session, id: %{public}d", GetPersistentId());

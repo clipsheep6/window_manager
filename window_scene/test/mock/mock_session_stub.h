@@ -38,6 +38,8 @@ public:
     MOCK_METHOD1(Background, WSError(bool isFromClient));
     MOCK_METHOD1(Disconnect, WSError(bool isFromClient));
     MOCK_METHOD1(Show, WSError(sptr<WindowSessionProperty> property));
+    MOCK_METHOD2(ShowWithAnimation, WSError(sptr<WindowSessionProperty> property, bool withAnimation));
+    MOCK_METHOD1(HideWithAnimation, WSError(bool withAnimation));
     MOCK_METHOD0(Hide, WSError(void));
     MOCK_METHOD0(DrawingCompleted, WSError(void));
 

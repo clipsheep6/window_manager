@@ -25,6 +25,8 @@ public:
     ~SubSession();
 
     WSError Show(sptr<WindowSessionProperty> property) override;
+    WSError ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation) override;
+    WSError HideWithAnimation(bool withAnimation) override;
     WSError Hide() override;
     WSError Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, sptr<WindowSessionProperty> property = nullptr,
