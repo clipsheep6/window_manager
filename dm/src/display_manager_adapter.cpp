@@ -28,7 +28,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM, "DisplayManagerAdapter"};
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "DisplayManagerAdapter"};
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(DisplayManagerAdapter)
 WM_IMPLEMENT_SINGLE_INSTANCE(ScreenManagerAdapter)
@@ -270,7 +270,8 @@ DMError ScreenManagerAdapter::IsScreenRotationLocked(bool& isLocked)
     return displayManagerServiceProxy_->IsScreenRotationLocked(isLocked);
 }
 
-bool ScreenManagerAdapter::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state, PowerStateChangeReason reason)
+bool ScreenManagerAdapter::SetSpecifiedScreenPower(ScreenId screenId, ScreenPowerState state,
+    PowerStateChangeReason reason)
 {
     INIT_PROXY_CHECK_RETURN(false);
     return displayManagerServiceProxy_->SetSpecifiedScreenPower(screenId, state, reason);
@@ -715,7 +716,6 @@ VirtualScreenFlag ScreenManagerAdapter::GetVirtualScreenFlag(ScreenId screenId)
         WLOGFE("screenId id is invalid");
         return VirtualScreenFlag::DEFAULT;
     }
-
     return displayManagerServiceProxy_->GetVirtualScreenFlag(screenId);
 }
 
@@ -739,18 +739,6 @@ DMError ScreenManagerAdapter::SetVirtualScreenRefreshRate(ScreenId screenId, uin
     return displayManagerServiceProxy_->SetVirtualScreenRefreshRate(screenId, refreshInterval);
 }
 
-void DisplayManagerAdapter::SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList)
-{
-    INIT_PROXY_CHECK_RETURN();
-    displayManagerServiceProxy_->SetVirtualScreenBlackList(screenId, windowIdList);
-}
-
-void DisplayManagerAdapter::DisablePowerOffRenderControl(ScreenId screenId)
-{
-    INIT_PROXY_CHECK_RETURN();
-    displayManagerServiceProxy_->DisablePowerOffRenderControl(screenId);
-}
-
 DMError DisplayManagerAdapter::ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy)
 {
     INIT_PROXY_CHECK_RETURN(DMError::DM_ERROR_INIT_DMS_PROXY_LOCKED);
@@ -763,9 +751,15 @@ DMError DisplayManagerAdapter::ResetAllFreezeStatus()
     return displayManagerServiceProxy_->ResetAllFreezeStatus();
 }
 
-std::vector<DisplayPhysicalResolution> DisplayManagerAdapter::GetAllDisplayPhysicalResolution()
+void DisplayManagerAdapter::SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList)
 {
-    INIT_PROXY_CHECK_RETURN(std::vector<DisplayPhysicalResolution>{});
-    return displayManagerServiceProxy_->GetAllDisplayPhysicalResolution();
+    INIT_PROXY_CHECK_RETURN();
+    displayManagerServiceProxy_->SetVirtualScreenBlackList(screenId, windowIdList);
+}
+
+void DisplayManagerAdapter::DisablePowerOffRenderControl(ScreenId screenId)
+{
+    INIT_PROXY_CHECK_RETURN();
+    displayManagerServiceProxy_->DisablePowerOffRenderControl(screenId);
 }
 } // namespace OHOS::Rosen
