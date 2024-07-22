@@ -128,31 +128,6 @@ HWTEST_F(ScreenSessionManagerProxyTest, SetVirtualScreenBlackList, Function | Sm
     ASSERT_EQ(resultValue, 1);
 }
 
-/**
- * @tc.name: GetAllDisplayPhysicalResolution
- * @tc.desc: GetAllDisplayPhysicalResolution
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenSessionManagerProxyTest, GetAllDisplayPhysicalResolution, Function | SmallTest | Level1)
-{
-    SingletonContainer::Get<ScreenManagerAdapter>().InitDMSProxy();
-    sptr<IRemoteObject> impl = SingletonContainer::Get<ScreenManagerAdapter>().displayManagerServiceProxy_->AsObject();
-    sptr<ScreenSessionManagerProxy> screenSessionManagerProxy = new ScreenSessionManagerProxy(impl);
-
-    std::vector<DisplayPhysicalResolution> allSize {};
-    std::function<void()> func = [&]()
-    {
-        allSize = screenSessionManagerProxy->GetAllDisplayPhysicalResolution();
-    };
-    func();
-    ASSERT_TRUE(!allSize.empty());
-}
-
-/**
- * @tc.name: GetDefaultDisplayInfo
- * @tc.desc: GetDefaultDisplayInfo
- * @tc.type: FUNC
- */
 HWTEST_F(ScreenSessionManagerProxyTest, GetDefaultDisplayInfo, Function | SmallTest | Level1)
 {
     SingletonContainer::Get<ScreenManagerAdapter>().InitDMSProxy();
@@ -625,9 +600,8 @@ HWTEST_F(ScreenSessionManagerProxyTest, SetDisplayState, Function | SmallTest | 
     sptr<ScreenSessionManagerProxy> screenSessionManagerProxy = new ScreenSessionManagerProxy(impl);
 
     DisplayState state {1};
-    screenSessionManagerProxy->SetDisplayState(state);
-    int resultValue = 0;
-    ASSERT_EQ(resultValue, 0);
+    bool expectation = true;
+    EXPECT_EQ(expectation, screenSessionManagerProxy->SetDisplayState(state));
 }
 
 /**
@@ -1364,9 +1338,8 @@ HWTEST_F(ScreenSessionManagerProxyTest, GetFoldStatus, Function | SmallTest | Le
     sptr<IRemoteObject> impl = SingletonContainer::Get<ScreenManagerAdapter>().displayManagerServiceProxy_->AsObject();
     sptr<ScreenSessionManagerProxy> screenSessionManagerProxy = new ScreenSessionManagerProxy(impl);
 
-    int resultValue = 0;
-    screenSessionManagerProxy->GetFoldStatus();
-    EXPECT_EQ(resultValue, 0);
+    EXPECT_NE(FoldStatus::UNKNOWN,
+              screenSessionManagerProxy->GetFoldStatus());
 }
 
 /**
@@ -1381,9 +1354,14 @@ HWTEST_F(ScreenSessionManagerProxyTest, GetCurrentFoldCreaseRegion, Function | S
     sptr<IRemoteObject> impl = SingletonContainer::Get<ScreenManagerAdapter>().displayManagerServiceProxy_->AsObject();
     sptr<ScreenSessionManagerProxy> screenSessionManagerProxy = new ScreenSessionManagerProxy(impl);
 
-    int resultValue = 0;
-    screenSessionManagerProxy->GetCurrentFoldCreaseRegion();
-    EXPECT_EQ(resultValue, 0);
+    sptr<FoldCreaseRegion> expectation = nullptr;
+    sptr<FoldCreaseRegion> res = nullptr;
+    std::function<void()> func = [&]()
+    {
+        res = screenSessionManagerProxy->GetCurrentFoldCreaseRegion();
+    };
+    func();
+    ASSERT_NE(res, expectation);
 }
 
 /**

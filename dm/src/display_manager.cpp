@@ -33,7 +33,7 @@ namespace {
     const static uint32_t MAX_RETRY_NUM = 6;
     const static uint32_t RETRY_WAIT_MS = 500;
     const static uint32_t MAX_DISPLAY_SIZE = 32;
-    const static uint32_t MAX_INTERVAL_US = 25000;
+    const static uint32_t MAX_INTERVAL_US = 15000;
     std::atomic<bool> g_dmIsDestroyed = false;
     std::mutex snapBypickerMutex;
 }
@@ -49,7 +49,6 @@ public:
     bool CheckSizeValid(const Media::Size& size, int32_t oriHeight, int32_t oriWidth) const;
     sptr<Display> GetDefaultDisplay();
     sptr<Display> GetDefaultDisplaySync();
-    std::vector<DisplayPhysicalResolution> GetAllDisplayPhysicalResolution();
     sptr<Display> GetDisplayById(DisplayId displayId);
     DMError HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow);
     bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId);
@@ -762,16 +761,6 @@ sptr<Display> DisplayManager::GetDefaultDisplaySync()
 std::vector<DisplayId> DisplayManager::GetAllDisplayIds()
 {
     return SingletonContainer::Get<DisplayManagerAdapter>().GetAllDisplayIds();
-}
-
-std::vector<DisplayPhysicalResolution> DisplayManager::Impl::GetAllDisplayPhysicalResolution()
-{
-    return SingletonContainer::Get<DisplayManagerAdapter>().GetAllDisplayPhysicalResolution();
-}
-
-std::vector<DisplayPhysicalResolution> DisplayManager::GetAllDisplayPhysicalResolution()
-{
-    return pImpl_->GetAllDisplayPhysicalResolution();
 }
 
 std::vector<sptr<Display>> DisplayManager::GetAllDisplays()
@@ -1868,16 +1857,6 @@ bool DisplayManager::Impl::ConvertScreenIdToRsScreenId(ScreenId screenId, Screen
     return res;
 }
 
-void DisplayManager::SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList)
-{
-    SingletonContainer::Get<DisplayManagerAdapter>().SetVirtualScreenBlackList(screenId, windowIdList);
-}
-
-void DisplayManager::DisablePowerOffRenderControl(ScreenId screenId)
-{
-    SingletonContainer::Get<DisplayManagerAdapter>().DisablePowerOffRenderControl(screenId);
-}
-
 DMError DisplayManager::ProxyForFreeze(std::set<int32_t> pidList, bool isProxy)
 {
     return pImpl_->ProxyForFreeze(pidList, isProxy);
@@ -1897,4 +1876,14 @@ DMError DisplayManager::Impl::ResetAllFreezeStatus()
 {
     return SingletonContainer::Get<DisplayManagerAdapter>().ResetAllFreezeStatus();
 }
-} // namespace OHOS::Rosen
+
+void DisplayManager::SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList)
+{
+    SingletonContainer::Get<DisplayManagerAdapter>().SetVirtualScreenBlackList(screenId, windowIdList);
+}
+
+void DisplayManager::DisablePowerOffRenderControl(ScreenId screenId)
+{
+    SingletonContainer::Get<DisplayManagerAdapter>().DisablePowerOffRenderControl(screenId);
+}
+} // namespace OHOS::Rosen
