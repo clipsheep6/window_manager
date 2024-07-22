@@ -1635,14 +1635,14 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreenByApiVersion(bool status)
             GetWindowId(), static_cast<int32_t>(status));
         WMError ret = WMError::WM_OK;
         if (status) {
-            RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+            ret = RemoveWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
             if (ret != WMError::WM_OK) {
                 TLOGE(WmsLogTag::WMS_IMMS, "RemoveWindowFlag errCode:%{public}d winId:%{public}u",
                     static_cast<int32_t>(ret), GetWindowId());
                 return ret;
             }
         } else {
-            AddWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
+            ret = AddWindowFlag(WindowFlag::WINDOW_FLAG_NEED_AVOID);
             if (ret != WMError::WM_OK) {
                 TLOGE(WmsLogTag::WMS_IMMS, "RemoveWindowFlag errCode:%{public}d winId:%{public}u",
                     static_cast<int32_t>(ret), GetWindowId());
@@ -3562,6 +3562,16 @@ bool WindowSceneSessionImpl::GetImmersiveModeEnabledState() const
     TLOGD(WmsLogTag::WMS_IMMS, "id: %{public}u， GetImmersiveModeEnabledState = %{public}u",
         GetWindowId(), enableImmersiveMode_);
     return enableImmersiveMode_;
+}
+
+uint32_t WindowSceneSessionImpl::GetStatusBarHeight()
+{
+    uint32_t height = 0;
+    auto hostSession = GetHostSession();
+    CHECK_HOST_SESSION_RETURN_ERROR_IF_NULL(hostSession, height);
+    height = static_cast<uint32_t>(hostSession->GetStatusBarHeight());
+    TLOGI(WmsLogTag::WMS_IMMS, "StatusBarVectorHeight is %{public}d", height);
+    return height;
 }
 } // namespace Rosen
 } // namespace OHOS

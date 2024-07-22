@@ -3747,8 +3747,7 @@ bool SceneSessionManager::IsSessionVisible(const sptr<SceneSession>& session)
         return false;
     }
 
-    if (session->IsVisible() || (session->GetAttachState() && (state == SessionState::STATE_ACTIVE ||
-        state == SessionState::STATE_FOREGROUND))) {
+    if (session->IsVisible() || (state == SessionState::STATE_ACTIVE || state == SessionState::STATE_FOREGROUND)) {
         WLOGFD("Window is at foreground, id: %{public}d", session->GetPersistentId());
         return true;
     }
@@ -4305,11 +4304,11 @@ bool SceneSessionManager::CheckTopmostWindowFocus(sptr<SceneSession>& focusedSes
 bool SceneSessionManager::CheckRequestFocusImmdediately(sptr<SceneSession>& sceneSession)
 {
     if ((sceneSession->GetWindowType() == WindowType::WINDOW_TYPE_APP_MAIN_WINDOW ||
-        (SessionHelper::IsSubWindow(sceneSession->GetWindowType()) && !sceneSession->IsTopmost())) &&
+         (SessionHelper::IsSubWindow(sceneSession->GetWindowType()) && !sceneSession->IsModal())) &&
         (ProcessModalTopmostRequestFocusImmdediately(sceneSession) == WSError::WS_OK ||
-        ProcessDialogRequestFocusImmdediately(sceneSession) == WSError::WS_OK)) {
-            TLOGD(WmsLogTag::WMS_FOCUS, "dialog or modal topmost subwindow get focused");
-            return true;
+         ProcessDialogRequestFocusImmdediately(sceneSession) == WSError::WS_OK)) {
+        TLOGD(WmsLogTag::WMS_FOCUS, "dialog or modal subwindow get focused");
+        return true;
     }
     return false;
 }
@@ -4533,6 +4532,10 @@ void SceneSessionManager::NotifyFocusStatus(sptr<SceneSession>& sceneSession, bo
 {
     if (sceneSession == nullptr) {
         WLOGFE("[WMSComm]session is nullptr");
+        if (isFocused) {
+            auto prevSession = GetSceneSession(lastFocusedSessionId_);
+            NotifyUnFocusedByMission(prevSession);
+        }
         return;
     }
     int32_t persistentId = sceneSession->GetPersistentId();
@@ -4608,6 +4611,17 @@ void SceneSessionManager::NotifyFocusStatusByMission(sptr<SceneSession>& prevSes
             TLOGD(WmsLogTag::WMS_FOCUS, "NotifyMissionFocused, id: %{public}d", currSession->GetMissionId());
             listenerController_->NotifySessionFocused(currSession->GetMissionId());
         }
+    }
+}
+
+void SceneSessionManager::NotifyUnFocusedByMission(sptr<SceneSession>& sceneSession)
+{
+    if (listenerController_ == nullptr) {
+        return;
+    }
+    if (sceneSession && !sceneSession->GetSessionInfo().isSystem_) {
+        TLOGD(WmsLogTag::WMS_FOCUS, "NotifyMissionUnfocused, id: %{public}d", sceneSession->GetMissionId());
+        listenerController_->NotifySessionUnfocused(sceneSession->GetMissionId());
     }
 }
 
@@ -9420,7 +9434,7 @@ WSError SceneSessionManager::SetAppForceLandscapeMode(const std::string& bundleN
     }
     WLOGFD("set app force landscape mode, app: %{public}s, mode: %{public}d", bundleName.c_str(), mode);
     std::unique_lock<std::shared_mutex> lock(appForceLandscapeMutex_);
-    appForceLandscapeMap_.emplace(bundleName, mode);
+    appForceLandscapeMap_[bundleName] = mode;
     return WSError::WS_OK;
 }
 
