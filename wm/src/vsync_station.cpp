@@ -55,6 +55,9 @@ void VsyncStation::RequestVsync(const std::shared_ptr<VsyncCallback>& vsyncCallb
         vsyncCallbacks_.insert(vsyncCallback);
 
         Init();
+        if (receiver_ == nullptr) {
+            return;
+        }
         if (hasRequestedVsync_) {
             return;
         }
@@ -120,7 +123,7 @@ void VsyncStation::SetDisplaySoloistFrameRateLinkerEnable(bool enabled)
 
 void VsyncStation::Init()
 {
-    if (!hasInitVsyncReceiver_ || !vsyncHandler_) {
+    if (!vsyncHandler_) {
         auto mainEventRunner = AppExecFwk::EventRunner::GetMainEventRunner();
         if (mainEventRunner != nullptr && isMainHandlerAvailable_) {
             WLOGI("MainEventRunner is available");
@@ -132,12 +135,20 @@ void VsyncStation::Init()
                     AppExecFwk::EventRunner::Create(VSYNC_THREAD_ID));
             }
         }
-        auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
+    }
+    if (frameRateLinker_ == nullptr) {
         frameRateLinker_ = OHOS::Rosen::RSFrameRateLinker::Create();
-        while (receiver_ == nullptr) {
-            receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getprocpid()), frameRateLinker_->GetId(),
-                vsyncHandler_, nodeId_);
-            TLOGI(WmsLogTag::WMS_MAIN, "Create vsync receiver for nodeId:%{public}" PRIu64"", nodeId_);
+    }
+    if (frameRateLinker_ == nullptr) {
+        TLOGI(WmsLogTag::WMS_MAIN, "cannot create frameRate linker_ for nodeId:%{public}" PRIu64"", nodeId_);
+    }
+    if (!vsyncHandler_ && frameRateLinker_ != nullptr) {
+        auto& rsClient = OHOS::Rosen::RSInterfaces::GetInstance();
+        receiver_ = rsClient.CreateVSyncReceiver("WM_" + std::to_string(::getprocpid()), frameRateLinker_->GetId(),
+            vsyncHandler_, nodeId_);
+        if (receiver_ == nullptr) {
+            TLOGI(WmsLogTag::WMS_MAIN, "cannot create vsync receiver for nodeId:%{public}" PRIu64"", nodeId_);
+            return;
         }
         receiver_->Init();
         hasInitVsyncReceiver_ = true;
