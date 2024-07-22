@@ -205,9 +205,25 @@ WMError SceneSessionManagerLite::GetWindowModeType(WindowModeType& windowModeTyp
     return SceneSessionManager::GetInstance().GetWindowModeType(windowModeType);
 }
 
+WSError SceneSessionManagerLite::RaiseWindowToTop(int32_t persistentId)
+{
+    return SceneSessionManager::GetInstance().RaiseWindowToTop(persistentId);
+}
+
 WMError SceneSessionManagerLite::GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo)
 {
     return SceneSessionManager::GetInstance().GetMainWindowInfos(topNum, topNInfo);
+}
+
+WSError SceneSessionManagerLite::RegisterIAbilityManagerCollaborator(int32_t type,
+    const sptr<AAFwk::IAbilityManagerCollaborator>& impl)
+{
+    return SceneSessionManager::GetInstance().RegisterIAbilityManagerCollaborator(type, impl);
+}
+
+WSError SceneSessionManagerLite::UnregisterIAbilityManagerCollaborator(int32_t type)
+{
+    return SceneSessionManager::GetInstance().UnregisterIAbilityManagerCollaborator(type);
 }
 
 WMError SceneSessionManagerLite::GetAllMainWindowInfos(std::vector<MainWindowInfo>& infos)
@@ -221,19 +237,7 @@ WMError SceneSessionManagerLite::ClearMainSessions(const std::vector<int32_t>& p
     return SceneSessionManager::GetInstance().ClearMainSessions(persistentIds, clearFailedIds);
 }
 
-WSError SceneSessionManagerLite::RaiseWindowToTop(int32_t persistentId)
-{
-    return SceneSessionManager::GetInstance().RaiseWindowToTop(persistentId);
-}
 
-WSError SceneSessionManagerLite::RegisterIAbilityManagerCollaborator(int32_t type,
-    const sptr<AAFwk::IAbilityManagerCollaborator>& impl)
-{
-    return SceneSessionManager::GetInstance().RegisterIAbilityManagerCollaborator(type, impl);
-}
 
-WSError SceneSessionManagerLite::UnregisterIAbilityManagerCollaborator(int32_t type)
-{
-    return SceneSessionManager::GetInstance().UnregisterIAbilityManagerCollaborator(type);
-}
+
 } // namespace OHOS::Rosen
