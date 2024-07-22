@@ -127,17 +127,17 @@ public:
         TRANS_ID_GET_VIRTUAL_SCREEN_FLAG,
         TRANS_ID_SET_VIRTUAL_SCREEN_FLAG,
         TRANS_ID_SET_VIRTUAL_SCREEN_SCALE_MODE,
-        TRANS_ID_GET_DEVICE_SCREEN_CONFIG,
-        TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE,
         TRANS_ID_DEVICE_IS_CAPTURE,
+        TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE,
+        TRANS_ID_GET_DEVICE_SCREEN_CONFIG,
         TRANS_ID_GET_SNAPSHOT_BY_PICKER,
         TRANS_ID_SWITCH_USER,
-        TRANS_ID_SET_VIRTUAL_SCREEN_BLACK_LIST,
-        TRANS_ID_DISABLE_POWEROFF_RENDER_CONTROL,
+        TRANS_ID_BUFFER_AVAILABLE,
         TRANS_ID_PROXY_FOR_FREEZE,
         TRANS_ID_RESET_ALL_FREEZE_STATUS,
+        TRANS_ID_SET_VIRTUAL_SCREEN_BLACK_LIST,
+        TRANS_ID_DISABLE_POWEROFF_RENDER_CONTROL,
         TRANS_ID_NOTIFY_DISPLAY_HOOK_INFO,
-        TRANS_ID_GET_ALL_PHYSICAL_DISPLAY_RESOLUTION,
     };
 
     virtual sptr<DisplayInfo> GetDefaultDisplayInfo() = 0;
@@ -266,11 +266,10 @@ public:
 
     virtual sptr<FoldCreaseRegion> GetCurrentFoldCreaseRegion() { return nullptr; }
 
-    virtual DMError HasImmersiveWindow(bool& immersive) { return DMError::DM_ERROR_DEVICE_NOT_SUPPORT; }
-
     // unique screen
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) { return DMError::DM_OK; }
 
+    virtual DMError HasImmersiveWindow(bool& immersive) { return DMError::DM_ERROR_DEVICE_NOT_SUPPORT; }
     virtual VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId)
     {
         return VirtualScreenFlag::DEFAULT;
@@ -293,11 +292,6 @@ public:
     }
     virtual void SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList) {}
     virtual void DisablePowerOffRenderControl(ScreenId screenId) {}
-
-    virtual std::vector<DisplayPhysicalResolution> GetAllDisplayPhysicalResolution()
-    {
-        return std::vector<DisplayPhysicalResolution> {};
-    }
 };
 } // namespace OHOS::Rosen
 

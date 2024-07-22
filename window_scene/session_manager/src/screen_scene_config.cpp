@@ -34,7 +34,6 @@
 namespace OHOS::Rosen {
 namespace {
 constexpr uint32_t NO_WATERFALL_DISPLAY_COMPRESSION_SIZE = 0;
-constexpr uint32_t DISPLAY_PHYSICAL_SIZE = 2;
 enum XmlNodeElement {
     DPI = 0,
     SUB_DPI,
@@ -46,17 +45,16 @@ enum XmlNodeElement {
     DEFAULT_DEVICE_ROTATION_OFFSET,
     DEFAULT_DISPLAY_CUTOUT_PATH,
     SUB_DISPLAY_CUTOUT_PATH,
-    ROTATION_POLICY,
     HALL_SWITCH_APP,
     PACKAGE_NAME,
+    ROTATION_POLICY,
     SCREEN_SNAPSHOT_BUNDLE_NAME,
     SCREEN_SNAPSHOT_ABILITY_NAME,
     IS_RIGHT_POWER_BUTTON,
     SUPPORT_ROTATE_WITH_SCREEN,
     EXTERNAL_SCREEN_DEFAULT_MODE,
     CAST_BUNDLE_NAME,
-    CAST_ABILITY_NAME,
-    PHYSICAL_DISPLAY_RESOLUTION
+    CAST_ABILITY_NAME
 };
 }
 
@@ -65,7 +63,6 @@ std::map<std::string, std::vector<int>> ScreenSceneConfig::intNumbersConfig_;
 std::map<std::string, std::string> ScreenSceneConfig::stringConfig_;
 std::map<std::string, std::vector<std::string>> ScreenSceneConfig::stringListConfig_;
 std::map<uint64_t, std::vector<DMRect>> ScreenSceneConfig::cutoutBoundaryRectMap_;
-std::vector<DisplayPhysicalResolution> ScreenSceneConfig::displayPhysicalResolution_;
 std::vector<DMRect> ScreenSceneConfig::subCutoutBoundaryRect_;
 bool ScreenSceneConfig::isWaterfallDisplay_ = false;
 bool ScreenSceneConfig::isScreenCompressionEnableInLandscape_ = false;
@@ -81,17 +78,16 @@ std::map<int32_t, std::string> ScreenSceneConfig::xmlNodeMap_ = {
     {DEFAULT_DEVICE_ROTATION_OFFSET, "defaultDeviceRotationOffset"},
     {DEFAULT_DISPLAY_CUTOUT_PATH, "defaultDisplayCutoutPath"},
     {SUB_DISPLAY_CUTOUT_PATH, "subDisplayCutoutPath"},
-    {ROTATION_POLICY, "rotationPolicy"},
     {HALL_SWITCH_APP, "hallSwitchApp"},
     {PACKAGE_NAME, "packageName"},
+    {ROTATION_POLICY, "rotationPolicy"},
     {SCREEN_SNAPSHOT_BUNDLE_NAME, "screenSnapshotBundleName"},
     {SCREEN_SNAPSHOT_ABILITY_NAME, "screenSnapshotAbilityName"},
     {IS_RIGHT_POWER_BUTTON, "isRightPowerButton"},
     {SUPPORT_ROTATE_WITH_SCREEN, "supportRotateWithSensor"},
     {EXTERNAL_SCREEN_DEFAULT_MODE, "externalScreenDefaultMode"},
     {CAST_BUNDLE_NAME, "castBundleName"},
-    {CAST_ABILITY_NAME, "castAbilityName"},
-    {PHYSICAL_DISPLAY_RESOLUTION, "physicalDisplayResolution"}
+    {CAST_ABILITY_NAME, "castAbilityName"}
 };
 
 
@@ -196,8 +192,6 @@ void ScreenSceneConfig::ParseNodeConfig(const xmlNodePtr& currNode)
         ReadStringConfigInfo(currNode);
     } else if (xmlNodeMap_[HALL_SWITCH_APP] == nodeName) {
         ReadStringListConfigInfo(currNode, nodeName);
-    } else if (xmlNodeMap_[PHYSICAL_DISPLAY_RESOLUTION] == nodeName) {
-        ReadPhysicalDisplayConfigInfo(currNode);
     } else {
         TLOGI(WmsLogTag::DMS, "xml config node name is not match, nodeName:%{public}s", nodeName.c_str());
     }
@@ -240,55 +234,6 @@ void ScreenSceneConfig::ReadIntNumbersConfigInfo(const xmlNodePtr& currNode)
     xmlFree(context);
 }
 
-void ScreenSceneConfig::ReadPhysicalDisplayConfigInfo(const xmlNodePtr& currNode)
-{
-    xmlChar* displayMode = xmlGetProp(currNode, reinterpret_cast<const xmlChar*>("displayMode"));
-    if (displayMode == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] read xml node error: nodeName:(%{public}s)", currNode->name);
-        return;
-    }
-    xmlChar* displayModeContext = xmlNodeGetContent(currNode);
-    if (displayModeContext == nullptr) {
-        TLOGE(WmsLogTag::DMS, "[SsConfig] read xml nodeName:(%{public}s) context null", currNode->name);
-        xmlFree(displayMode);
-        return;
-    }
-    std::string displaySizeStr = reinterpret_cast<const char*>(displayModeContext);
-    if (displaySizeStr.empty()) {
-        xmlFree(displayModeContext);
-        xmlFree(displayMode);
-        return;
-    }
-    auto displaySizeArray = Split(displaySizeStr, ":");
-    if (displaySizeArray.size() != DISPLAY_PHYSICAL_SIZE) {
-        xmlFree(displayModeContext);
-        xmlFree(displayMode);
-        return;
-    }
-    DisplayPhysicalResolution physicalSize;
-    if (!xmlStrcmp(displayMode, reinterpret_cast<const xmlChar*>("FOLD_DISPLAY_MODE_FULL"))) {
-        physicalSize.foldDisplayMode_ = FoldDisplayMode::FULL;
-    } else if (!xmlStrcmp(displayMode, reinterpret_cast<const xmlChar*>("FOLD_DISPLAY_MODE_MAIN"))) {
-        physicalSize.foldDisplayMode_ = FoldDisplayMode::MAIN;
-    } else if (!xmlStrcmp(displayMode, reinterpret_cast<const xmlChar*>("FOLD_DISPLAY_MODE_SUB"))) {
-        physicalSize.foldDisplayMode_ = FoldDisplayMode::SUB;
-    } else {
-        physicalSize.foldDisplayMode_ = FoldDisplayMode::UNKNOWN;
-    }
-    if (IsNumber(displaySizeArray[0]) && IsNumber(displaySizeArray[1])) {
-        physicalSize.physicalWidth_ = std::stoi(displaySizeArray[0]);
-        physicalSize.physicalHeight_ = std::stoi(displaySizeArray[1]);
-    }
-    displayPhysicalResolution_.emplace_back(physicalSize);
-    xmlFree(displayModeContext);
-    xmlFree(displayMode);
-}
-
-std::vector<DisplayPhysicalResolution> ScreenSceneConfig::GetAllDisplayPhysicalConfig()
-{
-    return displayPhysicalResolution_;
-}
-
 void ScreenSceneConfig::ReadEnableConfigInfo(const xmlNodePtr& currNode)
 {
     xmlChar* enable = xmlGetProp(currNode, reinterpret_cast<const xmlChar*>("enable"));
@@ -327,10 +272,13 @@ void ScreenSceneConfig::ReadStringConfigInfo(const xmlNodePtr& currNode)
 
 void ScreenSceneConfig::ReadStringListConfigInfo(const xmlNodePtr& rootNode, std::string name)
 {
-    xmlChar* rootContext = xmlNodeGetContent(rootNode);
     if (rootNode == nullptr || rootNode->name == nullptr) {
         TLOGE(WmsLogTag::DMS, "[SsConfig] get root element failed!");
-        xmlFree(rootContext);
+        return;
+    }
+    xmlChar* rootContext = xmlNodeGetContent(rootNode);
+    if (rootContext == nullptr) {
+        TLOGE(WmsLogTag::DMS, "rootContext is null");
         return;
     }
     std::vector<std::string> stringVec;

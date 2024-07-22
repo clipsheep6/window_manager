@@ -24,7 +24,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenSessionManagerStub" };
+constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenSessionManagerStub"};
 const static uint32_t MAX_SCREEN_SIZE = 32;
 const static int32_t ERR_INVALID_DATA = -1;
 const static int32_t MAX_BUFF_SIZE = 100;
@@ -218,10 +218,7 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             break;
         }
         case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_SCALE_MODE: {
-            ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
-            ScreenScaleMode scaleMode = static_cast<ScreenScaleMode>(data.ReadUint32());
-            DMError result = SetVirtualMirrorScreenScaleMode(screenId, scaleMode);
-            reply.WriteInt32(static_cast<int32_t>(result));
+            ProcSetVirtualScreenScaleMode(data, reply);
             break;
         }
         case DisplayManagerMessage::TRANS_ID_DESTROY_VIRTUAL_SCREEN: {
@@ -707,12 +704,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             ProcSetVirtualScreenFlag(data, reply);
             break;
         }
-        case DisplayManagerMessage::TRANS_ID_GET_DEVICE_SCREEN_CONFIG: {
-            if (!RSMarshallingHelper::Marshalling(reply, GetDeviceScreenConfig())) {
-                TLOGE(WmsLogTag::DMS, "Write deviceScreenConfig failed");
-            }
-            break;
-        }
         case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_REFRESH_RATE: {
             ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
             uint32_t refreshInterval = data.ReadUint32();
@@ -720,8 +711,27 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_GET_DEVICE_SCREEN_CONFIG: {
+            if (!RSMarshallingHelper::Marshalling(reply, GetDeviceScreenConfig())) {
+                TLOGE(WmsLogTag::DMS, "Write deviceScreenConfig failed");
+            }
+            break;
+        }
         case DisplayManagerMessage::TRANS_ID_SWITCH_USER: {
             SwitchUser();
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_BUFFER_AVAILABLE: {
+            NotifySessionBufferAvailable();
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_PROXY_FOR_FREEZE: {
+            ProcProxyForFreeze(data, reply);
+            break;
+        }
+        case DisplayManagerMessage::TRANS_ID_RESET_ALL_FREEZE_STATUS: {
+            DMError ret = ResetAllFreezeStatus();
+            reply.WriteInt32(static_cast<int32_t>(ret));
             break;
         }
         case DisplayManagerMessage::TRANS_ID_SET_VIRTUAL_SCREEN_BLACK_LIST: {
@@ -739,15 +749,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             DisablePowerOffRenderControl(screenId);
             break;
         }
-        case DisplayManagerMessage::TRANS_ID_PROXY_FOR_FREEZE: {
-            ProcProxyForFreeze(data, reply);
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_RESET_ALL_FREEZE_STATUS: {
-            DMError ret = ResetAllFreezeStatus();
-            reply.WriteInt32(static_cast<int32_t>(ret));
-            break;
-        }
         case DisplayManagerMessage::TRANS_ID_NOTIFY_DISPLAY_HOOK_INFO: {
             int32_t uid = data.ReadInt32();
             bool enable = data.ReadBool();
@@ -756,10 +757,6 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             hookInfo.height_ = data.ReadUint32();
             hookInfo.density_ = data.ReadFloat();
             UpdateDisplayHookInfo(uid, enable, hookInfo);
-            break;
-        }
-        case DisplayManagerMessage::TRANS_ID_GET_ALL_PHYSICAL_DISPLAY_RESOLUTION: {
-            ProcGetAllDisplayPhysicalResolution(data, reply);
             break;
         }
         default:
@@ -809,6 +806,14 @@ void ScreenSessionManagerStub::ProcGetVirtualScreenFlag(MessageParcel& data, Mes
     reply.WriteUint32(static_cast<uint32_t>(screenFlag));
 }
 
+void ScreenSessionManagerStub::ProcSetVirtualScreenScaleMode(MessageParcel& data, MessageParcel& reply)
+{
+    ScreenId screenId = static_cast<ScreenId>(data.ReadUint64());
+    ScreenScaleMode scaleMode = static_cast<ScreenScaleMode>(data.ReadUint32());
+    DMError result = SetVirtualMirrorScreenScaleMode(screenId, scaleMode);
+    reply.WriteInt32(static_cast<int32_t>(result));
+}
+
 void ScreenSessionManagerStub::ProcProxyForFreeze(MessageParcel& data, MessageParcel& reply)
 {
     std::set<int32_t> pidList;
@@ -823,33 +828,5 @@ void ScreenSessionManagerStub::ProcProxyForFreeze(MessageParcel& data, MessagePa
     bool isProxy = data.ReadBool();
     DMError ret = ProxyForFreeze(pidList, isProxy);
     reply.WriteInt32(static_cast<int32_t>(ret));
-}
-
-void ScreenSessionManagerStub::ProcGetAllDisplayPhysicalResolution(MessageParcel& data, MessageParcel& reply)
-{
-    auto physicalInfos = GetAllDisplayPhysicalResolution();
-    size_t infoSize = physicalInfos.size();
-    bool writeRet = reply.WriteInt32(static_cast<int32_t>(infoSize));
-    if (!writeRet) {
-        WLOGFE("write physical size error");
-        return;
-    }
-    for (const auto &physicalItem : physicalInfos) {
-        writeRet = reply.WriteUint32(static_cast<uint32_t>(physicalItem.foldDisplayMode_));
-        if (!writeRet) {
-            WLOGFE("write display mode error");
-            break;
-        }
-        writeRet = reply.WriteUint32(physicalItem.physicalWidth_);
-        if (!writeRet) {
-            WLOGFE("write physical width error");
-            break;
-        }
-        writeRet = reply.WriteUint32(physicalItem.physicalHeight_);
-        if (!writeRet) {
-            WLOGFE("write physical height error");
-            break;
-        }
-    }
 }
 } // namespace OHOS::Rosen
