@@ -31,6 +31,7 @@ config("we_systemtest_common_public_config") {
     "../../../extension/window_extension/include/zidl",
     "../../../interfaces/innerkits/extension",
     "../../../interfaces/innerkits/wm",
+    "../../../window_scene/common/include",
     "../../common/mock",
     "//third_party/googletest/googlemock/include",
   ]

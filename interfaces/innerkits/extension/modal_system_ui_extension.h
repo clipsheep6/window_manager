@@ -21,6 +21,7 @@
 #include <element_name.h>
 #include <ability_connect_callback_interface.h>
 #include <ability_connect_callback_stub.h>
+#include "task_scheduler.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -41,13 +42,15 @@ private:
             }
             virtual ~DialogAbilityConnection() = default;
 
+            int32_t SendWant(const sptr<IRemoteObject>& remoteObject);
+
             void OnAbilityConnectDone(const AppExecFwk::ElementName& element, const sptr<IRemoteObject>& remoteObject,
                 int resultCode) override;
             void OnAbilityDisconnectDone(const AppExecFwk::ElementName& element, int resultCode) override;
 
         private:
-            std::mutex mutex_;
             AAFwk::Want want_;
+            static std::shared_ptr<TaskScheduler> taskScheduler_;
     };
 
     sptr<OHOS::AAFwk::IAbilityConnection> dialogConnectionCallback_{ nullptr };
