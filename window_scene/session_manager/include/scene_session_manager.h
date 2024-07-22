@@ -698,6 +698,10 @@ private:
     WMError CheckAndReportScreenFoldStatus(const ScreenFoldData& data);
     WMError ReportScreenFoldStatus(const ScreenFoldData& data);
     RunnableFuture<std::vector<std::string>> dumpInfoFuture_;
+    void SetSkipCastControlPanelWindow(const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+        sptr<WindowSessionProperty> property);
+    void ResetSkipCastControlPanelWindow(const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+        sptr<WindowSessionProperty> property);
 };
 } // namespace OHOS::Rosen
 

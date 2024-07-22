@@ -2245,6 +2245,7 @@ WSError SceneSessionManager::CreateAndConnectSpecificSession(const sptr<ISession
         NotifyCreateSpecificSession(newSession, property, type);
         session = newSession;
         AddClientDeathRecipient(sessionStage, newSession);
+        SetSkipCastControlPanelWindow(surfaceNode, property);
         TLOGI(WmsLogTag::WMS_LIFE, "create specific session success, id: %{public}d, "
             "parentId: %{public}d, type: %{public}d",
             newSession->GetPersistentId(), newSession->GetParentPersistentId(), type);
@@ -2870,6 +2871,7 @@ WSError SceneSessionManager::DestroyAndDisconnectSpecificSessionInner(const int3
         nonSystemFloatSceneSessionMap_.erase(persistentId);
         UnregisterCreateSubSessionListener(persistentId);
     }
+    ResetSkipCastControlPanelWindow(sceneSession->GetSurfaceNode(), sceneSession->GetSessionProperty());
     TLOGI(WmsLogTag::WMS_LIFE, "Destroy specific session end, id: %{public}d", persistentId);
     return ret;
 }
@@ -9450,5 +9452,25 @@ int32_t SceneSessionManager::GetAppForceLandscapeMode(const std::string& bundleN
         return 0;
     }
     return appForceLandscapeMap_[bundleName];
+}
+
+void SceneSessionManager::SetSkipCastControlPanelWindow(const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+    sptr<WindowSessionProperty> property)
+{
+    std::size_t found = property->GetWindowName().find(std::string("CastControlPanelWindow"));
+    if (found != std::string::npos) {
+        TLOGI(WmsLogTag::WMS_LIFE, "CastControlPanelWindow set skip self when show on virtual screen");
+        SetSkipSelfWhenShowOnVirtualScreen(surfaceNode->GetId(), true);
+    }
+}
+
+void SceneSessionManager::ResetSkipCastControlPanelWindow(const std::shared_ptr<RSSurfaceNode>& surfaceNode,
+    sptr<WindowSessionProperty> property)
+{
+    std::size_t found = property->GetWindowName().find(std::string("CastControlPanelWindow"));
+    if (found != std::string::npos) {
+        TLOGI(WmsLogTag::WMS_LIFE, "CastControlPanelWindow reset skip self when show on virtual screen");
+        SetSkipSelfWhenShowOnVirtualScreen(surfaceNode->GetId(), false);
+    }
 }
 } // namespace OHOS::Rosen
