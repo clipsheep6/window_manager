@@ -145,9 +145,9 @@ void ModalSystemUiExtension::DialogAbilityConnection::OnAbilityConnectDone(
         }
         auto result = abilityManagerClient->DisconnectAbility(connection);
         if (result != ERR_OK) {
-            TLOGE(WmsLogTag::WMS_UIEXT, "DisconnectAbility dialog failed, result = %{public}d", result);
+            TLOGE(WmsLogTag::WMS_UIEXT, "DisconnectAbility failed, result = %{public}d", result);
         } else {
-            TLOGI(WmsLogTag::WMS_UIEXT, "DisconnectAbility dialog successfull.");
+            TLOGI(WmsLogTag::WMS_UIEXT, "DisconnectAbility successfull.");
         }
     };
 
