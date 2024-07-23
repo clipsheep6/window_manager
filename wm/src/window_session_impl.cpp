@@ -931,25 +931,10 @@ WMError WindowSessionImpl::InitUIContent(const std::string& contentInfo, napi_en
     {
         std::unique_lock<std::shared_mutex> lock(uiContentMutex_);
         uiContent_ = std::move(uiContent);
-        RegisterFrameLayoutCallback();
         WLOGFI("UIContent Initialize, isUIExtensionSubWindow:%{public}d, isUIExtensionAbilityProcess:%{public}d",
             uiContent_->IsUIExtensionSubWindow(), uiContent_->IsUIExtensionAbilityProcess());
     }
     return WMError::WM_OK;
-}
-
-void WindowSessionImpl::RegisterFrameLayoutCallback()
-{
-    uiContent_->SetFrameLayoutFinishCallback([weakThis = wptr(this)]() {
-        auto promoteThis = weakThis.promote();
-        if (promoteThis != nullptr && promoteThis->surfaceNode_ != nullptr) {
-            bool setCallBackEnable = true;
-            if (promoteThis->enableSetBufferAvailableCallback_.compare_exchange_strong(setCallBackEnable, false)) {
-                // false: Make the function callable
-                promoteThis->surfaceNode_->SetIsNotifyUIBufferAvailable(false);
-            }
-        }
-    });
 }
 
 WMError WindowSessionImpl::SetUIContentInner(const std::string& contentInfo, napi_env env, napi_value storage,
