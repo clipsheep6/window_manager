@@ -89,29 +89,34 @@ std::string ModalSystemUiExtension::ToString(const AAFwk::WantParams& wantParams
     return result;
 }
 
-int32_t ModalSystemUiExtension::DialogAbilityConnection::SendWant(const sptr<IRemoteObject>& remoteObject)
+bool ModalSystemUiExtension::DialogAbilityConnection::SendWant(const sptr<IRemoteObject>& remoteObject)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInt32(MESSAGE_PARCEL_KEY_SIZE)) {
         TLOGE(WmsLogTag::WMS_UIEXT, "write message parcel key size failed");
-        return;
+        return false;
     }
     if (!data.WriteString16(u"bundleName") || !data.WriteString16(Str8ToStr16(want_.GetElement().GetBundleName()))) {
         TLOGE(WmsLogTag::WMS_UIEXT, "write bundleName failed");
-        return;
+        return false;
     }
     if (!data.WriteString16(u"abilityName") || !data.WriteString16(Str8ToStr16(want_.GetElement().GetAbilityName()))) {
         TLOGE(WmsLogTag::WMS_UIEXT, "write abilityName failed");
-        return;
+        return false;
     }
     if (!data.WriteString16(u"parameters") ||
         !data.WriteString16(Str8ToStr16(ModalSystemUiExtension::ToString(want_.GetParams())))) {
         TLOGE(WmsLogTag::WMS_UIEXT, "write parameters failed");
-        return;
+        return false;
     }
-    return remoteObject->SendRequest(AAFwk::IAbilityConnection::ON_ABILITY_CONNECT_DONE, data, reply, option);
+    int32_t ret = remoteObject->SendRequest(AAFwk::IAbilityConnection::ON_ABILITY_CONNECT_DONE, data, reply, option);
+    if (ret != ERR_OK) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "show dialog failed");
+        return false;
+    }
+    return true;
 }
 
 void ModalSystemUiExtension::DialogAbilityConnection::OnAbilityConnectDone(
@@ -122,9 +127,7 @@ void ModalSystemUiExtension::DialogAbilityConnection::OnAbilityConnectDone(
         TLOGE(WmsLogTag::WMS_UIEXT, "remoteObject is nullptr");
         return;
     }
-    int32_t ret = SendWant(remoteObject);
-    if (ret != ERR_OK) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "show dialog failed");
+    if (!SendWant(remoteObject)) {
         return;
     }
 
@@ -137,17 +140,17 @@ void ModalSystemUiExtension::DialogAbilityConnection::OnAbilityConnectDone(
 
         auto abilityManagerClient = AbilityManagerClient::GetInstance();
         if (abilityManagerClient == nullptr) {
-            WLOGFE("ConnectSystemUi AbilityManagerClient is nullptr");
+            TLOGE(WmsLogTag::WMS_UIEXT, "AbilityManagerClient is nullptr");
             return;
         }
         auto result = abilityManagerClient->DisconnectAbility(connection);
         if (result != ERR_OK) {
-            WLOGFE("ConnectSystemUi DisconnectAbility dialog failed, result = %{public}d", result);
+            TLOGE(WmsLogTag::WMS_UIEXT, "DisconnectAbility dialog failed, result = %{public}d", result);
         } else {
-            WLOGFI("ConnectSystemUi DisconnectAbility dialog successfull.");
+            TLOGI(WmsLogTag::WMS_UIEXT, "DisconnectAbility dialog successfull.");
         }
     };
-    
+
     if (taskScheduler_ == nullptr) {
         taskScheduler_ = std::make_shared<TaskScheduler>(MODAL_UI_EXTENSION_THREAD);
     }

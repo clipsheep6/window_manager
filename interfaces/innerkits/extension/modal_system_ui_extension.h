@@ -42,7 +42,7 @@ private:
             }
             virtual ~DialogAbilityConnection() = default;
 
-            int32_t SendWant(const sptr<IRemoteObject>& remoteObject);
+            bool SendWant(const sptr<IRemoteObject>& remoteObject);
 
             void OnAbilityConnectDone(const AppExecFwk::ElementName& element, const sptr<IRemoteObject>& remoteObject,
                 int resultCode) override;
