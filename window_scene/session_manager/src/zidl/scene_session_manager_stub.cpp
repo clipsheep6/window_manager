@@ -313,7 +313,7 @@ int SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSessionWithDetachC
 
 int SceneSessionManagerStub::HandleRequestFocusStatus(MessageParcel &data, MessageParcel &reply)
 {
-    TLOGI("run");
+    TLOGI(WmsLogTag::WMS_FOCUS, "run");
     int32_t persistentId = data.ReadInt32();
     bool isFocused = data.ReadBool();
     WMError ret = RequestFocusStatus(persistentId, isFocused, true, FocusChangeReason::CLIENT_REQUEST);
