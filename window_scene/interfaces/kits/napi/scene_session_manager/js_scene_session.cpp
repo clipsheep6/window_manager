@@ -429,6 +429,15 @@ void JsSceneSession::ProcessKeyboardGravityChangeRegister()
     sessionchangeCallback->onKeyboardGravityChange_ = [this](SessionGravity gravity) {
         this->OnKeyboardGravityChange(gravity);
     };
+
+    auto session = weakSession_.promote();
+    if (session == nullptr) {
+        WLOGFE("session is nullptr");
+        return;
+    }
+    if (sessionchangeCallback->onKeyboardGravityChange_) {
+        sessionchangeCallback->onKeyboardGravityChange_(session->GetKeyboardGravity());
+    }
     TLOGI(WmsLogTag::WMS_KEYBOARD, "Register success");
 }
 
