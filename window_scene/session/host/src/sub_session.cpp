@@ -16,6 +16,7 @@
 #include "session/host/include/sub_session.h"
 #include "screen_session_manager/include/screen_session_manager_client.h"
 
+#include "common/include/session_permission.h"
 #include "key_event.h"
 #include "window_helper.h"
 #include "parameters.h"
@@ -43,6 +44,28 @@ SubSession::SubSession(const SessionInfo& info, const sptr<SpecificSessionCallba
 SubSession::~SubSession()
 {
     TLOGD(WmsLogTag::WMS_LIFE, "~SubSession, id: %{public}d", GetPersistentId());
+}
+
+WSError SubSession::ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation)
+{
+    if (withAnimation) {
+        if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+            TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
+            return WSError::WS_ERROR_NOT_SYSTEM_APP;
+        }
+    }
+    return Show(property);
+}
+
+WSError SubSession::HideWithAnimation(bool withAnimation)
+{
+    if (withAnimation) {
+        if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+            TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
+            return WSError::WS_ERROR_NOT_SYSTEM_APP;
+        }
+    }
+    return Hide();
 }
 
 WSError SubSession::Show(sptr<WindowSessionProperty> property)

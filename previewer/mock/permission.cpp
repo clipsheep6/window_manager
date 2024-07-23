@@ -23,7 +23,17 @@ bool Permission::IsSystemServiceCalling(bool needPrintLog)
     return true;
 }
 
+bool Permission::IsLocalSystemServiceCalling()
+{
+    return true;
+}
+
 bool Permission::IsSystemCalling()
+{
+    return true;
+}
+
+bool Permission::IsLocalSystemCalling()
 {
     return true;
 }
@@ -37,5 +47,16 @@ bool Permission::IsStartByHdcd()
 {
     return true;
 }
+
+bool Permission::IsLocalStartByHdcd()
+{
+    return true;
+}
+
+bool Permission::IsLocalSystemCallingOrStartByHdcd()
+{
+    return true;
+}
+
 } // namespace Rosen
 } // namespace OHOS

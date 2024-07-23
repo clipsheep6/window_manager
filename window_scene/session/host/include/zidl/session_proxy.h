@@ -84,6 +84,8 @@ public:
     WSError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
     WMError UpdateSessionPropertyByAction(const sptr<WindowSessionProperty>& property,
         WSPropertyChangeAction action) override;
+    WSError ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation) override;
+    WSError HideWithAnimation(bool withAnimation) override;
     int32_t GetAppForceLandscapeMode(const std::string& bundleName) override;
     int32_t GetStatusBarHeight() override;
 

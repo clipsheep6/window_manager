@@ -968,10 +968,10 @@ WMError WindowSceneSessionImpl::Show(uint32_t reason, bool withAnimation)
     }
     UpdateTitleButtonVisibility();
     if (WindowHelper::IsMainWindow(type)) {
-        ret = static_cast<WMError>(hostSession->Foreground(property_, true));
+        ret = static_cast<WMError>(hostSession->ShowWithAnimation(property_, withAnimation));
     } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)) {
         PreLayoutOnShow(type);
-        ret = static_cast<WMError>(hostSession->Show(property_));
+        ret = static_cast<WMError>(hostSession->ShowWithAnimation(property_, withAnimation));
     } else {
         ret = WMError::WM_ERROR_INVALID_WINDOW;
     }
@@ -1040,9 +1040,9 @@ WMError WindowSceneSessionImpl::Hide(uint32_t reason, bool withAnimation, bool i
         if (res != WMError::WM_OK) {
             return res;
         }
-        res = static_cast<WMError>(hostSession->Background(true));
+        res = static_cast<WMError>(hostSession->HideWithAnimation(withAnimation));
     } else if (WindowHelper::IsSubWindow(type) || WindowHelper::IsSystemWindow(type)) {
-        res = static_cast<WMError>(hostSession->Hide());
+        res = static_cast<WMError>(hostSession->HideWithAnimation(withAnimation));
     } else {
         res = WMError::WM_ERROR_INVALID_WINDOW;
     }

@@ -47,6 +47,28 @@ bool Permission::IsSystemServiceCalling(bool needPrintLog)
     return false;
 }
 
+bool Permission::IsLocalSystemServiceCalling()
+{
+    const auto tokenId = static_cast<uint32_t>(IPCSkeleton::GetSelfTokenID());
+    const auto flag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (flag == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        flag == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        TLOGD(WmsLogTag::DEFAULT,
+            "local system service calling, tokenId: %{public}u, flag: %{public}u", tokenId, flag);
+        return true;
+    }
+    return false;
+}
+
+bool Permission::IsLocalSystemCallingOrStartByHdcd()
+{
+    if (!IsLocalSystemCalling() && !IsLocalStartByHdcd()) {
+        TLOGE(WmsLogTag::DEFAULT, "not system calling, not start by hdcd");
+        return false;
+    }
+    return true;
+}
+
 bool Permission::IsSystemCalling()
 {
     if (IsSystemServiceCalling(false)) {
@@ -55,6 +77,15 @@ bool Permission::IsSystemCalling()
     uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
     bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
     return isSystemApp;
+}
+
+bool Permission::IsLocalSystemCalling()
+{
+    if (IsLocalSystemServiceCalling()) {
+        return true;
+    }
+    auto tokenId = IPCSkeleton::GetSelfTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
 }
 
 bool Permission::CheckCallingPermission(const std::string& permission)
@@ -68,6 +99,19 @@ bool Permission::CheckCallingPermission(const std::string& permission)
     }
     WLOGFD("permission ok!");
     return true;
+}
+
+bool Permission::IsLocalStartByHdcd()
+{
+    OHOS::Security::AccessToken::NativeTokenInfo info;
+    if (Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(
+        static_cast<uint32_t>(IPCSkeleton::GetSelfTokenID()), info) != 0) {
+        return false;
+    }
+    if (info.processName.compare("hdcd") == 0) {
+        return true;
+    }
+    return false;
 }
 
 bool Permission::IsStartByHdcd()

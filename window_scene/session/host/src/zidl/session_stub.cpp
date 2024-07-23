@@ -63,6 +63,10 @@ int SessionStub::ProcessRemoteRequest(uint32_t code, MessageParcel& data, Messag
             return HandleShow(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_HIDE):
             return HandleHide(data, reply);
+        case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SHOW_WITH_ANIMATION):
+            return HandleShowWithAnimation(data, reply);
+        case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_HIDE_WITH_ANIMATION):
+            return HandleHideWithAnimation(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DRAWING_COMPLETED):
             return HandleDrawingCompleted(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_RECTCHANGE_LISTENER_REGISTERED):
@@ -197,6 +201,34 @@ int SessionStub::HandleDisconnect(MessageParcel& data, MessageParcel& reply)
     WLOGFD("Disconnect!");
     bool isFromClient = data.ReadBool();
     const WSError& errCode = Disconnect(isFromClient);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleShowWithAnimation(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_LIFE, "ShowWithAnimation!");
+    sptr<WindowSessionProperty> property = nullptr;
+    if (data.ReadBool()) {
+        property = data.ReadStrongParcelable<WindowSessionProperty>();
+        if (property == nullptr) {
+            return ERR_INVALID_DATA;
+        }
+    } else {
+        TLOGE(WmsLogTag::WMS_LIFE, "Property not exist!");
+        property = new WindowSessionProperty();
+    }
+    bool withAnimation = data.ReadBool();
+    const WSError& errCode = ShowWithAnimation(property, withAnimation);
+    reply.WriteUint32(static_cast<uint32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleHideWithAnimation(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_LIFE, "HideWithAnimation!");
+    bool withAnimation = data.ReadBool();
+    const WSError& errCode = HideWithAnimation(withAnimation);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }

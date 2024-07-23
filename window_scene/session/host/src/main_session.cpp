@@ -17,6 +17,7 @@
 
 #include <ui/rs_surface_node.h>
 
+#include "common/include/session_permission.h"
 #include "key_event.h"
 #include "pointer_event.h"
 #include "session_helper.h"
@@ -156,6 +157,28 @@ bool MainSession::CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEv
         return false;
     }
     return true;
+}
+
+WSError MainSession::ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation)
+{
+    if (withAnimation) {
+        if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+            TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
+            return WSError::WS_ERROR_NOT_SYSTEM_APP;
+        }
+    }
+    return SceneSession::Foreground(property, true);
+}
+
+WSError MainSession::HideWithAnimation(bool withAnimation)
+{
+    if (withAnimation) {
+        if (!SessionPermission::IsSystemCalling() && !SessionPermission::IsStartByHdcd()) {
+            TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
+            return WSError::WS_ERROR_NOT_SYSTEM_APP;
+        }
+    }
+    return SceneSession::Background(true);
 }
 
 WSError MainSession::SetTopmost(bool topmost)

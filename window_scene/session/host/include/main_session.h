@@ -33,6 +33,8 @@ public:
     WSError SetTopmost(bool topmost) override;
     bool IsTopmost() const override;
     void RectCheck(uint32_t curWidth, uint32_t curHeight) override;
+    WSError ShowWithAnimation(sptr<WindowSessionProperty> property, bool withAnimation) override;
+    WSError HideWithAnimation(bool withAnimation) override;
     void SetExitSplitOnBackground(bool isExitSplitOnBackground) override;
     bool IsExitSplitOnBackground() const override;
 
