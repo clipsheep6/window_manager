@@ -424,6 +424,11 @@ void SceneSessionManager::ConfigWindowSceneXml(const WindowSceneConfig::ConfigIt
         systemConfig_.uiType_ = item.stringValue_;
         appWindowSceneConfig_.uiType_ = item.stringValue_;
     }
+    item = config["multiWindowUIType"];
+    if (item.IsString()) {
+        systemConfig_.multiWindowUIType_ = item.stringValue_;
+        appWindowSceneConfig_.multiWindowUIType_ = item.stringValue_;
+    }
     item = config["backgroundScreenLock"].GetProp("enable");
     if (item.IsBool()) {
         appWindowSceneConfig_.backgroundScreenLock_ = item.boolValue_;

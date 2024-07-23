@@ -103,7 +103,7 @@ WSError KeyboardSession::Hide()
         ret = session->SceneSession::Background();
         WSRect rect = {0, 0, 0, 0};
         session->NotifyKeyboardPanelInfoChange(rect, false);
-        if (session->systemConfig_.uiType_ == "pc") {
+        if (session->systemConfig_.multiWindowUIType_ == "FreeFormMultiWindow") {
             session->RestoreCallingSession();
             auto sessionProperty = session->GetSessionProperty();
             if (sessionProperty) {
@@ -337,7 +337,8 @@ bool KeyboardSession::CheckIfNeedRaiseCallingSession(sptr<SceneSession> callingS
         (WindowHelper::IsSubWindow(callingSession->GetWindowType()) && callingSession->GetParentSession() != nullptr &&
          callingSession->GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING);
     if (isCallingSessionFloating && isMainOrParentFloating &&
-        (systemConfig_.uiType_ == "phone" || systemConfig_.uiType_ == "pad")) {
+        (systemConfig_.multiWindowUIType_ == "HandsetSmartWindow" ||
+         systemConfig_.multiWindowUIType_ == "TabletSmartWindow")) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "No need to raise calling session in float window.");
         return false;
     }

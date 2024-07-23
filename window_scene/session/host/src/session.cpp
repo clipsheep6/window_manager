@@ -1822,7 +1822,7 @@ std::shared_ptr<Media::PixelMap> Session::Snapshot(const float scaleParam) const
         .scaleX = scaleValue,
         .scaleY = scaleValue,
         .useDma = true,
-        .useCurWindow = systemConfig_.uiType_ == "pc",
+        .useCurWindow = systemConfig_.multiWindowUIType_ == "FreeFormMultiWindow",
     };
     bool ret = RSInterfaces::GetInstance().TakeSurfaceCapture(surfaceNode_, callback, config);
     if (!ret) {
@@ -2534,8 +2534,8 @@ bool Session::IsStateMatch(bool isAttach) const
 
 bool Session::IsSupportDetectWindow(bool isAttach)
 {
-    bool isPc = systemConfig_.uiType_ == "pc";
-    bool isPhone = systemConfig_.uiType_ == "phone";
+    bool isPc = systemConfig_.multiWindowUIType_ == "FreeFormMultiWindow";
+    bool isPhone = systemConfig_.multiWindowUIType_ == "HandsetSmartWindow";
     if (!isPc && !isPhone) {
         TLOGI(WmsLogTag::WMS_LIFE, "device type not support, id:%{public}d", persistentId_);
         return false;

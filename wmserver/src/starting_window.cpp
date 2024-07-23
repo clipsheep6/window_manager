@@ -57,6 +57,7 @@ std::recursive_mutex StartingWindow::mutex_;
 WindowMode StartingWindow::defaultMode_ = WindowMode::WINDOW_MODE_FULLSCREEN;
 bool StartingWindow::transAnimateEnable_ = true;
 std::string StartingWindow::uiType_ = "";
+std::string StartingWindow::multiWindowUIType_ = "";
 AnimationConfig StartingWindow::animationConfig_;
 
 sptr<WindowNode> StartingWindow::CreateWindowNode(const sptr<WindowTransitionInfo>& info, uint32_t winId)
@@ -314,7 +315,7 @@ void StartingWindow::ReleaseStartWinSurfaceNode(sptr<WindowNode>& node)
 
 bool StartingWindow::IsWindowFollowParent(WindowType type)
 {
-    auto isPhone = uiType_ == "phone";
+    auto isPhone = multiWindowUIType_ == "HandsetSmartWindow";
     if (!isPhone) {
         return false;
     }

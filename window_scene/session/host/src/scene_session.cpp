@@ -1035,7 +1035,8 @@ void SceneSession::GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea)
         Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
         Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) &&
         WindowHelper::IsMainWindow(Session::GetWindowType()) &&
-        (systemConfig_.uiType_ == "phone" || systemConfig_.uiType_ == "pad") &&
+        (systemConfig_.multiWindowUIType_ == "HandsetSmartWindow" ||
+         systemConfig_.multiWindowUIType_ == "TabletSmartWindow") &&
         (!screenSession || screenSession->GetName() != "HiCar")) {
         float miniScale = 0.316f; // Pressed mini floating Scale with 0.001 precision
         if (Session::GetFloatingScale() <= miniScale) {
@@ -1084,7 +1085,8 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
           WindowHelper::IsMainWindow(Session::GetWindowType())) ||
          (WindowHelper::IsSubWindow(Session::GetWindowType()) && GetParentSession() != nullptr &&
           GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING)) &&
-        (systemConfig_.uiType_ == "phone" || (systemConfig_.uiType_ == "pad" && !IsFreeMultiWindowMode()))) {
+        (systemConfig_.multiWindowUIType_ == "HandsetSmartWindow" ||
+         (systemConfig_.multiWindowUIType_ == "TabletSmartWindow" && !IsFreeMultiWindowMode()))) {
         return;
     }
     auto sessionProperty = GetSessionProperty();
@@ -1190,8 +1192,8 @@ bool SceneSession::CheckGetAvoidAreaAvailable(AvoidAreaType type)
     WindowType winType = GetWindowType();
     if (WindowHelper::IsMainWindow(winType)) {
         if (mode != WindowMode::WINDOW_MODE_FLOATING ||
-            systemConfig_.uiType_ == "phone" ||
-            systemConfig_.uiType_ == "pad") {
+            systemConfig_.multiWindowUIType_ == "HandsetSmartWindow" ||
+            systemConfig_.multiWindowUIType_ == "TabletSmartWindow") {
             return true;
         }
     }
@@ -1598,7 +1600,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
             return Session::TransferPointerEvent(pointerEvent, needNotifyClient);
         }
         if (property->GetWindowMode() == WindowMode::WINDOW_MODE_FLOATING && property->GetDragEnabled()) {
-            auto isPC = systemConfig_.uiType_ == "pc";
+            auto isPC = systemConfig_.multiWindowUIType_ == "FreeFormMultiWindow";
             bool freeMultiWindowSupportDevices = systemConfig_.freeMultiWindowSupport_ &&
                 systemConfig_.freeMultiWindowEnable_;
             if ((isPC || freeMultiWindowSupportDevices) &&

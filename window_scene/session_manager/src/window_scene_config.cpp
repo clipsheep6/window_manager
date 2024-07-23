@@ -85,6 +85,7 @@ const std::map<std::string, WindowSceneConfig::ValueType> WindowSceneConfig::con
     { "backgroundswitch",                             WindowSceneConfig::ValueType::INTS },
     { "freeMultiWindow",                              WindowSceneConfig::ValueType::MAP },
     { "uiType",                                       WindowSceneConfig::ValueType::STRING },
+    { "multiWindowUIType",                            WindowSceneConfig::ValueType::STRING },
     { "backgroundScreenLock",                         WindowSceneConfig::ValueType::STRING },
     { "rotationMode",                                 WindowSceneConfig::ValueType::STRING },
     { "immersive",                                    WindowSceneConfig::ValueType::MAP },
