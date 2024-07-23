@@ -9451,4 +9451,19 @@ int32_t SceneSessionManager::GetAppForceLandscapeMode(const std::string& bundleN
     }
     return appForceLandscapeMap_[bundleName];
 }
+
+WMError SceneSessionManager::TerminateSessionByPersistentId(const int32_t persistentId)
+{
+    if (!SessionPermission::VerifyCallingPermission("ohos.permission.KILL_APP_PROCESSES")) {
+        TLOGE(WmsLogTag::WMS_LIFE, "The caller has not KILL_APP_PROCESSES permission granted.");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    auto sceneSession = GetSceneSession(persistentId);
+    if (sceneSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Session id:%{public}d is not found.", persistentId);
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    sceneSession->Clear(true);
+    return WMError::WM_OK;
+}
 } // namespace OHOS::Rosen
