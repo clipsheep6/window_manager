@@ -1340,6 +1340,7 @@ void SceneSessionManager::CreateKeyboardPanelSession(sptr<SceneSession> keyboard
             .screenId_ = static_cast<uint64_t>(displayId),
             .isRotable_ = true,
             .isSystemInput_ = false,
+            .isRotable_ = true,
         };
         static bool is2in1 = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
         if (is2in1) {
