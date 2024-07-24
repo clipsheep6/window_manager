@@ -834,7 +834,9 @@ ohos_unittest("ws_scene_session_manager_test3") {
 ohos_unittest("ws_scene_session_manager_supplement_test") {
   module_out_path = module_out_path
 
-  sources = [ "scene_session_manager_supplement_test.cpp" ]
+  sources = [
+    "scene_session_manager_supplement_test.cpp",
+  ]
 
   deps = [ ":ws_unittest_common" ]
 
