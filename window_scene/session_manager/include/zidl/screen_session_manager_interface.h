@@ -142,6 +142,7 @@ public:
 
     virtual void SetClient(const sptr<IScreenSessionManagerClient>& client) {}
     virtual void SwitchUser() {}
+    virtual void NotifySessionBufferAvailable() {}
     virtual ScreenProperty GetScreenProperty(ScreenId screenId) { return ScreenProperty(); }
     virtual std::shared_ptr<RSDisplayNode> GetDisplayNode(ScreenId screenId) { return nullptr; }
     virtual void UpdateScreenRotationProperty(ScreenId screenId, const RRectT<float>& bounds, float rotation) {}
@@ -154,7 +155,7 @@ public:
     virtual void SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate) {}
     virtual void SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList) {}
     virtual void NotifyFoldToExpandCompletion(bool foldToExpand) {}
-    virtual DeviceScreenConfig GetDeviceScreenConfig() { return {}; }
+
     DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval) override
     {
         return DMError::DM_OK;
@@ -167,6 +168,7 @@ public:
     {
         return DMError::DM_OK;
     }
+    virtual DeviceScreenConfig GetDeviceScreenConfig() { return {}; }
     virtual void SetVirtualScreenBlackList(ScreenId screenId, std::vector<uint64_t>& windowIdList) override {}
     virtual void DisablePowerOffRenderControl(ScreenId screenId) override {}
 
