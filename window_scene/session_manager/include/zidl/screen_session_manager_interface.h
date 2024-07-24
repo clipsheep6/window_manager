@@ -38,6 +38,7 @@ public:
     virtual sptr<DisplayInfo> GetDisplayInfoByScreen(ScreenId screenId) override {return nullptr; }
     virtual DMError HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow) override { return DMError::DM_OK; }
     virtual bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId) override { return true; }
+    virtual void UpdateDisplayHookinfo(unit32_t uid, bool enable, DMHookInfo& hookinfo) override {};
 
     virtual ScreenId CreateVirtualScreen(VirtualScreenOption option,
         const sptr<IRemoteObject>& displayManagerAgent) override { return -1; }
@@ -139,7 +140,6 @@ public:
     virtual DMError MakeUniqueScreen(const std::vector<ScreenId>& screenIds) override { return DMError::DM_OK; };
 
     virtual void SetClient(const sptr<IScreenSessionManagerClient>& client) {}
-    virtual void SwitchUser() {}
     virtual ScreenProperty GetScreenProperty(ScreenId screenId) { return ScreenProperty(); }
     virtual std::shared_ptr<RSDisplayNode> GetDisplayNode(ScreenId screenId) { return nullptr; }
     virtual void UpdateScreenRotationProperty(ScreenId screenId, const RRectT<float>& bounds, float rotation) {}
@@ -151,11 +151,20 @@ public:
     virtual void SetPrivacyStateByDisplayId(DisplayId id, bool hasPrivate) {}
     virtual void SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList) {}
     virtual void NotifyFoldToExpandCompletion(bool foldToExpand) {}
-    virtual DeviceScreenConfig GetDeviceScreenConfig() { return {}; }
+
     DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval) override
     {
         return DMError::DM_OK;
     }
+    virtual DMError ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy) override
+    {
+        return DMError::DM_OK;
+    }
+    virtual DMError ResetAllFreezeStatus() override
+    {
+        return DMError::DM_OK;
+    }
+    virtual DeviceScreenConfig GetDeviceScreenConfig() {return {};}
 };
 } // namespace Rosen
 } // namespace OHOS

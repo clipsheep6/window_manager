@@ -34,7 +34,9 @@ private:
     void ProcGetSnapshotByPicker(MessageParcel& reply);
     void ProcSetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply);
     void ProcGetVirtualScreenFlag(MessageParcel& data, MessageParcel& reply);
+    void ProcSetVortualScreenScaleMode(MessageParcel& data, MessageParcel& reply);
     void ProcGetAvailableArea(MessageParcel& data, MessageParcel& reply);
+    void ProcProxyForFreeze(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace Rosen
 } // namespace OHOS
