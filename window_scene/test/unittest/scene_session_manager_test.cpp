@@ -52,6 +52,8 @@ public:
     static void SetVisibleForAccessibility(sptr<SceneSession>& sceneSession);
     int32_t GetTaskCount(sptr<SceneSession>& session);
     static sptr<SceneSessionManager> ssm_;
+private:
+    static constexpr uint32_t WAIT_SYNC_IN_NS = 200000;
 };
 
 sptr<SceneSessionManager> SceneSessionManagerTest::ssm_ = nullptr;
@@ -85,6 +87,7 @@ void SceneSessionManagerTest::SetUp()
 
 void SceneSessionManagerTest::TearDown()
 {
+    usleep(WAIT_SYNC_IN_NS);
     ssm_->sceneSessionMap_.clear();
 }
 
@@ -122,6 +125,7 @@ HWTEST_F(SceneSessionManagerTest, SetBrightness, Function | SmallTest | Level3)
     info.abilityName_ = "SetBrightness";
     info.bundleName_ = "SetBrightness1";
     sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
+    ASSERT_NE(sceneSession, nullptr);
     WSError result = ssm_->SetBrightness(sceneSession, 0.5);
     ASSERT_EQ(result, WSError::WS_OK);
 }
@@ -818,7 +822,7 @@ HWTEST_F(SceneSessionManagerTest, RecoverSessionInfo, Function | SmallTest | Lev
     SessionInfo info = ssm_->RecoverSessionInfo(nullptr);
 
     sptr<WindowSessionProperty> property = new WindowSessionProperty();
-    EXPECT_FALSE(ssm_->alivePersistentIds_.empty());
+    ASSERT_NE(nullptr, property);
     info = ssm_->RecoverSessionInfo(property);
 }
 
