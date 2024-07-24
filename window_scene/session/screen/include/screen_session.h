@@ -115,7 +115,9 @@ public:
     void SetScreenSceneDpi(float density);
     void SetDensityInCurResolution(float densityInCurResolution);
     void SetScreenType(ScreenType type);
-
+    void SetMirrorScreenType(MirrorScreenType type);
+    MirrorScreenType GetMirrorScreenType();
+    
     void SetScreenSceneDestroyListener(const DestroyScreenSceneFunc& func);
     void DestroyScreenScene();
 
@@ -207,9 +209,6 @@ public:
     void UpdateRotationAfterBoot(bool foldToExpand);
     std::shared_ptr<Media::PixelMap> GetScreenSnapshot(float scaleX, float scaleY);
     void SetDefaultDeviceRotationOffset(uint32_t defaultRotationOffset);
-
-    void SetMirrorScreenType(MirrorScreenType mirrorType);
-    MirrorScreenType GetMirrorScreenType();
 
 private:
     Rotation ConvertIntToRotation(int rotation);
