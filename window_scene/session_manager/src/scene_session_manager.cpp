@@ -4340,7 +4340,7 @@ WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& scene
             byForeground = false;
         }
         if (byForeground && CheckFocusIsDownThroughBlockingType(sceneSession,  focusedSession,  true))  {
-            TLOGD(WmsLogTag::WMS_FOCUS, "check, need to be intercepted");
+            TLOGI(WmsLogTag::WMS_FOCUS, "check, need to be intercepted");
             return WSError::WS_DO_NOTHING;
         }
         if ((reason == FocusChangeReason::SPLIT_SCREEN || reason == FocusChangeReason::FLOATING_SCENE) &&
@@ -4356,7 +4356,7 @@ WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& scene
         // temp check
         if (isBlockingType && focusedSession->GetWindowType() == WindowType::WINDOW_TYPE_KEYGUARD &&
             sceneSession->GetZOrder() < focusedSession->GetZOrder()) {
-                TLOGD(WmsLogTag::WMS_FOCUS, "Lower session %{public}d cannot request focus from keyguard!",
+                TLOGI(WmsLogTag::WMS_FOCUS, "Lower session %{public}d cannot request focus from keyguard!",
                     persistentId);
                 return WSError::WS_DO_NOTHING;
         }
@@ -4366,7 +4366,7 @@ WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& scene
 
 sptr<SceneSession> SceneSessionManager::GetNextFocusableSession(int32_t persistentId)
 {
-    TLOGD(WmsLogTag::WMS_FOCUS, "GetNextFocusableSession, id: %{public}d", persistentId);
+    TLOGD(WmsLogTag::WMS_FOCUS, "id:%{public}d", persistentId);
     bool previousFocusedSessionFound = false;
     sptr<SceneSession> ret = nullptr;
     auto func = [this, persistentId, &previousFocusedSessionFound, &ret](sptr<SceneSession> session) {
@@ -4382,7 +4382,9 @@ sptr<SceneSession> SceneSessionManager::GetNextFocusableSession(int32_t persiste
             session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) &&
             GetSceneSession(session->GetParentPersistentId()) &&
             !IsSessionVisible(GetSceneSession(session->GetParentPersistentId()))) {
-                parentVisible = false;
+            TLOGD(WmsLogTag::WMS_FOCUS, "parent session id:%{public}d is not visible",
+                session->GetParentPersistentId());
+            parentVisible = false;
         }
         if (previousFocusedSessionFound && session->GetFocusable() && IsSessionVisible(session) && parentVisible) {
             ret = session;
@@ -4426,7 +4428,7 @@ sptr<SceneSession> SceneSessionManager::GetTopNearestBlockingFocusSession(uint32
 
 sptr<SceneSession> SceneSessionManager::GetTopFocusableNonAppSession()
 {
-    TLOGD(WmsLogTag::WMS_FOCUS, "GetTopFocusableNonAppSession.");
+    TLOGD(WmsLogTag::WMS_FOCUS, "Called.");
     sptr<SceneSession> ret = nullptr;
     auto func = [this, &ret](sptr<SceneSession> session) {
         if (session == nullptr) {
