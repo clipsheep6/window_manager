@@ -4348,9 +4348,9 @@ sptr<SceneSession> SceneSessionManager::GetNextFocusableSession(int32_t persiste
             session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) &&
             GetSceneSession(session->GetParentPersistentId()) &&
             !IsSessionVisible(GetSceneSession(session->GetParentPersistentId()))) {
-                TLOGD(WmsLogTag::WMS_FOCUS, "parent session id: %{public}d is not visible",
-                    session->GetParentPersistentId());
-                parentVisible = false;
+            TLOGD(WmsLogTag::WMS_FOCUS, "parent session id:%{public}d is not visible",
+                session->GetParentPersistentId());
+            parentVisible = false;
         }
         if (previousFocusedSessionFound && session->GetFocusable() && IsSessionVisible(session) && parentVisible) {
             ret = session;
