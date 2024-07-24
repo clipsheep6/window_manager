@@ -908,6 +908,9 @@ void Session::SetWindowSessionProperty(const sptr<WindowSessionProperty>& proper
             property->SetDragEnabled(sessionProperty->GetIsSupportDragInPcCompatibleMode());
         }
     }
+    if (sessionProperty && property && SessionHelper::IsMainWindow(GetWindowType())) {
+        property->SetIsPcAppInPad(sessionProperty->GetIsPcAppInPad());
+    }
 }
 
 WSError Session::Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
@@ -2132,12 +2135,24 @@ WSError Session::SetCompatibleModeInPc(bool enable, bool isSupportDragInPcCompat
         TLOGE(WmsLogTag::WMS_SCB, "id: %{public}d property is nullptr", persistentId_);
         return WSError::WS_ERROR_NULLPTR;
     }
-    
+
     property->SetCompatibleModeInPc(enable);
     property->SetIsSupportDragInPcCompatibleMode(isSupportDragInPcCompatibleMode);
     if (enable) {
         property->SetDragEnabled(isSupportDragInPcCompatibleMode);
     }
+    return WSError::WS_OK;
+}
+
+WSError Session::SetIsPcAppInPad(bool enable)
+{
+    TLOGI(WmsLogTag::WMS_SCB, "SetIsPcAppInPad enable: %{public}d", enable);
+    auto property = GetSessionProperty();
+    if (property == nullptr) {
+        TLOGE(WmsLogTag::WMS_SCB, "id: %{public}d property is nullptr", persistentId_);
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    property->SetIsPcAppInPad(enable);
     return WSError::WS_OK;
 }
 
