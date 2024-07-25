@@ -34,6 +34,8 @@ public:
 
 private:
     int HandleConnect(MessageParcel& data, MessageParcel& reply);
+    void HandleConnectReply(MessageParcel& reply, const SystemSessionConfig& systemConfig,
+        const sptr<WindowSessionProperty>& property, WSError errCode);
     int HandleForeground(MessageParcel& data, MessageParcel& reply);
     int HandleBackground(MessageParcel& data, MessageParcel& reply);
     int HandleDisconnect(MessageParcel& data, MessageParcel& reply);

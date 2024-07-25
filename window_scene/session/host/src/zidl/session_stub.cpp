@@ -265,6 +265,13 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
     SystemSessionConfig systemConfig;
     WSError errCode = Connect(sessionStage, eventChannel, surfaceNode, systemConfig, property, token,
         identityToken);
+    HandleConnectReply(reply, systemConfig, property, errCode);
+    return ERR_NONE;
+}
+
+void SessionStub::HandleConnectReply(MessageParcel& reply,
+    const SystemSessionConfig& systemConfig, const sptr<WindowSessionProperty>& property, WSError errCode)
+{
     reply.WriteParcelable(&systemConfig);
     if (property) {
         reply.WriteInt32(property->GetPersistentId());
@@ -287,7 +294,6 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
         reply.WriteBool(property->GetIsSupportDragInPcCompatibleMode());
     }
     reply.WriteUint32(static_cast<uint32_t>(errCode));
-    return ERR_NONE;
 }
 
 int SessionStub::HandleDrawingCompleted(MessageParcel& data, MessageParcel& reply)
