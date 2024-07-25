@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "fold_creen_controller/sensor_fold_state_manager/dual_display_sensor_fold_state_manager.h"
+#include "fold_screen_controller/sensor_fold_state_manager/dual_display_sensor_fold_state_manager.h"
 #include <iservice_registry.h>
 #include <parameters.h>
 #include <refbase.h>
