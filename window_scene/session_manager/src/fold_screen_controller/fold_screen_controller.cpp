@@ -18,9 +18,9 @@
 #include "fold_screen_controller/single_display_pocket_fold_policy.h"
 #include "fold_screen_controller/dual_display_fold_policy.h"
 #include "fold_screen_controller/fold_screen_sensor_manager.h"
+#include "fold_screen_controller/sensor_fold_state_manager/dual_display_sensor_fold_state_manager.h"
 #include "fold_screen_controller/sensor_fold_state_manager/single_display_sensor_fold_state_manager.h"
 #include "fold_screen_controller/sensor_fold_state_manager/single_display_sensor_pocket_fold_state_manager.h"
-#include "fold_screen_controller/sensor_fold_state_manager/dual_display_sensor_fold_state_manager.h"
 #include "fold_screen_state_internel.h"
 
 #include "window_manager_hilog.h"
@@ -43,9 +43,12 @@ FoldScreenController::FoldScreenController(std::recursive_mutex& displayInfoMute
         sensorFoldStateManager_ = new SingleDisplaySensorPocketFoldStateManager();
         TLOGI(WmsLogTag::DMS, "fold polocy: SINGLE_DISPLAY_POCKET_DEVICE");
     }
-
     if (foldScreenPolicy_ == nullptr) {
         TLOGE(WmsLogTag::DMS, "FoldScreenPolicy is null");
+        return;
+    }
+    if (sensorFoldStateManager_ == nullptr) {
+        TLOGE(WmsLogTag::DMS, "SensorFoldStateManager is null");
         return;
     }
 #ifdef SENSOR_ENABLE
