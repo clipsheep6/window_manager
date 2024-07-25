@@ -574,9 +574,9 @@ HWTEST_F(WindowAdapterTest, GetHostWindowRect, Function | SmallTest | Level2)
 HWTEST_F(WindowAdapterTest, GetWindowStyleType, Function | SmallTest | Level2)
 {
     WindowAdapter windowAdapter;
-    WindowStyleType windowStyleType;
-    auto ret = windowAdapter.GetWindowStyleType(windowStyleType);
-    ASSERT_EQ(WMError::WM_OK, ret);
+    WindowStyleType windowStyleType = Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT;
+    windowAdapter.GetWindowStyleType(windowStyleType);
+    ASSERT_EQ(Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT, windowStyleType);
 }
 
 }

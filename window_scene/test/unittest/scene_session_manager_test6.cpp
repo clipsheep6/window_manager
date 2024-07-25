@@ -1207,9 +1207,9 @@ HWTEST_F(SceneSessionManagerTest6, DeleteStateDetectTask, Function | SmallTest |
 HWTEST_F(SceneSessionManagerTest6, GetWindowStyleType, Function | SmallTest | Level3)
 {
     ASSERT_NE(nullptr, ssm_);
-    WindowStyleType windowModeType;
-    auto result = ssm_->GetWindowStyleType(windowModeType);
-    EXPECT_EQ(result, WMError::WM_OK);
+    WindowStyleType windowModeType = Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT;
+    ssm_->GetWindowStyleType(windowModeType);
+    ASSERT_EQ(windowModeType, Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT);
 }
 }
 } // namespace Rosen

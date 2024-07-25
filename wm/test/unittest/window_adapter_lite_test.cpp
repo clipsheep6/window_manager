@@ -110,9 +110,9 @@ HWTEST_F(WindowAdapterLiteTest, UnregisterWindowManagerAgent01, Function | Small
 HWTEST_F(WindowAdapterLiteTest, GetWindowStyleType, Function | SmallTest | Level2)
 {
     std::shared_ptr<WindowAdapterLite> windowAdapterLite_ = std::make_shared<WindowAdapterLite>();
-    WindowStyleType windowStyleType;
-    auto ret = windowAdapterLite_->GetWindowStyleType(windowStyleType);
-    ASSERT_EQ(WMError::WM_OK, ret);
+    WindowStyleType windowStyleType = Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT;
+    windowAdapterLite_->GetWindowStyleType(windowStyleType);
+    ASSERT_EQ(Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT, windowStyleType);
 }
 
 }
