@@ -198,8 +198,8 @@ WSError KeyboardSession::SetKeyboardSessionGravity(SessionGravity gravity, uint3
         TLOGI(WmsLogTag::WMS_KEYBOARD, "keyboardId: %{public}d, gravity: %{public}d, percent: %{public}d",
             session->GetPersistentId(), gravity, percent);
 
-        if (session->sessionChangeCallback_ && session->sessionChangeCallback_->onKeyboardGravityChange_) {
-            session->sessionChangeCallback_->onKeyboardGravityChange_(gravity);
+        if (session->keyboardGravityChangeFunc_) {
+            session->keyboardGravityChangeFunc_(gravity);
         }
         auto sessionProperty = session->GetSessionProperty();
         if (sessionProperty) {
