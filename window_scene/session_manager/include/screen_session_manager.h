@@ -90,6 +90,7 @@ public:
     bool SetScreenPowerForAll(ScreenPowerState state, PowerStateChangeReason reason) override;
     ScreenPowerState GetScreenPower(ScreenId screenId) override;
     void NotifyDisplayEvent(DisplayEvent event) override;
+    void HandlerSensor(ScreenPowerStatus status, PowerStateChangeReason reason);
 
     void RegisterDisplayChangeListener(sptr<IDisplayChangeListener> listener);
     bool NotifyDisplayPowerEvent(DisplayPowerEvent event, EventStatus status, PowerStateChangeReason reason);
@@ -234,6 +235,7 @@ public:
     void SetHdrFormats(ScreenId screenId, sptr<ScreenSession>& session);
     void SetColorSpaces(ScreenId screenId, sptr<ScreenSession>& session);
     void SwitchUser() override;
+    void NotifySessionBufferAvailable() override;
     void SetClient(const sptr<IScreenSessionManagerClient>& client) override;
     ScreenProperty GetScreenProperty(ScreenId screenId) override;
     std::shared_ptr<RSDisplayNode> GetDisplayNode(ScreenId screenId) override;
@@ -310,7 +312,6 @@ private:
     bool OnRemoteDied(const sptr<IRemoteObject>& agent);
     std::string TransferTypeToString(ScreenType type) const;
     void CheckAndSendHiSysEvent(const std::string& eventName, const std::string& bundleName) const;
-    void HandlerSensor(ScreenPowerStatus status, PowerStateChangeReason reason);
     bool GetPowerStatus(ScreenPowerState state, PowerStateChangeReason reason, ScreenPowerStatus& status);
 
     int Dump(int fd, const std::vector<std::u16string>& args) override;
@@ -325,8 +326,6 @@ private:
 #ifdef DEVICE_STATUS_ENABLE
     void SetDragWindowScreenId(ScreenId screenId, ScreenId displayNodeScreenId);
 #endif // DEVICE_STATUS_ENABLE
-    void ShowFoldStatusChangedInfo(int errCode, std::string& dumpInfo);
-    void SetMirrorScreenIds(std::vector<ScreenId>& mirrorScreenIds);
     class ScreenIdManager {
     friend class ScreenSessionGroup;
     public:
@@ -406,6 +405,10 @@ private:
     bool gotScreenOffNotify_ = false;
     bool needScreenOffNotify_ = false;
 
+    std::mutex scbBufferAvailableMutex_;
+    std::condition_variable scbBufferAvailableCV_;
+    void BlockScbByAvailabelBuffer(void);
+
     std::mutex screenOnMutex_;
     std::condition_variable screenOnCV_;
     std::mutex screenOffMutex_;
@@ -438,10 +441,11 @@ private:
     void NotifyClientProxyUpdateFoldDisplayMode(FoldDisplayMode displayMode);
     void RegisterApplicationStateObserver();
     void SetPostureAndHallSensorEnabled();
-    bool IsValidDisplayModeCommand(std::string command);
     bool IsDefaultMirrorMode(ScreenId screenId);
+    bool IsValidDisplayModeCommand(std::string command);
     void SetCastFromSettingData();
     void RegisterCastObserver(std::vector<ScreenId>& mirrorScreenIds);
+    void UnRegisterCastObserver(std::vector<ScreenId>& mirrorScreenIds);
 
 private:
     class ScbClientListenerDeathRecipient : public IRemoteObject::DeathRecipient {
