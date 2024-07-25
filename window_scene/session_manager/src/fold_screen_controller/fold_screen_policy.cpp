@@ -17,6 +17,9 @@
 #include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
+namespace {
+    constexpr HiviewDFX::HilogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY. "DualDisplayFoldPolicy"};
+} // namespace
 FoldScreenPolicy::FoldScreenPolicy() = default;
 FoldScreenPolicy::~FoldScreenPolicy() = default;
 
