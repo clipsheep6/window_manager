@@ -101,6 +101,20 @@ HWTEST_F(WindowAdapterLiteTest, UnregisterWindowManagerAgent01, Function | Small
 
     ASSERT_NE(WMError::WM_OK, ret);
 }
+
+/**
+ * @tc.name: GetWindowStyleType
+ * @tc.desc: WindowAdapterLite/GetWindowStyleType
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowAdapterLiteTest, GetWindowStyleType, Function | SmallTest | Level2)
+{
+    std::shared_ptr<WindowAdapterLite> windowAdapterLite_ = std::make_shared<WindowAdapterLite>();
+    WindowStyleType windowStyleType;
+    auto ret = windowAdapterLite_->GetWindowStyleType(windowStyleType);
+    ASSERT_EQ(WMError::WM_OK, ret);
+}
+
 }
 }
 }

@@ -1198,6 +1198,19 @@ HWTEST_F(SceneSessionManagerTest6, DeleteStateDetectTask, Function | SmallTest |
     ASSERT_NE(nullptr, ssm_);
     ssm_->DeleteStateDetectTask();
 }
+
+/**
+ * @tc.name: GetWindowStyleType
+ * @tc.desc: GetWindowStyleType
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest6, GetWindowStyleType, Function | SmallTest | Level3)
+{
+    ASSERT_NE(nullptr, ssm_);
+    WindowStyleType windowModeType;
+    auto result = ssm_->GetWindowStyleType(windowModeType);
+    EXPECT_EQ(result, WMError::WM_OK);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
