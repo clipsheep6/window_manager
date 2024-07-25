@@ -2441,7 +2441,7 @@ void Session::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info,
     sessionStage_->NotifyOccupiedAreaChangeInfo(info, rsTransaction);
 }
 
-WindowMode Session::GetWindowMode()
+WindowMode Session::GetWindowMode() const
 {
     auto property = GetSessionProperty();
     if (property == nullptr) {

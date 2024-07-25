@@ -335,7 +335,7 @@ public:
     int32_t GetCallingUid() const;
     void SetAbilityToken(sptr<IRemoteObject> token);
     sptr<IRemoteObject> GetAbilityToken() const;
-    WindowMode GetWindowMode();
+    WindowMode GetWindowMode() const;
     virtual void SetZOrder(uint32_t zOrder);
     uint32_t GetZOrder() const;
     void SetUINodeId(uint32_t uiNodeId);
