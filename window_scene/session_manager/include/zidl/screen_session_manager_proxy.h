@@ -115,6 +115,7 @@ public:
 
     virtual DMError HasPrivateWindow(DisplayId displayId, bool& hasPrivateWindow) override;
     virtual bool ConvertScreenIdToRsScreenId(ScreenId screenId, ScreenId& rsScreenId) override;
+    virtual void UpdateDisplayHookinfo(unit32_t uid, bool enable, DMHookInfo& hookinfo) override;
 
     virtual void DumpAllScreensInfo(std::string& dumpInfo) override;
     virtual void DumpSpecialScreenInfo(ScreenId id, std::string& dumpInfo) override;
@@ -148,12 +149,13 @@ public:
     void SetScreenPrivacyWindowList(DisplayId id, std::vector<std::string> privacyWindowList) override;
     virtual DMError GetAvailableArea(DisplayId displayId, DMRect& area) override;
     void NotifyFoldToExpandCompletion(bool foldToExpand) override;
-    void SwitchUser() override;
 
     VirtualScreenFlag GetVirtualScreenFlag(ScreenId screenId) override;
     DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag) override;
+    DMError SetVirtualScreenRefreshRate(ScreenId screenId, unit32_t refreshInterval) override;
     DeviceScreenConfig GetDeviceScreenConfig() override;
-    DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval) override;
+    DMError ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy) override;
+    DMError ResetAllFreezeStatus() override;
 private:
     static inline BrokerDelegator<ScreenSessionManagerProxy> delegator_;
 };

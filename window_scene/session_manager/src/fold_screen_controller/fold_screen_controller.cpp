@@ -14,11 +14,11 @@
  */
 
 #include "fold_screen_controller/fold_screen_controller.h"
-#include "fold_screen_controller/dual_display_device_policy.h"
-#include "fold_screen_controller/dual_display_policy.h"
+#include "fold_screen_controller/single_display_fold_policy.h"
+#include "fold_screen_controller/dual_display_fold_policy.h"
 #include "fold_screen_controller/fold_screen_sensor_manager.h"
-#include "fold_screen_controller/sensor_fold_state_manager/single_display_sensor_fold_state_manager.h"
 #include "fold_screen_controller/sensor_fold_state_manager/dual_display_sensor_fold_state_manager.h"
+#include "fold_screen_controller/sensor_fold_state_manager/single_display_sensor_fold_state_manager.h"
 #include "fold_screen_state_internel.h"
 
 #include "window_manager_hilog.h"
@@ -35,9 +35,12 @@ FoldScreenController::FoldScreenController(std::recursive_mutex& displayInfoMute
         foldScreenPolicy_ = GetFoldScreenPolicy(DisplayDeviceType::SINGLE_DISPLAY_DEVICE);
         sensorFoldStateManager_ = new SingleDisplaySensorFoldStateManager();
     }
-
     if (foldScreenPolicy_ == nullptr) {
         TLOGE(WmsLogTag::DMS, "FoldScreenPolicy is null");
+        return;
+    }
+    if(sensorFoldStateManager_==nullptr){
+        TLOGE(WmsLogTag::DMS, "SensorFoldStateManager is null");
         return;
     }
 #ifdef SENSOR_ENABLE
@@ -56,11 +59,11 @@ sptr<FoldScreenPolicy> FoldScreenController::GetFoldScreenPolicy(DisplayDeviceTy
     sptr<FoldScreenPolicy> tempPolicy = nullptr;
     switch (productType) {
         case DisplayDeviceType::SINGLE_DISPLAY_DEVICE: {
-            tempPolicy = new DualDisplayDevicePolicy(displayInfoMutex_, screenPowerTaskScheduler_);
+            tempPolicy = new SingleDisplayFoldPolicy(displayInfoMutex_, screenPowerTaskScheduler_);
             break;
         }
         case DisplayDeviceType::DOUBLE_DISPLAY_DEVICE: {
-            tempPolicy = new DualDisplayPolicy(displayInfoMutex_, screenPowerTaskScheduler_);
+            tempPolicy = new DualDisplayFoldPolicy(displayInfoMutex_, screenPowerTaskScheduler_);
             break;
         }
         default: {
