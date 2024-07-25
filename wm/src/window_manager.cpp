@@ -129,6 +129,7 @@ void WindowManager::Impl::NotifyFocused(const sptr<FocusChangeInfo>& focusChange
         std::shared_lock<std::shared_mutex> lock(listenerMutex_);
         focusChangeListeners = focusChangedListeners_;
     }
+    TLOGD(WmsLogTag::WMS_FOCUS, "NotifyFocused listeners:%{public}zu", focusChangeListeners.size());
     for (auto& listener : focusChangeListeners) {
         listener->OnFocused(focusChangeInfo);
     }
@@ -144,6 +145,7 @@ void WindowManager::Impl::NotifyUnfocused(const sptr<FocusChangeInfo>& focusChan
         std::shared_lock<std::shared_mutex> lock(listenerMutex_);
         focusChangeListeners = focusChangedListeners_;
     }
+    TLOGD(WmsLogTag::WMS_FOCUS, "NotifyUnfocused listeners:%{public}zu", focusChangeListeners.size());
     for (auto& listener : focusChangeListeners) {
         listener->OnUnfocused(focusChangeInfo);
     }
@@ -958,7 +960,7 @@ void WindowManager::UpdateFocusChangeInfo(const sptr<FocusChangeInfo>& focusChan
         WLOGFE("focusChangeInfo is nullptr.");
         return;
     }
-    TLOGD(WmsLogTag::WMS_FOCUS, "window focus change: %{public}d, id: %{public}u", focused, focusChangeInfo->windowId_);
+    TLOGI(WmsLogTag::WMS_FOCUS, "window focus change: %{public}d, id: %{public}u", focused, focusChangeInfo->windowId_);
     if (focused) {
         pImpl_->NotifyFocused(focusChangeInfo);
     } else {
@@ -970,7 +972,6 @@ void WindowManager::UpdateWindowModeTypeInfo(WindowModeType type) const
 {
     pImpl_->NotifyWindowModeChange(type);
 }
-
 
 WMError WindowManager::GetWindowModeType(WindowModeType& windowModeType) const
 {

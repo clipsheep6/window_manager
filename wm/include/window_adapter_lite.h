@@ -45,12 +45,12 @@ public:
     virtual WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos);
     virtual void ClearWindowAdapter();
     virtual WMError GetWindowModeType(WindowModeType& windowModeType);
+    virtual WMError RaiseWindowToTop(int32_t persistentId);
     virtual WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo);
+    WMError RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc);
     virtual WMError GetAllMainWindowInfos(std::vector<MainWindowInfo>& infos);
     virtual WMError ClearMainSessions(const std::vector<int32_t>& persistentIds);
     virtual WMError ClearMainSessions(const std::vector<int32_t>& persistentIds, std::vector<int32_t>& clearFailedIds);
-    virtual WMError RaiseWindowToTop(int32_t persistentId);
-    WMError RegisterWMSConnectionChangedListener(const WMSConnectionChangedCallbackFunc& callbackFunc);
 
 private:
     static inline SingletonDelegator<WindowAdapterLite> delegator;
