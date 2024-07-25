@@ -72,6 +72,36 @@ HWTEST_F(PictureInPictureOptionTest, PipTemplate, Function | SmallTest | Level2)
 }
 
 /**
+ * @tc.name: PiPControlStatus
+ * @tc.desc: SetPiPControlStatus/GetControlStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureOptionTest, PiPControlStatus, Function | SmallTest | Level2)
+{
+    auto option = sptr<PipOption>::MakeSptr();
+    ASSERT_NE(nullptr, option);
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    auto status = PiPControlStatus::PLAY;
+    option->SetPiPControlStatus(controlType, status);
+    ASSERT_NE(0, option->GetControlStatus().size());
+}
+
+/**
+ * @tc.name: PiPControlEnable
+ * @tc.desc: SetPiPControlEnabled/GetControlEnable
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureOptionTest, PiPControlEnable, Function | SmallTest | Level2)
+{
+    auto option = sptr<PipOption>::MakeSptr();
+    ASSERT_NE(nullptr, option);
+    auto controlType = PiPControlType::VIDEO_PLAY_PAUSE;
+    auto enabled = PiPControlStatus::ENABLED;
+    option->SetPiPControlEnabled(controlType, enabled);
+    ASSERT_NE(0, option->GetControlEnable().size());
+}
+
+/**
  * @tc.name: NavigationId
  * @tc.desc: SetNavigationId/GetNavigationId
  * @tc.type: FUNC
@@ -116,6 +146,18 @@ HWTEST_F(PictureInPictureOptionTest, ContentSize, Function | SmallTest | Level2)
     option->GetContentSize(w, h);
     ASSERT_EQ(width, w);
     ASSERT_EQ(height, h);
+}
+
+/**
+ * @tc.name: NodeController
+ * @tc.desc: SetNodeControllerRef/GetNodeControllerRef
+ * @tc.type: FUNC
+ */
+HWTEST_F(PictureInPictureOptionTest, NodeController, Function | SmallTest | Level2)
+{
+    sptr<PipOption> option = sptr<PipOption>::MakeSptr();
+    option->SetNodeControllerRef(nullptr);
+    ASSERT_EQ(option->GetNodeControllerRef(), nullptr);
 }
 }
 }

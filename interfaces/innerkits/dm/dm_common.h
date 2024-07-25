@@ -24,6 +24,7 @@ namespace OHOS {
 namespace Rosen {
 using DisplayId = uint64_t;
 using ScreenId = uint64_t;
+
 namespace {
     constexpr DisplayId DISPLAY_ID_INVALID = -1ULL;
     constexpr ScreenId SCREEN_ID_INVALID = -1ULL;
@@ -33,6 +34,17 @@ namespace {
     constexpr int DOT_PER_INCH_MINIMUM_VALUE = 80;
     constexpr uint32_t BASELINE_DENSITY = 160;
 }
+
+/**
+ * @struct HookInfo.
+ *
+ * @brief hook diaplayinfo deepending on the window size.
+ */
+struct DMHookInfo {
+    uint32_t width_;
+    uint32_t height_;
+    float_t density_;
+};
 
 /**
  * @brief Power state change reason.
@@ -364,6 +376,15 @@ struct ExpandOption {
     ScreenId screenId_;
     uint32_t startX_;
     uint32_t startY_;
+};
+
+/**
+ * @brief fold display physical resolution
+ */
+struct DisplayPhysicalResolution {
+    FoldDisplayMode foldDisplayMode_;
+    uint32_t physicalWidth_;
+    uint32_t physicalHeight_;
 };
 
 /**

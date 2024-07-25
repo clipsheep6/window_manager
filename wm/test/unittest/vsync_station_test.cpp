@@ -107,13 +107,13 @@ HWTEST_F(VsyncStationTest, FlushFrameRate, Function | SmallTest | Level3)
     std::shared_ptr<VsyncStation> vsyncStation0 = std::make_shared<VsyncStation>(nodeId0);
     ASSERT_NE(vsyncStation0, nullptr);
     uint32_t rate0 = 60;
-    bool isAnimatorStopped = true;
-    vsyncStation0->FlushFrameRate(rate0, isAnimatorStopped);
+    int32_t animatorExpectedFrameRate = -1;
+    vsyncStation0->FlushFrameRate(rate0, animatorExpectedFrameRate);
     NodeId nodeId1 = 1;
     std::shared_ptr<VsyncStation> vsyncStation1 = std::make_shared<VsyncStation>(nodeId1);
     ASSERT_NE(vsyncStation1, nullptr);
     uint32_t rate1 = 120;
-    vsyncStation1->FlushFrameRate(rate1, isAnimatorStopped);
+    vsyncStation1->FlushFrameRate(rate1, animatorExpectedFrameRate);
 }
 
 /**
@@ -133,6 +133,20 @@ HWTEST_F(VsyncStationTest, SetFrameRateLinkerEnable, Function | SmallTest | Leve
     ASSERT_NE(vsyncStation1, nullptr);
     bool enable1 = true;
     vsyncStation1->SetFrameRateLinkerEnable(enable1);
+}
+
+/**
+ * @tc.name: SetUiDvsyncSwitch
+ * @tc.desc: SetUiDvsyncSwitch Test
+ * @tc.type: FUNC
+*/
+HWTEST_F(VsyncStationTest, SetUiDvsyncSwitch, Function | SmallTest | Level3)
+{
+    NodeId nodeId = 0;
+    std::shared_ptr<VsyncStation> vsyncStation = std::make_shared<VsyncStation>(nodeId);
+    ASSERT_NE(vsyncStation, nullptr);
+    vsyncStation->SetUiDvsyncSwitch(true);
+    vsyncStation->SetUiDvsyncSwitch(false);
 }
 }
 } // namespace Rosen

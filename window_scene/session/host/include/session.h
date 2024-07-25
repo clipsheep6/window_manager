@@ -90,6 +90,7 @@ public:
     virtual void OnExtensionTimeout(int32_t errorCode) = 0;
     virtual void OnAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
         int64_t uiExtensionIdLevel) = 0;
+    virtual void OnDrawingCompleted() {}
 };
 
 enum class LifeCycleTaskType : uint32_t {
@@ -129,6 +130,7 @@ public:
     WSError Disconnect(bool isFromClient = false) override;
     WSError Show(sptr<WindowSessionProperty> property) override;
     WSError Hide() override;
+    WSError DrawingCompleted() override;
     void ResetSessionConnectState();
     
     bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
@@ -147,19 +149,6 @@ public:
     virtual WSError TransferPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent,
         bool needNotifyClient = true);
     virtual WSError TransferKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
-
-    virtual WSError TransferSearchElementInfo(int64_t elementId, int32_t mode, int64_t baseParent,
-        std::list<Accessibility::AccessibilityElementInfo>& infos);
-    virtual WSError TransferSearchElementInfosByText(int64_t elementId, const std::string& text, int64_t baseParent,
-        std::list<Accessibility::AccessibilityElementInfo>& infos);
-    virtual WSError TransferFindFocusedElementInfo(int64_t elementId, int32_t focusType, int64_t baseParent,
-        Accessibility::AccessibilityElementInfo& info);
-    virtual WSError TransferFocusMoveSearch(int64_t elementId, int32_t direction, int64_t baseParent,
-        Accessibility::AccessibilityElementInfo& info);
-    virtual WSError TransferExecuteAction(int64_t elementId, const std::map<std::string, std::string>& actionArguments,
-        int32_t action, int64_t baseParent);
-    WSError TransferAccessibilityHoverEvent(float pointX, float pointY, int32_t sourceType, int32_t eventType,
-        int64_t timeMs);
 
     virtual WSError NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rsTransaction) { return WSError::WS_OK; }
     WSError TransferBackPressedEventForConsumed(bool& isConsumed);
@@ -228,6 +217,8 @@ public:
     void SetBufferAvailable(bool bufferAvailable);
     bool GetBufferAvailable() const;
     void SetNeedSnapshot(bool needSnapshot);
+    virtual void SetExitSplitOnBackground(bool isExitSplitOnBackground);
+    virtual bool IsExitSplitOnBackground() const;
 
     void SetPendingSessionActivationEventListener(const NotifyPendingSessionActivationFunc& func);
     void SetChangeSessionVisibilityWithStatusBarEventListener(
@@ -291,6 +282,7 @@ public:
     virtual WSError UpdateFocus(bool isFocused);
     WSError NotifyFocusStatus(bool isFocused);
     virtual WSError UpdateWindowMode(WindowMode mode);
+    WSError SetCompatibleModeInPc(bool enable, bool isSupportDragInPcCompatibleMode);
     virtual WSError SetSystemSceneBlockingFocus(bool blocking);
     bool GetBlockingFocus() const;
     WSError SetFocusable(bool isFocusable);
@@ -312,7 +304,8 @@ public:
     bool GetDrawingContentState() const;
     WSError SetBrightness(float brightness);
     float GetBrightness() const;
-    void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info);
+    void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info,
+                                      const std::shared_ptr<RSTransaction>& rsTransaction = nullptr);
     void SetSessionInfoLockedStateChangeListener(const NotifySessionInfoLockedStateChangeFunc& func);
     void NotifySessionInfoLockedStateChange(bool lockedState);
     void SetContextTransparentFunc(const NotifyContextTransparentFunc& func);
@@ -325,6 +318,10 @@ public:
     bool IsSystemSession() const;
     bool IsTerminated() const;
     bool IsSessionForeground() const;
+    virtual bool IsAnco() const { return false; }
+    virtual void SetBlankFlag(bool isAddBlank) {};
+    virtual bool GetBlankFlag() const { return false; }
+    virtual bool GetBufferAvailableCallbackEnable() const { return false; }
 
     sptr<IRemoteObject> dialogTargetToken_ = nullptr;
     int32_t GetWindowId() const;
@@ -447,6 +444,7 @@ protected:
     virtual bool CheckPointerEventDispatch(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) const;
     bool IsTopDialog() const;
     void HandlePointDownDialog(int32_t pointAction);
+    void NotifySessionInfoChange();
 
     void PostTask(Task&& task, const std::string& name = "sessionTask", int64_t delayTime = 0);
     void PostExportTask(Task&& task, const std::string& name = "sessionExportTask", int64_t delayTime = 0);
@@ -469,6 +467,7 @@ protected:
         return ret;
     }
 
+    static std::shared_ptr<AppExecFwk::EventHandler> mainHandler_;
     int32_t persistentId_ = INVALID_SESSION_ID;
     std::atomic<SessionState> state_ = SessionState::STATE_DISCONNECT;
     SessionInfo sessionInfo_;
@@ -486,6 +485,7 @@ protected:
     Rotation rotation_;
     float offsetX_ = 0.0f;
     float offsetY_ = 0.0f;
+    std::atomic_bool isExitSplitOnBackground_ = false;
     bool isVisible_ = false;
     SizeChangeReason reason_ = SizeChangeReason::UNDEFINED;
 
@@ -550,8 +550,8 @@ private:
     void HandleDialogForeground();
     void HandleDialogBackground();
     void NotifyPointerEventToRs(int32_t pointAction);
-    void NotifySessionInfoChange();
     WSError HandleSubWindowClick(int32_t action);
+    void SetWindowSessionProperty(const sptr<WindowSessionProperty>& property);
 
     template<typename T>
     bool RegisterListenerLocked(std::vector<std::shared_ptr<T>>& holder, const std::shared_ptr<T>& listener);

@@ -38,7 +38,8 @@ public:
     MOCK_METHOD2(NotifyTransferComponentDataSync, WSErrorCode(const AAFwk::WantParams& wantParams,
         AAFwk::WantParams& reWantParams));
     MOCK_METHOD1(MarkProcessed, WSError(int32_t eventId));
-    MOCK_METHOD1(NotifyOccupiedAreaChangeInfo, void(sptr<OccupiedAreaChangeInfo> info));
+    MOCK_METHOD2(NotifyOccupiedAreaChangeInfo, void(sptr<OccupiedAreaChangeInfo> info,
+        const std::shared_ptr<RSTransaction>& rsTransaction));
     MOCK_METHOD2(UpdateAvoidArea, WSError(const sptr<AvoidArea>& avoidArea, AvoidAreaType type));
     MOCK_METHOD1(DumpSessionElementInfo, void(const std::vector<std::string>& params));
     MOCK_METHOD0(NotifyScreenshot, void(void));
@@ -56,6 +57,7 @@ public:
     MOCK_METHOD1(NotifyTransformChange, void(const Transform& transform));
     MOCK_METHOD1(NotifyDialogStateChange, WSError(bool isForeground));
     MOCK_METHOD2(SetPipActionEvent, WSError(const std::string& action, int32_t status));
+    MOCK_METHOD2(SetPiPControlEvent, WSError(WsPiPControlType controlType, WsPiPControlStatus status));
     MOCK_METHOD1(UpdateDisplayId, WSError(uint64_t displayId));
     MOCK_METHOD2(NotifyDisplayMove, void(DisplayId from, DisplayId to));
     MOCK_METHOD1(SwitchFreeMultiWindow, WSError(bool enable));

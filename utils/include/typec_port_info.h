@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_STUB_H
-#define OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_STUB_H
+#ifndef OHOS_ROSEN_TYPEC_PORT_INFO_H
+#define OHOS_ROSEN_TYPEC_PORT_INFO_H
 
-#include "iremote_stub.h"
-#include "session_listener_interface.h"
+#include <cstdint>
 
 namespace OHOS::Rosen {
-class SessionListenerStub : public IRemoteStub<ISessionChangeListener> {
+class TypeCPortInfo {
 public:
-    SessionListenerStub() = default;
-    virtual ~SessionListenerStub() = default;
+    static bool GetTypeCThermal(int32_t& thermal);
 };
-} // namespace OHOS::Rosen
-#endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_LISTENER_STUB_H
+}
+#endif // OHOS_ROSEN_TYPEC_PORT_INFO_H

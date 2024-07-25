@@ -184,13 +184,13 @@ HWTEST_F(RootSceneTest, FlushFrameRate, Function | SmallTest | Level3)
 {
     RootScene rootScene;
     uint32_t rate = 120;
-    bool isAnimatorStopped = true;
+    int32_t animatorExpectedFrameRate = -1;
 
     rootScene.vsyncStation_ = nullptr;
-    rootScene.FlushFrameRate(rate, isAnimatorStopped);
+    rootScene.FlushFrameRate(rate, animatorExpectedFrameRate);
 
     rootScene.vsyncStation_ = std::make_shared<VsyncStation>(0);
-    rootScene.FlushFrameRate(rate, isAnimatorStopped);
+    rootScene.FlushFrameRate(rate, animatorExpectedFrameRate);
     ASSERT_EQ(1, rootScene.GetWindowId());
 }
 
@@ -220,11 +220,11 @@ HWTEST_F(RootSceneTest, OnBundleUpdated, Function | SmallTest | Level3)
 
     rootScene->vsyncStation_ = nullptr;
     rootScene->GetVSyncPeriod();
-    rootScene->FlushFrameRate(0, true);
+    rootScene->FlushFrameRate(0, -1);
     NodeId nodeId = 0;
     rootScene->vsyncStation_ = std::make_shared<VsyncStation>(nodeId);
     rootScene->GetVSyncPeriod();
-    rootScene->FlushFrameRate(0, true);
+    rootScene->FlushFrameRate(0, -1);
 
     rootScene->uiContent_ = nullptr;
     rootScene->OnBundleUpdated("a");
@@ -270,6 +270,33 @@ HWTEST_F(RootSceneTest, UpdateConfiguration01, Function | SmallTest | Level3)
     rootScene->UpdateConfiguration(configuration);
     rootScene->uiContent_ = std::make_unique<Ace::UIContentMocker>();
     rootScene->UpdateConfiguration(configuration);
+}
+
+/**
+ * @tc.name: SetUiDvsyncSwitch
+ * @tc.desc: SetUiDvsyncSwitch Test
+ * @tc.type: FUNC
+*/
+HWTEST_F(RootSceneTest, SetUiDvsyncSwitchSucc, Function | SmallTest | Level3)
+{
+    RootScene rootScene;
+    rootScene.SetUiDvsyncSwitch(true);
+    rootScene.SetUiDvsyncSwitch(false);
+    ASSERT_EQ(1, rootScene.GetWindowId());
+}
+
+/**
+ * @tc.name: SetUiDvsyncSwitch
+ * @tc.desc: SetUiDvsyncSwitch Test
+ * @tc.type: FUNC
+*/
+HWTEST_F(RootSceneTest, SetUiDvsyncSwitchErr, Function | SmallTest | Level3)
+{
+    RootScene rootScene;
+    rootScene.vsyncStation_ = nullptr;
+    rootScene.SetUiDvsyncSwitch(true);
+    rootScene.SetUiDvsyncSwitch(false);
+    ASSERT_EQ(1, rootScene.GetWindowId());
 }
 }
 } // namespace Rosen

@@ -23,6 +23,9 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
+}
 class ScreenSnapshotPickerConnectionTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -37,6 +40,7 @@ void ScreenSnapshotPickerConnectionTest::SetUpTestCase()
 
 void ScreenSnapshotPickerConnectionTest::TearDownTestCase()
 {
+    usleep(SLEEP_TIME_IN_US);
 }
 
 void ScreenSnapshotPickerConnectionTest::SetUp()
@@ -50,11 +54,11 @@ void ScreenSnapshotPickerConnectionTest::TearDown()
 namespace {
 
 /**
- * @tc.name: SnapshotPickerConnectExtension
+ * @tc.name: SnapshotPickerConnectExtension01
  * @tc.desc: SnapshotPickerConnectExtension func
  * @tc.type: FUNC
  */
-HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerConnectExtension, Function | SmallTest | Level1)
+HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerConnectExtension01, Function | SmallTest | Level1)
 {
     ScreenSceneConfig::LoadConfigXml();
     auto strConfig = ScreenSceneConfig::GetStringConfig();
@@ -64,6 +68,130 @@ HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerConnectExtension, Fun
     ScreenSnapshotPickerConnection::GetInstance().SetAbilityName(abilityName);
     auto ret = ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerConnectExtension();
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name: SnapshotPickerConnectExtension02
+ * @tc.desc: SnapshotPickerConnectExtension func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerConnectExtension02, Function | SmallTest | Level1)
+{
+    ScreenSceneConfig::LoadConfigXml();
+    auto strConfig = ScreenSceneConfig::GetStringConfig();
+    std::string bundleName = strConfig[""];
+    std::string abilityName = strConfig["screenSnapshotAbilityName"];
+    ScreenSnapshotPickerConnection::GetInstance().SetBundleName(bundleName);
+    ScreenSnapshotPickerConnection::GetInstance().SetAbilityName(abilityName);
+    auto ret = ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerConnectExtension();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name: SnapshotPickerConnectExtension03
+ * @tc.desc: SnapshotPickerConnectExtension func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerConnectExtension03, Function | SmallTest | Level1)
+{
+    ScreenSceneConfig::LoadConfigXml();
+    auto strConfig = ScreenSceneConfig::GetStringConfig();
+    std::string bundleName = strConfig["screenSnapshotBundleName"];
+    std::string abilityName = strConfig[""];
+    ScreenSnapshotPickerConnection::GetInstance().SetBundleName(bundleName);
+    ScreenSnapshotPickerConnection::GetInstance().SetAbilityName(abilityName);
+    auto ret = ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerConnectExtension();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name: SnapshotPickerConnectExtension04
+ * @tc.desc: SnapshotPickerConnectExtension func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerConnectExtension04, Function | SmallTest | Level1)
+{
+    ScreenSceneConfig::LoadConfigXml();
+    auto strConfig = ScreenSceneConfig::GetStringConfig();
+    std::string bundleName = strConfig[""];
+    std::string abilityName = strConfig[""];
+    ScreenSnapshotPickerConnection::GetInstance().SetBundleName(bundleName);
+    ScreenSnapshotPickerConnection::GetInstance().SetAbilityName(abilityName);
+    auto ret = ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerConnectExtension();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name: SnapshotPickerConnectExtension05
+ * @tc.desc: SnapshotPickerConnectExtension func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerConnectExtension05, Function | SmallTest | Level1)
+{
+    ScreenSceneConfig::LoadConfigXml();
+    auto strConfig = ScreenSceneConfig::GetStringConfig();
+    std::string bundleName = strConfig[""];
+    std::string abilityName = strConfig[""];
+    std::unique_ptr<ScreenSessionAbilityConnection> abilityConnection_ =
+        std::make_unique<ScreenSessionAbilityConnection>();
+    ScreenSnapshotPickerConnection::GetInstance().SetBundleName(bundleName);
+    ScreenSnapshotPickerConnection::GetInstance().SetAbilityName(abilityName);
+    auto ret = ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerConnectExtension();
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.name: GetScreenSnapshotInfo01
+ * @tc.desc: GetScreenSnapshotInfo func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSnapshotPickerConnectionTest, GetScreenSnapshotInfo01, Function | SmallTest | Level1)
+{
+    std::unique_ptr<ScreenSessionAbilityConnection> abilityConnection_ =
+        std::make_unique<ScreenSessionAbilityConnection>();
+    Media::Rect rect{};
+    ScreenId screenId = SCREEN_ID_INVALID;
+    ScreenSnapshotPickerConnection::GetInstance().GetScreenSnapshotInfo(rect, screenId);
+    EXPECT_EQ(rect.height, 0);
+}
+
+/**
+ * @tc.name: GetScreenSnapshotInfo02
+ * @tc.desc: GetScreenSnapshotInfo func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSnapshotPickerConnectionTest, GetScreenSnapshotInfo02, Function | SmallTest | Level1)
+{
+    std::unique_ptr<ScreenSessionAbilityConnection> abilityConnection_ = nullptr;
+    Media::Rect rect{};
+    ScreenId screenId;
+    ScreenSnapshotPickerConnection::GetInstance().GetScreenSnapshotInfo(rect, screenId);
+    EXPECT_EQ(rect.height, 0);
+}
+
+/**
+ * @tc.name: SnapshotPickerDisconnectExtension01
+ * @tc.desc: SnapshotPickerDisconnectExtension func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerDisconnectExtension01, Function | SmallTest | Level1)
+{
+    std::unique_ptr<ScreenSessionAbilityConnection> abilityConnection_ = nullptr;
+    ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerDisconnectExtension();
+    EXPECT_EQ(abilityConnection_, nullptr);
+}
+
+/**
+ * @tc.name: SnapshotPickerDisconnectExtension02
+ * @tc.desc: SnapshotPickerDisconnectExtension func
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSnapshotPickerConnectionTest, SnapshotPickerDisconnectExtension02, Function | SmallTest | Level1)
+{
+    std::unique_ptr<ScreenSessionAbilityConnection> abilityConnection_ =
+        std::make_unique<ScreenSessionAbilityConnection>();
+    ScreenSnapshotPickerConnection::GetInstance().SnapshotPickerDisconnectExtension();
+    EXPECT_NE(abilityConnection_, nullptr);
 }
 
 /**

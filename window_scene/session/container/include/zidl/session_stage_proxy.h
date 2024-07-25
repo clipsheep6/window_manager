@@ -21,6 +21,7 @@
 
 #include "interfaces/include/ws_common.h"
 #include "session/container/include/zidl/session_stage_interface.h"
+#include "ws_common.h"
 
 namespace OHOS::Rosen {
 class SessionStageProxy : public IRemoteProxy<ISessionStage> {
@@ -42,7 +43,8 @@ public:
     WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams) override;
     WSErrorCode NotifyTransferComponentDataSync(const AAFwk::WantParams& wantParams,
                                                 AAFwk::WantParams& reWantParams) override;
-    void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info) override;
+    void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info,
+                                      const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     WSError UpdateAvoidArea(const sptr<AvoidArea>& avoidArea, AvoidAreaType type) override;
     void NotifyScreenshot() override;
     void DumpSessionElementInfo(const std::vector<std::string>& params)  override;
@@ -58,6 +60,7 @@ public:
     void NotifyTransformChange(const Transform& transform) override;
     WSError NotifyDialogStateChange(bool isForeground) override;
     WSError SetPipActionEvent(const std::string& action, int32_t status) override;
+    WSError SetPiPControlEvent(WsPiPControlType controlType, WsPiPControlStatus status) override;
     WSError UpdateDisplayId(uint64_t displayId) override;
     void NotifyDisplayMove(DisplayId from, DisplayId to) override;
     WSError SwitchFreeMultiWindow(bool enable) override;

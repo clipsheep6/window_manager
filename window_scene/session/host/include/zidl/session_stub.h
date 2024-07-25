@@ -24,7 +24,6 @@
 
 namespace OHOS::Rosen {
 class SessionStub;
-using SessionStubFunc = int (SessionStub::*)(MessageParcel& data, MessageParcel& reply);
 
 class SessionStub : public IRemoteStub<ISession> {
 public:
@@ -40,6 +39,7 @@ private:
     int HandleDisconnect(MessageParcel& data, MessageParcel& reply);
     int HandleShow(MessageParcel& data, MessageParcel& reply);
     int HandleHide(MessageParcel& data, MessageParcel& reply);
+    int HandleDrawingCompleted(MessageParcel& data, MessageParcel& reply);
 
     // scene session
     int HandleUpdateActivateStatus(MessageParcel& data, MessageParcel& reply);
@@ -71,6 +71,7 @@ private:
     int HandleAdjustKeyboardLayout(MessageParcel& data, MessageParcel& reply);
     int HandleUpdatePropertyByAction(MessageParcel& data, MessageParcel& reply);
     int HandleLayoutFullScreenChange(MessageParcel& data, MessageParcel& reply);
+    int HandleGetAppForceLandscapeMode(MessageParcel& data, MessageParcel& reply);
 
     // extension extension
     int HandleTransferAbilityResult(MessageParcel& data, MessageParcel& reply);
@@ -81,11 +82,13 @@ private:
     int HandleNotifyExtensionTimeout(MessageParcel& data, MessageParcel& reply);
     int HandleTriggerBindModalUIExtension(MessageParcel& data, MessageParcel& reply);
     int HandleTransferAccessibilityEvent(MessageParcel& data, MessageParcel& reply);
-    static const std::map<uint32_t, SessionStubFunc> stubFuncMap_;
 
     // PictureInPicture
     int HandleNotifyPiPWindowPrepareClose(MessageParcel& data, MessageParcel& reply);
     int HandleUpdatePiPRect(MessageParcel& data, MessageParcel& reply);
+    int HandleUpdatePiPControlStatus(MessageParcel& data, MessageParcel& reply);
+
+    int ProcessRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option);
 };
 } // namespace OHOS::Rosen
 

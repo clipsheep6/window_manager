@@ -417,24 +417,6 @@ HWTEST_F(SceneSessionManagerStubTest, HandleIsValidSessionIds, Function | SmallT
 }
 
 /**
- * @tc.name: HandleUnRegisterSessionChangeListener
- * @tc.desc: test HandleUnRegisterSessionChangeListener
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionManagerStubTest, HandleUnRegisterSessionChangeListener, Function | SmallTest | Level2)
-{
-    if (stub_ == nullptr) {
-        return;
-    }
-
-    MessageParcel data;
-    MessageParcel reply;
-
-    int res = stub_->HandleUnRegisterSessionChangeListener(data, reply);
-    EXPECT_EQ(res, ERR_NONE);
-}
-
-/**
  * @tc.name: HandlePendingSessionToForeground
  * @tc.desc: test HandlePendingSessionToForeground
  * @tc.type: FUNC
@@ -1134,13 +1116,57 @@ HWTEST_F(SceneSessionManagerStubTest, HandleAddExtensionWindowStageToSCB, Functi
 
     sptr<ISessionStage> sessionStage = new SessionStageMocker();
     data.WriteRemoteObject(sessionStage->AsObject());
-
-    int32_t persistentId = 65535;
-    data.WriteInt32(persistentId);
-    int32_t parentId = 12345;
-    data.WriteInt32(parentId);
+    sptr<IRemoteObject> token = nullptr;
+    data.WriteRemoteObject(token);
 
     int res = stub_->HandleAddExtensionWindowStageToSCB(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleUpdateModalExtensionRect
+ * @tc.desc: test HandleUpdateModalExtensionRect
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleUpdateModalExtensionRect, Function | SmallTest | Level2)
+{
+    ASSERT_NE(stub_, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    sptr<IRemoteObject> token = nullptr;
+    data.WriteRemoteObject(token);
+    Rect rect { 1, 2, 3, 4 };
+    data.WriteInt32(rect.posX_);
+    data.WriteInt32(rect.posY_);
+    data.WriteInt32(rect.width_);
+    data.WriteInt32(rect.height_);
+
+    int res = stub_->HandleUpdateModalExtensionRect(data, reply);
+    EXPECT_EQ(res, ERR_NONE);
+}
+
+/**
+ * @tc.name: HandleProcessModalExtensionPointDown
+ * @tc.desc: test HandleProcessModalExtensionPointDown
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, HandleProcessModalExtensionPointDown, Function | SmallTest | Level2)
+{
+    ASSERT_NE(stub_, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    sptr<IRemoteObject> token = nullptr;
+    data.WriteRemoteObject(token);
+    int32_t posX = 114;
+    data.WriteInt32(posX);
+    int32_t posY = 514;
+    data.WriteInt32(posY);
+
+    int res = stub_->HandleProcessModalExtensionPointDown(data, reply);
     EXPECT_EQ(res, ERR_NONE);
 }
 
@@ -1201,8 +1227,8 @@ HWTEST_F(SceneSessionManagerStubTest, HandleUpdateExtWindowFlags, Function | Sma
     MessageParcel data;
     MessageParcel reply;
 
-    data.WriteInt32(1234);
-    data.WriteInt32(12345);
+    sptr<IRemoteObject> token = nullptr;
+    data.WriteRemoteObject(token);
     data.WriteInt32(7);
     data.WriteInt32(7);
 

@@ -44,18 +44,18 @@ int main(int argc, char *argv[])
     cmdArguments.fileName = "";
 
     if (!SnapShotUtils::ProcessArgs(argc, argv, cmdArguments)) {
-        return 0;
+        _exit(-1);
     }
 
     if (DEVELOPER_MODE_STATE_ON_DEFAULT == IS_DEVELOPER_MODE) {
         std::cout << "current mode is not developer mode, just return." << std::endl;
-        return 0;
+        _exit(-1);
     }
 
     auto display = DisplayManager::GetInstance().GetDisplayById(cmdArguments.displayId);
     if (display == nullptr) {
         std::cout << "error: GetDisplayById " << cmdArguments.displayId << " error!" << std::endl;
-        return -1;
+        _exit(-1);
     }
     if (cmdArguments.fileType != "png") {
         cmdArguments.fileType = "jpeg";
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     // get PixelMap from DisplayManager API
     std::shared_ptr<OHOS::Media::PixelMap> pixelMap = nullptr;
     if (!GetScreenshotByCmdArguments(cmdArguments, display, pixelMap)) {
-        return -1;
+        _exit(-1);
     }
 
     bool ret = false;
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     if (!ret) {
         std::cout << "\nerror: snapshot display " << cmdArguments.displayId <<
             ", write to " << cmdArguments.fileName << " as jpeg failed!" << std::endl;
-        return -1;
+        _exit(-1);
     }
 
     std::cout << "\nsuccess: snapshot display " << cmdArguments.displayId << " , write to " <<

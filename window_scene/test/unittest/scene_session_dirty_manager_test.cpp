@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "transaction/rs_uiextension_data.h"
 #include "input_manager.h"
 #include "session_manager/include/scene_session_dirty_manager.h"
 #include <gtest/gtest.h>
@@ -522,6 +522,40 @@ HWTEST_F(SceneSessionDirtyManagerTest, UpdateWindowFlags, Function | SmallTest |
 
     screenSession->SetTouchEnabledFromJs(false);
     manager_->UpdateWindowFlags(screenId, sceneSession, windowinfo);
+}
+
+/**
+ * @tc.name: AddModalExtensionWindowInfo
+ * @tc.desc: AddModalExtensionWindowInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionDirtyManagerTest, AddModalExtensionWindowInfo, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    sptr<SceneSession> sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
+    ASSERT_NE(sceneSession, nullptr);
+
+    std::vector<MMI::WindowInfo> windowInfoList;
+    MMI::WindowInfo windowInfo;
+    windowInfoList.emplace_back(windowInfo);
+    manager_->AddModalExtensionWindowInfo(windowInfoList, windowInfo, nullptr);
+    EXPECT_EQ(windowInfoList.size(), 1);
+
+    ExtensionWindowEventInfo extensionInfo = {
+        .persistentId = 12345,
+        .pid = 1234
+    };
+    sceneSession->AddModalUIExtension(extensionInfo);
+    manager_->AddModalExtensionWindowInfo(windowInfoList, windowInfo, sceneSession);
+    ASSERT_EQ(windowInfoList.size(), 2);
+    EXPECT_TRUE(windowInfoList[1].defaultHotAreas.empty());
+
+    Rect windowRect {1, 1, 7, 8};
+    extensionInfo.windowRect = windowRect;
+    sceneSession->UpdateModalUIExtension(extensionInfo);
+    manager_->AddModalExtensionWindowInfo(windowInfoList, windowInfo, sceneSession);
+    ASSERT_EQ(windowInfoList.size(), 3);
+    EXPECT_EQ(windowInfoList[2].defaultHotAreas.size(), 1);
 }
 
 } // namespace

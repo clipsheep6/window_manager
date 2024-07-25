@@ -119,7 +119,6 @@ ohos_shared_library("libwmutil_base") {
     "src/cutout_info.cpp",
     "src/display_change_info.cpp",
     "src/display_info.cpp",
-    "src/js_err_utils.cpp",
     "src/screen_group_info.cpp",
     "src/screen_info.cpp",
     "src/screenshot_info.cpp",
@@ -139,7 +138,6 @@ ohos_shared_library("libwmutil_base") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
-    "napi:ace_napi",
   ]
 
   innerapi_tags = [ "platformsdk" ]
@@ -156,12 +154,14 @@ ohos_shared_library("libwmutil") {
     "src/permission.cpp",
     "src/persistent_storage.cpp",
     "src/pip_report.cpp",
+    "src/screen_fold_data.cpp",
     "src/screen_group_info.cpp",
     "src/screen_info.cpp",
     "src/surface_draw.cpp",
     "src/surface_reader.cpp",
     "src/surface_reader_handler_impl.cpp",
     "src/sys_cap_util.cpp",
+    "src/typec_port_info.cpp",
     "src/window_property.cpp",
     "src/window_transition_info.cpp",
   ]
@@ -193,9 +193,11 @@ ohos_shared_library("libwmutil") {
     "input:libmmi-client",
     "ipc:ipc_single",
     "napi:ace_napi",
-    "preferences:native_preferences",
     "samgr:samgr_proxy",
   ]
+  if (!(host_os == "linux" && host_cpu == "arm64")) {
+    external_deps += [ "preferences:native_preferences" ]
+  }
 
   innerapi_tags = [ "platformsdk" ]
   part_name = "window_manager"

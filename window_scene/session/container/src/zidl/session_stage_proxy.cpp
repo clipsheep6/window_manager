@@ -105,10 +105,13 @@ WSError SessionStageProxy::UpdateRect(const WSRect& rect, SizeChangeReason reaso
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (hasRSTransaction) {
+        auto pid = rsTransaction->GetParentPid();
+        rsTransaction->SetParentPid(getprocpid());
         if (!data.WriteParcelable(rsTransaction.get())) {
             WLOGFE("Write transaction sync Id failed");
             return WSError::WS_ERROR_IPC_FAILED;
         }
+        rsTransaction->SetParentPid(pid);
     }
 
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_SIZE_CHANGE),
@@ -348,25 +351,38 @@ WSErrorCode SessionStageProxy::NotifyTransferComponentDataSync(const AAFwk::Want
     return WSErrorCode::WS_OK;
 }
 
-void SessionStageProxy::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info)
+void SessionStageProxy::NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info,
+                                                     const std::shared_ptr<RSTransaction>& rsTransaction)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "WriteInterfaceToken failed");
         return;
     }
 
     if (!data.WriteParcelable(info.GetRefPtr())) {
-        WLOGFE("occupied info write failed.");
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "occupied info write failed.");
         return;
+    }
+
+    bool hasRSTransaction = rsTransaction != nullptr;
+    if (!data.WriteBool(hasRSTransaction)) {
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "Write has transaction failed");
+        return;
+    }
+    if (hasRSTransaction) {
+        if (!data.WriteParcelable(rsTransaction.get())) {
+            TLOGE(WmsLogTag::WMS_KEYBOARD, "Write transaction sync Id failed");
+            return;
+        }
     }
 
     if (Remote()->SendRequest(
         static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_OCCUPIED_AREA_CHANGE_INFO),
         data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
+        TLOGE(WmsLogTag::WMS_KEYBOARD, "SendRequest failed");
         return;
     }
     return;
@@ -724,6 +740,35 @@ WSError SessionStageProxy::SetPipActionEvent(const std::string& action, int32_t 
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_PIP_ACTION_EVENT),
         data, reply, option) != ERR_NONE) {
         WLOGFE("SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    return WSError::WS_OK;
+}
+
+WSError SessionStageProxy::SetPiPControlEvent(WsPiPControlType controlType, WsPiPControlStatus status)
+{
+    TLOGI(WmsLogTag::WMS_PIP, "controlType:%{public}u, enabled:%{public}d", controlType, status);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_PIP, "WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteUint32(static_cast<uint32_t>(controlType))) {
+        TLOGE(WmsLogTag::WMS_PIP, "Write params failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (!data.WriteInt32(static_cast<int32_t>(status))) {
+        TLOGE(WmsLogTag::WMS_PIP, "Write status failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_SET_PIP_CONTROL_EVENT),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_PIP, "SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     return WSError::WS_OK;

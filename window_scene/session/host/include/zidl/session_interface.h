@@ -23,6 +23,7 @@
 #include "common/include/window_session_property.h"
 #include "session/container/include/zidl/session_stage_interface.h"
 #include "session/container/include/zidl/window_event_channel_interface.h"
+
 namespace OHOS::Accessibility {
 class AccessibilityEventInfo;
 }
@@ -41,6 +42,7 @@ public:
     virtual WSError Disconnect(bool isFromClient = false) = 0;
     virtual WSError Show(sptr<WindowSessionProperty> property) = 0;
     virtual WSError Hide() = 0;
+    virtual WSError DrawingCompleted() = 0;
 
     // scene session
     virtual WSError UpdateActiveStatus(bool isActive) { return WSError::WS_OK; }
@@ -86,8 +88,11 @@ public:
 
     // PictureInPicture
     virtual void NotifyPiPWindowPrepareClose() {}
-    virtual WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason)
-        { return WSError::WS_OK; }
+    virtual WSError UpdatePiPRect(const Rect& rect, SizeChangeReason reason) { return WSError::WS_OK; }
+    virtual WSError UpdatePiPControlStatus(WsPiPControlType controlType, WsPiPControlStatus status)
+    {
+        return WSError::WS_OK;
+    }
     virtual WSError ProcessPointDownSession(int32_t posX, int32_t posY) { return WSError::WS_OK; }
     virtual WSError SendPointEventForMoveDrag(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
     {
@@ -106,6 +111,7 @@ public:
     virtual WSError AdjustKeyboardLayout(const KeyboardLayoutParams& params) { return WSError::WS_OK; }
     virtual WMError UpdateSessionPropertyByAction(const sptr<WindowSessionProperty>& property,
         WSPropertyChangeAction action) { return WMError::WM_OK; }
+    virtual int32_t GetAppForceLandscapeMode(const std::string& bundleName) { return 0; }
 };
 } // namespace OHOS::Rosen
 

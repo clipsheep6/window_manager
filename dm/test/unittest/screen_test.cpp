@@ -408,7 +408,7 @@ HWTEST_F(ScreenTest, SetResolution, Function | SmallTest | Level2)
     ASSERT_EQ(DMError::DM_ERROR_INVALID_PARAM, res);
 
     res = screen_->SetResolution(1, 1, 100);
-    ASSERT_EQ(DMError::DM_ERROR_IPC_FAILED, res);
+    ASSERT_EQ(DMError::DM_OK, res);
 }
 
 /**

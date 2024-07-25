@@ -28,12 +28,12 @@
 #endif
 
 #include "window_option.h"
+#include "window_visibility_info.h"
 #include "wm_common.h"
 namespace OHOS {
 namespace Rosen {
 constexpr int32_t RGB_LENGTH = 6;
 constexpr int32_t RGBA_LENGTH = 8;
-constexpr int32_t WINDOW_MAX_WIDTH = 1920;
 
 #define CHECK_NAPI_RETCODE(errCode, code, call)                                           \
     do {                                                                                  \
@@ -269,6 +269,8 @@ const std::map<WindowSizeChangeReason, RectChangeReason> JS_SIZE_CHANGE_REASON {
     { WindowSizeChangeReason::END,                   RectChangeReason::UNDEFINED  },
 };
 
+    napi_value CreateJsWindowInfoArrayObject(napi_env env, const std::vector<sptr<WindowVisibilityInfo>>& infos);
+    napi_value CreateJsWindowInfoObject(napi_env env, const sptr<WindowVisibilityInfo>& window);
     napi_value GetRectAndConvertToJsValue(napi_env env, const Rect& rect);
     napi_value CreateJsWindowPropertiesObject(napi_env env, sptr<Window>& window, const Rect& drawableRect);
     napi_value CreateJsSystemBarPropertiesObject(napi_env env, sptr<Window>& window);
@@ -302,6 +304,7 @@ const std::map<WindowSizeChangeReason, RectChangeReason> JS_SIZE_CHANGE_REASON {
     napi_value WindowEventTypeInit(napi_env env);
     napi_value WindowLayoutModeInit(napi_env env);
     napi_value BlurStyleInit(napi_env env);
+    napi_value MaximizePresentationInit(napi_env env);
     napi_value WindowErrorCodeInit(napi_env env);
     napi_value WindowErrorInit(napi_env env);
     napi_value WindowStatusTypeInit(napi_env env);

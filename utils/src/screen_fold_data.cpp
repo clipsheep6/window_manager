@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,11 +13,23 @@
  * limitations under the License.
  */
 
-#include "session_listener_proxy.h"
+#include "screen_fold_data.h"
+
+#include "typec_port_info.h"
 
 namespace OHOS::Rosen {
+void ScreenFoldData::SetInvalid()
+{
+    currentScreenFoldStatus_ = ScreenFoldData::INVALID_VALUE;
+}
 
-void SessionListenerProxy::OnSessionLabelChange(int32_t persistentId, const std::string &label) {}
-void SessionListenerProxy::OnSessionIconChange(int32_t persistentId, const std::shared_ptr<Media::PixelMap> &icon) {}
+bool ScreenFoldData::GetTypeCThermalWithUtil()
+{
+    return TypeCPortInfo::GetTypeCThermal(typeCThermal_);
+}
 
+void ScreenFoldData::SetFocusedPkgName(const std::string& packageName)
+{
+    focusedPackageName_ = packageName;
+}
 } // namespace OHOS::Rosen

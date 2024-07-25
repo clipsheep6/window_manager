@@ -23,13 +23,27 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+namespace {
+    constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
+}
 class ScreenSessionManagerClientProxyTest : public testing::Test {
 public:
+    static void SetUpTestCase();
+    static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
     sptr<IRemoteObjectMocker> iRemoteObjectMocker_;
     sptr<ScreenSessionManagerClientProxy> screenSessionManagerClientProxy_;
 };
+
+void ScreenSessionManagerClientProxyTest::SetUpTestCase()
+{
+}
+
+void ScreenSessionManagerClientProxyTest::TearDownTestCase()
+{
+    usleep(SLEEP_TIME_IN_US);
+}
 
 void ScreenSessionManagerClientProxyTest::SetUp()
 {
@@ -59,6 +73,20 @@ HWTEST_F(ScreenSessionManagerClientProxyTest, OnScreenConnectionChanged, Functio
 }
 
 /**
+ * @tc.name: SwitchUserCallback
+ * @tc.desc: SwitchUserCallback test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientProxyTest, SwitchUserCallback, Function | SmallTest | Level2)
+{
+    std::vector<int32_t> oldScbPids {0, 1};
+    int32_t currentScbPid = 0;
+
+    ASSERT_TRUE(screenSessionManagerClientProxy_ != nullptr);
+    screenSessionManagerClientProxy_->SwitchUserCallback(oldScbPids, currentScbPid);
+}
+
+/**
  * @tc.name: OnPropertyChanged
  * @tc.desc: OnPropertyChanged test
  * @tc.type: FUNC
@@ -71,6 +99,21 @@ HWTEST_F(ScreenSessionManagerClientProxyTest, OnPropertyChanged, Function | Smal
 
     ASSERT_TRUE(screenSessionManagerClientProxy_ != nullptr);
     screenSessionManagerClientProxy_->OnPropertyChanged(screenId, property, reason);
+}
+
+/**
+ * @tc.name: OnPowerStatusChanged
+ * @tc.desc: OnPowerStatusChanged test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientProxyTest, OnPowerStatusChanged, Function | SmallTest | Level2)
+{
+    DisplayPowerEvent event = DisplayPowerEvent::DISPLAY_ON;
+    EventStatus status = EventStatus::BEGIN;
+    PowerStateChangeReason reason = PowerStateChangeReason::POWER_BUTTON;
+
+    ASSERT_TRUE(screenSessionManagerClientProxy_ != nullptr);
+    screenSessionManagerClientProxy_->OnPowerStatusChanged(event, status, reason);
 }
 
 /**
@@ -134,6 +177,33 @@ HWTEST_F(ScreenSessionManagerClientProxyTest, OnDisplayStateChanged, Function | 
 }
 
 /**
+ * @tc.name: OnGetSurfaceNodeIdsFromMissionIdsChanged
+ * @tc.desc: OnGetSurfaceNodeIdsFromMissionIdsChanged test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientProxyTest, OnGetSurfaceNodeIdsFromMissionIdsChanged, Function | SmallTest | Level2)
+{
+    std::vector<uint64_t> missionIds = {0, 1};
+    std::vector<uint64_t> surfaceNodeIds;
+
+    ASSERT_TRUE(screenSessionManagerClientProxy_ != nullptr);
+    screenSessionManagerClientProxy_->OnGetSurfaceNodeIdsFromMissionIdsChanged(missionIds, surfaceNodeIds);
+}
+
+/**
+ * @tc.name: OnUpdateFoldDisplayMode
+ * @tc.desc: OnUpdateFoldDisplayMode test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientProxyTest, OnUpdateFoldDisplayMode, Function | SmallTest | Level2)
+{
+    FoldDisplayMode displayMode = FoldDisplayMode::MAIN;
+
+    ASSERT_TRUE(screenSessionManagerClientProxy_ != nullptr);
+    screenSessionManagerClientProxy_->OnUpdateFoldDisplayMode(displayMode);
+}
+
+/**
  * @tc.name: OnScreenshot
  * @tc.desc: OnScreenshot test
  * @tc.type: FUNC
@@ -157,6 +227,34 @@ HWTEST_F(ScreenSessionManagerClientProxyTest, OnImmersiveStateChanged, Function 
 
     ASSERT_TRUE(screenSessionManagerClientProxy_ != nullptr);
     screenSessionManagerClientProxy_->OnImmersiveStateChanged(immersive);
+}
+
+/**
+ * @tc.name: SetDisplayNodeScreenId
+ * @tc.desc: SetDisplayNodeScreenId test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientProxyTest, SetDisplayNodeScreenId, Function | SmallTest | Level2)
+{
+    ScreenId screenId = 0;
+    ScreenId displayNodeScreenId = 0;
+
+    ASSERT_TRUE(screenSessionManagerClientProxy_ != nullptr);
+    screenSessionManagerClientProxy_->SetDisplayNodeScreenId(screenId, displayNodeScreenId);
+}
+
+/**
+ * @tc.name: SetVirtualPixelRatioSystem
+ * @tc.desc: SetVirtualPixelRatioSystem test
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSessionManagerClientProxyTest, SetVirtualPixelRatioSystem, Function | SmallTest | Level2)
+{
+    ScreenId screenId = 0;
+    float virtualPixelRatio = 1.0f;
+
+    ASSERT_TRUE(screenSessionManagerClientProxy_ != nullptr);
+    screenSessionManagerClientProxy_->SetVirtualPixelRatioSystem(screenId, virtualPixelRatio);
 }
 } // namespace Rosen
 } // namespace OHOS

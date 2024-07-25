@@ -23,6 +23,7 @@
 #include "session_manager/include/scene_session_manager.h"
 #include "session_manager/include/screen_session_manager.h"
 #include "window_manager_hilog.h"
+#include "transaction/rs_uiextension_data.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -41,17 +42,7 @@ constexpr int MAX_WINDOWINFO_NUM = 15;
 constexpr int DEFALUT_DISPLAYID = 0;
 constexpr int EMPTY_FOCUS_WINDOW_ID = -1;
 
-
-std::string DumpRect(const std::vector<MMI::Rect>& rects)
-{
-    std::string rectStr = "";
-    for (const auto& rect : rects) {
-        rectStr = rectStr + " hot : [ " + std::to_string(rect.x) +" , " + std::to_string(rect.y) + 
-        " , " + std::to_string(rect.width) + " , " + std::to_string(rect.height) + "]"; 
-    }
-    return rectStr;
-}
-
+bool IsEqualUiExtentionWindowInfo(const std::vector<MMI::WindowInfo>& a, const std::vector<MMI::WindowInfo>& b);
 bool operator!=(const MMI::Rect& a, const MMI::Rect& b)
 {
     if (a.x != b.x || a.y != b.y || a.width != b.width || a.height != b.height) {
@@ -134,19 +125,32 @@ bool operator==(const MMI::WindowInfo& a, const MMI::WindowInfo& b)
     if (a.transform != b.transform) {
         return false;
     }
+    if (!IsEqualUiExtentionWindowInfo(a.uiExtentionWindowInfo, b.uiExtentionWindowInfo)) {
+        return false;
+    }
     return true;
 }
 
-std::string DumpWindowInfo(const MMI::WindowInfo& info)
+bool operator!=(const MMI::WindowInfo& a, const MMI::WindowInfo& b)
 {
-    std::string infoStr = "windowInfo:";
-    infoStr = infoStr + "windowId: " + std::to_string(info.id) + " pid : " + std::to_string(info.pid) +
-        " uid: " + std::to_string(info.uid) + " area: [ " + std::to_string(info.area.x) + " , " +
-        std::to_string(info.area.y) +  " , " + std::to_string(info.area.width) + " , " +
-        std::to_string(info.area.height) + "] agentWindowId:" + std::to_string(info.agentWindowId) + " flags:" +
-        std::to_string(info.flags)  +" displayId: " + std::to_string(info.displayId) +
-        " action: " + std::to_string(static_cast<int>(info.action)) + " zOrder: " + std::to_string(info.zOrder);
-    return infoStr + DumpRect(info.defaultHotAreas);
+    if (a == b) {
+        return false;
+    }
+    return true;
+}
+
+bool IsEqualUiExtentionWindowInfo(const std::vector<MMI::WindowInfo>& a, const std::vector<MMI::WindowInfo>& b)
+{
+    if (a.size() != b.size()) {
+        return false;
+    }
+    int size = static_cast<int>(a.size());
+    for (int i = 0; i < size; i++) {
+        if (a[i] != b[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 std::string DumpDisplayInfo(const MMI::DisplayInfo& info)
@@ -234,22 +238,21 @@ void SceneInputManager::FlushFullInfoToMMI(const std::vector<MMI::DisplayInfo>& 
         return;
     }
 
-    int32_t focusId = Rosen::SceneSessionManager::GetInstance().GetFocusedSessionId();
     MMI::DisplayGroupInfo displayGroupInfo = {
         .width = mainScreenWidth,
         .height = mainScreenHeight,
-        .focusWindowId = focusId,
+        .focusWindowId = focusedSessionId_,
         .currentUserId = currentUserId_,
         .windowsInfo = windowInfoList,
         .displaysInfo = displayInfos};
     for (const auto& displayInfo : displayGroupInfo.displaysInfo) {
         TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] - %{public}s", DumpDisplayInfo(displayInfo).c_str());
     }
-    std::string windowinfolst = "windowinfo  ";
+    std::string windowInfoListDump = "windowinfo  ";
     for (const auto& windowInfo : displayGroupInfo.windowsInfo) {
-        windowinfolst.append(DumpWindowInfo(windowInfo).append("  ||  "));
+        windowInfoListDump.append(DumpWindowInfo(windowInfo).append("  ||  "));
     }
-    TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] - %{public}s", windowinfolst.c_str());
+    TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] - %{public}s", windowInfoListDump.c_str());
     MMI::InputManager::GetInstance()->UpdateDisplayInfo(displayGroupInfo);
 }
 
@@ -300,13 +303,12 @@ void SceneInputManager::FlushChangeInfoToMMI(const std::map<uint64_t, std::vecto
     for (auto& iter : screenId2Windows) {
         auto displayId = iter.first;
         auto& windowInfos = iter.second;
-        std::string windowinfolst = "windowinfo  ";
+        std::string windowInfoListDump = "windowinfo  ";
         for (auto& windowInfo : windowInfos) {
-            windowinfolst.append(DumpWindowInfo(windowInfo).append("  ||  "));
+            windowInfoListDump.append(DumpWindowInfo(windowInfo).append("  ||  "));
         }
-        TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] --- %{public}s", windowinfolst.c_str());
-        int32_t focusId = Rosen::SceneSessionManager::GetInstance().GetFocusedSessionId();
-        MMI::WindowGroupInfo windowGroup = {focusId, displayId, windowInfos};
+        TLOGD(WmsLogTag::WMS_EVENT, "[EventDispatch] --- %{public}s", windowInfoListDump.c_str());
+        MMI::WindowGroupInfo windowGroup = {focusedSessionId_, displayId, windowInfos};
         MMI::InputManager::GetInstance()->UpdateWindowInfo(windowGroup);
     }
 }
@@ -347,6 +349,18 @@ bool SceneInputManager::CheckNeedUpdate(const std::vector<MMI::DisplayInfo>& dis
     return false;
 }
 
+void SceneInputManager::UpdateFocusedSessionId(int32_t focusedSessionId)
+{
+    auto focusedSceneSession = SceneSessionManager::GetInstance().GetSceneSession(focusedSessionId);
+    if (focusedSceneSession == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "focusedSceneSession is null");
+        return;
+    }
+    if (focusedSceneSession->HasModalUIExtension()) {
+        focusedSessionId_ =  focusedSceneSession->GetLastModalUIExtensionEventInfo().persistentId;
+    }
+}
+
 void SceneInputManager::PrintWindowInfo(const std::vector<MMI::WindowInfo>& windowInfoList)
 {
     int windowListSize = static_cast<int>(windowInfoList.size());
@@ -356,11 +370,17 @@ void SceneInputManager::PrintWindowInfo(const std::vector<MMI::WindowInfo>& wind
     if (windowEventID == UINT32_MAX) {
         windowEventID = 0;
     }
+    focusedSessionId_ = Rosen::SceneSessionManager::GetInstance().GetFocusedSessionId();
     for (auto& e : windowInfoList) {
         idList += std::to_string(e.id) + "|" + std::to_string(e.flags) + "|" +
-            std::to_string(static_cast<int>(e.zOrder)) + "|" +
+            std::to_string(e.zOrder) + "|" +
+            std::to_string(e.pid) + "|" +
             std::to_string(e.defaultHotAreas.size()) + " ";
+        if ((focusedSessionId_ == e.id) && (e.id == e.agentWindowId)) {
+            UpdateFocusedSessionId(focusedSessionId_);
+        }
     }
+    idList += std::to_string(focusedSessionId_);
     if (lastIdList != idList) {
         windowEventID++;
         TLOGI(WmsLogTag::WMS_EVENT, "EventID:%{public}d ListSize:%{public}d idList:%{public}s",
@@ -434,6 +454,7 @@ void SceneInputManager::FlushDisplayInfoToMMI(const bool forceFlush)
             return;
         }
         if (sceneSessionDirty_ == nullptr) {
+            TLOGE(WmsLogTag::WMS_EVENT, "sceneSessionDirty_ is nullptr");
             return;
         }
         sceneSessionDirty_->ResetSessionDirty();
@@ -453,6 +474,15 @@ void SceneInputManager::FlushDisplayInfoToMMI(const bool forceFlush)
     if (eventHandler_) {
         eventHandler_->PostTask(task);
     }
+}
+
+void SceneInputManager::UpdateSecSurfaceInfo(const std::map<uint64_t, std::vector<SecSurfaceInfo>>& secSurfaceInfoMap)
+{
+    if (sceneSessionDirty_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_EVENT, "sceneSessionDirty_ is nullptr");
+        return;
+    }
+    sceneSessionDirty_->UpdateSecSurfaceInfo(secSurfaceInfoMap);
 }
 }
 } // namespace OHOS::Rosen

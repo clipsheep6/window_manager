@@ -245,6 +245,7 @@ bool SessionPermission::IsSameBundleNameAsCalling(const std::string& bundleName)
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     std::string callingBundleName;
     bundleManagerServiceProxy_->GetNameForUid(uid, callingBundleName);
+    IPCSkeleton::SetCallingIdentity(identity);
     if (callingBundleName == bundleName) {
         WLOGFI("verify bundle name success");
         return true;
@@ -289,8 +290,6 @@ bool SessionPermission::IsStartedByUIExtension()
 
 bool SessionPermission::CheckCallingIsUserTestMode(pid_t pid)
 {
-    // reset ipc identity
-    std::string identity = IPCSkeleton::ResetCallingIdentity();
     TLOGI(WmsLogTag::DEFAULT, "Calling proxy func");
     bool isUserTestMode = false;
     auto appMgrClient = DelayedSingleton<AppExecFwk::AppMgrClient>::GetInstance();
@@ -298,13 +297,15 @@ bool SessionPermission::CheckCallingIsUserTestMode(pid_t pid)
         TLOGE(WmsLogTag::DEFAULT, "AppMgeClient is null!");
         return false;
     }
+    // reset ipc identity
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     int32_t ret = appMgrClient->CheckCallingIsUserTestMode(pid, isUserTestMode);
+    // set ipc identity to raw
+    IPCSkeleton::SetCallingIdentity(identity);
     if (ret != ERR_OK) {
         TLOGE(WmsLogTag::DEFAULT, "Permission denied! ret=%{public}d", ret);
         return false;
     }
-    // set ipc identity to raw
-    IPCSkeleton::SetCallingIdentity(identity);
     return isUserTestMode;
 }
 

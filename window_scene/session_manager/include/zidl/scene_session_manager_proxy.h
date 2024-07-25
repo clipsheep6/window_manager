@@ -55,8 +55,6 @@ public:
     WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) override;
     WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) override;
     WSError IsValidSessionIds(const std::vector<int32_t> &sessionIds, std::vector<bool> &results) override;
-    WSError RegisterSessionListener(const sptr<ISessionChangeListener> sessionListener) override;
-    void UnregisterSessionListener() override;
     WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
     WMError GetUnreliableWindowInfo(int32_t windowId, std::vector<sptr<UnreliableWindowInfo>>& infos) override;
     WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) override;
@@ -101,10 +99,12 @@ public:
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override;
     WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WSError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId) override;
-    void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage, int32_t persistentId,
-        int32_t parentId) override;
+    void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage,
+        const sptr<IRemoteObject>& token, uint64_t surfaceNodeId) override;
+    void UpdateModalExtensionRect(const sptr<IRemoteObject>& token, Rect rect) override;
+    void ProcessModalExtensionPointDown(const sptr<IRemoteObject>& token, int32_t posX, int32_t posY) override;
     WSError AddOrRemoveSecureSession(int32_t persistentId, bool shouldHide) override;
-    WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags,
+    WSError UpdateExtWindowFlags(const sptr<IRemoteObject>& token, uint32_t extWindowFlags,
         uint32_t extWindowActions) override;
     WSError GetHostWindowRect(int32_t hostWindowId, Rect& rect) override;
     WMError GetCallingWindowWindowStatus(int32_t persistentId, WindowStatus& windowStatus) override;

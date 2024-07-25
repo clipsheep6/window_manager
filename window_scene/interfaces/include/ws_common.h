@@ -104,7 +104,8 @@ const std::map<WSError, WSErrorCode> WS_JS_TO_ERROR_CODE_MAP {
     { WSError::WS_ERROR_INVALID_PARAM, WSErrorCode::WS_ERROR_STATE_ABNORMALLY },
     { WSError::WS_ERROR_IPC_FAILED,      WSErrorCode::WS_ERROR_SYSTEM_ABNORMALLY },
     { WSError::WS_ERROR_NULLPTR,         WSErrorCode::WS_ERROR_STATE_ABNORMALLY },
-    { WSError::WS_ERROR_EDM_CONTROLLED,  WSErrorCode::WS_ERROR_EDM_CONTROLLED},
+    { WSError::WS_ERROR_EDM_CONTROLLED,  WSErrorCode::WS_ERROR_EDM_CONTROLLED },
+    { WSError::WS_ERROR_INVALID_WINDOW,  WSErrorCode::WS_ERROR_STATE_ABNORMALLY },
 };
 
 enum class SessionState : uint32_t {
@@ -157,6 +158,34 @@ enum SessionOperationType : int32_t {
 
 enum class ManagerState : uint32_t {
     MANAGER_STATE_SCREEN_LOCKED = 0,
+};
+
+/**
+ * @brief Enumerates picture in picture control status.
+ */
+enum class WsPiPControlStatus : int32_t {
+    PLAY = 1,
+    PAUSE = 0,
+    OPEN = 1,
+    CLOSE = 0,
+    ENABLED = -2,
+    DISABLED = -3,
+};
+
+/**
+ * @brief Enumerates picture in picture control type.
+ */
+enum class WsPiPControlType : uint32_t {
+    VIDEO_PLAY_PAUSE = 0,
+    VIDEO_PREVIOUS = 1,
+    VIDEO_NEXT = 2,
+    FAST_FORWARD = 3,
+    FAST_BACKWARD = 4,
+    HANG_UP_BUTTON = 5,
+    MICROPHONE_SWITCH = 6,
+    CAMERA_SWITCH = 7,
+    MUTE_SWITCH = 8,
+    END,
 };
 
 enum class FocusChangeReason {
@@ -282,7 +311,9 @@ struct SessionInfo {
     uint32_t windowInputType_ = 0;
     std::string continueSessionId_ = "";
     bool isCalledRightlyByCallerId_ = false;
-    bool isModal_ = false;
+    uint32_t uiExtensionUsage_ = 0;
+    bool fullScreenStart_ = false;
+    bool isAtomicService_ = false;
 };
 
 enum class SessionFlag : uint32_t {

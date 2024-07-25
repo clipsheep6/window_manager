@@ -242,18 +242,6 @@ HWTEST_F(WindowManagerLiteTest, GetMainWindowInfos, Function | SmallTest | Level
 }
 
 /**
- * @tc.name: Test02
- * @tc.desc: Test02
- * @tc.type: FUNC
- */
-HWTEST_F(WindowManagerLiteTest, Test02, Function | SmallTest | Level2)
-{
-    WindowChecker windowChecker;
-    auto ret1 = windowChecker.CheckWindowId(-1);
-    ASSERT_EQ(-1, ret1);
-}
-
-/**
  * @tc.name: TestUpdateFocusChangeInfo
  * @tc.desc: TestUpdateFocusChangeInfo
  * @tc.type: FUNC
@@ -298,9 +286,6 @@ HWTEST_F(WindowManagerLiteTest, Test04, Function | SmallTest | Level2)
     std::vector<sptr<WindowDrawingContentInfo>> windowDrawingContentInfos;
     lite.pImpl_->NotifyWindowDrawingContentInfoChanged(windowDrawingContentInfos);
     lite.pImpl_->NotifyWindowModeChange(WindowModeType::WINDOW_MODE_SPLIT);
-    WindowChecker windowChecker;
-    auto ret = windowChecker.CheckWindowId(-1);
-    ASSERT_EQ(-1, ret);
 }
 
 /**
@@ -438,6 +423,46 @@ HWTEST_F(WindowManagerLiteTest, GetWindowModeType, Function | SmallTest | Level2
     WindowModeType windowModeType = WindowModeType::WINDOW_MODE_SPLIT_FLOATING;
     auto ret = WindowManagerLite::GetInstance().GetWindowModeType(windowModeType);
     ASSERT_EQ(WMError::WM_ERROR_INVALID_PERMISSION, ret);
+}
+
+/**
+ * @tc.name: RaiseWindowToTop
+ * @tc.desc: RaiseWindowToTop
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerLiteTest, RaiseWindowToTop, Function | SmallTest | Level2)
+{
+    auto ret = WindowManagerLite::GetInstance().RaiseWindowToTop(0);
+    EXPECT_EQ(WMError::WM_ERROR_INVALID_PERMISSION, ret);
+}
+
+/**
+ * @tc.name: NotifyWMSConnected
+ * @tc.desc: NotifyWMSConnected
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerLiteTest, NotifyWMSConnected, Function | SmallTest | Level2)
+{
+    WindowManagerLite::GetInstance().pImpl_->wmsConnectionChangedListener_ = nullptr;
+    WindowManagerLite::GetInstance().pImpl_->NotifyWMSConnected(0, 0);
+    WindowManagerLite::GetInstance().pImpl_->NotifyWMSDisconnected(0, 0);
+    sptr<FocusChangeInfo> focusChangeInfo = nullptr;
+    WindowManagerLite::GetInstance().UpdateFocusChangeInfo(focusChangeInfo, true);
+    focusChangeInfo = sptr<FocusChangeInfo>::MakeSptr();
+    ASSERT_NE(nullptr, focusChangeInfo);
+    WindowManagerLite::GetInstance().UpdateFocusChangeInfo(focusChangeInfo, true);
+    WindowManagerLite::GetInstance().UpdateFocusChangeInfo(focusChangeInfo, false);
+    std::vector<sptr<WindowVisibilityInfo>> windowVisibilityInfos;
+    WindowManagerLite::GetInstance().UpdateWindowVisibilityInfo(windowVisibilityInfos);
+    std::vector<sptr<WindowDrawingContentInfo>> windowDrawingContentInfos;
+    WindowManagerLite::GetInstance().UpdateWindowDrawingContentInfo(windowDrawingContentInfos);
+    WindowManagerLite::GetInstance().OnRemoteDied();
+    WindowManagerLite::GetInstance().OnWMSConnectionChanged(0, 0, true);
+    WindowManagerLite::GetInstance().OnWMSConnectionChanged(0, 0, false);
+    WindowModeType windowModeType = WindowModeType::WINDOW_MODE_SPLIT_FLOATING;
+    WindowManagerLite::GetInstance().UpdateWindowModeTypeInfo(windowModeType);
+    auto ret = WindowManagerLite::GetInstance().GetWindowModeType(windowModeType);
+    EXPECT_EQ(WMError::WM_ERROR_INVALID_PERMISSION, ret);
 }
 }
 }
