@@ -39,6 +39,7 @@ public:
     static bool IsStartedByUIExtension();
     static bool CheckCallingIsUserTestMode(pid_t pid);
     static bool IsBetaVersion();
+    static bool IsFoundationCall(uint32_t callerTokenId = 0);
 };
 } // Rosen
 } // OHOS
