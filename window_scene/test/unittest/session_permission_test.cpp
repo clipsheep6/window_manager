@@ -205,7 +205,6 @@ HWTEST_F(SessionPermissionTest, IsStartedByUIExtension, Function | SmallTest | L
     bool result = SessionPermission::IsStartedByUIExtension();
     ASSERT_EQ(result, false);
 }
-
 } // namespacecd
 } // namespace Rosen
 } // namespace OHOS
