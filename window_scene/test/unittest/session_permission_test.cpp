@@ -206,17 +206,6 @@ HWTEST_F(SessionPermissionTest, IsStartedByUIExtension, Function | SmallTest | L
     ASSERT_EQ(result, false);
 }
 
-/**
- * @tc.name: IsFoundationCall
- * @tc.desc: test function : IsFoundationCall
- * @tc.type: FUNC
-*/
-HWTEST_F(SessionPermissionTest, IsFoundationCall, Function | SmallTest | Level1)
-{
-    const uint32_t callerTokenId = 1000;
-    bool result = SessionPermission::IsFoundationCall(callerTokenId);
-    ASSERT_EQ(false, result);
-}
 } // namespacecd
 } // namespace Rosen
 } // namespace OHOS
