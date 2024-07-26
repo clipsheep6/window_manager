@@ -140,7 +140,10 @@ void SingleDisplayFoldPolicy::SetOnBootAnimation(bool onBootAnimation)
 void SingleDisplayFoldPolicy::RecoverWhenBootAnimationExit()
 {
     TLOGI(WmsLogTag::DMS, "RecoverWhenBootAnimationExit currentScreen(%{public}" PRIu64 ")", screenId_);
-    FoldDisplayMode displayMode = GetModeMatchStatus();
+    FoldDisplayMode displayMode = FoldDisplayMode::FULL;
+    if (RSInterfaces::GetInstance().GetActiveScreenId() == SCREEN_ID_MAIN) {
+        displayMode = FoldDisplayMode::MAIN;
+    }
     if (currentDisplayMode_ != displayMode) {
         ChangeScreenDisplayMode(displayMode);
     } else {
