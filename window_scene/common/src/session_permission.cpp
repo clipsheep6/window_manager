@@ -34,6 +34,7 @@ namespace OHOS {
 namespace Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_WINDOW, "SessionPermission"};
+constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 
 sptr<AppExecFwk::IBundleMgr> GetBundleManagerProxy()
 {
@@ -314,6 +315,27 @@ bool SessionPermission::IsBetaVersion()
 {
     std::string betaName = OHOS::system::GetParameter("const.logsystem.versiontype", "");
     return betaName.find("beta") != std::string::npos;
+}
+
+bool SessionPermission::IsFoundationCall(uint32_t callerTokenId)
+{
+    if (callerTokenId == 0) {
+        callerTokenId = IPCSkeleton::GetCallingTokenID();
+    }
+    TLOGD(WmsLogTag::DEFAULT, "callerTokenId is %{public}u", callerTokenId);
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerTokenId);
+    if (tokenType != Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        TLOGW(WmsLogTag::DEFAULT, "Is not native call");
+        return false;
+    }
+    Security::AccessToken::NativeTokenInfo nativeInfo;
+    auto result = Security::AccessToken::AccessTokenKit::GetNativeTokenInfo(callerTokenId, nativeInfo);
+    if (result != ERR_OK) {
+        TLOGE(WmsLogTag::DEFAULT, "GetNativeTokenInfo failed, callerTokenId is %{public}u.", callerTokenId);
+        return false;
+    }
+    TLOGD(WmsLogTag::DEFAULT, "Caller process name : %{public}s", nativeInfo.processName.c_str());
+    return nativeInfo.processName == FOUNDATION_PROCESS_NAME;
 }
 
 } // namespace Rosen
