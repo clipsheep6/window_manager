@@ -2721,7 +2721,8 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         TLOGE(WmsLogTag::WMS_LIFE, "The caller has not permission granted");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
-    auto task = [weakThis = wptr(this), abilitySessionInfo]() {
+    bool isFoundationCall = SessionPermission::IsFoundationCall();
+    auto task = [weakThis = wptr(this), abilitySessionInfo, isFoundationCall]() {
         auto session = weakThis.promote();
         if (!session) {
             TLOGE(WmsLogTag::WMS_LIFE, "session is null");
@@ -2740,10 +2741,10 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
                     session->GetForegroundInteractiveStatus());
                 return WSError::WS_ERROR_INVALID_OPERATION;
             }
-            if (!isSessionForeground && !(abilitySessionInfo->canStartAbilityFromBackground)) {
+            if (!isSessionForeground && !(isFoundationCall && abilitySessionInfo->canStartAbilityFromBackground)) {
                 TLOGW(WmsLogTag::WMS_LIFE, "start ability invalid, window state:%{public}d, \
-                    canStartAbilityFromBackground:%{public}u",
-                    sessionState, abilitySessionInfo->canStartAbilityFromBackground);
+                    isFoundationCall:%{public}u, canStartAbilityFromBackground:%{public}u",
+                    sessionState, isFoundationCall, abilitySessionInfo->canStartAbilityFromBackground);
                 return WSError::WS_ERROR_INVALID_OPERATION;
             }
         }
