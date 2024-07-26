@@ -19,9 +19,9 @@
 #include <want.h>
 
 #include "ability_connection.h"
-#include "window_manager_hilog.h"
-#include "ipc_skeleton.h"
 #include "extension_manager_client.h"
+#include "ipc_skeleton.h"
+#include "window_manager_hilog.h"
 
 namespace OHOS::Rosen {
 constexpr int32_t DEFAULT_VALUE = -1;
