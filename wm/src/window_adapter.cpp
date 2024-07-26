@@ -570,7 +570,7 @@ void WindowAdapter::OffWindowZoom()
 
 WMError WindowAdapter::RaiseToAppTop(uint32_t windowId)
 {
-    INIT_PROXY_CHECK_RETURN(WmErrorCode::WM_DO_NOTHING);
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
 
     auto wmsProxy = GetWindowManagerServiceProxy();
     CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);

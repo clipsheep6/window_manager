@@ -1391,7 +1391,7 @@ WMError WindowManagerService::RaiseToAppTop(uint32_t windowId)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
         WLOGFE("window raise to app top permission denied!");
-        return WmErrorCode::WM_ERROR_NOT_SYSTEM_APP;
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
     }
     auto task = [this, windowId]() {
         return windowController_->RaiseToAppTop(windowId);

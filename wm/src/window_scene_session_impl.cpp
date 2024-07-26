@@ -1536,7 +1536,7 @@ WMError WindowSceneSessionImpl::RaiseToAppTop()
         return WMError::WM_DO_NOTHING;
     }
     auto hostSession = GetHostSession();
-    CHECK_HOST_SESSION_RETURN_ERROR_IF_NULL(hostSession, WmErrorCode::WM_ERROR_NULLPTR);
+    CHECK_HOST_SESSION_RETURN_ERROR_IF_NULL(hostSession, WMError::WM_ERROR_NULLPTR);
     const WSError ret = hostSession->RaiseToAppTop();
     return static_cast<WMError>(ret);
 }

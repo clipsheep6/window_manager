@@ -554,7 +554,7 @@ HWTEST_F(WindowSceneSessionImplTest, RaiseToAppTop01, Function | SmallTest | Lev
 
     windowSceneSession->property_->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
     windowSceneSession->state_ = WindowState::STATE_HIDDEN;
-    ASSERT_EQ(WMError::WM_ERROR_STATE_ABNORMALLY, windowSceneSession->RaiseToAppTop());
+    ASSERT_EQ(WMError::WM_DO_NOTHING, windowSceneSession->RaiseToAppTop());
 
     windowSceneSession->state_ = WindowState::STATE_SHOWN;
     SessionInfo sessionInfo = { "CreateTestBundle", "CreateTestModule", "CreateTestAbility" };
