@@ -4374,7 +4374,7 @@ WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& scene
     return WSError::WS_OK;
 }
 
-void dumpAllSessionFocusableInfo(int32_t persistentId) 
+void SceneSessionManager::dumpAllSessionFocusableInfo(int32_t persistentId)
 {
     TLOGI(WmsLogTag::WMS_FOCUS, "id: %{public}d", persistentId);
     auto func = [this](sptr<SceneSession> session) {
@@ -4389,8 +4389,8 @@ void dumpAllSessionFocusableInfo(int32_t persistentId)
                 parentVisible = false;
         }
         bool sessionVisible = IsSessionVisible(session);
-        TLOGI(WmsLogTag::WMS_FOCUS, 
-            "%{public}d, winType:%{public}d, hide:%{public}d, focusable:%{public}d, visible:%{public}d, parentVisible:%{public}d",
+        TLOGI(WmsLogTag::WMS_FOCUS, "%{public}d, winType:%{public}d, hide:%{public}d, "
+            "focusable:%{public}d, visible:%{public}d, parentVisible:%{public}d",
             session->GetPersistentId(), session->GetWindowType(), session->GetForceHideState(),
             session->GetFocusable(), sessionVisible, parentVisible);
         return false;
