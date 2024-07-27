@@ -61,6 +61,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSession" };
 const std::string DLP_INDEX = "ohos.dlp.params.index";
 constexpr const char* APP_CLONE_INDEX = "ohos.extra.param.key.appCloneIndex";
+const uint32_t FOUNDATION_UID = 5523;
 } // namespace
 
 MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
@@ -2715,8 +2716,8 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         TLOGE(WmsLogTag::WMS_LIFE, "The caller has not permission granted");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
-    auto isSACalling = SessionPermission::IsSACalling();
-    auto task = [weakThis = wptr(this), abilitySessionInfo, isSACalling]() {
+    bool isAMSCall = IPCSkeleton::GetCallingUid() == FOUNDATION_UID;
+    auto task = [weakThis = wptr(this), abilitySessionInfo, isAMSCall]() {
         auto session = weakThis.promote();
         if (!session) {
             TLOGE(WmsLogTag::WMS_LIFE, "session is null");
@@ -2727,25 +2728,19 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
             return WSError::WS_ERROR_NULLPTR;
         }
         auto isPC = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
-        if (!(isPC || session->IsFreeMultiWindowMode()) && !isSACalling &&
-            WindowHelper::IsMainWindow(session->GetWindowType())) {
-            auto sessionState = session->GetSessionState();
-            if ((sessionState == SessionState::STATE_FOREGROUND || sessionState == SessionState::STATE_ACTIVE) &&
-                !(session->GetForegroundInteractiveStatus())) {
+        if (!(isPC || session->IsFreeMultiWindowMode()) && WindowHelper::IsMainWindow(session->GetWindowType())) {
+            SessionState sessionState = session->GetSessionState();
+            bool isSessionForeground = sessionState == SessionState::STATE_FOREGROUND ||
+                sessionState == SessionState::STATE_ACTIVE;
+            if (isSessionForeground && !(session->GetForegroundInteractiveStatus())) {
                 TLOGW(WmsLogTag::WMS_LIFE, "start ability invalid, ForegroundInteractiveStatus: %{public}u",
                     session->GetForegroundInteractiveStatus());
                 return WSError::WS_ERROR_INVALID_OPERATION;
             }
-            auto callingTokenId = abilitySessionInfo->callingTokenId;
-            auto startAbilityBackground = SessionPermission::VerifyPermissionByCallerToken(
-                callingTokenId, "ohos.permission.START_ABILITIES_FROM_BACKGROUND") ||
-                SessionPermission::VerifyPermissionByCallerToken(callingTokenId,
-                "ohos.permission.START_ABILIIES_FROM_BACKGROUND");
-            if (sessionState != SessionState::STATE_FOREGROUND && sessionState != SessionState::STATE_ACTIVE &&
-                !(startAbilityBackground || abilitySessionInfo->hasContinuousTask)) {
-                TLOGW(WmsLogTag::WMS_LIFE, "start ability invalid, window state: %{public}d, \
-                    startAbilityBackground:%{public}u, hasContinuousTask: %{public}u",
-                    sessionState, startAbilityBackground, abilitySessionInfo->hasContinuousTask);
+            if (!isSessionForeground && !(isAMSCall && abilitySessionInfo->canStartAbilityFromBackground)) {
+                TLOGW(WmsLogTag::WMS_LIFE, "start ability invalid, window state:%{public}d, \
+                    isAMSCall:%{public}u, canStartAbilityFromBackground:%{public}u",
+                    sessionState, isAMSCall, abilitySessionInfo->canStartAbilityFromBackground);
                 return WSError::WS_ERROR_INVALID_OPERATION;
             }
         }
