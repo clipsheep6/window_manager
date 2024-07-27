@@ -412,6 +412,7 @@ private:
     void InitSceneSession(sptr<SceneSession>& sceneSession, const SessionInfo& sessionInfo,
         const sptr<WindowSessionProperty>& property);
 
+    void dumpAllSessionFocusableInfo(int32_t persistentId);
     sptr<SceneSession> GetNextFocusableSession(int32_t persistentId);
     sptr<SceneSession> GetTopNearestBlockingFocusSession(uint32_t zOrder, bool includingAppSession);
     sptr<SceneSession> GetTopFocusableNonAppSession();
