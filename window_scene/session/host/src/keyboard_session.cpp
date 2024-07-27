@@ -67,6 +67,9 @@ SessionGravity KeyboardSession::GetKeyboardGravity() const
 
 WSError KeyboardSession::Show(sptr<WindowSessionProperty> property)
 {
+    if (!CheckPermissionWithPropertyAnimation(property)) {
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
     auto task = [weakThis = wptr(this), property]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -86,6 +89,9 @@ WSError KeyboardSession::Show(sptr<WindowSessionProperty> property)
 
 WSError KeyboardSession::Hide()
 {
+    if (!CheckPermissionWithPropertyAnimation(GetSessionProperty())) {
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    }
     auto task = [weakThis = wptr(this)]() {
         auto session = weakThis.promote();
         if (!session) {
@@ -103,7 +109,10 @@ WSError KeyboardSession::Hide()
         ret = session->SceneSession::Background();
         WSRect rect = {0, 0, 0, 0};
         session->NotifyKeyboardPanelInfoChange(rect, false);
-        if (session->systemConfig_.multiWindowUIType_ == "FreeFormMultiWindow") {
+        if (session->systemConfig_.multiWindowUIType_ == "FreeFormMultiWindow" ||
+            session->GetSessionScreenName() == "HiCar" ||
+            session->GetSessionScreenName() == "SuperLauncher") {
+            TLOGD(WmsLogTag::WMS_KEYBOARD, "pc or virtual screen, restore calling session");
             session->RestoreCallingSession();
             auto sessionProperty = session->GetSessionProperty();
             if (sessionProperty) {
@@ -154,7 +163,7 @@ WSError KeyboardSession::NotifyClientToUpdateRect(std::shared_ptr<RSTransaction>
         }
         if (session->reason_ != SizeChangeReason::DRAG) {
             session->reason_ = SizeChangeReason::UNDEFINED;
-            session->isDirty_ = false;
+            session->dirtyFlags_ &= ~static_cast<uint32_t>(SessionUIDirtyFlag::RECT);
         }
         return ret;
     };
@@ -173,7 +182,11 @@ void KeyboardSession::OnKeyboardPanelUpdated()
     panelRect = (keyboardPanelSession_ == nullptr) ? panelRect : keyboardPanelSession_->GetSessionRect();
     RaiseCallingSession(panelRect);
     if (specificCallback_ != nullptr && specificCallback_->onUpdateAvoidArea_ != nullptr) {
-        specificCallback_->onUpdateAvoidArea_(GetPersistentId());
+        if (Session::IsScbCoreEnabled()) {
+            dirtyFlags_ |= static_cast<uint32_t>(SessionUIDirtyFlag::AVOID_AREA);
+        } else {
+            specificCallback_->onUpdateAvoidArea_(GetPersistentId());
+        }
     }
 }
 
@@ -346,6 +359,23 @@ bool KeyboardSession::CheckIfNeedRaiseCallingSession(sptr<SceneSession> callingS
     return true;
 }
 
+static bool IsCallingSessionSplitMode(const sptr<SceneSession>& callingSession)
+{
+    auto windowType = callingSession->GetWindowType();
+    bool isCallingSessionSplit = false;
+    if (WindowHelper::IsMainWindow(windowType)) {
+        if (callingSession->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+            isCallingSessionSplit = true;
+        }
+    } else if (WindowHelper::IsSubWindow(windowType) || WindowHelper::IsDialogWindow(windowType)) {
+        if (callingSession->GetParentSession() != nullptr &&
+            callingSession->GetParentSession()->GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+            isCallingSessionSplit = true;
+        }
+    }
+    return isCallingSessionSplit;
+}
+
 void KeyboardSession::RaiseCallingSession(const WSRect& keyboardPanelRect,
     const std::shared_ptr<RSTransaction>& rsTransaction)
 {
@@ -370,7 +400,9 @@ void KeyboardSession::RaiseCallingSession(const WSRect& keyboardPanelRect,
         SessionHelper::IsEmptyRect(callingSessionRestoringRect)) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "No overlap area, keyboardRect: %{public}s, callingRect: %{public}s",
             keyboardPanelRect.ToString().c_str(), callingSessionRect.ToString().c_str());
-        return;
+        if (!IsCallingSessionSplitMode(callingSession)) {
+            return;
+        }
     }
 
     WSRect newRect = callingSessionRect;
@@ -532,7 +564,11 @@ void KeyboardSession::CloseKeyboardSyncTransaction(const WSRect& keyboardPanelRe
         if (isKeyboardShow) {
             session->RaiseCallingSession(keyboardPanelRect, rsTransaction);
             if (session->specificCallback_ != nullptr && session->specificCallback_->onUpdateAvoidArea_ != nullptr) {
-                session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
+                if (Session::IsScbCoreEnabled()) {
+                    session->dirtyFlags_ |= static_cast<uint32_t>(SessionUIDirtyFlag::AVOID_AREA);
+                } else {
+                    session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
+                }
             }
         } else {
             session->RestoreCallingSession(rsTransaction);
@@ -564,5 +600,18 @@ std::shared_ptr<RSTransaction> KeyboardSession::GetRSTransaction()
         rsTransaction = transactionController->GetRSTransaction();
     }
     return rsTransaction;
+}
+
+std::string KeyboardSession::GetSessionScreenName()
+{
+    auto sessionProperty = GetSessionProperty();
+    if (sessionProperty != nullptr) {
+        auto displayId = sessionProperty->GetDisplayId();
+        auto screenSession = ScreenSessionManagerClient::GetInstance().GetScreenSession(displayId);
+        if (screenSession != nullptr) {
+            return screenSession->GetName();
+        }
+    }
+    return "";
 }
 } // namespace OHOS::Rosen
