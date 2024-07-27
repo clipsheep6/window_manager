@@ -2729,7 +2729,7 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
             SessionState sessionState = session->GetSessionState();
             bool isSessionForeground = sessionState == SessionState::STATE_FOREGROUND ||
                 sessionState == SessionState::STATE_ACTIVE;
-            if (isSessionForeground && !(session->GetForegroundInteractiveStatus()) {
+            if (isSessionForeground && !(session->GetForegroundInteractiveStatus())) {
                 TLOGW(WmsLogTag::WMS_LIFE, "start ability invalid, ForegroundInteractiveStatus: %{public}u",
                     session->GetForegroundInteractiveStatus());
                 return WSError::WS_ERROR_INVALID_OPERATION;
