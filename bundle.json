@@ -384,6 +384,10 @@
               ],
               "header_base": "//foundation/window/window_manager/interfaces/kits/cj/window_runtime"
             }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/window/window_manager/interfaces/innerkits:wm_interface"
           }
         ],
         "test": [
