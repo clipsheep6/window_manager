@@ -202,7 +202,8 @@ void WindowSessionImpl::MakeSubOrDialogWindowDragableAndMoveble()
 {
     TLOGI(WmsLogTag::WMS_LIFE, "Called %{public}d.", GetPersistentId());
     auto isPC = windowSystemConfig_.uiType_ == "pc";
-    if ((isPC || IsFreeMultiWindowMode()) && windowOption_ != nullptr) {
+    bool isPcAppInPad = property_->GetIsPcAppInPad();
+    if ((isPC || IsFreeMultiWindowMode() || isPcAppInPad) && windowOption_ != nullptr) {
         if (WindowHelper::IsSubWindow(property_->GetWindowType())) {
             TLOGI(WmsLogTag::WMS_LIFE, "create subwindow, title: %{public}s, decorEnable: %{public}d",
                 windowOption_->GetSubWindowTitle().c_str(), windowOption_->GetSubWindowDecorEnable());
@@ -668,6 +669,46 @@ void WindowSessionImpl::UpdateDensity()
         preRect.posX_, preRect.posY_, preRect.width_, preRect.height_);
 }
 
+void WindowSessionImpl::SetUniqueVirtualPixelRatio(bool useUniqueDensity, float virtualPixelRatio)
+{
+    TLOGI(WmsLogTag::DEFAULT, "old {useUniqueDensity: %{public}d, virtualPixelRatio: %{public}f}, "\
+        "new {useUniqueDensity: %{public}d, virtualPixelRatio: %{public}f}",
+        useUniqueDensity_, virtualPixelRatio_, useUniqueDensity, virtualPixelRatio);
+    bool oldUseUniqueDensity = useUniqueDensity_;
+    useUniqueDensity_ = useUniqueDensity;
+    if (useUniqueDensity_) {
+        float oldVirtualPixelRatio = virtualPixelRatio_;
+        virtualPixelRatio_ = virtualPixelRatio;
+        if (!MathHelper::NearZero(oldVirtualPixelRatio - virtualPixelRatio)) {
+            UpdateDensity();
+            SetUniqueVirtualPixelRatioForSub(useUniqueDensity, virtualPixelRatio);
+        }
+    } else {
+        if (oldUseUniqueDensity) {
+            UpdateDensity();
+            SetUniqueVirtualPixelRatioForSub(useUniqueDensity, virtualPixelRatio);
+        }
+    }
+}
+
+void WindowSessionImpl::CopyUniqueDensityParameter(sptr<WindowSessionImpl> parentWindow)
+{
+    if (parentWindow) {
+        useUniqueDensity_ = parentWindow->useUniqueDensity_;
+        virtualPixelRatio_ = parentWindow->virtualPixelRatio_;
+    }
+}
+
+void WindowSessionImpl::SetUniqueVirtualPixelRatioForSub(bool useUniqueDensity, float virtualPixelRatio)
+{
+    if (subWindowSessionMap_.count(GetPersistentId()) == 0) {
+        return;
+    }
+    for (auto& subWindowSession : subWindowSessionMap_.at(GetPersistentId())) {
+        subWindowSession->SetUniqueVirtualPixelRatio(useUniqueDensity, virtualPixelRatio);
+    }
+}
+
 WSError WindowSessionImpl::UpdateOrientation()
 {
     TLOGD(WmsLogTag::DMS, "UpdateOrientation, wid: %{public}d", GetPersistentId());
@@ -752,6 +793,9 @@ WSError WindowSessionImpl::UpdateWindowMode(WindowMode mode)
 
 float WindowSessionImpl::GetVirtualPixelRatio(sptr<DisplayInfo> displayInfo)
 {
+    if (useUniqueDensity_) {
+        return virtualPixelRatio_;
+    }
     return displayInfo->GetVirtualPixelRatio();
 }
 
@@ -836,10 +880,11 @@ void WindowSessionImpl::UpdateTitleButtonVisibility()
         return;
     }
     auto isPC = windowSystemConfig_.uiType_ == "pc";
+    bool isPcAppInPad = property_->GetIsPcAppInPad();
     WindowType windowType = GetType();
     bool isSubWindow = WindowHelper::IsSubWindow(windowType);
     bool isDialogWindow = WindowHelper::IsDialogWindow(windowType);
-    if ((isPC || IsFreeMultiWindowMode()) && (isSubWindow || isDialogWindow)) {
+    if ((isPC || IsFreeMultiWindowMode() || isPcAppInPad) && (isSubWindow || isDialogWindow)) {
         WLOGFD("hide other buttons except close");
         uiContent->HideWindowTitleButton(true, true, true);
         return;
@@ -1077,7 +1122,9 @@ void WindowSessionImpl::UpdateDecorEnableToAce(bool isDecorEnable)
                 (mode == WindowMode::WINDOW_MODE_FULLSCREEN && !property_->IsLayoutFullScreen());
             WLOGFD("[WSLayout]Notify uiContent window mode change end,decorVisible:%{public}d", decorVisible);
             if (windowSystemConfig_.freeMultiWindowSupport_) {
-                decorVisible = decorVisible && windowSystemConfig_.freeMultiWindowEnable_;
+                auto isSubWindow = WindowHelper::IsSubWindow(GetType());
+                decorVisible = decorVisible && (windowSystemConfig_.freeMultiWindowEnable_ ||
+                        (property_->GetIsPcAppInPad() && isSubWindow));
             }
             uiContent->UpdateDecorVisible(decorVisible, isDecorEnable);
             return;
@@ -1105,7 +1152,9 @@ void WindowSessionImpl::UpdateDecorEnable(bool needNotify, WindowMode mode)
                     mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY ||
                     (mode == WindowMode::WINDOW_MODE_FULLSCREEN && !property_->IsLayoutFullScreen());
                 if (windowSystemConfig_.freeMultiWindowSupport_) {
-                    decorVisible = decorVisible && windowSystemConfig_.freeMultiWindowEnable_;
+                    auto isSubWindow = WindowHelper::IsSubWindow(GetType());
+                    decorVisible = decorVisible && (windowSystemConfig_.freeMultiWindowEnable_ ||
+                            (property_->GetIsPcAppInPad() && isSubWindow));
                 }
                 WLOGFD("[WSLayout]Notify uiContent window mode change end,decorVisible:%{public}d", decorVisible);
                 uiContent->UpdateDecorVisible(decorVisible, IsDecorEnable());
@@ -2006,7 +2055,8 @@ WMError WindowSessionImpl::SetTitleButtonVisible(bool isMaximizeVisible, bool is
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     auto isPC = windowSystemConfig_.uiType_ == "pc";
-    if (!(isPC || IsFreeMultiWindowMode())) {
+    bool isPcAppInPad = property_->GetIsPcAppInPad();
+    if (!(isPC || IsFreeMultiWindowMode() || isPcAppInPad)) {
         return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
     }
     windowTitleVisibleFlags_ = { isMaximizeVisible, isMinimizeVisible, isSplitVisible };
@@ -2040,7 +2090,8 @@ void WindowSessionImpl::NotifyAfterForeground(bool needNotifyListeners, bool nee
 
 void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool needNotifyUiContent)
 {
-    if (needNotifyListeners) {
+    bool isPcAppInPad = property_->GetIsPcAppInPad();
+    if (needNotifyListeners && !isPcAppInPad) {
         std::lock_guard<std::recursive_mutex> lockListener(lifeCycleListenerMutex_);
         auto lifecycleListeners = GetListeners<IWindowLifeCycle>();
         CALL_LIFECYCLE_LISTENER(AfterBackground, lifecycleListeners);

@@ -562,6 +562,9 @@ WSError SceneSessionManager::SwitchFreeMultiWindow(bool enable)
         }
         sceneSession->SwitchFreeMultiWindow(enable);
     }
+    WindowStyleType type = enable ?
+            WindowStyleType::WINDOW_STYLE_FREE_MULTI_WINDOW : WindowStyleType::WINDOW_STYLE_DEFAULT;
+    SessionManagerAgentController::GetInstance().NotifyWindowStyleChange(type);
     return WSError::WS_OK;
 }
 
@@ -1929,7 +1932,12 @@ WSError SceneSessionManager::RequestSceneSessionBackground(const sptr<SceneSessi
             TLOGE(WmsLogTag::WMS_MAIN, "Create Ability info failed, id %{public}d", persistentId);
             return WSError::WS_ERROR_NULLPTR;
         }
-        if (systemConfig_.backgroundswitch) {
+        bool isPcAppInpad = false;
+        auto property = scnSession->GetSessionProperty();
+        if (property) {
+            isPcAppInpad = property->GetIsPcAppInPad();
+        }
+        if (systemConfig_.backgroundswitch || isPcAppInpad) {
             TLOGI(WmsLogTag::WMS_MAIN, "NotifySessionBackground: %{public}d", persistentId);
             scnSession->NotifySessionBackground(1, true, true);
         } else {
@@ -6457,7 +6465,9 @@ WMError SceneSessionManager::RegisterWindowManagerAgent(WindowManagerAgentType t
 {
     if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY ||
         type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_DRAWING_STATE ||
-        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_VISIBLE_WINDOW_NUM) {
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_VISIBLE_WINDOW_NUM ||
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS ||
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_MODE) {
         if (!SessionPermission::IsSACalling()) {
             TLOGE(WmsLogTag::WMS_LIFE, "permission denied!");
             return WMError::WM_ERROR_INVALID_PERMISSION;
@@ -6492,7 +6502,9 @@ WMError SceneSessionManager::UnregisterWindowManagerAgent(WindowManagerAgentType
     }
     if (type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_VISIBILITY ||
         type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_DRAWING_STATE ||
-        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_VISIBLE_WINDOW_NUM) {
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_VISIBLE_WINDOW_NUM ||
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_FOCUS ||
+        type == WindowManagerAgentType::WINDOW_MANAGER_AGENT_TYPE_WINDOW_MODE) {
         if (!SessionPermission::IsSACalling()) {
             TLOGE(WmsLogTag::WMS_LIFE, "permission denied!");
             return WMError::WM_ERROR_INVALID_PERMISSION;
@@ -9552,6 +9564,17 @@ WMError SceneSessionManager::GetWindowModeType(WindowModeType& windowModeType)
         return WMError::WM_ERROR_INVALID_PERMISSION;
     }
     windowModeType = CheckWindowModeType();
+    return WMError::WM_OK;
+}
+
+WMError SceneSessionManager::GetWindowStyleType(WindowStyleType& windowStyleType)
+{
+    if (!SessionPermission::IsSACalling()) {
+        TLOGE(WmsLogTag::WMS_LIFE, "permission denied!");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    windowStyleType = systemConfig_.freeMultiWindowSupport_ && systemConfig_.freeMultiWindowEnable_ ?
+        WindowStyleType::WINDOW_STYLE_FREE_MULTI_WINDOW : WindowStyleType::WINDOW_STYLE_DEFAULT;
     return WMError::WM_OK;
 }
 

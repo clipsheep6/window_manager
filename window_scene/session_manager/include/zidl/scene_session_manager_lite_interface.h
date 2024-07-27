@@ -74,6 +74,7 @@ public:
         TRANS_ID_RAISE_WINDOW_TO_TOP,
         TRANS_ID_REGISTER_COLLABORATOR,
         TRANS_ID_UNREGISTER_COLLABORATOR,
+        TRANS_ID_GET_WINDOW_STYLE_TYPE,
         TRANS_ID_TERMINATE_SESSION_BY_PERSISTENT_ID,
     };
 
@@ -110,6 +111,7 @@ public:
     virtual WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
                                        SessionSnapshot& snapshot, bool isLowResolution) = 0;
     virtual WSError RaiseWindowToTop(int32_t persistentId) = 0;
+    virtual WMError GetWindowStyleType(WindowStyleType& windowStyleType) = 0;
 };
 } // namespace OHOS::Rosen
 #endif // OHOS_ROSEN_WINDOW_SCENE_SESSION_MANAGER_LITE_INTERFACE_H

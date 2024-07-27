@@ -115,9 +115,11 @@ private:
     static void BindNativeMethod(napi_env env, napi_value objValue, const char* moduleName);
     static napi_value SetSkipSelfWhenShowOnVirtualScreen(napi_env env, napi_callback_info info);
     static napi_value SetCompatibleModeInPc(napi_env env, napi_callback_info info);
+    static napi_value SetUniqueDensityDpiFromSCB(napi_env env, napi_callback_info info);
     static napi_value SetBlankFlag(napi_env env, napi_callback_info info);
     static napi_value SetBufferAvailableCallbackEnable(napi_env env, napi_callback_info info);
     static napi_value IsDeviceWakeupByApplication(napi_env env, napi_callback_info info);
+    static napi_value SetIsPcAppInPad(napi_env env, napi_callback_info info);
     static napi_value SetStartingWindowExitAnimationFlag(napi_env env, napi_callback_info info);
 
     napi_value OnRegisterCallback(napi_env env, napi_callback_info info);
@@ -148,9 +150,11 @@ private:
     napi_value OnSetSkipDraw(napi_env env, napi_callback_info info);
     napi_value OnSetSkipSelfWhenShowOnVirtualScreen(napi_env env, napi_callback_info info);
     napi_value OnSetCompatibleModeInPc(napi_env env, napi_callback_info info);
+    napi_value OnSetUniqueDensityDpiFromSCB(napi_env env, napi_callback_info info);
     napi_value OnSetBlankFlag(napi_env env, napi_callback_info info);
     napi_value OnSetBufferAvailableCallbackEnable(napi_env env, napi_callback_info info);
     napi_value OnIsDeviceWakeupByApplication(napi_env env, napi_callback_info info);
+    napi_value OnSetIsPcAppInPad(napi_env env, napi_callback_info info);
     napi_value OnSetStartingWindowExitAnimationFlag(napi_env env, napi_callback_info info);
 
     bool IsCallbackRegistered(napi_env env, const std::string& type, napi_value jsListenerObject);
