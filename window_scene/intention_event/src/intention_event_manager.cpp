@@ -37,12 +37,43 @@ constexpr unsigned int FREQUENT_CLICK_TIME_LIMIT = 3;
 constexpr int FREQUENT_CLICK_COUNT_LIMIT = 8;
 static const bool IS_BETA = OHOS::system::GetParameter("const.logsystem.versiontype", "").find("beta") !=
     std::string::npos;
+constexpr uint32_t MAX_MOVE_POINTER_COUNT = 125;
+
+void PrintMovePointerEvent(const std::shared_ptr<MMI::PointerEvent> pointerEvent)
+{
+    if (pointerEvent == nullptr) {
+        return;
+    }
+    static std::string movePointerEventInfo;
+    static uint32_t movePointerEventCount = 0;
+    int32_t action = pointerEvent->GetPointerAction();
+    if (action == MMI::PointerEvent::POINTER_ACTION_MOVE) {
+        movePointerEventCount++;
+        if (movePointerEventInfo.empty()) {
+            movePointerEventInfo = "id:";
+        } else {
+            movePointerEventInfo += " ";
+        }
+        movePointerEventInfo += std::to_string(pointerEvent->GetPointerId());
+        if (!pointerEvent->IsMarkEnabled()) {
+            movePointerEventInfo += "|" + std::to_string(pointerEvent->IsMarkEnabled());
+        }
+    }
+    if (((movePointerEventCount > 0) && (action !=  MMI::PointerEvent::POINTER_ACTION_MOVE)) ||
+        (movePointerEventCount >= MAX_MOVE_POINTER_COUNT)) {
+        TLOGI(WmsLogTag::WMS_INPUT_KEY_FLOW, "movePT count:%{public}u %{public}s",
+            movePointerEventCount, movePointerEventInfo.c_str());
+        movePointerEventCount = 0;
+        movePointerEventInfo = "";
+    }
+}
 
 void LogPointInfo(const std::shared_ptr<MMI::PointerEvent>& pointerEvent)
 {
     if (pointerEvent == nullptr) {
         return;
     }
+    PrintMovePointerEvent(pointerEvent);
 
     uint32_t windowId = static_cast<uint32_t>(pointerEvent->GetTargetWindowId());
     TLOGD(WmsLogTag::WMS_EVENT, "point source:%{public}d", pointerEvent->GetSourceType());
