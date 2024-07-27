@@ -27,6 +27,7 @@ public:
     explicit SessionProxy(const sptr<IRemoteObject>& impl) : IRemoteProxy<ISession>(impl) {}
     virtual ~SessionProxy() = default;
 
+    // lifecycle func
     WSError Foreground(sptr<WindowSessionProperty> property, bool isFromClient = false) override;
     WSError Background(bool isFromClient = false) override;
     WSError Disconnect(bool isFromClient = false) override;
@@ -38,13 +39,14 @@ public:
         const std::string& identityToken = "") override;
     WSError DrawingCompleted() override;
     WSError UpdateActiveStatus(bool isActive) override;
-    WSError ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::SessionInfo> abilitySessionInfo,
-        bool visible) override;
     WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
-    bool WriteAbilitySessionInfoBasic(MessageParcel& data, const sptr<AAFwk::SessionInfo> abilitySessionInfo);
     WSError TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
     WSError NotifySessionException(
         const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needRemoveSession = false) override;
+
+    WSError ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::SessionInfo> abilitySessionInfo,
+        bool visible) override;
+    bool WriteAbilitySessionInfoBasic(MessageParcel& data, const sptr<AAFwk::SessionInfo> abilitySessionInfo);
     WSError OnSessionEvent(SessionEvent event) override;
     WSError OnLayoutFullScreenChange(bool isLayoutFullScreen) override;
     WSError RaiseToAppTop() override;
