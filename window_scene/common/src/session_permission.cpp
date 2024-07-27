@@ -301,7 +301,7 @@ bool SessionPermission::CheckCallingIsUserTestMode(pid_t pid)
     bool isUserTestMode = false;
     auto appMgrClient = DelayedSingleton<AppExecFwk::AppMgrClient>::GetInstance();
     if (appMgrClient == nullptr) {
-        TLOGE(WmsLogTag::DEFAULT, "AppMgeClient is null!");
+        TLOGE(WmsLogTag::DEFAULT, "AppMgrClient is null!");
         return false;
     }
     // reset ipc identity
