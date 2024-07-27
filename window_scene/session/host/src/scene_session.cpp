@@ -2712,7 +2712,7 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         TLOGE(WmsLogTag::WMS_LIFE, "The caller has not permission granted");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
-    bool isAMSCall = true;
+    bool isAMSCall = IPCSkeleton::GetCallingUid() == 5523;
     auto task = [weakThis = wptr(this), abilitySessionInfo, isAMSCall]() {
         auto session = weakThis.promote();
         if (!session) {
