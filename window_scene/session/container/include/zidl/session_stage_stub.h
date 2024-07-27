@@ -39,7 +39,13 @@ private:
     int HandleUpdateDensity(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateOrientation(MessageParcel& data, MessageParcel& reply);
     int HandleBackEventInner(MessageParcel& data, MessageParcel& reply);
+
+    // lifecycle func
     int HandleNotifyDestroy(MessageParcel& data, MessageParcel& reply);
+    int HandleNotifyForegroundInteractiveStatus(MessageParcel& data, MessageParcel& reply);
+    int HandleNotifySessionForeground(MessageParcel& data, MessageParcel& reply);
+    int HandleNotifySessionBackground(MessageParcel& data, MessageParcel& reply);
+
     int HandleUpdateFocus(MessageParcel& date, MessageParcel& reply);
     int HandleNotifyTransferComponentData(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyTransferComponentDataSync(MessageParcel& data, MessageParcel& reply);
@@ -49,11 +55,8 @@ private:
     int HandleDumpSessionElementInfo(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyTouchOutside(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateWindowMode(MessageParcel& data, MessageParcel& reply);
-    int HandleNotifyForegroundInteractiveStatus(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateMaximizeMode(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyCloseExistPipWindow(MessageParcel& data, MessageParcel& reply);
-    int HandleNotifySessionForeground(MessageParcel& data, MessageParcel& reply);
-    int HandleNotifySessionBackground(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateTitleInTargetPos(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyDensityFollowHost(MessageParcel& data, MessageParcel& reply);
     int HandleNotifyWindowVisibilityChange(MessageParcel& data, MessageParcel& reply);

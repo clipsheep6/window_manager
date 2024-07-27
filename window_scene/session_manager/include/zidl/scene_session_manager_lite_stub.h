@@ -35,34 +35,39 @@ private:
     int HandleSetSessionLabel(MessageParcel& data, MessageParcel& reply);
     int HandleSetSessionIcon(MessageParcel& data, MessageParcel& reply);
     int HandleIsValidSessionIds(MessageParcel& data, MessageParcel& reply);
+
+    // lifecycle func
     int HandlePendingSessionToForeground(MessageParcel& data, MessageParcel& reply);
     int HandlePendingSessionToBackgroundForDelegator(MessageParcel& data, MessageParcel& reply);
-    int HandleGetFocusSessionToken(MessageParcel& data, MessageParcel& reply);
-    int HandleGetFocusSessionElement(MessageParcel& data, MessageParcel& reply);
     int HandleRegisterSessionListener(MessageParcel& data, MessageParcel& reply);
     int HandleUnRegisterSessionListener(MessageParcel& data, MessageParcel& reply);
-    int HandleGetSessionInfos(MessageParcel& data, MessageParcel& reply);
-    int HandleGetSessionInfo(MessageParcel& data, MessageParcel& reply);
-    int HandleGetSessionInfoByContinueSessionId(MessageParcel& data, MessageParcel& reply);
-    int HandleSetSessionContinueState(MessageParcel& data, MessageParcel& reply);
     int HandleTerminateSessionNew(MessageParcel& data, MessageParcel& reply);
-    int HandleGetSessionSnapshot(MessageParcel& data, MessageParcel& reply);
     int HandleClearSession(MessageParcel& data, MessageParcel& reply);
     int HandleClearAllSessions(MessageParcel& data, MessageParcel& reply);
     int HandleLockSession(MessageParcel& data, MessageParcel& reply);
     int HandleUnlockSession(MessageParcel& data, MessageParcel& reply);
     int HandleMoveSessionsToForeground(MessageParcel& data, MessageParcel& reply);
     int HandleMoveSessionsToBackground(MessageParcel& data, MessageParcel& reply);
+    int HandleGetVisibilityWindowInfo(MessageParcel& data, MessageParcel& reply);
+    int HandleClearMainSessions(MessageParcel& data, MessageParcel& reply);
+    int HandleRegisterCollaborator(MessageParcel& data, MessageParcel& reply);
+    int HandleUnregisterCollaborator(MessageParcel& data, MessageParcel& reply);
+
+    int HandleGetFocusSessionToken(MessageParcel& data, MessageParcel& reply);
+    int HandleGetFocusSessionElement(MessageParcel& data, MessageParcel& reply);
+    int HandleGetSessionInfos(MessageParcel& data, MessageParcel& reply);
+    int HandleGetSessionInfo(MessageParcel& data, MessageParcel& reply);
+    int HandleGetSessionInfoByContinueSessionId(MessageParcel& data, MessageParcel& reply);
+    int HandleSetSessionContinueState(MessageParcel& data, MessageParcel& reply);
+    int HandleGetSessionSnapshot(MessageParcel& data, MessageParcel& reply);
     //for window manager service
     int HandleGetFocusSessionInfo(MessageParcel& data, MessageParcel& reply);
     int HandleRegisterWindowManagerAgent(MessageParcel &data, MessageParcel &reply);
     int HandleUnregisterWindowManagerAgent(MessageParcel &data, MessageParcel &reply);
     int HandleCheckWindowId(MessageParcel &data, MessageParcel &reply);
-    int HandleGetVisibilityWindowInfo(MessageParcel& data, MessageParcel& reply);
     int HandleGetWindowModeType(MessageParcel& data, MessageParcel& reply);
     int HandleGetMainWinodowInfo(MessageParcel& data, MessageParcel& reply);
     int HandleGetAllMainWindowInfos(MessageParcel& data, MessageParcel& reply);
-    int HandleClearMainSessions(MessageParcel& data, MessageParcel& reply);
     int HandleRaiseWindowToTop(MessageParcel& data, MessageParcel& reply);
     int HandleRegisterCollaborator(MessageParcel& data, MessageParcel& reply);
     int HandleUnregisterCollaborator(MessageParcel& data, MessageParcel& reply);

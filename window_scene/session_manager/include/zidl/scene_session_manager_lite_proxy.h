@@ -30,40 +30,43 @@ public:
     WSError SetSessionLabel(const sptr<IRemoteObject>& token, const std::string& label) override;
     WSError SetSessionIcon(const sptr<IRemoteObject>& token, const std::shared_ptr<Media::PixelMap>& icon) override;
     WSError IsValidSessionIds(const std::vector<int32_t>& sessionIds, std::vector<bool>& results) override;
+
+    // lifecycle func
     WSError PendingSessionToForeground(const sptr<IRemoteObject>& token) override;
     WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject>& token) override;
-    WSError GetFocusSessionToken(sptr<IRemoteObject>& token) override;
-    WSError GetFocusSessionElement(AppExecFwk::ElementName& element) override;
     WSError RegisterSessionListener(const sptr<ISessionListener>& listener) override;
     WSError UnRegisterSessionListener(const sptr<ISessionListener>& listener) override;
-    WSError GetSessionInfos(const std::string& deviceId, int32_t numMax,
-                            std::vector<SessionInfoBean>& sessionInfos) override;
-    WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) override;
-    WSError GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
-        SessionInfoBean& sessionInfo) override;
-    WSError SetSessionContinueState(const sptr<IRemoteObject>& token, const ContinueState& continueState) override;
     WSError TerminateSessionNew(
         const sptr<AAFwk::SessionInfo> info, bool needStartCaller, bool isFromBroker = false) override;
-    WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
-                               SessionSnapshot& snapshot, bool isLowResolution) override;
     WSError LockSession(int32_t persistentId) override;
     WSError UnlockSession(int32_t persistentId) override;
     WSError MoveSessionsToForeground(const std::vector<int32_t>& sessionIds, int32_t topSessionId) override;
     WSError MoveSessionsToBackground(const std::vector<int32_t>& sessionIds, std::vector<int32_t>& result) override;
     WSError ClearSession(int32_t persistentId) override;
     WSError ClearAllSessions() override;
- 
-    void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
+    WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
+    WMError ClearMainSessions(const std::vector<int32_t>& persistentIds, std::vector<int32_t>& clearFailedIds) override;
+
+    WSError GetFocusSessionToken(sptr<IRemoteObject>& token) override;
+    WSError GetFocusSessionElement(AppExecFwk::ElementName& element) override;
+    WSError GetSessionInfos(const std::string& deviceId, int32_t numMax,
+                            std::vector<SessionInfoBean>& sessionInfos) override;
+    WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) override;
+    WSError GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
+        SessionInfoBean& sessionInfo) override;
+    WSError SetSessionContinueState(const sptr<IRemoteObject>& token, const ContinueState& continueState) override;
+    WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
+                               SessionSnapshot& snapshot, bool isLowResolution) override;
+ 
+    void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
     WMError CheckWindowId(int32_t windowId, int32_t &pid) override;
-    WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WMError GetWindowModeType(WindowModeType& windowModeType) override;
     WMError GetMainWindowInfos(int32_t topNum, std::vector<MainWindowInfo>& topNInfo) override;
     WMError GetAllMainWindowInfos(std::vector<MainWindowInfo>& infos) override;
-    WMError ClearMainSessions(const std::vector<int32_t>& persistentIds, std::vector<int32_t>& clearFailedIds) override;
     WSError RaiseWindowToTop(int32_t persistentId) override;
     WSError RegisterIAbilityManagerCollaborator(int32_t type,
         const sptr<AAFwk::IAbilityManagerCollaborator>& impl) override;

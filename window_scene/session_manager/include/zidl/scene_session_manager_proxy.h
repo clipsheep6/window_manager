@@ -27,6 +27,7 @@ public:
         : IRemoteProxy<ISceneSessionManager>(impl) {}
     virtual ~SceneSessionManagerProxy() = default;
 
+    // lifecycle func
     WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
@@ -41,51 +42,16 @@ public:
     WSError DestroyAndDisconnectSpecificSession(const int32_t persistentId) override;
     WSError DestroyAndDisconnectSpecificSessionWithDetachCallback(const int32_t persistentId,
         const sptr<IRemoteObject>& callback) override;
-    WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
-    WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true,
-        FocusChangeReason reason = FocusChangeReason::DEFAULT) override;
-    WSError RaiseWindowToTop(int32_t persistentId) override;
-
     WMError RegisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
     WMError UnregisterWindowManagerAgent(WindowManagerAgentType type,
         const sptr<IWindowManagerAgent>& windowManagerAgent) override;
-    WMError SetGestureNavigaionEnabled(bool enable) override;
-    void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
-    WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) override;
-    WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) override;
-    WSError IsValidSessionIds(const std::vector<int32_t> &sessionIds, std::vector<bool> &results) override;
-    WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
-    WMError GetUnreliableWindowInfo(int32_t windowId, std::vector<sptr<UnreliableWindowInfo>>& infos) override;
     WSError PendingSessionToForeground(const sptr<IRemoteObject> &token) override;
     WSError PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token) override;
-    WMError GetSessionSnapshotById(int32_t persistentId, SessionSnapshot& snapshot) override;
-    WMError GetSnapshotByWindowId(int32_t persistentId, std::shared_ptr<Media::PixelMap>& pixelMap) override;
-    WSError GetFocusSessionToken(sptr<IRemoteObject> &token) override;
-    WSError GetFocusSessionElement(AppExecFwk::ElementName& element) override;
-    WMError CheckWindowId(int32_t windowId, int32_t &pid) override;
-
     WSError RegisterSessionListener(const sptr<ISessionListener>& listener) override;
     WSError UnRegisterSessionListener(const sptr<ISessionListener>& listener) override;
-    WSError GetSessionInfos(const std::string& deviceId, int32_t numMax,
-                            std::vector<SessionInfoBean>& sessionInfos) override;
-    WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) override;
-    WSError GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
-        SessionInfoBean& sessionInfo) override;
-
-    WSError DumpSessionAll(std::vector<std::string> &infos) override;
-    WSError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos) override;
-    WSError SetSessionContinueState(const sptr<IRemoteObject> &token, const ContinueState& continueState) override;
     WSError TerminateSessionNew(
         const sptr<AAFwk::SessionInfo> info, bool needStartCaller, bool isFromBroker = false) override;
-    WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info) override;
-    void NotifyDumpInfoResult(const std::vector<std::string>& info) override;
-    WSError UpdateSessionAvoidAreaListener(int32_t& persistentId, bool haveListener) override;
-    WSError UpdateSessionTouchOutsideListener(int32_t& persistentId, bool haveListener) override;
-    WSError UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener) override;
-    WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
-                               SessionSnapshot& snapshot, bool isLowResolution) override;
-    WSError GetUIContentRemoteObj(int32_t persistentId, sptr<IRemoteObject>& uiContentRemoteObj) override;
     WSError LockSession(int32_t persistentId) override;
     WSError UnlockSession(int32_t persistentId) override;
     WSError MoveSessionsToForeground(const std::vector<int32_t>& sessionIds, int32_t topSessionId) override;
@@ -95,9 +61,46 @@ public:
     WSError RegisterIAbilityManagerCollaborator(int32_t type,
         const sptr<AAFwk::IAbilityManagerCollaborator> &impl) override;
     WSError UnregisterIAbilityManagerCollaborator(int32_t type) override;
+    WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
+    
+    WSError BindDialogSessionTarget(uint64_t persistentId, sptr<IRemoteObject> targetToken) override;
+    WMError RequestFocusStatus(int32_t persistentId, bool isFocused, bool byForeground = true,
+        FocusChangeReason reason = FocusChangeReason::DEFAULT) override;
+    WSError RaiseWindowToTop(int32_t persistentId) override;
+
+    WMError SetGestureNavigaionEnabled(bool enable) override;
+    void GetFocusWindowInfo(FocusChangeInfo& focusInfo) override;
+    WSError SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label) override;
+    WSError SetSessionIcon(const sptr<IRemoteObject> &token, const std::shared_ptr<Media::PixelMap> &icon) override;
+    
+    WSError IsValidSessionIds(const std::vector<int32_t> &sessionIds, std::vector<bool> &results) override;
+    WMError GetAccessibilityWindowInfo(std::vector<sptr<AccessibilityWindowInfo>>& infos) override;
+    WMError GetUnreliableWindowInfo(int32_t windowId, std::vector<sptr<UnreliableWindowInfo>>& infos) override;
+    WMError GetSessionSnapshotById(int32_t persistentId, SessionSnapshot& snapshot) override;
+    WMError GetSnapshotByWindowId(int32_t persistentId, std::shared_ptr<Media::PixelMap>& pixelMap) override;
+    WSError GetFocusSessionToken(sptr<IRemoteObject> &token) override;
+    WSError GetFocusSessionElement(AppExecFwk::ElementName& element) override;
+    WMError CheckWindowId(int32_t windowId, int32_t &pid) override;
+
+    WSError GetSessionInfos(const std::string& deviceId, int32_t numMax,
+                            std::vector<SessionInfoBean>& sessionInfos) override;
+    WSError GetSessionInfo(const std::string& deviceId, int32_t persistentId, SessionInfoBean& sessionInfo) override;
+    WSError GetSessionInfoByContinueSessionId(const std::string& continueSessionId,
+        SessionInfoBean& sessionInfo) override;
+
+    WSError DumpSessionAll(std::vector<std::string> &infos) override;
+    WSError DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos) override;
+    WSError SetSessionContinueState(const sptr<IRemoteObject> &token, const ContinueState& continueState) override;
+    WSError GetSessionDumpInfo(const std::vector<std::string>& params, std::string& info) override;
+    void NotifyDumpInfoResult(const std::vector<std::string>& info) override;
+    WSError UpdateSessionAvoidAreaListener(int32_t& persistentId, bool haveListener) override;
+    WSError UpdateSessionTouchOutsideListener(int32_t& persistentId, bool haveListener) override;
+    WSError UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener) override;
+    WSError GetSessionSnapshot(const std::string& deviceId, int32_t persistentId,
+                               SessionSnapshot& snapshot, bool isLowResolution) override;
+    WSError GetUIContentRemoteObj(int32_t persistentId, sptr<IRemoteObject>& uiContentRemoteObj) override;
     WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible) override;
     WMError GetTopWindowId(uint32_t mainWinId, uint32_t& topWinId) override;
-    WMError GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos) override;
     WSError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId) override;
     void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage,
         const sptr<IRemoteObject>& token, uint64_t surfaceNodeId) override;
