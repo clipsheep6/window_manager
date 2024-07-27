@@ -1679,8 +1679,7 @@ WMError WindowSceneSessionImpl::SetLayoutFullScreen(bool status)
 
     if (WindowHelper::IsMainWindow(GetType()) &&
         ((windowSystemConfig_.multiWindowUIType_ != "HandsetSmartWindow" &&
-          windowSystemConfig_.multiWindowUIType_ != "TabletSmartWindow") ||
-         IsFreeMultiWindowMode())) {
+          windowSystemConfig_.multiWindowUIType_ != "TabletSmartWindow") || IsFreeMultiWindowMode())) {
         if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FULLSCREEN)) {
             TLOGE(WmsLogTag::WMS_IMMS, "fullscreen window mode is not supported");
             return WMError::WM_ERROR_INVALID_WINDOW;

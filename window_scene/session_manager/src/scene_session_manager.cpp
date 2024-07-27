@@ -249,6 +249,7 @@ void SceneSessionManager::Init()
 
     bundleMgr_ = GetBundleManager();
     LoadWindowSceneXml();
+    LoadWindowParameter();
     sptr<IDisplayChangeListener> listener = new DisplayChangeListener();
     ScreenSessionManagerClient::GetInstance().RegisterDisplayChangeListener(listener);
     InitPrepareTerminateConfig();
@@ -340,6 +341,13 @@ void SceneSessionManager::RegisterAppListener()
     }
 }
 
+void SceneSessionManager::LoadWindowParameter()
+{
+    std::string multiWindowUIType = system::GetParameter("const.window.multiWindowUIType", "HandsetSmartWindow");
+    systemConfig_.multiWindowUIType_ = multiWindowUIType;
+    appWindowSceneConfig_.multiWindowUIType_ = multiWindowUIType;
+}
+
 void SceneSessionManager::LoadWindowSceneXml()
 {
     if (WindowSceneConfig::LoadConfigXml()) {
@@ -424,11 +432,6 @@ void SceneSessionManager::ConfigWindowSceneXml(const WindowSceneConfig::ConfigIt
     if (item.IsString()) {
         systemConfig_.uiType_ = item.stringValue_;
         appWindowSceneConfig_.uiType_ = item.stringValue_;
-    }
-    item = config["multiWindowUIType"];
-    if (item.IsString()) {
-        systemConfig_.multiWindowUIType_ = item.stringValue_;
-        appWindowSceneConfig_.multiWindowUIType_ = item.stringValue_;
     }
     item = config["backgroundScreenLock"].GetProp("enable");
     if (item.IsBool()) {
