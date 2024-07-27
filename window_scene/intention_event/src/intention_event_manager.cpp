@@ -54,7 +54,7 @@ void PrintMovePointerEvent(const std::shared_ptr<MMI::PointerEvent> pointerEvent
         } else {
             movePointerEventInfo += " ";
         }
-        movePointerEventInfo += std::to_string(pointerEvent->GetPointerId());
+        movePointerEventInfo += std::to_string(pointerEvent->GetId());
         if (!pointerEvent->IsMarkEnabled()) {
             movePointerEventInfo += "|" + std::to_string(pointerEvent->IsMarkEnabled());
         }
