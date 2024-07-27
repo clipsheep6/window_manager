@@ -119,6 +119,7 @@ public:
     void SetEventHandler(const std::shared_ptr<AppExecFwk::EventHandler>& handler,
         const std::shared_ptr<AppExecFwk::EventHandler>& exportHandler = nullptr);
 
+    // lifecycle func
     virtual WSError ConnectInner(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
         sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr,
@@ -133,15 +134,27 @@ public:
     WSError Hide() override;
     WSError DrawingCompleted() override;
     void ResetSessionConnectState();
-    
-    bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
-    bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
-
     void NotifyActivation();
     void NotifyConnect();
     void NotifyForeground();
     void NotifyBackground();
     void NotifyDisconnect();
+    WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller, bool isFromBroker);
+    WSError TerminateSessionTotal(const sptr<AAFwk::SessionInfo> info, TerminateType terminateType);
+    WSError Clear(bool needStartCaller = false);
+    WSError PendingSessionToForeground();
+    WSError PendingSessionToBackgroundForDelegator();
+    virtual void NotifyForegroundInteractiveStatus(bool interactive);
+    WSError NotifyDestroy();
+    bool IsSessionValid() const;
+    bool IsActive() const;
+    bool IsSystemActive() const;
+    bool IsTerminated() const;
+    bool IsSessionForeground() const;
+
+    bool RegisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
+    bool UnregisterLifecycleListener(const std::shared_ptr<ILifecycleListener>& listener);
+
     void NotifyExtensionDied() override;
     void NotifyExtensionTimeout(int32_t errorCode) override;
     void NotifyTransferAccessibilityEvent(const Accessibility::AccessibilityEventInfo& info,
@@ -226,13 +239,10 @@ public:
     void SetChangeSessionVisibilityWithStatusBarEventListener(
         const NotifyChangeSessionVisibilityWithStatusBarFunc& func);
     void SetTerminateSessionListener(const NotifyTerminateSessionFunc& func);
-    WSError TerminateSessionNew(const sptr<AAFwk::SessionInfo> info, bool needStartCaller, bool isFromBroker);
     void SetTerminateSessionListenerNew(const NotifyTerminateSessionFuncNew& func);
     void SetSessionExceptionListener(const NotifySessionExceptionFunc& func, bool fromJsScene);
     void SetSessionSnapshotListener(const NotifySessionSnapshotFunc& func);
-    WSError TerminateSessionTotal(const sptr<AAFwk::SessionInfo> info, TerminateType terminateType);
     void SetTerminateSessionListenerTotal(const NotifyTerminateSessionFuncTotal& func);
-    WSError Clear(bool needStartCaller = false);
     WSError SetSessionLabel(const std::string &label);
     void SetUpdateSessionLabelListener(const NofitySessionLabelUpdatedFunc& func);
     WSError SetSessionIcon(const std::shared_ptr<Media::PixelMap> &icon);
@@ -260,14 +270,11 @@ public:
     void RemoveDialogToParentSession(const sptr<Session>& session);
     std::vector<sptr<Session>> GetDialogVector() const;
     void ClearDialogVector();
-    WSError NotifyDestroy();
     WSError NotifyCloseExistPipWindow();
 
     void SetPendingSessionToForegroundListener(const NotifyPendingSessionToForegroundFunc& func);
-    WSError PendingSessionToForeground();
     void SetPendingSessionToBackgroundForDelegatorListener(const NotifyPendingSessionToBackgroundForDelegatorFunc&
         func);
-    WSError PendingSessionToBackgroundForDelegator();
 
     void SetSessionFocusableChangeListener(const NotifySessionFocusableChangeFunc& func);
     void SetSessionTouchableChangeListener(const NotifySessionTouchableChangeFunc& func);
@@ -315,12 +322,7 @@ public:
     void NotifyContextTransparent();
     bool NeedCheckContextTransparent() const;
 
-    bool IsSessionValid() const;
-    bool IsActive() const;
-    bool IsSystemActive() const;
     bool IsSystemSession() const;
-    bool IsTerminated() const;
-    bool IsSessionForeground() const;
     virtual bool IsAnco() const { return false; }
     virtual void SetBlankFlag(bool isAddBlank) {};
     virtual bool GetBlankFlag() const { return false; }
@@ -394,7 +396,6 @@ public:
     WSRectF UpdateHotRect(const WSRect& rect);
     WSError RaiseToAppTopForPointDown();
 
-    virtual void NotifyForegroundInteractiveStatus(bool interactive);
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height);
     void SetNotifySystemSessionPointerEventFunc(const NotifySystemSessionPointerEventFunc& func);
     void SetNotifySystemSessionKeyEventFunc(const NotifySystemSessionKeyEventFunc& func);
@@ -443,10 +444,12 @@ protected:
         std::chrono::steady_clock::time_point startTime = std::chrono::steady_clock::now();
         bool running = false;
     };
+    // lifecycle func
     void StartLifeCycleTask(sptr<SessionLifeCycleTask> lifeCycleTask);
-    void GeneratePersistentId(bool isExtension, int32_t persistentId);
     virtual void UpdateSessionState(SessionState state);
     void NotifySessionStateChange(const SessionState& state);
+
+    void GeneratePersistentId(bool isExtension, int32_t persistentId);
     void UpdateSessionTouchable(bool touchable);
     virtual WSError UpdateActiveStatus(bool isActive) { return WSError::WS_OK; }
 

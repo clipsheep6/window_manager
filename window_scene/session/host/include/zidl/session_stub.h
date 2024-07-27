@@ -33,6 +33,7 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
+    // lifecycle func
     int HandleConnect(MessageParcel& data, MessageParcel& reply);
     int HandleForeground(MessageParcel& data, MessageParcel& reply);
     int HandleBackground(MessageParcel& data, MessageParcel& reply);
@@ -40,6 +41,10 @@ private:
     int HandleShow(MessageParcel& data, MessageParcel& reply);
     int HandleHide(MessageParcel& data, MessageParcel& reply);
     int HandleDrawingCompleted(MessageParcel& data, MessageParcel& reply);
+    int HandleUpdateActivateStatus(MessageParcel& data, MessageParcel& reply);
+    int HandlePendingSessionActivation(MessageParcel &data, MessageParcel &reply);
+    int HandleTerminateSession(MessageParcel& data, MessageParcel& reply);
+    int HandleSessionException(MessageParcel& data, MessageParcel& reply);
 
     // scene session
     int HandleSessionEvent(MessageParcel& data, MessageParcel& reply);
@@ -57,9 +62,6 @@ private:
     int HandleRaiseAboveTarget(MessageParcel& data, MessageParcel& reply);
     int HandleRaiseAppMainWindowToTop(MessageParcel &data, MessageParcel &reply);
     int HandleChangeSessionVisibilityWithStatusBar(MessageParcel &data, MessageParcel &reply);
-    int HandlePendingSessionActivation(MessageParcel &data, MessageParcel &reply);
-    int HandleTerminateSession(MessageParcel& data, MessageParcel& reply);
-    int HandleSessionException(MessageParcel& data, MessageParcel& reply);
     int HandleProcessPointDownSession(MessageParcel& data, MessageParcel& reply);
     int HandleSendPointerEvenForMoveDrag(MessageParcel& data, MessageParcel& reply);
     int HandleSetLandscapeMultiWindow(MessageParcel& data, MessageParcel& reply);
