@@ -61,6 +61,7 @@ namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SceneSession" };
 const std::string DLP_INDEX = "ohos.dlp.params.index";
 constexpr const char* APP_CLONE_INDEX = "ohos.extra.param.key.appCloneIndex";
+const uint32_t FOUNDATION_UID = 5523;
 } // namespace
 
 MaximizeMode SceneSession::maximizeMode_ = MaximizeMode::MODE_RECOVER;
@@ -2712,7 +2713,7 @@ WSError SceneSession::PendingSessionActivation(const sptr<AAFwk::SessionInfo> ab
         TLOGE(WmsLogTag::WMS_LIFE, "The caller has not permission granted");
         return WSError::WS_ERROR_INVALID_PERMISSION;
     }
-    bool isAMSCall = IPCSkeleton::GetCallingUid() == 5523;
+    bool isAMSCall = IPCSkeleton::GetCallingUid() == FOUNDATION_UID;
     auto task = [weakThis = wptr(this), abilitySessionInfo, isAMSCall]() {
         auto session = weakThis.promote();
         if (!session) {
