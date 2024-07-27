@@ -126,7 +126,6 @@ HWTEST_F(MainSessionLifecycleTest, NotifyForegroundInteractiveStatus01, Function
     mainSession_->NotifyForegroundInteractiveStatus(false);
     ASSERT_EQ(WSError::WS_OK, mainSession_->SetFocusable(false));
 }
-
 }
 }
 }

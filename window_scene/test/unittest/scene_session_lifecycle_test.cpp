@@ -88,7 +88,7 @@ HWTEST_F(SceneSessionLifecycleTest, Foreground01, Function | SmallTest | Level2)
     auto result = scensession->Foreground(property);
     ASSERT_EQ(result, WSError::WS_OK);
     specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
-                                                                     sptr<WindowSessionProperty> property) -> sptr<SceneSession>
+        sptr<WindowSessionProperty> property) -> sptr<SceneSession>
     {
         sptr<SceneSession> scensessionreturn = new (std::nothrow) SceneSession(info, specificCallback_);
         EXPECT_NE(scensessionreturn, nullptr);
@@ -229,7 +229,7 @@ HWTEST_F(SceneSessionLifecycleTest, Background01, Function | SmallTest | Level2)
     auto result = scensession->Background();
     ASSERT_EQ(result, WSError::WS_OK);
     specificCallback_->onCreate_ = [&resultValue, specificCallback_](const SessionInfo &info,
-                                                                     sptr<WindowSessionProperty> property) -> sptr<SceneSession>
+        sptr<WindowSessionProperty> property) -> sptr<SceneSession>
     {
         sptr<SceneSession> scensessionreturn = new (std::nothrow) SceneSession(info, specificCallback_);
         EXPECT_NE(scensessionreturn, nullptr);
@@ -885,7 +885,6 @@ HWTEST_F(SceneSessionLifecycleTest, NotifySessionBackground, Function | SmallTes
     scensession->NotifySessionBackground(reason, withAnimation, isFromInnerkits);
     ASSERT_EQ(ret, 1);
 }
-
 }
 }
 }

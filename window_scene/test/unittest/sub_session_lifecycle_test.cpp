@@ -56,7 +56,8 @@ void SessionStubLifecycleTest::TearDownTestCase()
 {
 }
 
-void SessionStubLifecycleTest::SetUp() {
+void SessionStubLifecycleTest::SetUp()
+{
     SessionInfo info;
     info.abilityName_ = "testMainSession1";
     info.moduleName_ = "testMainSession2";
@@ -65,11 +66,13 @@ void SessionStubLifecycleTest::SetUp() {
     EXPECT_NE(nullptr, subSession_);
 }
 
-void SessionStubLifecycleTest::TearDown() {
+void SessionStubLifecycleTest::TearDown()
+{
     subSession_ = nullptr;
 }
 
-RSSurfaceNode::SharedPtr SessionStubLifecycleTest::CreateRSSurfaceNode() {
+RSSurfaceNode::SharedPtr SessionStubLifecycleTest::CreateRSSurfaceNode()
+{
     struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
     rsSurfaceNodeConfig.SurfaceNodeName = "WindowSessionTestSurfaceNode";
     auto surfaceNode = RSSurfaceNode::Create(rsSurfaceNodeConfig);
@@ -256,7 +259,6 @@ HWTEST_F(SessionStubLifecycleTest, Show03, Function | SmallTest | Level1)
     auto result = subSession_->Show(property);
     ASSERT_EQ(result, WSError::WS_OK);
 }
-
 }
 }
 }

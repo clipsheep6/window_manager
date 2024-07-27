@@ -384,7 +384,8 @@ HWTEST_F(WindowSessionLifecycleTest, IsActive, Function | SmallTest | Level2)
     ASSERT_NE(session_, nullptr);
     session_->isActive_ = false;
     if (!session_->IsActive()) {
-    ASSERT_EQ(false, session_->IsActive());
+        ASSERT_EQ(false, session_->IsActive());
+    }
 }
 
 /**
@@ -675,7 +676,6 @@ HWTEST_F(WindowSessionLifecycleTest, IsTerminated49, Function | SmallTest | Leve
     res = session_->IsTerminated();
     ASSERT_EQ(false, res);
 }
-
 }
 }
 }

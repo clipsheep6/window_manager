@@ -33,8 +33,8 @@ group("unittest") {
     ":ws_fold_screen_state_machine_test",
     ":ws_intention_event_manager_test",
     ":ws_keyboard_session_test",
-    ":ws_main_session_test",
     ":ws_main_session_lifecycle_test",
+    ":ws_main_session_test",
     ":ws_move_drag_controller_test",
     ":ws_multi_screen_manager_test",
     ":ws_root_scene_session_test",
@@ -44,6 +44,7 @@ group("unittest") {
     ":ws_scene_persistent_storage_test",
     ":ws_scene_session_converter_test",
     ":ws_scene_session_dirty_manager_test",
+    ":ws_scene_session_lifecycle_test",
     ":ws_scene_session_manager_lite_stub_test",
     ":ws_scene_session_manager_lite_test",
     ":ws_scene_session_manager_proxy_test",
@@ -55,7 +56,6 @@ group("unittest") {
     ":ws_scene_session_manager_test5",
     ":ws_scene_session_manager_test6",
     ":ws_scene_session_test",
-    ":ws_scene_session_lifecycle_test",
     ":ws_screen_cutout_controller_test",
     ":ws_screen_property_test",
     ":ws_screen_rotation_property_test",
@@ -76,31 +76,31 @@ group("unittest") {
     ":ws_screen_snapshot_picker_connection_test",
     ":ws_sensor_fold_state_manager_test",
     ":ws_session_display_power_controller_test",
+    ":ws_session_lifecycle_test",
     ":ws_session_listener_controller_test",
     ":ws_session_manager_agent_controller_test",
     ":ws_session_manager_lite_test",
     ":ws_session_manager_service_recover_proxy_test",
     ":ws_session_manager_test",
     ":ws_session_permission_test",
+    ":ws_session_proxy_lifecycle_test",
     ":ws_session_proxy_mock_test",
     ":ws_session_proxy_test",
-    ":ws_session_proxy_lifecycle_test",
     ":ws_session_stage_proxy_test",
     ":ws_session_stage_stub_test",
+    ":ws_session_stub_lifecycle_test",
     ":ws_session_stub_mock_test",
     ":ws_session_stub_test",
-    ":ws_session_stub_lifecycle_test",
     ":ws_session_test",
-    ":ws_session_lifecycle_test",
     ":ws_setting_observer_test",
     ":ws_setting_provider_test",
     ":ws_single_display_fold_policy_test",
     ":ws_single_display_pocket_fold_policy_test",
     ":ws_single_display_sensor_fold_state_manager_test",
-    ":ws_sub_session_test",
     ":ws_sub_session_lifecycle_test",
-    ":ws_system_session_test",
+    ":ws_sub_session_test",
     ":ws_system_session_lifecycle_test",
+    ":ws_system_session_test",
     ":ws_task_scheduler_test",
     ":ws_timer_manager_test",
     ":ws_window_event_channel_proxy_mock_test",
@@ -641,7 +641,7 @@ ohos_unittest("ws_session_test") {
 ohos_unittest("ws_session_lifecycle_test") {
   module_out_path = module_out_path
 
-  sources = ["session_lifecycle_test.cpp"]
+  sources = [ "session_lifecycle_test.cpp" ]
 
   deps = [ ":ws_unittest_common" ]
 
@@ -1061,7 +1061,7 @@ ohos_unittest("ws_scene_session_test") {
 ohos_unittest("ws_scene_session_lifecycle_test") {
   module_out_path = module_out_path
 
-  sources = ["scene_session_lifecycle_test.cpp"]
+  sources = [ "scene_session_lifecycle_test.cpp" ]
 
   deps = [ ":ws_unittest_common" ]
 

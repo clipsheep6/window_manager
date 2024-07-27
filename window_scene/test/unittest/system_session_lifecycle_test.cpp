@@ -186,7 +186,6 @@ HWTEST_F(SystemSessionLifecycleTest, Disconnect, Function | SmallTest | Level1)
     auto ret = systemSession_->Disconnect(isFromClient);
     ASSERT_EQ(WSError::WS_OK, ret);
 }
-
 }
 }
 }

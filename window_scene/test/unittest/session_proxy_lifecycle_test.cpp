@@ -15,7 +15,6 @@
 #include "session_proxy.h"
 #include "iremote_object_mocker.h"
 #include <gtest/gtest.h>
-#include "accessibility_event_info.h"
 #include "ws_common.h"
 
 // using namespace FRAME_TRACE;
@@ -191,7 +190,6 @@ HWTEST_F(SessionProxyLifecycleTest, UpdateActiveStatus, Function | SmallTest | L
     ASSERT_EQ(res, WSError::WS_OK);
     GTEST_LOG_(INFO) << "SessionProxyLifecycleTest: UpdateActiveStatus end";
 }
-
 }
 }
 }

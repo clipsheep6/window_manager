@@ -20,7 +20,6 @@
 #include "mock/mock_session_stub.h"
 #include "session/host/include/zidl/session_stub.h"
 #include "ability_start_setting.h"
-#include "parcel/accessibility_event_info_parcel.h"
 #include "session/host/include/zidl/session_ipc_interface_code.h"
 #include "want.h"
 #include "ws_common.h"
@@ -165,7 +164,6 @@ HWTEST_F(SessionStubLifecycleTest, HandlePendingSessionActivation011, Function |
     auto res = session_->HandlePendingSessionActivation(data, reply);
     ASSERT_EQ(0, res);
 }
-
 }
 }
 }

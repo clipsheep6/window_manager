@@ -127,6 +127,7 @@ public:
     WSError UpdateRect(const WSRect& rect, SizeChangeReason reason,
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     void UpdateDensity() override;
+    void SetUniqueVirtualPixelRatio(bool useUniqueDensity, float virtualPixelRatio) override;
     WSError UpdateOrientation() override;
     WSError UpdateDisplayId(uint64_t displayId) override;
     WSError UpdateFocus(bool focus) override;
@@ -273,6 +274,7 @@ protected:
     void DispatchKeyEventCallback(const std::shared_ptr<MMI::KeyEvent>& keyEvent, bool& isConsumed);
     bool FilterKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent);
     void RegisterFrameLayoutCallback();
+    void CopyUniqueDensityParameter(sptr<WindowSessionImpl> parentWindow);
 
     WMError RegisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
     WMError UnregisterExtensionAvoidAreaChangeListener(sptr<IAvoidAreaChangedListener>& listener);
@@ -304,6 +306,7 @@ protected:
     std::shared_ptr<VsyncStation> vsyncStation_ = nullptr;
     std::shared_ptr<IInputEventConsumer> inputEventConsumer_;
     bool needRemoveWindowInputChannel_ = false;
+    bool useUniqueDensity_ { false };
     float virtualPixelRatio_ { 1.0f };
     bool escKeyEventTriggered_ = false;
     // Check whether the UIExtensionAbility process is started
@@ -382,6 +385,7 @@ private:
     WMError GetAppForceLandscapeConfig(AppForceLandscapeConfig& config);
     void SetForceSplitEnable(bool isForceSplit, const std::string& homePage = "");
     bool IsNotifyInteractiveDuplicative(bool interactive);
+    void SetUniqueVirtualPixelRatioForSub(bool useUniqueDensity, float virtualPixelRatio);
 
     static std::recursive_mutex lifeCycleListenerMutex_;
     static std::recursive_mutex windowChangeListenerMutex_;

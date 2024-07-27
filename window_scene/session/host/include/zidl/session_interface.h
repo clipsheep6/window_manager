@@ -44,12 +44,11 @@ public:
     virtual WSError Show(sptr<WindowSessionProperty> property) = 0;
     virtual WSError Hide() = 0;
     virtual WSError DrawingCompleted() = 0;
-    virtual WSError UpdateActiveStatus(bool isActive) { return WSError::WS_OK; }
     virtual WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo)
     { return WSError::WS_OK; }
     virtual WSError TerminateSession(const sptr<AAFwk::SessionInfo> abilitySessionInfo) { return WSError::WS_OK; }
     virtual WSError NotifySessionException(
-            const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needRemoveSession = false) { return WSError::WS_OK; }
+        const sptr<AAFwk::SessionInfo> abilitySessionInfo, bool needRemoveSession = false) { return WSError::WS_OK; }
 
     // scene session
     virtual WSError OnSessionEvent(SessionEvent event) { return WSError::WS_OK; }

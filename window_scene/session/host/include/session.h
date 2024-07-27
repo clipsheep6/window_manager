@@ -292,6 +292,7 @@ public:
     WSError NotifyFocusStatus(bool isFocused);
     virtual WSError UpdateWindowMode(WindowMode mode);
     WSError SetCompatibleModeInPc(bool enable, bool isSupportDragInPcCompatibleMode);
+    WSError SetIsPcAppInPad(bool enable);
     virtual WSError SetSystemSceneBlockingFocus(bool blocking);
     bool GetBlockingFocus() const;
     WSError SetFocusable(bool isFocusable);
@@ -450,6 +451,7 @@ protected:
 
     void GeneratePersistentId(bool isExtension, int32_t persistentId);
     void UpdateSessionTouchable(bool touchable);
+    virtual WSError UpdateActiveStatus(bool isActive) { return WSError::WS_OK; }
 
     WSRectF UpdateTopBottomArea(const WSRectF& rect, MMI::WindowArea area);
     WSRectF UpdateLeftRightArea(const WSRectF& rect, MMI::WindowArea area);
