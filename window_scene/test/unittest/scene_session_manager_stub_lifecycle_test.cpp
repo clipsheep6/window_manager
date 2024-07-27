@@ -249,7 +249,11 @@ HWTEST_F(SceneSessionManagerStubLifecycleTest, HandlePendingSessionToForeground,
  * @tc.desc: test HandlePendingSessionToBackgroundForDelegator
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionManagerStubLifecycleTest, HandlePendingSessionToBackgroundForDelegator, Function | SmallTest | Level2)
+HWTEST_F(
+    SceneSessionManagerStubLifecycleTest, 
+    HandlePendingSessionToBackgroundForDelegator, 
+    Function | SmallTest | Level2
+)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -428,7 +432,11 @@ HWTEST_F(SceneSessionManagerStubLifecycleTest, HandleMoveSessionsToBackground, F
  * @tc.desc: test HandleUpdateSessionWindowVisibilityListener
  * @tc.type: FUNC
  */
-HWTEST_F(SceneSessionManagerStubLifecycleTest, HandleUpdateSessionWindowVisibilityListener, Function | SmallTest | Level2)
+HWTEST_F(
+    SceneSessionManagerStubLifecycleTest, 
+    HandleUpdateSessionWindowVisibilityListener, 
+    Function | SmallTest | Level2
+)
 {
     MessageParcel data;
     MessageParcel reply;
