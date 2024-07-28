@@ -470,9 +470,9 @@ void ScreenSession::SetUpdateToInputManagerCallback(std::function<void(float)> u
     updateToInputManagerCallback_ = updateToInputManagerCallback;
 }
 
-void ScreenSession::SetUpdateScreenPivotCallback(std::function<void(float, float)> updateScreenPivotCallback)
+void ScreenSession::SetUpdateScreenPivotCallback(std::function<void(float, float)>&& updateScreenPivotCallback)
 {
-    updateScreenPivotCallback_ = updateScreenPivotCallback;
+    updateScreenPivotCallback_ = std::move(updateScreenPivotCallback);
 }
 
 VirtualScreenFlag ScreenSession::GetVirtualScreenFlag()

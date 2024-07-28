@@ -4022,22 +4022,20 @@ void ScreenSessionManager::SetDisplayScale(ScreenId screenId, float scaleX, floa
     }
     TLOGD(WmsLogTag::DMS,
         "scale [%{public}f, %{public}f] pivot [%{public}f, %{public}f]",
-        scaleX,
-        scaleY,
-        pivotX,
-        pivotY);
+        scaleX, scaleY, pivotX, pivotY);
     displayNode->SetScale(scaleX, scaleY);
     displayNode->SetPivot(pivotX, pivotY);
     auto transactionProxy = RSTransactionProxy::GetInstance();
     if (transactionProxy != nullptr) {
-        TLOGI(WmsLogTag::DMS, "FreeDisplayMirrorNodeInner free displayNode");
         transactionProxy->FlushImplicitTransaction();
+    } else {
+        TLOGE(WmsLogTag::DMS, "transactionProxy is nullptr");
     }
 
     session->SetScreenScale(scaleX, scaleY, pivotX, pivotY);
     std::map<DisplayId, sptr<DisplayInfo>> emptyMap;
-    NotifyDisplayStateChange(GetDefaultScreenId(), session->ConvertToDisplayInfo(),
-        emptyMap, DisplayStateChangeType::UPDATE_SCALE);
+    NotifyDisplayStateChange(
+        GetDefaultScreenId(), session->ConvertToDisplayInfo(), {}, DisplayStateChangeType::UPDATE_SCALE);
 }
 
 void ScreenSessionManager::SetFoldStatusLocked(bool locked)
