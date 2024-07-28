@@ -87,6 +87,7 @@ public:
 
     int SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
     {
+        reply = reply_;
         return sendRequestResult_;
     }
 
@@ -120,6 +121,7 @@ public:
         return 0;
     }
 
+    MessageParcel reply_;
     int sendRequestResult_ = 0;
     int count_ = 0;
 };

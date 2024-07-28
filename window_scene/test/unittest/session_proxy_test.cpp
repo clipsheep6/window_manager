@@ -16,6 +16,9 @@
 #include "iremote_object_mocker.h"
 #include <gtest/gtest.h>
 #include "accessibility_event_info.h"
+#include "mock/mock_session.h"
+#include "mock/mock_session_stage.h"
+#include "mock/mock_window_event_channel.h"
 #include "ws_common.h"
 
 // using namespace FRAME_TRACE;
@@ -534,6 +537,55 @@ HWTEST_F(SessionProxyTest, GetStatusBarHeight, Function | SmallTest | Level2)
     int32_t res = sProxy->GetStatusBarHeight();
     ASSERT_EQ(res, 0);
     GTEST_LOG_(INFO) << "SessionProxyTest: GetStatusBarHeight end";
+}
+
+/**
+ * @tc.name: Connect
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionProxyTest, Connect, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SessionProxyTest: Connect start";
+    sptr<IRemoteObject> iRemoteObjectMocker = new MockIRemoteObject();
+    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+
+    sptr<ISessionStage> sessionStage = new (std::nothrow) SessionStageMocker();
+    sptr<IWindowEventChannel> eventChannel = new (std::nothrow) WindowEventChannelMocker(sessionStage);
+    
+    struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
+    std::shared_ptr<RSSurfaceNode> surfaceNode = RSSurfaceNode::Create(rsSurfaceNodeConfig, RSSurfaceNodeType::DEFAULT);
+    SystemSessionConfig systemSessionConfig;
+    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
+    property->SetWindowRect({ 1, 1, 1, 1 });
+
+    auto &reply = iRemoteObjectMocker->reply_;
+    reply.WriteParcelable(systemSessionConfig);
+    reply.WriteInt32(1);
+    reply.WriteUint64(0);
+    reply.WriteBool(false);
+    reply.WriteInt32(0);
+    reply.WriteInt32(0);
+    reply.WriteUint32(0);
+    reply.WriteUint32(0);
+    reply.WriteInt32(0);
+    reply.WriteBool(false);
+    reply.WriteBool(false);
+    reply.WriteBool(false);
+    reply.WriteBool(false);
+    reply.WriteUint32(0);
+
+    WSError res = sProxy->Connect(sessionStage, eventChannel, surfaceNode, systemSessionConfig, property,
+        nullptr, "");
+
+    auto rectResult = property->GetWindowRect();
+    ASSERT_EQ(rectResult.posX_, 1);
+    ASSERT_EQ(rectResult.posY_, 1);
+    ASSERT_EQ(rectResult.width_, 1);
+    ASSERT_EQ(rectResult.height_, 1);
+
+    ASSERT_EQ(res, WSError::WS_OK);
+    GTEST_LOG_(INFO) << "SessionProxyTest: connect end";
 }
 } // namespace
 } // namespace Rosen
