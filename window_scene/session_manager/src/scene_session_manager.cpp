@@ -4374,6 +4374,17 @@ WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& scene
     return WSError::WS_OK;
 }
 
+bool SceneSessionManager::CheckParentSessionVisible(const sptr<SceneSession>& session)
+{
+    if ((WindowHelper::IsSubWindow(session->GetWindowType()) ||
+        session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) &&
+        GetSceneSession(session->GetParentPersistentId()) &&
+        !IsSessionVisible(GetSceneSession(session->GetParentPersistentId()))) {
+        return false;
+    }
+    return true;
+}
+
 void SceneSessionManager::DumpAllSessionFocusableInfo(int32_t persistentId)
 {
     TLOGI(WmsLogTag::WMS_FOCUS, "id: %{public}d", persistentId);
@@ -4381,13 +4392,7 @@ void SceneSessionManager::DumpAllSessionFocusableInfo(int32_t persistentId)
         if (session == nullptr) {
             return false;
         }
-        bool parentVisible = true;
-        if ((WindowHelper::IsSubWindow(session->GetWindowType()) ||
-            session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) &&
-            GetSceneSession(session->GetParentPersistentId()) &&
-            !IsSessionVisible(GetSceneSession(session->GetParentPersistentId()))) {
-                parentVisible = false;
-        }
+        bool parentVisible = CheckParentSessionVisible(session);
         bool sessionVisible = IsSessionVisible(session);
         TLOGI(WmsLogTag::WMS_FOCUS, "%{public}d, winType:%{public}d, hide:%{public}d, "
             "focusable:%{public}d, visible:%{public}d, parentVisible:%{public}d",
@@ -4411,14 +4416,8 @@ sptr<SceneSession> SceneSessionManager::GetNextFocusableSession(int32_t persiste
             TLOGD(WmsLogTag::WMS_FOCUS, "the window hide id: %{public}d", persistentId);
             return false;
         }
-        bool parentVisible = true;
-        if ((WindowHelper::IsSubWindow(session->GetWindowType()) ||
-            session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) &&
-            GetSceneSession(session->GetParentPersistentId()) &&
-            !IsSessionVisible(GetSceneSession(session->GetParentPersistentId()))) {
-                parentVisible = false;
-        }
-        if (previousFocusedSessionFound && session->GetFocusable() && IsSessionVisible(session) && parentVisible) {
+        if (previousFocusedSessionFound && session->GetFocusable() &&
+            IsSessionVisible(session) && CheckParentSessionVisible(session)) {
             ret = session;
             return true;
         }
