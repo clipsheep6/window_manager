@@ -419,10 +419,18 @@ void SceneInputManager::PrintWindowInfo(const std::vector<MMI::WindowInfo>& wind
     }
     focusedSessionId_ = Rosen::SceneSessionManager::GetInstance().GetFocusedSessionId();
     for (auto& e : windowInfoList) {
+        auto sceneSession = Rosen::SceneSessionManager::GetInstance().GetSceneSession(e.id);
+        if (sceneSession == nullptr) {
+            TLOGE(WmsLogTag::WMS_EVENT, "sceneSession is null");
+            continue;
+        }
+        // windowId|flags|zOrder|pid|defaultHotAreasSize|isDefaultHotAreas
+        bool isDefaultHotAreas = sceneSession->GetTouchHotAreas().size() == 0 ? true : false;
         idList += std::to_string(e.id) + "|" + std::to_string(e.flags) + "|" +
             std::to_string(e.zOrder) + "|" +
             std::to_string(e.pid) + "|" +
-            std::to_string(e.defaultHotAreas.size()) + ",";
+            std::to_string(e.defaultHotAreas.size()) + "|";
+            std::to_string(isDefaultHotAreas) + ",";
 
         if ((focusedSessionId_ == e.id) && (e.id == e.agentWindowId)) {
             UpdateFocusedSessionId(focusedSessionId_);
