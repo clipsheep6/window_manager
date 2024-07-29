@@ -4224,7 +4224,7 @@ WSError SceneSessionManager::RequestSessionUnfocus(int32_t persistentId, FocusCh
     }
     auto nextSession = GetNextFocusableSession(persistentId);
     if (nextSession == nullptr) {
-        dumpAllSessionFocusableInfo(persistentId);
+        DumpAllSessionFocusableInfo(persistentId);
     }
 
     needBlockNotifyUnfocusStatus_ = needBlockNotifyFocusStatusUntilForeground_;
@@ -4374,7 +4374,7 @@ WSError SceneSessionManager::RequestFocusSpecificCheck(sptr<SceneSession>& scene
     return WSError::WS_OK;
 }
 
-void SceneSessionManager::dumpAllSessionFocusableInfo(int32_t persistentId)
+void SceneSessionManager::DumpAllSessionFocusableInfo(int32_t persistentId)
 {
     TLOGI(WmsLogTag::WMS_FOCUS, "id: %{public}d", persistentId);
     auto func = [this](sptr<SceneSession> session) {
