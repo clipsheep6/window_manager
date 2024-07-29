@@ -431,6 +431,243 @@ HWTEST_F(SystemSessionTest, RectCheck, Function | SmallTest | Level1)
     systemSession_->RectCheck(curWidth, curHeight);
 }
 
+/**
+ * @tc.name: UpdateCameraWindowStatus
+ * @tc.desc: test function : UpdateCameraWindowStatus
+ * @tc.type: FUNC
+ */
+HWTEST_F(SystemSessionTest, UpdateCameraWindowStatus, Function | SmallTest | Level1)
+{
+    SessionInfo info;
+    info.abilityName_ = "testname1";
+    info.bundleName_ = "testname2";
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
+        sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
+    ASSERT_NE(specificCallback, nullptr);
+    sptr<SystemSession> sysSession =
+        sptr<SystemSession>::MakeSptr(info, specificCallback);
+    ASSERT_NE(sysSession, nullptr);
+    ASSERT_NE(sysSession->specificCallback_, nullptr);
+    EXPECT_EQ(sysSession->specificCallback_->onCameraFloatSessionChange_, nullptr);
+    sysSession->property_->SetWindowType(WindowType::WINDOW_TYPE_FLOAT_CAMERA);
+    sysSession->UpdateCameraWindowStatus(false);
+
+    sysSession->property_->SetWindowType(WindowType::WINDOW_TYPE_PIP);
+    sysSession->property_->SetWindowMode(WindowMode::WINDOW_MODE_PIP);
+    specificCallback->onCameraSessionChange_ = [](uint32_t accessTokenId, bool isShowing) {};
+    sysSession = sptr<SystemSession>::MakeSptr(info, specificCallback);
+    EXPECT_NE(sysSession->specificCallback_->onCameraSessionChange_, nullptr);
+    sysSession->pipTemplateInfo_.pipTemplateType = 0;
+    sysSession->UpdateCameraWindowStatus(false);
+    sysSession->pipTemplateInfo_.pipTemplateType = 2;
+    sysSession->UpdateCameraWindowStatus(false);
+}
+
+/**
+ * @tc.name: Reconnect02
+ * @tc.desc: test function : Reconnect
+ * @tc.type: FUNC
+ */
+HWTEST_F(SystemSessionTest, Reconnect02, Function | SmallTest | Level1)
+{
+    ASSERT_TRUE(systemSession_ != nullptr);
+
+    auto surfaceNode = CreateRSSurfaceNode();
+    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
+    ASSERT_NE(nullptr, property);
+    property->SetWindowState(WindowState::STATE_SHOWN);
+    property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
+    sptr<SessionStageMocker> mockSessionStage = new (std::nothrow) SessionStageMocker();
+    EXPECT_NE(nullptr, mockSessionStage);
+    sptr<TestWindowEventChannel> testWindowEventChannel = new (std::nothrow) TestWindowEventChannel();
+    EXPECT_NE(nullptr, testWindowEventChannel);
+
+    auto result = systemSession_->Reconnect(mockSessionStage, testWindowEventChannel, surfaceNode, property);
+    EXPECT_EQ(systemSession_->state_, SessionState::STATE_ACTIVE);
+    EXPECT_EQ(result, WSError::WS_OK);
+
+    property->SetWindowType(WindowType::APP_WINDOW_BASE);
+    result = systemSession_->Reconnect(mockSessionStage, testWindowEventChannel, surfaceNode, property);
+    EXPECT_EQ(systemSession_->state_, SessionState::STATE_FOREGROUND);
+    EXPECT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: ProcessPointDownSession02
+ * @tc.desc: test function : ProcessPointDownSession
+ * @tc.type: FUNC
+ */
+HWTEST_F(SystemSessionTest, ProcessPointDownSession02, Function | SmallTest | Level1)
+{
+    ASSERT_TRUE(systemSession_ != nullptr);
+    SessionInfo info;
+    info.abilityName_ = "testSession1";
+    info.moduleName_ = "testSession2";
+    sptr<Session> session = sptr<Session>::MakeSptr(info);
+    ASSERT_NE(session, nullptr);
+    systemSession_->parentSession_ = session;
+
+    int32_t posX = 2;
+    int32_t posY = 3;
+    auto result = systemSession_->ProcessPointDownSession(posX, posY);
+    EXPECT_EQ(result, WSError::WS_OK);
+
+    session->SetSessionState(SessionState::STATE_ACTIVE);
+    systemSession_->dialogVec_.push_back(session);
+    result = systemSession_->ProcessPointDownSession(posX, posY);
+    EXPECT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: TransferKeyEvent04
+ * @tc.desc: test function : TransferKeyEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(SystemSessionTest, TransferKeyEvent04, Function | SmallTest | Level1)
+{
+    ASSERT_TRUE(systemSession_ != nullptr);
+
+    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
+    EXPECT_NE(nullptr, keyEvent);
+    SessionInfo info;
+    info.abilityName_ = "testSystemSession1";
+    info.moduleName_ = "testSystemSession2";
+    info.isSystem_ = false;
+    sptr<SystemSession> sysSession = sptr<SystemSession>::MakeSptr(info, nullptr);
+    EXPECT_NE(nullptr, sysSession);
+    sysSession->state_ = SessionState::STATE_CONNECT;
+    sysSession->property_->SetWindowType(WindowType::APP_WINDOW_BASE);
+    auto result = sysSession->TransferKeyEvent(keyEvent);
+    EXPECT_EQ(result, WSError::WS_ERROR_NULLPTR);
+
+    sysSession->property_->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+    sptr<Session> session = sptr<Session>::MakeSptr(info);
+    ASSERT_NE(session, nullptr);
+    sysSession->parentSession_ = session;
+    session->SetSessionState(SessionState::STATE_ACTIVE);
+    sysSession->dialogVec_.push_back(session);
+    result = sysSession->TransferKeyEvent(keyEvent);
+    EXPECT_EQ(result, WSError::WS_DO_NOTHING);
+
+    session->SetSessionState(SessionState::STATE_CONNECT);
+    result = sysSession->TransferKeyEvent(keyEvent);
+    EXPECT_EQ(result, WSError::WS_DO_NOTHING);
+
+    sysSession->winRect_.width_ = 1;
+    sysSession->winRect_.height_ = 1;
+    sysSession->SetVisible(true);
+    session->SetSessionState(SessionState::STATE_FOREGROUND);
+    sysSession->parentSession_ = session;
+    sysSession->SetSessionState(SessionState::STATE_FOREGROUND);
+    result = sysSession->TransferKeyEvent(keyEvent);
+    EXPECT_EQ(result, WSError::WS_ERROR_NULLPTR);
+}
+
+/**
+ * @tc.name: ProcessBackEvent02
+ * @tc.desc: test function : ProcessBackEvent
+ * @tc.type: FUNC
+ */
+HWTEST_F(SystemSessionTest, ProcessBackEvent02, Function | SmallTest | Level1)
+{
+    ASSERT_TRUE(systemSession_ != nullptr);
+
+    systemSession_->SetSessionState(SessionState::STATE_CONNECT);
+    ASSERT_NE(systemSession_->property_, nullptr);
+    systemSession_->property_->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
+    auto result = systemSession_->ProcessBackEvent();
+    ASSERT_EQ(result, WSError::WS_OK);
+
+    systemSession_->property_->SetWindowType(WindowType::WINDOW_TYPE_SCREENSHOT);
+    ASSERT_EQ(result, WSError::WS_OK);
+}
+
+/**
+ * @tc.name: CheckKeyEventDispatch
+ * @tc.desc: test function : CheckKeyEventDispatch
+ * @tc.type: FUNC
+ */
+HWTEST_F(SystemSessionTest, CheckKeyEventDispatch, Function | SmallTest | Level1)
+{
+    ASSERT_TRUE(systemSession_ != nullptr);
+
+    std::shared_ptr<MMI::KeyEvent> keyEvent = MMI::KeyEvent::Create();
+    ASSERT_NE(keyEvent, nullptr);
+    systemSession_->SetVisible(true);
+    systemSession_->winRect_.width_ = 1;
+    systemSession_->winRect_.height_ = 0;
+    auto result = systemSession_->CheckKeyEventDispatch(keyEvent);
+    EXPECT_EQ(result, false);
+
+    systemSession_->winRect_.width_ = 0;
+    result = systemSession_->CheckKeyEventDispatch(keyEvent);
+    EXPECT_EQ(result, false);
+
+    systemSession_->SetVisible(false);
+    result = systemSession_->CheckKeyEventDispatch(keyEvent);
+    EXPECT_EQ(result, false);
+
+    systemSession_->SetVisible(true);
+    systemSession_->winRect_.width_ = 1;
+    systemSession_->winRect_.height_ = 1;
+    result = systemSession_->CheckKeyEventDispatch(keyEvent);
+    EXPECT_EQ(result, false);
+
+    SessionInfo info;
+    info.abilityName_ = "testSession1";
+    info.moduleName_ = "testSession2";
+    sptr<Session> session = sptr<Session>::MakeSptr(info);
+    ASSERT_NE(session, nullptr);
+    session->SetSessionState(SessionState::STATE_FOREGROUND);
+    systemSession_->SetSessionState(SessionState::STATE_CONNECT);
+    systemSession_->SetParentSession(session);
+    EXPECT_EQ(systemSession_->GetParentSession(), session);
+    result = systemSession_->CheckKeyEventDispatch(keyEvent);
+    EXPECT_EQ(result, false);
+
+    session->SetSessionState(SessionState::STATE_CONNECT);
+    systemSession_->SetParentSession(session);
+    result = systemSession_->CheckKeyEventDispatch(keyEvent);
+    EXPECT_EQ(result, false);
+
+    session->SetSessionState(SessionState::STATE_FOREGROUND);
+    systemSession_->SetSessionState(SessionState::STATE_FOREGROUND);
+    systemSession_->SetParentSession(session);
+    result = systemSession_->CheckKeyEventDispatch(keyEvent);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.name: CheckPointerEventDispatch02
+ * @tc.desc: test function : CheckPointerEventDispatch
+ * @tc.type: FUNC
+ */
+HWTEST_F(SystemSessionTest, CheckPointerEventDispatch02, Function | SmallTest | Level1)
+{
+    std::shared_ptr<MMI::PointerEvent> pointerEvent = MMI::PointerEvent::Create();
+    ASSERT_NE(pointerEvent, nullptr);
+    SessionInfo info;
+    info.abilityName_ = "CheckPointerEventDispatch";
+    info.bundleName_ = "CheckPointerEventDispatchBundleName";
+    info.windowType_ = 2122;
+    sptr<SceneSession::SpecificSessionCallback> specificCallback =
+        sptr<SceneSession::SpecificSessionCallback>::MakeSptr();
+    ASSERT_NE(specificCallback, nullptr);
+    sptr<SystemSession> sysSession =
+        sptr<SystemSession>::MakeSptr(info, specificCallback);
+    ASSERT_NE(sysSession, nullptr);
+    sysSession->SetSessionState(SessionState::STATE_CONNECT);
+    bool ret = sysSession->CheckPointerEventDispatch(pointerEvent);
+    ASSERT_EQ(true, ret);
+
+    sysSession->SetSessionState(SessionState::STATE_ACTIVE);
+    ret = sysSession->CheckPointerEventDispatch(pointerEvent);
+    ASSERT_EQ(true, ret);
+
+    sysSession->SetSessionState(SessionState::STATE_FOREGROUND);
+    ret = sysSession->CheckPointerEventDispatch(pointerEvent);
+    ASSERT_EQ(true, ret);
+}
 } // namespace
 } // namespace Rosen
 } // namespace OHOS
