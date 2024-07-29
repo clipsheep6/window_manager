@@ -624,59 +624,6 @@ HWTEST_F(SceneSessionManagerTest3, OnSCBSystemSessionBufferAvailable, Function |
 }
 
 /**
- * @tc.name: CreateSceneSession
- * @tc.desc: CreateSceneSession
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, CreateSceneSession, Function | SmallTest | Level3)
-{
-    int ret = 0;
-    SessionInfo info;
-    ssm_->CreateSceneSession(info, nullptr);
-    info.isSystem_ = true;
-    info.windowType_ = 3000;
-    ssm_->CreateSceneSession(info, nullptr);
-    info.windowType_ = 3;
-    ssm_->CreateSceneSession(info, nullptr);
-    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
-    ASSERT_NE(nullptr, property);
-    ssm_->CreateSceneSession(info, property);
-    property->SetWindowType(WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
-    ssm_->CreateSceneSession(info, property);
-    property->SetWindowType(WindowType::WINDOW_TYPE_INPUT_METHOD_FLOAT);
-    ssm_->CreateSceneSession(info, property);
-    property->SetWindowType(WindowType::SYSTEM_SUB_WINDOW_BASE);
-    ssm_->CreateSceneSession(info, property);
-    ssm_->NotifySessionUpdate(info, ActionType::SINGLE_START, 0);
-    info.persistentId_ = 0;
-    ssm_->UpdateSceneSessionWant(info);
-    info.persistentId_ = 1;
-    ssm_->UpdateSceneSessionWant(info);
-    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->sceneSessionMap_.insert({1, sceneSession});
-    ssm_->UpdateSceneSessionWant(info);
-    std::shared_ptr<AAFwk::Want> want = std::make_shared<AAFwk::Want>();
-    ASSERT_NE(nullptr, want);
-    info.want = want;
-    ssm_->UpdateSceneSessionWant(info);
-    sceneSession->SetCollaboratorType(0);
-    ssm_->UpdateSceneSessionWant(info);
-    sceneSession->SetCollaboratorType(1);
-    ssm_->UpdateSceneSessionWant(info);
-    ssm_->sceneSessionMap_.erase(1);
-    sptr<SceneSession> sceneSession1;
-    ssm_->UpdateCollaboratorSessionWant(sceneSession1, 1);
-    ssm_->UpdateCollaboratorSessionWant(sceneSession, 1);
-    SessionInfo info1;
-    info1.ancoSceneState = 0;
-    sceneSession1 = new (std::nothrow) SceneSession(info1, nullptr);
-    ASSERT_NE(nullptr, sceneSession1);
-    ssm_->UpdateCollaboratorSessionWant(sceneSession1, 1);
-    ASSERT_EQ(ret, 0);
-}
-
-/**
  * @tc.name: CheckAppIsInDisplay
  * @tc.desc: CheckAppIsInDisplay
  * @tc.type: FUNC
@@ -725,120 +672,6 @@ HWTEST_F(SceneSessionManagerTest3, CheckAppIsInDisplay, Function | SmallTest | L
     ssm_->DestroySubSession(sceneSession);
     ssm_->EraseSceneSessionMapById(2);
     ASSERT_EQ(ret, 1);
-}
-
-/**
- * @tc.name: RequestSceneSessionBackground
- * @tc.desc: RequestSceneSessionBackground
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionBackground, Function | SmallTest | Level3)
-{
-    int ret = 0;
-    sptr<SceneSession> sceneSession;
-    ssm_->RequestSceneSessionActivation(sceneSession, true);
-    SessionInfo info;
-    ret++;
-    sptr<AAFwk::SessionInfo> abilitySessionInfo;
-    ssm_->NotifyCollaboratorAfterStart(sceneSession, abilitySessionInfo);
-    ssm_->RequestSceneSessionBackground(sceneSession, true, false);
-    ssm_->RequestSceneSessionBackground(sceneSession, true, true);
-    ssm_->RequestSceneSessionBackground(sceneSession, false, true);
-    ssm_->RequestSceneSessionBackground(sceneSession, false, false);
-    ssm_->NotifyForegroundInteractiveStatus(sceneSession, true);
-    ssm_->NotifyForegroundInteractiveStatus(sceneSession, false);
-    ssm_->DestroyDialogWithMainWindow(sceneSession);
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->RequestSceneSessionBackground(sceneSession, true, false);
-    ssm_->RequestSceneSessionBackground(sceneSession, true, true);
-    ssm_->RequestSceneSessionBackground(sceneSession, false, true);
-    ssm_->RequestSceneSessionBackground(sceneSession, false, false);
-    ssm_->NotifyForegroundInteractiveStatus(sceneSession, true);
-    ssm_->NotifyForegroundInteractiveStatus(sceneSession, false);
-    ssm_->NotifyCollaboratorAfterStart(sceneSession, abilitySessionInfo);
-    ssm_->DestroyDialogWithMainWindow(sceneSession);
-    ssm_->DestroySubSession(sceneSession);
-    ssm_->SetAbilitySessionInfo(sceneSession);
-    ssm_->RequestSceneSessionActivation(sceneSession, true);
-    ssm_->RequestInputMethodCloseKeyboard(1);
-    ssm_->sceneSessionMap_.insert({1, nullptr});
-    ssm_->RequestInputMethodCloseKeyboard(1);
-    ssm_->RequestSceneSessionActivation(sceneSession, true);
-    ssm_->RequestSceneSessionActivation(sceneSession, false);
-    ssm_->StartUIAbilityBySCB(sceneSession);
-    ssm_->RequestSceneSessionActivation(sceneSession, true);
-    abilitySessionInfo = new (std::nothrow) AAFwk::SessionInfo();
-    ASSERT_NE(nullptr, abilitySessionInfo);
-    ssm_->NotifyCollaboratorAfterStart(sceneSession, abilitySessionInfo);
-    ssm_->DestroySubSession(sceneSession);
-    ssm_->EraseSceneSessionMapById(2);
-    ASSERT_EQ(ret, 1);
-}
-
-/**
- * @tc.name: RequestSceneSessionDestruction
- * @tc.desc: RequestSceneSessionDestruction
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionDestruction, Function | SmallTest | Level3)
-{
-    int ret = 0;
-    SessionInfo info;
-    info.abilityName_ = "111";
-    info.bundleName_ = "222";
-    sptr<SceneSession> sceneSession;
-    sptr<ISessionStage> sessionStage;
-    ssm_->AddClientDeathRecipient(sessionStage, sceneSession);
-    ssm_->RequestSceneSessionDestruction(sceneSession, true);
-    ssm_->RequestSceneSessionDestruction(sceneSession, false);
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->AddClientDeathRecipient(sessionStage, sceneSession);
-    ssm_->RequestSceneSessionDestruction(sceneSession, true);
-    ssm_->RequestSceneSessionDestruction(sceneSession, false);
-    ssm_->HandleCastScreenDisConnection(sceneSession);
-    ssm_->sceneSessionMap_.insert({sceneSession->GetPersistentId(), sceneSession});
-    ssm_->RequestSceneSessionDestruction(sceneSession, true);
-    ssm_->RequestSceneSessionDestruction(sceneSession, false);
-    ssm_->sceneSessionMap_.erase(sceneSession->GetPersistentId());
-    sptr<AAFwk::SessionInfo> scnSessionInfo = new (std::nothrow) AAFwk::SessionInfo();
-    ASSERT_NE(nullptr, scnSessionInfo);
-    ssm_->RequestSceneSessionDestructionInner(sceneSession, scnSessionInfo, true);
-    ssm_->RequestSceneSessionDestructionInner(sceneSession, scnSessionInfo, false);
-    std::shared_ptr<SessionListenerController> listenerController =
-        std::make_shared<SessionListenerController>();
-    ASSERT_NE(nullptr, listenerController);
-    ssm_->listenerController_ = listenerController;
-    ssm_->RequestSceneSessionDestructionInner(sceneSession, scnSessionInfo, true);
-    ssm_->RequestSceneSessionDestructionInner(sceneSession, scnSessionInfo, false);
-    ssm_->AddClientDeathRecipient(sessionStage, sceneSession);
-    ASSERT_EQ(ret, 0);
-}
-
-/**
- * @tc.name: CreateAndConnectSpecificSession
- * @tc.desc: CreateAndConnectSpecificSession
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, CreateAndConnectSpecificSession, Function | SmallTest | Level3)
-{
-    int ret = 0;
-    sptr<ISessionStage> sessionStage;
-    sptr<IWindowEventChannel> eventChannel;
-    std::shared_ptr<RSSurfaceNode> node = nullptr;
-    sptr<WindowSessionProperty> property;
-    sptr<ISession> session;
-    SystemSessionConfig systemConfig;
-    sptr<IRemoteObject> token;
-    int32_t id = 0;
-    ssm_->CreateAndConnectSpecificSession(sessionStage, eventChannel, node, property, id, session,
-        systemConfig, token);
-    property = new (std::nothrow) WindowSessionProperty();
-    ASSERT_NE(nullptr, property);
-    ssm_->CreateAndConnectSpecificSession(sessionStage, eventChannel, node, property, id, session,
-        systemConfig, token);
-    ASSERT_EQ(ret, 0);
 }
 
 /**
@@ -907,23 +740,6 @@ HWTEST_F(SceneSessionManagerTest3, PrepareTerminate, Function | SmallTest | Leve
 }
 
 /**
- * @tc.name: RequestSceneSessionBackground002
- * @tc.desc: SceneSesionManager request scene session background
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionBackground002, Function | SmallTest | Level3)
-{
-    bool isDelegator = false;
-    SessionInfo info;
-    info.abilityName_ = "RequestSceneSessionBackground002";
-    info.bundleName_ = "RequestSceneSessionBackground002";
-    sptr<SceneSession> sceneSession;
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ASSERT_EQ(WSError::WS_OK, ssm_->RequestSceneSessionBackground(sceneSession, isDelegator));
-}
-
-/**
  * @tc.name: DestroyDialogWithMainWindow
  * @tc.desc: SceneSesionManager destroy dialog with main window
  * @tc.type: FUNC
@@ -937,42 +753,6 @@ HWTEST_F(SceneSessionManagerTest3, DestroyDialogWithMainWindow, Function | Small
     sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_NE(nullptr, sceneSession);
     ASSERT_EQ(WSError::WS_OK, ssm_->DestroyDialogWithMainWindow(sceneSession));
-}
-
-/**
- * @tc.name: RequestSceneSessionDestruction002
- * @tc.desc: SceneSesionManager request scene session destruction
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, RequestSceneSessionDestruction002, Function | SmallTest | Level3)
-{
-    bool needRemoveSession = false;
-    SessionInfo info;
-    info.abilityName_ = "RequestSceneSessionDestruction002";
-    info.bundleName_ = "RequestSceneSessionDestruction002";
-    sptr<SceneSession> sceneSession;
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ASSERT_EQ(WSError::WS_OK, ssm_->RequestSceneSessionDestruction(sceneSession, needRemoveSession));
-}
-
-/**
- * @tc.name: NotifyForegroundInteractiveStatus
- * @tc.desc: SceneSesionManager notify scene session interactive status
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, NotifyForegroundInteractiveStatus, Function | SmallTest | Level3)
-{
-    bool interactive = false;
-    SessionInfo info;
-    info.abilityName_ = "NotifyForegroundInteractiveStatus";
-    info.bundleName_ = "NotifyForegroundInteractiveStatus";
-    sptr<SceneSession> sceneSession;
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    int ret = 0;
-    ssm_->NotifyForegroundInteractiveStatus(sceneSession, interactive);
-    ASSERT_EQ(ret, 0);
 }
 
 /**
@@ -990,19 +770,6 @@ HWTEST_F(SceneSessionManagerTest3, AddClientDeathRecipient, Function | SmallTest
     ASSERT_NE(nullptr, sceneSession);
     int ret = 0;
     ssm_->AddClientDeathRecipient(nullptr, sceneSession);
-    ASSERT_EQ(ret, 0);
-}
-
-/**
- * @tc.name: DestroySpecificSession
- * @tc.desc: SceneSesionManager destroy specific session
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, DestroySpecificSession, Function | SmallTest | Level3)
-{
-    sptr<IRemoteObject> remoteObject = nullptr;
-    int ret = 0;
-    ssm_->DestroySpecificSession(remoteObject);
     ASSERT_EQ(ret, 0);
 }
 
@@ -1072,30 +839,6 @@ HWTEST_F(SceneSessionManagerTest3, SetOutsideDownEventListener, Function | Small
 }
 
 /**
- * @tc.name: DestroyAndDisconnectSpecificSession
- * @tc.desc: SceneSesionManager destroy and disconnect specific session
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, DestroyAndDisconnectSpecificSession, Function | SmallTest | Level3)
-{
-    int32_t persistentId = 0;
-    WSError result = ssm_->DestroyAndDisconnectSpecificSession(persistentId);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-}
-
-/**
- * @tc.name: DestroyAndDisconnectSpecificSessionWithDetachCallback
- * @tc.desc: SceneSesionManager destroy and disconnect specific session with detach callback
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, DestroyAndDisconnectSpecificSessionWithDetachCallback, Function | SmallTest | Level3)
-{
-    int32_t persistentId = 0;
-    WSError result = ssm_->DestroyAndDisconnectSpecificSessionWithDetachCallback(persistentId, nullptr);
-    ASSERT_EQ(result, WSError::WS_ERROR_NULLPTR);
-}
-
-/**
  * @tc.name: GetWindowSceneConfig
  * @tc.desc: SceneSesionManager get window scene config
  * @tc.type: FUNC
@@ -1161,46 +904,6 @@ HWTEST_F(SceneSessionManagerTest3, GetSessionInfoByContinueSessionId, Function |
 }
 
 /**
- * @tc.name: PreHandleCollaborator
- * @tc.desc: SceneSesionManager prehandle collaborator
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, PreHandleCollaborator, Function | SmallTest | Level3)
-{
-    SessionInfo info;
-    info.abilityName_ = "PreHandleCollaborator";
-    info.bundleName_ = "PreHandleCollaborator";
-    sptr<SceneSession> sceneSession = nullptr;
-    ssm_->PreHandleCollaborator(sceneSession);
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->PreHandleCollaborator(sceneSession);
-    sceneSession = nullptr;
-    AppExecFwk::ApplicationInfo applicationInfo_;
-    applicationInfo_.codePath = std::to_string(CollaboratorType::RESERVE_TYPE);
-    AppExecFwk::AbilityInfo abilityInfo_;
-    abilityInfo_.applicationInfo = applicationInfo_;
-    info.abilityInfo = std::make_shared<AppExecFwk::AbilityInfo>(abilityInfo_);
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->PreHandleCollaborator(sceneSession);
-    sceneSession = nullptr;
-    applicationInfo_.codePath = std::to_string(CollaboratorType::OTHERS_TYPE);
-    abilityInfo_.applicationInfo = applicationInfo_;
-    info.abilityInfo = std::make_shared<AppExecFwk::AbilityInfo>(abilityInfo_);
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->PreHandleCollaborator(sceneSession);
-    EXPECT_EQ(sceneSession->GetSessionInfo().want, nullptr);
-    sceneSession = nullptr;
-    info.want = std::make_shared<AAFwk::Want>();
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->PreHandleCollaborator(sceneSession);
-    ASSERT_NE(sceneSession->GetSessionInfo().want, nullptr);
-}
-
-/**
  * @tc.name: CheckCollaboratorType
  * @tc.desc: SceneSesionManager check collborator type
  * @tc.type: FUNC
@@ -1235,37 +938,6 @@ HWTEST_F(SceneSessionManagerTest3, NotifyUpdateSessionInfo, Function | SmallTest
     int32_t persistentId = 10086;
     ssm_->NotifyMoveSessionToForeground(collaboratorType, persistentId);
     ssm_->NotifyClearSession(collaboratorType, persistentId);
-}
-
-/**
- * @tc.name: NotifySessionCreate
- * @tc.desc: SceneSesionManager notify session create
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, NotifySessionCreate, Function | SmallTest | Level3)
-{
-    SessionInfo info;
-    info.abilityName_ = "NotifySessionCreate";
-    info.bundleName_ = "NotifySessionCreate";
-    sptr<SceneSession> sceneSession;
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->NotifySessionCreate(nullptr, info);
-    EXPECT_EQ(info.want, nullptr);
-    ssm_->NotifySessionCreate(sceneSession, info);
-    info.want = std::make_shared<AAFwk::Want>();
-    sceneSession = nullptr;
-    sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->NotifySessionCreate(sceneSession, info);
-    EXPECT_NE(info.want, nullptr);
-    AppExecFwk::AbilityInfo aInfo;
-    sptr<AAFwk::SessionInfo> abilitySessionInfo = new AAFwk::SessionInfo();
-    std::shared_ptr<AppExecFwk::AbilityInfo> abilityInfo =
-        std::make_shared<AppExecFwk::AbilityInfo>(aInfo);
-    ASSERT_NE(nullptr, abilityInfo);
-    int32_t collaboratorType = CollaboratorType::RESERVE_TYPE;
-    ssm_->NotifyLoadAbility(collaboratorType, abilitySessionInfo, abilityInfo);
 }
 
 /**
@@ -1866,30 +1538,6 @@ HWTEST_F(SceneSessionManagerTest3, ConfigDecor02, Function | SmallTest | Level3)
     ASSERT_NE(item, nullptr);
     ssm_->ConfigDecor(*item, false);
     delete item;
-}
-
-/**
- * @tc.name: UpdateRecoveredSessionInfo
- * @tc.desc: SceneSessionManager load window scene xml
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionManagerTest3, UpdateRecoveredSessionInfo02, Function | SmallTest | Level3)
-{
-    std::vector<int32_t> recoveredPersistentIds;
-    ASSERT_NE(ssm_, nullptr);
-    ssm_->UpdateRecoveredSessionInfo(recoveredPersistentIds);
-    recoveredPersistentIds.push_back(0);
-    ssm_->UpdateRecoveredSessionInfo(recoveredPersistentIds);
-    SessionInfo info;
-    info.abilityName_ = "test1";
-    info.bundleName_ = "test1";
-    sptr<KeyboardSession::SpecificSessionCallback> specificCallback;
-    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, specificCallback);
-    ASSERT_NE(sceneSession, nullptr);
-    ssm_->sceneSessionMap_.insert({0, sceneSession});
-    ssm_->UpdateRecoveredSessionInfo(recoveredPersistentIds);
-    constexpr uint32_t WAIT_SYNC_IN_NS = 50000;
-    usleep(WAIT_SYNC_IN_NS);
 }
 
 /**

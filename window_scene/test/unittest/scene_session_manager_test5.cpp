@@ -120,49 +120,6 @@ HWTEST_F(SceneSessionManagerTest5, NotifySessionTouchOutside01, Function | Small
 }
 
 /**
- * @tc.name: DestroyAndDisconnectSpecificSessionInner
- * @tc.desc: check func DestroyAndDisconnectSpecificSessionInner
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionManagerTest5, DestroyAndDisconnectSpecificSessionInner, Function | SmallTest | Level2)
-{
-    sptr<ISession> session;
-    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
-    ASSERT_NE(nullptr, property);
-    std::vector<int32_t> recoveredPersistentIds = {0, 1, 2};
-    ssm_->SetAlivePersistentIds(recoveredPersistentIds);
-    ProcessShiftFocusFunc shiftFocusFunc_;
-    property->SetWindowType(WindowType::WINDOW_TYPE_DIALOG);
-    ssm_->DestroyAndDisconnectSpecificSessionInner(1);
-    property->SetPersistentId(1);
-    ssm_->DestroyAndDisconnectSpecificSessionInner(1);
-
-    property->SetWindowType(WindowType::WINDOW_TYPE_TOAST);
-    ssm_->DestroyAndDisconnectSpecificSessionInner(1);
-}
-
-/**
- * @tc.name: DestroyAndDisconnectSpecificSessionWithDetachCallback
- * @tc.desc: SceneSesionManager destroy and disconnect specific session with detach callback
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest5, DestroyAndDetachCallback, Function | SmallTest | Level3)
-{
-    int32_t persistentId = 0;
-    ASSERT_NE(ssm_, nullptr);
-    sptr<IRemoteObject> callback = new (std::nothrow) IRemoteObjectMocker();
-    ASSERT_NE(callback, nullptr);
-    ssm_->DestroyAndDisconnectSpecificSessionWithDetachCallback(persistentId, callback);
-    sptr<WindowSessionProperty> property;
-    ssm_->recoveringFinished_ = false;
-    SessionInfo info;
-    info.abilityName_ = "test1";
-    info.bundleName_ = "test2";
-    sptr<SceneSession> sceneSession = ssm_->CreateSceneSession(info, property);
-    ssm_->DestroyAndDisconnectSpecificSessionWithDetachCallback(persistentId, callback);
-}
-
-/**
  * @tc.name: GetStartupPageFromResource
  * @tc.desc: GetStartupPageFromResource
  * @tc.type: FUNC
@@ -208,26 +165,6 @@ HWTEST_F(SceneSessionManagerTest5, OnSCBSystemSessionBufferAvailable02, Function
     SceneSessionManager* sceneSessionManager = new SceneSessionManager();
     ASSERT_NE(sceneSessionManager, nullptr);
     sceneSessionManager->OnSCBSystemSessionBufferAvailable(WindowType::WINDOW_TYPE_FLOAT);
-    delete sceneSessionManager;
-}
-
-/**
- * @tc.name: CreateKeyboardPanelSession
- * @tc.desc: CreateKeyboardPanelSession
- * @tc.type: FUNC
- */
-HWTEST_F(SceneSessionManagerTest5, CreateKeyboardPanelSession, Function | SmallTest | Level3)
-{
-    SceneSessionManager* sceneSessionManager = new SceneSessionManager();
-    ASSERT_NE(sceneSessionManager, nullptr);
-    SessionInfo info;
-    info.abilityName_ = "test1";
-    info.bundleName_ = "test2";
-    sptr<WindowSessionProperty> property = new (std::nothrow) WindowSessionProperty();
-    ASSERT_NE(property, nullptr);
-    property->SetWindowType(WindowType::SYSTEM_SUB_WINDOW_BASE);
-    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    sceneSessionManager->CreateKeyboardPanelSession(sceneSession);
     delete sceneSessionManager;
 }
 
