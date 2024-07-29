@@ -2910,15 +2910,19 @@ WSError SceneSessionManager::UpdateBrightness(int32_t persistentId)
     if (std::fabs(brightness - UNDEFINED_BRIGHTNESS) < std::numeric_limits<float>::min()) {
         if (GetDisplayBrightness() != brightness) {
             WLOGI("adjust brightness with default value");
+#ifdef POWERMGR_DISPLAY_MANAGER_ENABLE
             DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().RestoreBrightness();
+#endif
             SetDisplayBrightness(UNDEFINED_BRIGHTNESS); // UNDEFINED_BRIGHTNESS means system default brightness
         }
         brightnessSessionId_ = INVALID_WINDOW_ID;
     } else {
         if (GetDisplayBrightness() != brightness) {
             WLOGI("adjust brightness with value");
+#ifdef POWERMGR_DISPLAY_MANAGER_ENABLE
             DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().OverrideBrightness(
                 static_cast<uint32_t>(brightness * MAX_BRIGHTNESS));
+#endif
             SetDisplayBrightness(brightness);
         }
         brightnessSessionId_ = sceneSession->GetPersistentId();
