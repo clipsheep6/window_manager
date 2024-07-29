@@ -292,6 +292,9 @@ public:
     WSError NotifyFocusStatus(bool isFocused);
     virtual WSError UpdateWindowMode(WindowMode mode);
     WSError SetCompatibleModeInPc(bool enable, bool isSupportDragInPcCompatibleMode);
+    WSError CompatibleFullScreenRecover();
+    WSError CompatibleFullScreenMinimize();
+    WSError CompatibleFullScreenClose();
     WSError SetIsPcAppInPad(bool enable);
     virtual WSError SetSystemSceneBlockingFocus(bool blocking);
     bool GetBlockingFocus() const;

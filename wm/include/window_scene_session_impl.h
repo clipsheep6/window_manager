@@ -154,6 +154,9 @@ public:
     bool GetDefaultDensityEnabled() override;
     WMError HideNonSecureWindows(bool shouldHide) override;
     virtual WMError SetWindowMask(const std::vector<std::vector<uint32_t>>& windowMask) override;
+    WSError CompatibleFullScreenRecover() override;
+    WSError CompatibleFullScreenMinimize() override;
+    WSError CompatibleFullScreenClose() override;
     void UpdateDensity() override;
     WSError UpdateOrientation() override;
     WSError UpdateDisplayId(uint64_t displayId) override;
@@ -220,7 +223,6 @@ private:
     sptr<IAnimationTransitionController> animationTransitionController_;
     uint32_t setSameSystembarPropertyCnt_ = 0;
     std::atomic<bool> isDefaultDensityEnabled_ = false;
-    bool enableImmersiveMode_ = false;
     uint32_t getAvoidAreaCnt_ = 0;
     bool enableImmersiveMode_ = false;
 
