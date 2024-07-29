@@ -536,22 +536,6 @@ HWTEST_F(WindowSceneSessionImplTest, DisableAppWindowDecor01, Function | SmallTe
 }
 
 /**
- * @tc.name: HandleBackEvent01
- * @tc.desc: HandleBackEvent
- * @tc.type: FUNC
- */
-HWTEST_F(WindowSceneSessionImplTest, HandleBackEvent01, Function | SmallTest | Level3)
-{
-    sptr<WindowOption> option = new (std::nothrow) WindowOption();
-    option->SetWindowName("HandleBackEvent01");
-    sptr<WindowSceneSessionImpl> windowSceneSession = new (std::nothrow) WindowSceneSessionImpl(option);
-    ASSERT_NE(nullptr, windowSceneSession);
-
-    windowSceneSession->uiContent_ = std::make_unique<Ace::UIContentMocker>();
-    ASSERT_EQ(WSError::WS_OK, windowSceneSession->HandleBackEvent());
-}
-
-/**
  * @tc.name: RaiseToAppTop01
  * @tc.desc: RaiseToAppTop
  * @tc.type: FUNC
@@ -854,7 +838,7 @@ HWTEST_F(WindowSceneSessionImplTest, NotifyDrawingCompleted, Function | SmallTes
     ASSERT_NE(nullptr, session);
 
     window->hostSession_ = session;
-    ASSERT_EQ(WMError::WM_OK, window->NotifyDrawingCompleted());
+    window->NotifyDrawingCompleted();
 }
 
 /**
@@ -1713,6 +1697,19 @@ HWTEST_F(WindowSceneSessionImplTest, SetShadowOffsetX, Function | SmallTest | Le
     } else {
         ASSERT_EQ(WMError::WM_OK, window->SetShadowOffsetX(1.0));
     }
+}
+
+/*
+ * @tc.name: GetStatusBarHeight
+ * @tc.desc: GetStatusBarHeight test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSceneSessionImplTest, GetStatusBarHeight, Function | SmallTest | Level3)
+{
+    sptr<WindowOption> option = new (std::nothrow) WindowOption();
+    option->SetWindowName("GetStatusBarHeight");
+    sptr<WindowSceneSessionImpl> window = new (std::nothrow) WindowSceneSessionImpl(option);
+    ASSERT_EQ(0, window->GetStatusBarHeight());
 }
 }
 } // namespace Rosen

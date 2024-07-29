@@ -67,7 +67,7 @@ public:
     PictureInPictureController(sptr<PipOption> pipOption, sptr<Window> mainWindow, uint32_t mainWindowId, napi_env env);
     ~PictureInPictureController();
     WMError StartPictureInPicture(StartPipType startType);
-    WMError StopPictureInPicture(bool destroyWindow, StopPipType stopPipType);
+    WMError StopPictureInPicture(bool destroyWindow, StopPipType stopPipType, bool withAnim = true);
     WMError StopPictureInPictureFromClient();
     WMError DestroyPictureInPictureWindow();
     sptr<Window> GetPipWindow() const;
@@ -83,9 +83,12 @@ public:
     void PreRestorePictureInPicture();
     void RestorePictureInPictureWindow();
     void LocateSource();
-    void SetPictureInPictureLifecycle(sptr<IPiPLifeCycle> listener);
-    void SetPictureInPictureActionObserver(sptr<IPiPActionObserver> listener);
-    void SetPictureInPictureControlObserver(sptr<IPiPControlObserver> listener);
+    WMError RegisterPiPLifecycle(const sptr<IPiPLifeCycle>& listener);
+    WMError RegisterPiPActionObserver(const sptr<IPiPActionObserver>& listener);
+    WMError RegisterPiPControlObserver(const sptr<IPiPControlObserver>& listener);
+    WMError UnregisterPiPLifecycle(const sptr<IPiPLifeCycle>& listener);
+    WMError UnregisterPiPActionObserver(const sptr<IPiPActionObserver>& listener);
+    WMError UnregisterPiPControlObserver(const sptr<IPiPControlObserver>& listener);
     sptr<IPiPLifeCycle> GetPictureInPictureLifecycle() const;
     sptr<IPiPActionObserver> GetPictureInPictureActionObserver() const;
     sptr<IPiPControlObserver> GetPictureInPictureControlObserver() const;
@@ -142,16 +145,18 @@ private:
     WMError CreatePictureInPictureWindow(StartPipType startType);
     WMError ShowPictureInPictureWindow(StartPipType startType);
     WMError StartPictureInPictureInner(StartPipType startType);
-    WMError StopPictureInPictureInner(StopPipType stopType);
+    WMError StopPictureInPictureInner(StopPipType stopType, bool withAnim);
     void UpdateXComponentPositionAndSize();
     void UpdatePiPSourceRect() const;
     void ResetExtController();
     bool IsPullPiPAndHandleNavigation();
+    template<typename T> WMError RegisterListener(std::vector<sptr<T>>& holder, const sptr<T>& listener);
+    template<typename T> WMError UnregisterListener(std::vector<sptr<T>>& holder, const sptr<T>& listener);
     wptr<PictureInPictureController> weakRef_ = nullptr;
     sptr<PipOption> pipOption_;
-    sptr<IPiPLifeCycle> pipLifeCycleListener_;
-    sptr<IPiPActionObserver> pipActionObserver_;
-    sptr<IPiPControlObserver> pipControlObserver_;
+    std::vector<sptr<IPiPLifeCycle>> pipLifeCycleListeners_;
+    std::vector<sptr<IPiPActionObserver>> pipActionObservers_;
+    std::vector<sptr<IPiPControlObserver>> pipControlObservers_;
     sptr<Window> window_;
     sptr<Window> mainWindow_;
     uint32_t mainWindowId_;
@@ -164,6 +169,7 @@ private:
     napi_env env_;
     std::mutex mutex_;
     int32_t handleId_ = -1;
+    bool isStoppedFromClient_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS

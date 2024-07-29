@@ -149,6 +149,12 @@ int SceneSessionManagerStub::ProcessRemoteRequest(uint32_t code, MessageParcel& 
             return HandleGetVisibilityWindowInfo(data, reply);
         case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB):
             return HandleAddExtensionWindowStageToSCB(data, reply);
+        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_REMOVE_EXTENSION_WINDOW_STAGE_FROM_SCB):
+            return HandleRemoveExtensionWindowStageFromSCB(data, reply);
+        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_MODALEXTENSION_RECT_TO_SCB):
+            return HandleUpdateModalExtensionRect(data, reply);
+        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_PROCESS_MODALEXTENSION_POINTDOWN_TO_SCB):
+            return HandleProcessModalExtensionPointDown(data, reply);
         case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_ADD_OR_REMOVE_SECURE_SESSION):
             return HandleAddOrRemoveSecureSession(data, reply);
         case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_UPDATE_EXTENSION_WINDOW_FLAGS):
@@ -161,6 +167,8 @@ int SceneSessionManagerStub::ProcessRemoteRequest(uint32_t code, MessageParcel& 
             return HandleGetCallingWindowRect(data, reply);
         case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_MODE_TYPE):
             return HandleGetWindowModeType(data, reply);
+        case static_cast<uint32_t>(SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_STYLE_TYPE):
+            return HandleGetWindowStyleType(data, reply);
         default:
             WLOGFE("Failed to find function handler!");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -305,10 +313,10 @@ int SceneSessionManagerStub::HandleDestroyAndDisconnectSpcificSessionWithDetachC
 
 int SceneSessionManagerStub::HandleRequestFocusStatus(MessageParcel &data, MessageParcel &reply)
 {
-    WLOGFI("run HandleRequestFocusStatus!");
+    WLOGFI("run");
     int32_t persistentId = data.ReadInt32();
     bool isFocused = data.ReadBool();
-    WMError ret = RequestFocusStatus(persistentId, isFocused, false, FocusChangeReason::CLIENT_REQUEST);
+    WMError ret = RequestFocusStatus(persistentId, isFocused, true, FocusChangeReason::CLIENT_REQUEST);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
@@ -684,7 +692,7 @@ int SceneSessionManagerStub::HandleGetUIContentRemoteObj(MessageParcel& data, Me
 int SceneSessionManagerStub::HandleBindDialogTarget(MessageParcel &data, MessageParcel &reply)
 {
     WLOGFI("run HandleBindDialogTarget!");
-    auto persistentId = data.ReadUint64();
+    uint64_t persistentId = data.ReadUint64();
     sptr<IRemoteObject> remoteObject = data.ReadRemoteObject();
     const WSError& ret = BindDialogSessionTarget(persistentId, remoteObject);
     reply.WriteUint32(static_cast<uint32_t>(ret));
@@ -865,34 +873,42 @@ int SceneSessionManagerStub::HandleAddExtensionWindowStageToSCB(MessageParcel& d
     if (sessionStage == nullptr) {
         return ERR_INVALID_DATA;
     }
-    int32_t persistentId = data.ReadInt32();
-    int32_t parentId = data.ReadInt32();
-    UIExtensionUsage usage = static_cast<UIExtensionUsage>(data.ReadUint32());
+    sptr<IRemoteObject> token = data.ReadRemoteObject();
     uint64_t surfaceNodeId = data.ReadUint64();
-    AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId, usage, surfaceNodeId);
+    AddExtensionWindowStageToSCB(sessionStage, token, surfaceNodeId);
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleRemoveExtensionWindowStageFromSCB(MessageParcel& data, MessageParcel& reply)
+{
+    sptr<IRemoteObject> sessionStageObject = data.ReadRemoteObject();
+    sptr<ISessionStage> sessionStage = iface_cast<ISessionStage>(sessionStageObject);
+    if (sessionStage == nullptr) {
+        return ERR_INVALID_DATA;
+    }
+    sptr<IRemoteObject> token = data.ReadRemoteObject();
+    RemoveExtensionWindowStageFromSCB(sessionStage, token);
     return ERR_NONE;
 }
 
 int SceneSessionManagerStub::HandleUpdateModalExtensionRect(MessageParcel& data, MessageParcel& reply)
 {
-    int32_t persistentId = data.ReadInt32();
-    int32_t parentId = data.ReadInt32();
+    sptr<IRemoteObject> token = data.ReadRemoteObject();
     int32_t rectX = data.ReadInt32();
     int32_t rectY = data.ReadInt32();
     int32_t rectWidth = data.ReadInt32();
     int32_t rectHeight = data.ReadInt32();
     Rect windowRect{rectX, rectY, rectWidth, rectHeight};
-    UpdateModalExtensionRect(persistentId, parentId, windowRect);
+    UpdateModalExtensionRect(token, windowRect);
     return ERR_NONE;
 }
 
 int SceneSessionManagerStub::HandleProcessModalExtensionPointDown(MessageParcel& data, MessageParcel& reply)
 {
-    int32_t persistentId = data.ReadInt32();
-    int32_t parentId = data.ReadInt32();
+    sptr<IRemoteObject> token = data.ReadRemoteObject();
     int32_t posX = data.ReadInt32();
     int32_t posY = data.ReadInt32();
-    ProcessModalExtensionPointDown(persistentId, parentId, posX, posY);
+    ProcessModalExtensionPointDown(token, posX, posY);
     return ERR_NONE;
 }
 
@@ -907,11 +923,10 @@ int SceneSessionManagerStub::HandleAddOrRemoveSecureSession(MessageParcel& data,
 
 int SceneSessionManagerStub::HandleUpdateExtWindowFlags(MessageParcel& data, MessageParcel& reply)
 {
-    int32_t parentId = data.ReadInt32();
-    int32_t persistentId = data.ReadInt32();
+    sptr<IRemoteObject> token = data.ReadRemoteObject();
     uint32_t extWindowFlags = data.ReadUint32();
     uint32_t extWindowActions = data.ReadUint32();
-    WSError ret = UpdateExtWindowFlags(parentId, persistentId, extWindowFlags, extWindowActions);
+    WSError ret = UpdateExtWindowFlags(token, extWindowFlags, extWindowActions);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }
@@ -963,13 +978,26 @@ int SceneSessionManagerStub::HandleGetCallingWindowRect(MessageParcel&data, Mess
     return ERR_NONE;
 }
 
-int SceneSessionManagerStub::HandleGetWindowModeType(MessageParcel &data, MessageParcel &reply)
+int SceneSessionManagerStub::HandleGetWindowModeType(MessageParcel& data, MessageParcel& reply)
 {
     WindowModeType windowModeType = Rosen::WindowModeType::WINDOW_MODE_OTHER;
     WMError errCode = GetWindowModeType(windowModeType);
     WLOGFI("run HandleGetWindowModeType, windowModeType:%{public}d!", static_cast<int32_t>(windowModeType));
     if (!reply.WriteUint32(static_cast<int32_t>(windowModeType))) {
         WLOGE("Failed to WriteBool");
+        return ERR_INVALID_DATA;
+    }
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
+
+int SceneSessionManagerStub::HandleGetWindowStyleType(MessageParcel& data, MessageParcel& reply)
+{
+    WindowStyleType windowStyleType = Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT;
+    WMError errCode = GetWindowStyleType(windowStyleType);
+    TLOGI(WmsLogTag::WMS_LIFE, "windowStyleType:%{public}d!", static_cast<int32_t>(windowStyleType));
+    if (!reply.WriteUint32(static_cast<int32_t>(windowStyleType))) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Failed to WriteBool");
         return ERR_INVALID_DATA;
     }
     reply.WriteInt32(static_cast<int32_t>(errCode));

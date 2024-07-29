@@ -67,8 +67,6 @@ int SessionStub::ProcessRemoteRequest(uint32_t code, MessageParcel& data, Messag
             return HandleDrawingCompleted(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_RECTCHANGE_LISTENER_REGISTERED):
             return HandleUpdateRectChangeListenerRegistered(data, reply);
-        case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_ACTIVE_STATUS):
-            return HandleUpdateActivateStatus(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SESSION_EVENT):
             return HandleSessionEvent(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_SESSION_RECT):
@@ -145,6 +143,12 @@ int SessionStub::ProcessRemoteRequest(uint32_t code, MessageParcel& data, Messag
             return HandleUpdatePiPControlStatus(data, reply);
         case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_LAYOUT_FULL_SCREEN_CHANGE):
             return HandleLayoutFullScreenChange(data, reply);
+        case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_FORCE_LANDSCAPE_CONFIG):
+            return HandleGetAppForceLandscapeConfig(data, reply);
+        case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_STATUSBAR_HEIGHT):
+            return HandleGetStatusBarHeight(data, reply);
+        case static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_DIALOG_SESSION_BACKGESTURE_ENABLE):
+            return HandleSetDialogSessionBackGestureEnabled(data, reply);
         default:
             WLOGFE("Failed to find function handler!");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -279,6 +283,7 @@ int SessionStub::HandleConnect(MessageParcel& data, MessageParcel& reply)
         reply.WriteBool(property->GetFullScreenStart());
         reply.WriteBool(property->GetCompatibleModeInPc());
         reply.WriteBool(property->GetIsSupportDragInPcCompatibleMode());
+        reply.WriteBool(property->GetIsPcAppInPad());
     }
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
@@ -408,15 +413,6 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
         abilitySessionInfo->startSetting.reset(data.ReadParcelable<AAFwk::AbilityStartSetting>());
     }
     const WSError& errCode = PendingSessionActivation(abilitySessionInfo);
-    reply.WriteUint32(static_cast<uint32_t>(errCode));
-    return ERR_NONE;
-}
-
-int SessionStub::HandleUpdateActivateStatus(MessageParcel& data, MessageParcel& reply)
-{
-    WLOGFD("HandleUpdateActivateStatus!");
-    bool isActive = data.ReadBool();
-    const WSError& errCode = UpdateActiveStatus(isActive);
     reply.WriteUint32(static_cast<uint32_t>(errCode));
     return ERR_NONE;
 }
@@ -750,6 +746,33 @@ int SessionStub::HandleUpdatePropertyByAction(MessageParcel& data, MessageParcel
         TLOGW(WmsLogTag::DEFAULT, "Property not exist!");
     }
     const WMError ret = UpdateSessionPropertyByAction(property, action);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleGetAppForceLandscapeConfig(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::DEFAULT, "called");
+    AppForceLandscapeConfig config;
+    WMError ret = GetAppForceLandscapeConfig(config);
+    reply.WriteParcelable(&config);
+    reply.WriteInt32(static_cast<int32_t>(ret));
+    return ERR_NONE;
+}
+
+int SessionStub::HandleGetStatusBarHeight(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t height = GetStatusBarHeight();
+    TLOGD(WmsLogTag::WMS_IMMS, "StatusBarVectorHeight is %{public}d", height);
+    reply.WriteInt32(height);
+    return ERR_NONE;
+}
+
+int SessionStub::HandleSetDialogSessionBackGestureEnabled(MessageParcel& data, MessageParcel& reply)
+{
+    TLOGD(WmsLogTag::WMS_DIALOG, "called");
+    bool isEnabled = data.ReadBool();
+    WSError ret = SetDialogSessionBackGestureEnabled(isEnabled);
     reply.WriteInt32(static_cast<int32_t>(ret));
     return ERR_NONE;
 }

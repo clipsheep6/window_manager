@@ -196,24 +196,6 @@ HWTEST_F(SessionProxyTest, NotifySessionException, Function | SmallTest | Level2
 }
 
 /**
- * @tc.name: UpdateActiveStatus
- * @tc.desc: normal function
- * @tc.type: FUNC
- */
-HWTEST_F(SessionProxyTest, UpdateActiveStatus, Function | SmallTest | Level2)
-{
-    GTEST_LOG_(INFO) << "SessionProxyTest: UpdateActiveStatus start";
-    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
-    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
-    sptr<AAFwk::SessionInfo> abilitySessionInfo = new(std::nothrow) AAFwk::SessionInfo();
-    ASSERT_NE(abilitySessionInfo, nullptr);
-
-    WSError res = sProxy->UpdateActiveStatus(abilitySessionInfo);
-    ASSERT_EQ(res, WSError::WS_OK);
-    GTEST_LOG_(INFO) << "SessionProxyTest: UpdateActiveStatus end";
-}
-
-/**
  * @tc.name: OnSessionEvent
  * @tc.desc: normal function
  * @tc.type: FUNC
@@ -537,6 +519,21 @@ HWTEST_F(SessionProxyTest, UpdatePiPControlStatus, Function | SmallTest | Level2
     WSError res = sProxy->UpdatePiPControlStatus(controlType, status);
     ASSERT_EQ(res, WSError::WS_OK);
     GTEST_LOG_(INFO) << "SessionProxyTest: UpdatePiPControlStatus end";
+}
+
+/**
+ * @tc.name: GetStatusBarHeight
+ * @tc.desc: normal function
+ * @tc.type: FUNC
+ */
+HWTEST_F(SessionProxyTest, GetStatusBarHeight, Function | SmallTest | Level2)
+{
+    GTEST_LOG_(INFO) << "SessionProxyTest: GetStatusBarHeight start";
+    sptr<IRemoteObject> iRemoteObjectMocker = new IRemoteObjectMocker();
+    SessionProxy* sProxy = new(std::nothrow) SessionProxy(iRemoteObjectMocker);
+    int32_t res = sProxy->GetStatusBarHeight();
+    ASSERT_EQ(res, 0);
+    GTEST_LOG_(INFO) << "SessionProxyTest: GetStatusBarHeight end";
 }
 } // namespace
 } // namespace Rosen

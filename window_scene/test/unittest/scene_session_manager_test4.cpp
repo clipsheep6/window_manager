@@ -769,7 +769,7 @@ HWTEST_F(SceneSessionManagerTest4, CacVisibleWindowNum, Function | SmallTest | L
     ASSERT_NE(sceneSession04, nullptr);
     ASSERT_NE(sceneSession01->property_, nullptr);
     sceneSession01->property_->type_ = WindowType::WINDOW_TYPE_WALLPAPER;
-    sceneSession01->SetVisible(true);
+    sceneSession01->SetRSVisible(true);
     sceneSession02->state_ = SessionState::STATE_BACKGROUND;
     ASSERT_NE(sceneSession03->property_, nullptr);
     sceneSession03->property_->type_ = WindowType::APP_MAIN_WINDOW_END;
@@ -1470,11 +1470,9 @@ HWTEST_F(SceneSessionManagerTest4, GetIsLayoutFullScreen, Function | SmallTest |
 HWTEST_F(SceneSessionManagerTest4, UpdateExtWindowFlags, Function | SmallTest | Level3)
 {
     ASSERT_NE(ssm_, nullptr);
-    int32_t parentId = 1;
-    int32_t persistentId = 0;
     uint32_t extWindowFlags = 0;
     uint32_t extWindowActions = 0;
-    auto ret = ssm_->UpdateExtWindowFlags(parentId, persistentId, extWindowFlags, extWindowActions);
+    auto ret = ssm_->UpdateExtWindowFlags(nullptr, extWindowFlags, extWindowActions);
     EXPECT_EQ(ret, WSError::WS_OK);
 }
 

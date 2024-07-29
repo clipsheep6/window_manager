@@ -530,6 +530,38 @@ static napi_value CreateJsSystemBarRegionTintObject(napi_env env, const SystemBa
     return objValue;
 }
 
+napi_value CreateJsWindowInfoArrayObject(napi_env env, const std::vector<sptr<WindowVisibilityInfo>>& infos)
+{
+    napi_value arrayValue = nullptr;
+    napi_create_array_with_length(env, infos.size(), &arrayValue);
+    if (arrayValue == nullptr) {
+        WLOGFE("[NAPI]Failed to convert windowVisibilityInfo to jsArrayObject");
+        return nullptr;
+    }
+    uint32_t index = 0;
+    for (size_t i = 0; i < infos.size(); i++) {
+        auto info = infos[i];
+        auto windowType = info->GetWindowType();
+        if (windowType >= WindowType::APP_MAIN_WINDOW_BASE && windowType < WindowType::APP_MAIN_WINDOW_END) {
+            napi_set_element(env, arrayValue, index++, CreateJsWindowInfoObject(env, info));
+        }
+    }
+    return arrayValue;
+}
+
+napi_value CreateJsWindowInfoObject(napi_env env, const sptr<WindowVisibilityInfo>& info)
+{
+    napi_value objValue = nullptr;
+    CHECK_NAPI_CREATE_OBJECT_RETURN_IF_NULL(env, objValue);
+    napi_set_named_property(env, objValue, "rect", GetRectAndConvertToJsValue(env, info->GetRect()));
+    napi_set_named_property(env, objValue, "bundleName", CreateJsValue(env, info->GetBundleName()));
+    napi_set_named_property(env, objValue, "abilityName", CreateJsValue(env, info->GetAbilityName()));
+    napi_set_named_property(env, objValue, "windowId", CreateJsValue(env, info->GetWindowId()));
+    napi_set_named_property(env, objValue, "windowStatusType",
+        CreateJsValue(env, static_cast<int32_t>(info->GetWindowStatus())));
+    return objValue;
+}
+
 napi_value CreateJsSystemBarRegionTintArrayObject(napi_env env, const SystemBarRegionTints& tints)
 {
     if (tints.empty()) {
@@ -914,6 +946,17 @@ bool CheckCallingPermission(std::string permission)
     return true;
 }
 
+bool ParseSystemWindowTypeForApiWindowType(int32_t apiWindowType, WindowType& windowType)
+{
+    if (JS_TO_NATIVE_WINDOW_TYPE_MAP.count(static_cast<ApiWindowType>(apiWindowType)) != 0) {
+        windowType = JS_TO_NATIVE_WINDOW_TYPE_MAP.at(static_cast<ApiWindowType>(apiWindowType));
+        if (WindowHelper::IsSystemWindow(windowType)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool GetAPI7Ability(napi_env env, AppExecFwk::Ability* &ability)
 {
     napi_value global;
@@ -958,6 +1001,25 @@ bool GetWindowMaskFromJsValue(napi_env env, napi_value jsObject, std::vector<std
         windowMask.emplace_back(elementArray);
     }
     return true;
+}
+
+napi_value ExtensionWindowAttributeInit(napi_env env)
+{
+    if (env == nullptr) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "env is nullptr");
+        return nullptr;
+    }
+    napi_value objValue = nullptr;
+    napi_create_object(env, &objValue);
+    if (objValue == nullptr) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Failed to create object");
+        return nullptr;
+    }
+    napi_set_named_property(env, objValue, "SYSTEM_WINDOW",
+        CreateJsValue(env, static_cast<int32_t>(ExtensionWindowAttribute::SYSTEM_WINDOW)));
+    napi_set_named_property(env, objValue, "SUB_WINDOW",
+        CreateJsValue(env, static_cast<int32_t>(ExtensionWindowAttribute::SUB_WINDOW)));
+    return objValue;
 }
 } // namespace Rosen
 } // namespace OHOS

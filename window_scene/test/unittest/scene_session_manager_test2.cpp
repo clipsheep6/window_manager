@@ -118,12 +118,10 @@ void SceneSessionManagerTest2::TearDownTestCase()
 
 void SceneSessionManagerTest2::SetUp()
 {
-    ssm_->sceneSessionMap_.clear();
 }
 
 void SceneSessionManagerTest2::TearDown()
 {
-    ssm_->sceneSessionMap_.clear();
     usleep(WAIT_SYNC_IN_NS);
 }
 
@@ -2223,7 +2221,7 @@ HWTEST_F(SceneSessionManagerTest2, NotifyCreateToastSession, Function | SmallTes
     int32_t persistentId = Info.persistentId_;
     Info.abilityName_ = "testInfo1a";
     Info.bundleName_ = "testInfo1b";
-    sptr<SceneSession> session = new(std::nothrow) SceneSession(Info, nullptr);
+    sptr<SceneSession> session = new (std::nothrow) SceneSession(Info, nullptr);
     ssm_->NotifyCreateToastSession(persistentId, session);
 }
 }

@@ -27,7 +27,9 @@ group("unittest") {
     ":ws_event_stage_test",
     ":ws_extension_session_manager_test",
     ":ws_extension_session_test",
+    ":ws_ffrt_helper_test",
     ":ws_fold_screen_controller_test",
+    ":ws_fold_screen_sensor_manager_test",
     ":ws_fold_screen_state_machine_test",
     ":ws_intention_event_manager_test",
     ":ws_keyboard_session_test",
@@ -88,6 +90,7 @@ group("unittest") {
     ":ws_setting_observer_test",
     ":ws_setting_provider_test",
     ":ws_single_display_fold_policy_test",
+    ":ws_single_display_pocket_fold_policy_test",
     ":ws_single_display_sensor_fold_state_manager_test",
     ":ws_sub_session_test",
     ":ws_system_session_test",
@@ -183,6 +186,20 @@ ohos_unittest("ws_single_display_fold_policy_test") {
   ]
 }
 
+ohos_unittest("ws_single_display_pocket_fold_policy_test") {
+  module_out_path = module_out_path
+
+  sources = [ "single_display_pocket_fold_policy_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_runtime:app_manager",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
 ohos_unittest("ws_sensor_fold_state_manager_test") {
   module_out_path = module_out_path
 
@@ -225,6 +242,27 @@ ohos_unittest("ws_dual_display_sensor_fold_state_manager_test") {
     "hilog:libhilog",
     "init:libbegetutil",
   ]
+}
+
+ohos_unittest("ws_fold_screen_sensor_manager_test") {
+  module_out_path = module_out_path
+
+  sources = [ "fold_screen_sensor_manager_test.cpp" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_runtime:app_manager",
+    "c_utils:utils",
+    "hilog:libhilog",
+    "init:libbegetutil",
+  ]
+
+  defines = []
+  if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {
+    external_deps += [ "sensor:sensor_interface_native" ]
+    defines += [ "SENSOR_ENABLE" ]
+  }
 }
 
 ohos_unittest("ws_screen_session_publish_test") {
@@ -461,10 +499,25 @@ ohos_unittest("ws_extension_session_test") {
   include_dirs = [ "${window_base_path}/window_scene/session/host/include" ]
 
   deps = [ ":ws_unittest_common" ]
+  defines = [ "ACCESSIBILITY_MOCK" ]
 
   external_deps = [
     "ability_base:session_info",
     "ability_base:want",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
+ohos_unittest("ws_ffrt_helper_test") {
+  module_out_path = module_out_path
+
+  sources = [ "ws_ffrt_helper_test.cpp" ]
+  include_dirs = [ "${window_base_path}/window_scene/session/host/include" ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
   ]
@@ -593,6 +646,9 @@ ohos_unittest("ws_screen_session_manager_client_proxy_test") {
 
 ohos_unittest("ws_screen_session_manager_client_stub_test") {
   module_out_path = module_out_path
+
+  include_dirs =
+      [ "${window_base_path}/window_scene/screen_session_manager/include/zidl" ]
 
   sources = [ "screen_session_manager_client_stub_test.cpp" ]
 
@@ -949,11 +1005,13 @@ ohos_unittest("ws_scene_session_dirty_manager_test") {
     "ability_base:configuration",
     "ability_base:session_info",
     "ability_runtime:ability_context_native",
+    "ability_runtime:app_manager",
     "ability_runtime:mission_info",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
     "input:libmmi-client",
   ]
 }
@@ -973,7 +1031,10 @@ ohos_unittest("ws_window_event_channel_test") {
 
   sources = [ "window_event_channel_test.cpp" ]
 
-  deps = [ ":ws_unittest_common" ]
+  deps = [
+    ":ws_unittest_common",
+    "${window_base_path}/window_scene/interfaces/innerkits:libwsutils",
+  ]
 
   external_deps = [
     "c_utils:utils",
@@ -1448,7 +1509,6 @@ ohos_static_library("ws_unittest_common") {
   ]
 
   deps = [
-    "${bundlefwk_inner_api_path}/appexecfwk_base:appexecfwk_base",
     "${window_base_path}/dm:libdm",
     "${window_base_path}/utils:libwmutil",
     "${window_base_path}/utils:libwmutil_base",
@@ -1476,13 +1536,17 @@ ohos_static_library("ws_unittest_common") {
 
   external_deps = [
     "ability_base:configuration",
-    "ability_base:want",
     "accessibility:accessibility_common",
     "accessibility:accessibility_interface",
     "c_utils:utils",
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+  ]
+
+  public_external_deps = [
+    "ability_base:session_info",
+    "ability_base:want",
   ]
   defines = []
   if (defined(global_parts_info) && defined(global_parts_info.sensors_sensor)) {

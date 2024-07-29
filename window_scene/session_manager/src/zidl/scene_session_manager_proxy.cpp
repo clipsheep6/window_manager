@@ -21,6 +21,7 @@
 #include <ui/rs_surface_node.h>
 
 #include "marshalling_helper.h"
+#include "permission.h"
 #include "window_manager.h"
 #include "window_manager_hilog.h"
 
@@ -1542,7 +1543,7 @@ WSError SceneSessionManagerProxy::ShiftAppWindowFocus(int32_t sourcePersistentId
     return static_cast<WSError>(reply.ReadInt32());
 }
 
-void SceneSessionManagerProxy::UpdateModalExtensionRect(int32_t persistentId, int32_t parentId, Rect rect)
+void SceneSessionManagerProxy::UpdateModalExtensionRect(const sptr<IRemoteObject>& token, Rect rect)
 {
     MessageOption option(MessageOption::TF_SYNC);
     MessageParcel data;
@@ -1551,12 +1552,8 @@ void SceneSessionManagerProxy::UpdateModalExtensionRect(int32_t persistentId, in
         TLOGE(WmsLogTag::WMS_UIEXT, "Write interface token failed.");
         return;
     }
-    if (!data.WriteInt32(persistentId)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write persistentId failed");
-        return;
-    }
-    if (!data.WriteInt32(parentId)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write parentId failed");
+    if (!data.WriteRemoteObject(token)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write token failed");
         return;
     }
     if (!data.WriteInt32(rect.posX_)) {
@@ -1582,8 +1579,8 @@ void SceneSessionManagerProxy::UpdateModalExtensionRect(int32_t persistentId, in
     }
 }
 
-void SceneSessionManagerProxy::ProcessModalExtensionPointDown(int32_t persistentId, int32_t parentId,
-    int32_t posX, int32_t posY)
+void SceneSessionManagerProxy::ProcessModalExtensionPointDown(const sptr<IRemoteObject>& token, int32_t posX,
+    int32_t posY)
 {
     MessageOption option(MessageOption::TF_SYNC);
     MessageParcel data;
@@ -1592,12 +1589,8 @@ void SceneSessionManagerProxy::ProcessModalExtensionPointDown(int32_t persistent
         TLOGE(WmsLogTag::WMS_UIEXT, "Write interface token failed.");
         return;
     }
-    if (!data.WriteInt32(persistentId)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write persistentId failed");
-        return;
-    }
-    if (!data.WriteInt32(parentId)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write parentId failed");
+    if (!data.WriteRemoteObject(token)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write token failed");
         return;
     }
     if (!data.WriteInt32(posX)) {
@@ -1616,8 +1609,12 @@ void SceneSessionManagerProxy::ProcessModalExtensionPointDown(int32_t persistent
 }
 
 void SceneSessionManagerProxy::AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage,
-    int32_t persistentId, int32_t parentId, UIExtensionUsage usage, uint64_t surfaceNodeId)
+    const sptr<IRemoteObject>& token, uint64_t surfaceNodeId)
 {
+    if (sessionStage == nullptr || token == nullptr) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "input is nullptr");
+        return;
+    }
     MessageOption option(MessageOption::TF_SYNC);
     MessageParcel data;
     MessageParcel reply;
@@ -1629,16 +1626,8 @@ void SceneSessionManagerProxy::AddExtensionWindowStageToSCB(const sptr<ISessionS
         TLOGE(WmsLogTag::WMS_UIEXT, "Write ISessionStage failed!");
         return;
     }
-    if (!data.WriteInt32(persistentId)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write persistentId failed");
-        return;
-    }
-    if (!data.WriteInt32(parentId)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write parentId failed");
-        return;
-    }
-    if (!data.WriteUint32(static_cast<uint32_t>(usage))) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write usage failed");
+    if (!data.WriteRemoteObject(token)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write token failed");
         return;
     }
     if (!data.WriteUint64(static_cast<uint64_t>(surfaceNodeId))) {
@@ -1647,6 +1636,35 @@ void SceneSessionManagerProxy::AddExtensionWindowStageToSCB(const sptr<ISessionS
     }
     if (Remote()->SendRequest(static_cast<uint32_t>(
                               SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB),
+                              data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "SendRequest failed");
+    }
+}
+
+void SceneSessionManagerProxy::RemoveExtensionWindowStageFromSCB(const sptr<ISessionStage>& sessionStage,
+    const sptr<IRemoteObject>& token)
+{
+    if (sessionStage == nullptr || token == nullptr) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "input is nullptr");
+        return;
+    }
+    MessageOption option(MessageOption::TF_SYNC);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write InterfaceToken failed!");
+        return;
+    }
+    if (!data.WriteRemoteObject(sessionStage->AsObject())) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write ISessionStage failed!");
+        return;
+    }
+    if (!data.WriteRemoteObject(token)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write token failed");
+        return;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+                              SceneSessionManagerMessage::TRANS_ID_REMOVE_EXTENSION_WINDOW_STAGE_FROM_SCB),
                               data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_UIEXT, "SendRequest failed");
     }
@@ -1678,7 +1696,7 @@ WSError SceneSessionManagerProxy::AddOrRemoveSecureSession(int32_t persistentId,
     return static_cast<WSError>(reply.ReadInt32());
 }
 
-WSError SceneSessionManagerProxy::UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags,
+WSError SceneSessionManagerProxy::UpdateExtWindowFlags(const sptr<IRemoteObject>& token, uint32_t extWindowFlags,
     uint32_t extWindowActions)
 {
     TLOGD(WmsLogTag::WMS_UIEXT, "run SceneSessionManagerProxy::UpdateExtWindowFlags");
@@ -1689,12 +1707,8 @@ WSError SceneSessionManagerProxy::UpdateExtWindowFlags(int32_t parentId, int32_t
         TLOGE(WmsLogTag::WMS_UIEXT, "Write interface token failed.");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteInt32(parentId)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write parentId failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!data.WriteInt32(persistentId)) {
-        TLOGE(WmsLogTag::WMS_UIEXT, "Write persistentId failed");
+    if (!data.WriteRemoteObject(token)) {
+        TLOGE(WmsLogTag::WMS_UIEXT, "Write token failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (!data.WriteUint32(extWindowFlags)) {
@@ -1810,6 +1824,43 @@ WMError SceneSessionManagerProxy::GetWindowModeType(WindowModeType& windowModeTy
         return WMError::WM_ERROR_IPC_FAILED;
     }
     windowModeType = static_cast<WindowModeType>(reply.ReadUint32());
+    return static_cast<WMError>(reply.ReadInt32());
+}
+
+WMError SceneSessionManagerProxy::MinimizeAllAppWindows(DisplayId displayId)
+{
+    if (!Permission::IsSystemCallingOrStartByHdcd(true)) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right, displayId %{public}" PRIu64, displayId);
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    TLOGE(WmsLogTag::WMS_LIFE, "Not support minimize, displayId %{public}" PRIu64, displayId);
+    return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+}
+
+WMError SceneSessionManagerProxy::ToggleShownStateForAllAppWindows()
+{
+    if (!Permission::IsSystemCallingOrStartByHdcd(true)) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Not system app, no right");
+        return WMError::WM_ERROR_NOT_SYSTEM_APP;
+    }
+    TLOGE(WmsLogTag::WMS_LIFE, "Not support call toggleShownState");
+    return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+}
+
+WMError SceneSessionManagerProxy::GetWindowStyleType(WindowStyleType& windowStyleType)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_LIFE, "GetwindowStyleType Write interfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SceneSessionManagerMessage::TRANS_ID_GET_WINDOW_STYLE_TYPE), data, reply, option) != ERR_NONE) {
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    windowStyleType = static_cast<WindowStyleType>(reply.ReadUint32());
     return static_cast<WMError>(reply.ReadInt32());
 }
 } // namespace OHOS::Rosen

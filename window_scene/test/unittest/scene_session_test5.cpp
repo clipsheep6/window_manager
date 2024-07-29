@@ -560,7 +560,6 @@ HWTEST_F(SceneSessionTest5, UpdateSessionPropertyByAction, Function | SmallTest 
     SessionInfo info;
     info.abilityName_ = "UpdateSessionPropertyByAction";
     info.bundleName_ = "UpdateSessionPropertyByAction";
-    info.abilityInfo = std::make_shared<AppExecFwk::AbilityInfo>();
     info.windowType_ = static_cast<uint32_t>(WindowType::APP_MAIN_WINDOW_BASE);
     sptr<SceneSession> session = sptr<SceneSession>::MakeSptr(info, nullptr);
     EXPECT_NE(session, nullptr);
@@ -1117,6 +1116,33 @@ HWTEST_F(SceneSessionTest5, HandleActionUpdateMaximizeState, Function | SmallTes
     EXPECT_EQ(WMError::WM_OK, res);
     res = session->HandleActionUpdateAnimationFlag(property, session, action);
     EXPECT_EQ(WMError::WM_OK, res);
+}
+
+/**
+ * @tc.name: SetUniqueDensityDpi
+ * @tc.desc: SetUniqueDensityDpi function01
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionTest5, SetUniqueDensityDpi, Function | SmallTest | Level2)
+{
+    SessionInfo info;
+    info.abilityName_ = "SetUniqueDensityDpi";
+    info.bundleName_ = "SetUniqueDensityDpi";
+    info.windowType_ = static_cast<uint32_t>(WindowType::ABOVE_APP_SYSTEM_WINDOW_BASE);
+    info.isSystem_ = true;
+    sptr<SceneSession> session = sptr<SceneSession>::MakeSptr(info, nullptr);
+    EXPECT_NE(session, nullptr);
+    session->sessionStage_ = nullptr;
+    EXPECT_EQ(WMError::WM_ERROR_INVALID_SESSION, session->SetUniqueDensityDpi(true, 520));
+    session->sessionInfo_.isSystem_ = false;
+    session->state_ = SessionState::STATE_DISCONNECT;
+    EXPECT_EQ(WMError::WM_ERROR_INVALID_SESSION, session->SetUniqueDensityDpi(true, 520));
+    session->state_ = SessionState::STATE_CONNECT;
+    EXPECT_EQ(WMError::WM_ERROR_NULLPTR, session->SetUniqueDensityDpi(true, 520));
+    EXPECT_EQ(WMError::WM_ERROR_INVALID_PARAM, session->SetUniqueDensityDpi(true, 79));
+    EXPECT_EQ(WMError::WM_ERROR_INVALID_PARAM, session->SetUniqueDensityDpi(true, 641));
+    EXPECT_EQ(WMError::WM_ERROR_NULLPTR, session->SetUniqueDensityDpi(false, 79));
+    EXPECT_EQ(WMError::WM_ERROR_NULLPTR, session->SetUniqueDensityDpi(false, 641));
 }
 
 }

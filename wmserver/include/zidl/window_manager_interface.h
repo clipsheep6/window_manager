@@ -152,6 +152,19 @@ public:
     {
         return WSError::WS_OK;
     }
+    virtual WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError RaiseWindowToTop(int32_t persistentId) { return WSError::WS_OK; }
+    virtual WSError UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener)
+    {
+        return WSError::WS_OK;
+    }
+    virtual WSError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId)
+    {
+        return WSError::WS_ERROR_DEVICE_NOT_SUPPORT;
+    }
     virtual WSError CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
         const sptr<IWindowEventChannel>& eventChannel, const std::shared_ptr<RSSurfaceNode>& surfaceNode,
         sptr<WindowSessionProperty> property, int32_t& persistentId, sptr<ISession>& session,
@@ -184,33 +197,21 @@ public:
     {
         return WMError::WM_OK;
     }
-    virtual WSError RaiseWindowToTop(int32_t persistentId) { return WSError::WS_OK; }
-    virtual WSError NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)
-    {
-        return WSError::WS_OK;
-    }
     virtual WMError GetSnapshotByWindowId(int32_t persistentId, std::shared_ptr<Media::PixelMap>& pixelMap)
     {
         return WMError::WM_OK;
     }
-    virtual WSError UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener)
-    {
-        return WSError::WS_OK;
-    }
-    virtual WSError ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId)
-    {
-        return WSError::WS_ERROR_DEVICE_NOT_SUPPORT;
-    }
-    virtual void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage, int32_t persistentId,
-        int32_t parentId, UIExtensionUsage usage, uint64_t surfaceNodeId) {}
-    virtual void UpdateModalExtensionRect(int32_t persistentId, int32_t parentId, Rect rect) {}
-    virtual void ProcessModalExtensionPointDown(int32_t persistentId, int32_t parentId,
-        int32_t posX, int32_t posY) {}
+    virtual void AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage,
+        const sptr<IRemoteObject>& token, uint64_t surfaceNodeId) {}
+    virtual void RemoveExtensionWindowStageFromSCB(const sptr<ISessionStage>& sessionStage,
+        const sptr<IRemoteObject>& token) {}
+    virtual void UpdateModalExtensionRect(const sptr<IRemoteObject>& token, Rect rect) {}
+    virtual void ProcessModalExtensionPointDown(const sptr<IRemoteObject>& token, int32_t posX, int32_t posY) {}
     virtual WSError AddOrRemoveSecureSession(int32_t persistentId, bool shouldHide)
     {
         return WSError::WS_OK;
     }
-    virtual WSError UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags,
+    virtual WSError UpdateExtWindowFlags(const sptr<IRemoteObject>& token, uint32_t extWindowFlags,
         uint32_t extWindowActions)
     {
         return WSError::WS_OK;
@@ -228,6 +229,10 @@ public:
         return WMError::WM_OK;
     }
     virtual WMError GetWindowModeType(WindowModeType& windowModeType)
+    {
+        return WMError::WM_OK;
+    };
+    virtual WMError GetWindowStyleType(WindowStyleType& windowStyleType)
     {
         return WMError::WM_OK;
     };

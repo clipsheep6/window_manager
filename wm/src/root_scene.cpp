@@ -203,14 +203,14 @@ int64_t RootScene::GetVSyncPeriod()
     return vsyncStation_->GetVSyncPeriod();
 }
 
-void RootScene::FlushFrameRate(uint32_t rate, bool isAnimatorStopped, uint32_t rateType)
+void RootScene::FlushFrameRate(uint32_t rate, int32_t animatorExpectedFrameRate, uint32_t rateType)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (vsyncStation_ == nullptr) {
         TLOGE(WmsLogTag::WMS_MAIN, "vsyncStation is nullptr");
         return;
     }
-    vsyncStation_->FlushFrameRate(rate, isAnimatorStopped, rateType);
+    vsyncStation_->FlushFrameRate(rate, animatorExpectedFrameRate, rateType);
 }
 
 void RootScene::OnBundleUpdated(const std::string& bundleName)
@@ -244,6 +244,16 @@ void RootScene::SetUiDvsyncSwitch(bool dvsyncSwitch)
         return;
     }
     vsyncStation_->SetUiDvsyncSwitch(dvsyncSwitch);
+}
+
+WMError RootScene::GetSessionRectByType(AvoidAreaType type, WSRect& rect)
+{
+    if (getSessionRectCallback_ == nullptr) {
+        TLOGE(WmsLogTag::WMS_IMMS, "getSessionRectCallback is nullptr");
+        return WMError::WM_ERROR_NULLPTR;
+    }
+    rect = getSessionRectCallback_(type);
+    return WMError::WM_OK;
 }
 } // namespace Rosen
 } // namespace OHOS

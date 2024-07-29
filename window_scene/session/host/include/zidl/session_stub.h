@@ -42,7 +42,6 @@ private:
     int HandleDrawingCompleted(MessageParcel& data, MessageParcel& reply);
 
     // scene session
-    int HandleUpdateActivateStatus(MessageParcel& data, MessageParcel& reply);
     int HandleSessionEvent(MessageParcel& data, MessageParcel& reply);
     int HandleUpdateSessionRect(MessageParcel& data, MessageParcel& reply);
     int HandleRaiseToAppTop(MessageParcel& data, MessageParcel& reply);
@@ -71,6 +70,9 @@ private:
     int HandleAdjustKeyboardLayout(MessageParcel& data, MessageParcel& reply);
     int HandleUpdatePropertyByAction(MessageParcel& data, MessageParcel& reply);
     int HandleLayoutFullScreenChange(MessageParcel& data, MessageParcel& reply);
+    int HandleGetAppForceLandscapeConfig(MessageParcel& data, MessageParcel& reply);
+    int HandleGetStatusBarHeight(MessageParcel& data, MessageParcel& reply);
+    int HandleSetDialogSessionBackGestureEnabled(MessageParcel& data, MessageParcel& reply);
 
     // extension extension
     int HandleTransferAbilityResult(MessageParcel& data, MessageParcel& reply);

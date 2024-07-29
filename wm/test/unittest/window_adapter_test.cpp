@@ -286,10 +286,11 @@ HWTEST_F(WindowAdapterTest, DestroyAndDisconnectSpecificSessionWithDetachCallbac
 HWTEST_F(WindowAdapterTest, UpdateModalExtensionRect, Function | SmallTest | Level2)
 {
     WindowAdapter windowAdapter;
-    int32_t persistentId = 12345;
-    int32_t parentId = 1234;
     Rect rect { 1, 2, 3, 4 };
-    windowAdapter.UpdateModalExtensionRect(persistentId, parentId, rect);
+    sptr<IRemoteObject> token = sptr<IRemoteObjectMocker>::MakeSptr();
+    ASSERT_NE(token, nullptr);
+    windowAdapter.UpdateModalExtensionRect(token, rect);
+    windowAdapter.UpdateModalExtensionRect(nullptr, rect);
     auto ret = windowAdapter.InitWMSProxy();
     EXPECT_TRUE(ret);
 }
@@ -302,9 +303,36 @@ HWTEST_F(WindowAdapterTest, UpdateModalExtensionRect, Function | SmallTest | Lev
 HWTEST_F(WindowAdapterTest, ProcessModalExtensionPointDown, Function | SmallTest | Level2)
 {
     WindowAdapter windowAdapter;
-    int32_t persistentId = 12345;
-    int32_t parentId = 1234;
-    windowAdapter.ProcessModalExtensionPointDown(persistentId, parentId, 0, 0);
+    sptr<IRemoteObject> token = sptr<IRemoteObjectMocker>::MakeSptr();
+    ASSERT_NE(token, nullptr);
+    windowAdapter.ProcessModalExtensionPointDown(token, 0, 0);
+    windowAdapter.ProcessModalExtensionPointDown(nullptr, 0, 0);
+    auto ret = windowAdapter.InitWMSProxy();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: AddExtensionWindowStageToSCB
+ * @tc.desc: WindowAdapter/AddExtensionWindowStageToSCB
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowAdapterTest, AddExtensionWindowStageToSCB, Function | SmallTest | Level2)
+{
+    WindowAdapter windowAdapter;
+    windowAdapter.AddExtensionWindowStageToSCB(nullptr, nullptr, 0);
+    auto ret = windowAdapter.InitWMSProxy();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.name: RemoveExtensionWindowStageFromSCB
+ * @tc.desc: WindowAdapter/RemoveExtensionWindowStageFromSCB
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowAdapterTest, RemoveExtensionWindowStageFromSCB, Function | SmallTest | Level2)
+{
+    WindowAdapter windowAdapter;
+    windowAdapter.RemoveExtensionWindowStageFromSCB(nullptr, nullptr);
     auto ret = windowAdapter.InitWMSProxy();
     EXPECT_TRUE(ret);
 }
@@ -330,10 +358,11 @@ HWTEST_F(WindowAdapterTest, AddOrRemoveSecureSession, Function | SmallTest | Lev
  */
 HWTEST_F(WindowAdapterTest, UpdateExtWindowFlags, Function | SmallTest | Level2)
 {
-    int32_t parentId = 1234;
-    int32_t persistentId = 12345;
     WindowAdapter windowAdapter;
-    windowAdapter.UpdateExtWindowFlags(parentId, persistentId, 7, 7);
+    sptr<IRemoteObject> token = sptr<IRemoteObjectMocker>::MakeSptr();
+    ASSERT_NE(token, nullptr);
+    windowAdapter.UpdateExtWindowFlags(token, 7, 7);
+    windowAdapter.UpdateExtWindowFlags(nullptr, 7, 7);
     auto ret = windowAdapter.InitWMSProxy();
     ASSERT_EQ(true, ret);
 }
@@ -536,6 +565,20 @@ HWTEST_F(WindowAdapterTest, GetHostWindowRect, Function | SmallTest | Level2)
     auto ret = windowAdapter.GetHostWindowRect(hostWindowId, rect);
     ASSERT_EQ(WMError::WM_OK, ret);
 }
+
+/**
+ * @tc.name: GetWindowStyleType
+ * @tc.desc: WindowAdapter/GetWindowStyleType
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowAdapterTest, GetWindowStyleType, Function | SmallTest | Level2)
+{
+    WindowAdapter windowAdapter;
+    WindowStyleType windowStyleType = Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT;
+    windowAdapter.GetWindowStyleType(windowStyleType);
+    ASSERT_EQ(Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT, windowStyleType);
+}
+
 }
 }
 }

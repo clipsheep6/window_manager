@@ -229,8 +229,8 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
         Rect preRect = property->GetWindowRect();
         Rect rect = { reply.ReadInt32(), reply.ReadInt32(), reply.ReadUint32(), reply.ReadUint32() };
         TLOGI(WmsLogTag::WMS_LAYOUT, "updateRect when connect."
-            "preRect:[%{public}d, %{public}d, %{public}u, %{public}u]"
-            "rect:[%{public}d, %{public}d, %{public}u, %{public}u]",
+            "preRect:[%{public}d,%{public}d,%{public}u,%{public}u]"
+            "rect:[%{public}d,%{public}d,%{public}u,%{public}u]",
             preRect.posX_, preRect.posY_, preRect.width_, preRect.height_,
             rect.posX_, rect.posY_, rect.width_, rect.height_);
         if (preRect.IsUninitializedRect() && !rect.IsUninitializedRect()) {
@@ -240,6 +240,7 @@ WSError SessionProxy::Connect(const sptr<ISessionStage>& sessionStage, const spt
         property->SetFullScreenStart(reply.ReadBool());
         property->SetCompatibleModeInPc(reply.ReadBool());
         property->SetIsSupportDragInPcCompatibleMode(reply.ReadBool());
+        property->SetIsPcAppInPad(reply.ReadBool());
     }
     int32_t ret = reply.ReadInt32();
     return static_cast<WSError>(ret);
@@ -468,28 +469,6 @@ WSError SessionProxy::NotifySessionException(const sptr<AAFwk::SessionInfo> abil
     if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_EXCEPTION),
         data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_LIFE, "SendRequest failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    int32_t ret = reply.ReadInt32();
-    return static_cast<WSError>(ret);
-}
-
-WSError SessionProxy::UpdateActiveStatus(bool isActive)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        WLOGFE("WriteInterfaceToken failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (!(data.WriteBool(isActive))) {
-        WLOGFE("Write active status failed");
-        return WSError::WS_ERROR_IPC_FAILED;
-    }
-    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_ACTIVE_STATUS),
-        data, reply, option) != ERR_NONE) {
-        WLOGFE("SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     int32_t ret = reply.ReadInt32();
@@ -1283,5 +1262,70 @@ WMError SessionProxy::UpdateSessionPropertyByAction(const sptr<WindowSessionProp
     }
     int32_t ret = reply.ReadInt32();
     return static_cast<WMError>(ret);
+}
+
+WMError SessionProxy::GetAppForceLandscapeConfig(AppForceLandscapeConfig& config)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::DEFAULT, "WriteInterfaceToken failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(
+        SessionInterfaceCode::TRANS_ID_GET_FORCE_LANDSCAPE_CONFIG),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::DEFAULT, "SendRequest failed");
+        return WMError::WM_ERROR_IPC_FAILED;
+    }
+    sptr<AppForceLandscapeConfig> replyConfig = reply.ReadParcelable<AppForceLandscapeConfig>();
+    if (replyConfig) {
+        config = *replyConfig;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WMError>(ret);
+}
+
+int32_t SessionProxy::GetStatusBarHeight()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    int32_t height = 0;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::DEFAULT, "WriteInterfaceToken failed");
+        return height;
+    }
+    if (Remote()->SendRequest(static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_STATUSBAR_HEIGHT),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::DEFAULT, "SendRequest failed");
+        return height;
+    }
+    height = reply.ReadInt32();
+    return height;
+}
+
+WSError SessionProxy::SetDialogSessionBackGestureEnabled(bool isEnabled)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        TLOGE(WmsLogTag::WMS_DIALOG, "WriteInterfaceToken failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        TLOGE(WmsLogTag::WMS_DIALOG, "Write isEnabled failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    if (Remote()->SendRequest(
+        static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_DIALOG_SESSION_BACKGESTURE_ENABLE),
+        data, reply, option) != ERR_NONE) {
+        TLOGE(WmsLogTag::WMS_DIALOG, "SendRequest failed");
+        return WSError::WS_ERROR_IPC_FAILED;
+    }
+    int32_t ret = reply.ReadInt32();
+    return static_cast<WSError>(ret);
 }
 } // namespace OHOS::Rosen

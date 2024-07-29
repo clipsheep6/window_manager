@@ -28,7 +28,7 @@
 
 namespace OHOS::Rosen {
 namespace {
-    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DMS_DM, "DisplayManagerAdapter"};
+    constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "DisplayManagerAdapter"};
 }
 WM_IMPLEMENT_SINGLE_INSTANCE(DisplayManagerAdapter)
 WM_IMPLEMENT_SINGLE_INSTANCE(ScreenManagerAdapter)
@@ -591,6 +591,14 @@ void DisplayManagerAdapter::SetFoldDisplayMode(const FoldDisplayMode mode)
     INIT_PROXY_CHECK_RETURN();
 
     return displayManagerServiceProxy_->SetFoldDisplayMode(mode);
+}
+
+void DisplayManagerAdapter::SetDisplayScale(ScreenId screenId,
+    float scaleX, float scaleY, float pivotX, float pivotY)
+{
+    INIT_PROXY_CHECK_RETURN();
+
+    return displayManagerServiceProxy_->SetDisplayScale(screenId, scaleX, scaleY, pivotX, pivotY);
 }
 
 void DisplayManagerAdapter::SetFoldStatusLocked(bool locked)

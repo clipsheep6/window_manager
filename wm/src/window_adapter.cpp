@@ -649,6 +649,7 @@ WMError WindowAdapter::GetWindowAnimationTargets(std::vector<uint32_t> missionId
     CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_ERROR_SAMGR);
     return wmsProxy->GetWindowAnimationTargets(missionIds, targets);
 }
+
 void WindowAdapter::SetMaximizeMode(MaximizeMode maximizeMode)
 {
     INIT_PROXY_CHECK_RETURN();
@@ -693,6 +694,44 @@ WMError WindowAdapter::UpdateSessionTouchOutsideListener(int32_t& persistentId, 
     CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
     return static_cast<WMError>(
         wmsProxy->UpdateSessionTouchOutsideListener(persistentId, haveListener));
+}
+
+WMError WindowAdapter::NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+
+    auto wmsProxy = GetWindowManagerServiceProxy();
+    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(wmsProxy->NotifyWindowExtensionVisibilityChange(pid, uid, visible));
+}
+
+WMError WindowAdapter::RaiseWindowToTop(int32_t persistentId)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+
+    auto wmsProxy = GetWindowManagerServiceProxy();
+    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(wmsProxy->RaiseWindowToTop(persistentId));
+}
+
+WMError WindowAdapter::UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+
+    auto wmsProxy = GetWindowManagerServiceProxy();
+    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
+    WSError ret = wmsProxy->UpdateSessionWindowVisibilityListener(persistentId, haveListener);
+    return static_cast<WMError>(ret);
+}
+
+WMError WindowAdapter::ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
+
+    auto wmsProxy = GetWindowManagerServiceProxy();
+    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
+    return static_cast<WMError>(
+        wmsProxy->ShiftAppWindowFocus(sourcePersistentId, targetPersistentId));
 }
 
 void WindowAdapter::CreateAndConnectSpecificSession(const sptr<ISessionStage>& sessionStage,
@@ -786,70 +825,42 @@ WMError WindowAdapter::RequestFocusStatus(int32_t persistentId, bool isFocused)
     return static_cast<WMError>(wmsProxy->RequestFocusStatus(persistentId, isFocused));
 }
 
-WMError WindowAdapter::RaiseWindowToTop(int32_t persistentId)
-{
-    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
-
-    auto wmsProxy = GetWindowManagerServiceProxy();
-    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
-    return static_cast<WMError>(wmsProxy->RaiseWindowToTop(persistentId));
-}
-
-WMError WindowAdapter::NotifyWindowExtensionVisibilityChange(int32_t pid, int32_t uid, bool visible)
-{
-    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
-
-    auto wmsProxy = GetWindowManagerServiceProxy();
-    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
-    return static_cast<WMError>(wmsProxy->NotifyWindowExtensionVisibilityChange(pid, uid, visible));
-}
-
-WMError WindowAdapter::UpdateSessionWindowVisibilityListener(int32_t persistentId, bool haveListener)
-{
-    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
-
-    auto wmsProxy = GetWindowManagerServiceProxy();
-    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
-    WSError ret = wmsProxy->UpdateSessionWindowVisibilityListener(persistentId, haveListener);
-    return static_cast<WMError>(ret);
-}
-
-WMError WindowAdapter::ShiftAppWindowFocus(int32_t sourcePersistentId, int32_t targetPersistentId)
-{
-    INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
-
-    auto wmsProxy = GetWindowManagerServiceProxy();
-    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
-    return static_cast<WMError>(
-        wmsProxy->ShiftAppWindowFocus(sourcePersistentId, targetPersistentId));
-}
-
-void WindowAdapter::AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage, int32_t persistentId,
-    int32_t parentId, UIExtensionUsage usage, uint64_t surfaceNodeId)
+void WindowAdapter::AddExtensionWindowStageToSCB(const sptr<ISessionStage>& sessionStage,
+    const sptr<IRemoteObject>& token, uint64_t surfaceNodeId)
 {
     INIT_PROXY_CHECK_RETURN();
 
     auto wmsProxy = GetWindowManagerServiceProxy();
     CHECK_PROXY_RETURN_IF_NULL(wmsProxy);
-    wmsProxy->AddExtensionWindowStageToSCB(sessionStage, persistentId, parentId, usage, surfaceNodeId);
+    wmsProxy->AddExtensionWindowStageToSCB(sessionStage, token, surfaceNodeId);
 }
 
-void WindowAdapter::ProcessModalExtensionPointDown(int32_t persistentId, int32_t parentId, int32_t posX, int32_t posY)
+void WindowAdapter::RemoveExtensionWindowStageFromSCB(const sptr<ISessionStage>& sessionStage,
+    const sptr<IRemoteObject>& token)
 {
     INIT_PROXY_CHECK_RETURN();
 
     auto wmsProxy = GetWindowManagerServiceProxy();
     CHECK_PROXY_RETURN_IF_NULL(wmsProxy);
-    wmsProxy->ProcessModalExtensionPointDown(persistentId, parentId, posX, posY);
+    wmsProxy->RemoveExtensionWindowStageFromSCB(sessionStage, token);
 }
 
-void WindowAdapter::UpdateModalExtensionRect(int32_t persistentId, int32_t parentId, Rect rect)
+void WindowAdapter::ProcessModalExtensionPointDown(const sptr<IRemoteObject>& token, int32_t posX, int32_t posY)
 {
     INIT_PROXY_CHECK_RETURN();
 
     auto wmsProxy = GetWindowManagerServiceProxy();
     CHECK_PROXY_RETURN_IF_NULL(wmsProxy);
-    wmsProxy->UpdateModalExtensionRect(persistentId, parentId, rect);
+    wmsProxy->ProcessModalExtensionPointDown(token, posX, posY);
+}
+
+void WindowAdapter::UpdateModalExtensionRect(const sptr<IRemoteObject>& token, Rect rect)
+{
+    INIT_PROXY_CHECK_RETURN();
+
+    auto wmsProxy = GetWindowManagerServiceProxy();
+    CHECK_PROXY_RETURN_IF_NULL(wmsProxy);
+    wmsProxy->UpdateModalExtensionRect(token, rect);
 }
 
 WMError WindowAdapter::AddOrRemoveSecureSession(int32_t persistentId, bool shouldHide)
@@ -861,15 +872,14 @@ WMError WindowAdapter::AddOrRemoveSecureSession(int32_t persistentId, bool shoul
     return static_cast<WMError>(wmsProxy->AddOrRemoveSecureSession(persistentId, shouldHide));
 }
 
-WMError WindowAdapter::UpdateExtWindowFlags(int32_t parentId, int32_t persistentId, uint32_t extWindowFlags,
+WMError WindowAdapter::UpdateExtWindowFlags(const sptr<IRemoteObject>& token, uint32_t extWindowFlags,
     uint32_t extWindowActions)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_DO_NOTHING);
 
     auto wmsProxy = GetWindowManagerServiceProxy();
     CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_DO_NOTHING);
-    return static_cast<WMError>(wmsProxy->UpdateExtWindowFlags(parentId, persistentId,
-        extWindowFlags, extWindowActions));
+    return static_cast<WMError>(wmsProxy->UpdateExtWindowFlags(token, extWindowFlags, extWindowActions));
 }
 
 WMError WindowAdapter::GetHostWindowRect(int32_t hostWindowId, Rect& rect)
@@ -907,6 +917,14 @@ WMError WindowAdapter::GetWindowModeType(WindowModeType& windowModeType)
     auto wmsProxy = GetWindowManagerServiceProxy();
     CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_ERROR_SAMGR);
     return wmsProxy->GetWindowModeType(windowModeType);
+}
+
+WMError WindowAdapter::GetWindowStyleType(WindowStyleType& windowStyleType)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+    auto wmsProxy = GetWindowManagerServiceProxy();
+    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_ERROR_SAMGR);
+    return wmsProxy->GetWindowStyleType(windowStyleType);
 }
 
 sptr<IWindowManager> WindowAdapter::GetWindowManagerServiceProxy() const
