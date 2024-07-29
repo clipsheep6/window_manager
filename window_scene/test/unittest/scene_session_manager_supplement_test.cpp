@@ -533,6 +533,8 @@ HWTEST_F(SceneSessionManagerSupplementTest, NotifyCreateSubSession, Function | S
     sceneSession->persistentId_ = property->callingSessionId_ + 1;
     ssm_->NotifySessionTouchOutside(1);
     ASSERT_EQ(ret, 0);
+    static constexpr uint32_t WAIT_SYNC_IN_NS = 200000;
+    usleep(WAIT_SYNC_IN_NS);
 }
 
 /**
