@@ -39,11 +39,11 @@ ohos_shared_library("cj_window_ffi") {
       "window_register_manager.cpp",
       "window_stage_impl.cpp",
     ]
-    deps = [
+    deps = [ "../../../../wm:libwm" ]
+    deps += [
       "../../../../dm:libdm",
       "../../../../utils:libwmutil",
       "../../../../utils:libwmutil_base",
-      "../../../../wm:libwm",
     ]
     external_deps = [
       "ability_runtime:ability_context_native",
