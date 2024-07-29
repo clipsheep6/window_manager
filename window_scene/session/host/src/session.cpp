@@ -2618,8 +2618,8 @@ bool Session::IsStateMatch(bool isAttach) const
 
 bool Session::IsSupportDetectWindow(bool isAttach)
 {
-    bool isPc = systemConfig_.uiType_ == "pc";
-    bool isPhone = systemConfig_.uiType_ == "phone";
+    bool isPc = systemConfig_.multiWindowUIType_ == "FreeFormMultiWindow";
+    bool isPhone = systemConfig_.multiWindowUIType_ == "HandsetSmartWindow";
     if (!isPc && !isPhone) {
         TLOGI(WmsLogTag::WMS_LIFE, "device type not support, id:%{public}d", persistentId_);
         return false;

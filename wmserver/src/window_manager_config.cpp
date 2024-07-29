@@ -73,6 +73,7 @@ const std::map<std::string, WindowManagerConfig::ValueType> WindowManagerConfig:
     { "remoteAnimation",                              WindowManagerConfig::ValueType::UNDIFINED },
     { "configMainFloatingWindowAbove",                WindowManagerConfig::ValueType::UNDIFINED },
     { "uiType",                                       WindowManagerConfig::ValueType::STRING },
+    { "multiWindowUIType",                            WindowManagerConfig::ValueType::STRING },
     { "supportTypeFloatWindow",                       WindowManagerConfig::ValueType::STRING },
 };
 

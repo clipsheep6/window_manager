@@ -66,6 +66,7 @@ bool WindowNodeContainer::isFloatWindowAboveFullWindow_ = false;
 uint32_t WindowNodeContainer::maxMainFloatingWindowNumber_ = 100;
 bool WindowNodeContainer::isAnimateTransactionEnabled_ = false;
 std::string WindowNodeContainer::uiType_ = "";
+std::string WindowNodeContainer::multiWindowUIType_ = "";
 
 WindowNodeContainer::WindowNodeContainer(const sptr<DisplayInfo>& displayInfo, ScreenId displayGroupId)
 {
@@ -775,7 +776,7 @@ void WindowNodeContainer::CloseInputMethodSyncTransaction()
 
 bool WindowNodeContainer::IsWindowFollowParent(WindowType type)
 {
-    auto isPhone = uiType_ == "phone";
+    auto isPhone = multiWindowUIType_ == "HandsetSmartWindow";
     if (!isPhone) {
         return false;
     }

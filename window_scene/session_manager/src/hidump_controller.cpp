@@ -348,7 +348,7 @@ void HidumpController::DumpSysconfigParamList(std::ostringstream& oss)
     oss << "Sysconfig:"
         << std::endl
         << "isSystemDecorEnable decorModeSupportInfo isStretchable defaultWindowMode "
-        << "keyboardAnimationConfig maxFloatingWindowSize uiType"
+        << "keyboardAnimationConfig maxFloatingWindowSize multiWindowUIType"
         << std::endl
         << "miniWidthOfMainWindow miniHeightOfMainWindow miniWidthOfSubWindow miniHeightOfSubWindow backgroundswitch "
         << "freeMultiWindowEnable freeMultiWindowSupport supportTypeFloatWindow freeMultiWindowConfig_"
@@ -369,7 +369,7 @@ void HidumpController::DumpSysconfigParam(std::ostringstream& oss, sptr<SceneSes
         << systemConfig.keyboardAnimationConfig_.durationIn_ << " "
         << systemConfig.keyboardAnimationConfig_.durationOut_ << "]|"
         << systemConfig.maxFloatingWindowSize_ << "|"
-        << systemConfig.uiType_ << "|"
+        << systemConfig.multiWindowUIType_ << "|"
         << std::endl
         << systemConfig.miniWidthOfMainWindow_ << "|"
         << systemConfig.miniHeightOfMainWindow_ << "|"

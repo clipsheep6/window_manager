@@ -701,6 +701,7 @@ HWTEST_F(SceneSessionManagerTest2, ConfigWindowSceneXml02, Function | SmallTest 
         "<Configs>"
         "<defaultWindowMode>1 1</defaultWindowMode>"
         "<uiType>phone</uiType>"
+        "<multiWindowUIType>HandsetSmartWindow</multiWindowUIType>"
         "<backgroundScreenLock enable=\"true\"></backgroundScreenLock>"
         "<rotationMode>windowRotation</rotationMode>"
         "<supportTypeFloatWindow enable=\"true\"></supportTypeFloatWindow>"
@@ -800,10 +801,12 @@ HWTEST_F(SceneSessionManagerTest2, ConfigWindowSceneXml06, Function | SmallTest 
     std::string xmlStr = "<?xml version='1.0' encoding=\"utf-8\"?>"
         "<Configs>"
         "<uiType>ut</uiType>"
+        "<multiWindowUIType>ut</multiWindowUIType>"
         "</Configs>";
     WindowSceneConfig::config_ = ReadConfig(xmlStr);
     ssm_->ConfigWindowSceneXml();
     ASSERT_EQ(ssm_->appWindowSceneConfig_.uiType_, "ut");
+    ASSERT_EQ(ssm_->appWindowSceneConfig_.multiWindowUIType_, "ut");
 }
 
 /**

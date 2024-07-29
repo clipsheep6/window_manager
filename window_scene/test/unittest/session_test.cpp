@@ -1492,7 +1492,7 @@ HWTEST_F(WindowSessionTest, TransferFocusStateEvent02, Function | SmallTest | Le
  */
 HWTEST_F(WindowSessionTest, CreateDetectStateTask001, Function | SmallTest | Level2)
 {
-    session_->systemConfig_.uiType_ = "phone";
+    session_->systemConfig_.multiWindowUIType_ = "HandsetSmartWindow";
     std::string taskName = "wms:WindowStateDetect" + std::to_string(session_->persistentId_);
     DetectTaskInfo detectTaskInfo;
     detectTaskInfo.taskState = DetectTaskState::NO_TASK;
@@ -1512,7 +1512,7 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask001, Function | SmallTest | Lev
  */
 HWTEST_F(WindowSessionTest, CreateDetectStateTask002, Function | SmallTest | Level2)
 {
-    session_->systemConfig_.uiType_ = "phone";
+    session_->systemConfig_.multiWindowUIType_ = "HandsetSmartWindow";
     std::string taskName = "wms:WindowStateDetect" + std::to_string(session_->persistentId_);
     auto task = [](){};
     int64_t delayTime = 3000;
@@ -1538,7 +1538,7 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask002, Function | SmallTest | Lev
  */
 HWTEST_F(WindowSessionTest, CreateDetectStateTask003, Function | SmallTest | Level2)
 {
-    session_->systemConfig_.uiType_ = "phone";
+    session_->systemConfig_.multiWindowUIType_ = "HandsetSmartWindow";
     std::string taskName = "wms:WindowStateDetect" + std::to_string(session_->persistentId_);
     DetectTaskInfo detectTaskInfo;
     detectTaskInfo.taskState = DetectTaskState::DETACH_TASK;
@@ -1559,7 +1559,7 @@ HWTEST_F(WindowSessionTest, CreateDetectStateTask003, Function | SmallTest | Lev
  */
 HWTEST_F(WindowSessionTest, CreateDetectStateTask004, Function | SmallTest | Level2)
 {
-    session_->systemConfig_.uiType_ = "phone";
+    session_->systemConfig_.multiWindowUIType_ = "HandsetSmartWindow";
     std::string taskName = "wms:WindowStateDetect" + std::to_string(session_->persistentId_);
     DetectTaskInfo detectTaskInfo;
     int32_t beforeTaskNum = GetTaskCount();

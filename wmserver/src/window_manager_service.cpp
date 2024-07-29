@@ -430,6 +430,12 @@ void WindowManagerService::ConfigureWindowManagerService()
         StartingWindow::uiType_ = item.stringValue_;
         WindowNodeContainer::uiType_ = item.stringValue_;
     }
+    item = config["multiWindowUIType"];
+    if (item.IsString()) {
+        systemConfig_.multiWindowUIType_ = item.stringValue_;
+        StartingWindow::multiWindowUIType_ = item.stringValue_;
+        WindowNodeContainer::multiWindowUIType_ = item.stringValue_;
+    }
     item = config["supportTypeFloatWindow"].GetProp("enable");
     if (item.IsBool()) {
         systemConfig_.supportTypeFloatWindow_ = item.boolValue_;
