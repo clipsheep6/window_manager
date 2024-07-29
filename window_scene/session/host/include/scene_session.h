@@ -133,6 +133,7 @@ public:
     SceneSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback);
     virtual ~SceneSession();
 
+    // lifecycle func
     WSError Connect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, SystemSessionConfig& systemConfig,
         sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr,
@@ -146,10 +147,22 @@ public:
         sptr<IRemoteObject> token = nullptr, int32_t pid = -1, int32_t uid = -1);
     WSError Foreground(sptr<WindowSessionProperty> property, bool isFromClient = false) override;
     WSError Background(bool isFromClient = false) override;
-    virtual void RegisterBufferAvailableCallback(const SystemSessionBufferAvailableCallback& func) {};
     WSError BackgroundTask(const bool isSaveSnapshot = true);
     WSError Disconnect(bool isFromClient = false) override;
     WSError DisconnectTask(bool isFromClient = false, bool isSaveSnapshot = true);
+    WSError UpdateActiveStatus(bool isActive) override;
+    WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> info) override;
+    WSError TerminateSession(const sptr<AAFwk::SessionInfo> info) override;
+    WSError NotifySessionException(
+            const sptr<AAFwk::SessionInfo> info, bool needRemoveSession = false) override;
+    WSError NotifySessionExceptionInner(
+            const sptr<AAFwk::SessionInfo> info, bool needRemoveSession = false, bool isFromClient = false);
+    void NotifySessionForeground(uint32_t reason, bool withAnimation);
+    void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits);
+    void NotifySessionFullScreen(bool fullScreen);
+    void UpdateSessionState(SessionState state) override;
+
+    virtual void RegisterBufferAvailableCallback(const SystemSessionBufferAvailableCallback& func) {};
     void SetClientIdentityToken(const std::string& clientIdentityToken);
     virtual void BindKeyboardPanelSession(sptr<SceneSession> panelSession) {};
     virtual sptr<SceneSession> GetKeyboardPanelSession() const { return nullptr; };
@@ -158,7 +171,6 @@ public:
     virtual SessionGravity GetKeyboardGravity() const { return SessionGravity::SESSION_GRAVITY_DEFAULT; };
     virtual void OnKeyboardPanelUpdated() {};
 
-    WSError UpdateActiveStatus(bool isActive) override;
     WSError OnSessionEvent(SessionEvent event) override;
     WSError OnLayoutFullScreenChange(bool isLayoutFullScreen) override;
     WSError RaiseToAppTop() override;
@@ -170,12 +182,6 @@ public:
         const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
     WSError UpdateSessionRect(const WSRect& rect, const SizeChangeReason& reason) override;
     WSError ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::SessionInfo> info, bool visible) override;
-    WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> info) override;
-    WSError TerminateSession(const sptr<AAFwk::SessionInfo> info) override;
-    WSError NotifySessionException(
-        const sptr<AAFwk::SessionInfo> info, bool needRemoveSession = false) override;
-    WSError NotifySessionExceptionInner(
-        const sptr<AAFwk::SessionInfo> info, bool needRemoveSession = false, bool isFromClient = false);
     WSError NotifyClientToUpdateRect(std::shared_ptr<RSTransaction> rsTransaction) override;
     WSError OnNeedAvoid(bool status) override;
     AvoidArea GetAvoidAreaByType(AvoidAreaType type) override;
@@ -289,8 +295,6 @@ public:
     bool RemoveSubSession(int32_t persistentId);
     bool AddToastSession(const sptr<SceneSession>& toastSession);
     bool RemoveToastSession(int32_t persistentId);
-    void NotifySessionForeground(uint32_t reason, bool withAnimation);
-    void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits);
     void RegisterSessionChangeCallback(const sptr<SceneSession::SessionChangeCallback>& sessionChangeCallback);
     void RegisterForceSplitListener(const NotifyForceSplitFunc& func);
     void ClearSpecificSessionCbMap();
@@ -309,10 +313,8 @@ public:
     void RemoveExtWindowFlags(int32_t extPersistentId);
     void ClearExtWindowFlags();
     void NotifyDisplayMove(DisplayId from, DisplayId to);
-    void NotifySessionFullScreen(bool fullScreen);
 
     void SetSessionState(SessionState state) override;
-    void UpdateSessionState(SessionState state) override;
     void SetForceHideState(ForceHideState forceHideState);
     ForceHideState GetForceHideState() const;
     bool IsTemporarilyShowWhenLocked() const;
@@ -403,6 +405,9 @@ protected:
     sptr<SceneSession> keyboardSession_ = nullptr;
 
 private:
+    // lifecycle func
+    WSError ForegroundTask(const sptr<WindowSessionProperty>& property);
+
     void NotifyAccessibilityVisibilityChange();
     void CalculateAvoidAreaRect(WSRect& rect, WSRect& avoidRect, AvoidArea& avoidArea) const;
     void GetSystemAvoidArea(WSRect& rect, AvoidArea& avoidArea);
@@ -413,9 +418,6 @@ private:
     void HandleStyleEvent(MMI::WindowArea area) override;
     WSError HandleEnterWinwdowArea(int32_t windowX, int32_t windowY);
     WSError HandlePointerStyle(const std::shared_ptr<MMI::PointerEvent>& pointerEvent);
-
-    // session lifecycle funcs
-    WSError ForegroundTask(const sptr<WindowSessionProperty>& property);
 
 #ifdef DEVICE_STATUS_ENABLE
     void RotateDragWindow(std::shared_ptr<RSTransaction> rsTransaction);

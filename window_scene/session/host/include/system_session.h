@@ -24,12 +24,14 @@ public:
     SystemSession(const SessionInfo& info, const sptr<SpecificSessionCallback>& specificCallback);
     ~SystemSession();
 
+    // lifecycle func
     WSError Show(sptr<WindowSessionProperty> property) override;
     WSError Hide() override;
     WSError Reconnect(const sptr<ISessionStage>& sessionStage, const sptr<IWindowEventChannel>& eventChannel,
         const std::shared_ptr<RSSurfaceNode>& surfaceNode, sptr<WindowSessionProperty> property = nullptr,
         sptr<IRemoteObject> token = nullptr, int32_t pid = -1, int32_t uid = -1) override;
     WSError Disconnect(bool isFromClient = false) override;
+
     int32_t GetMissionId() const override;
     WSError ProcessPointDownSession(int32_t posX, int32_t posY) override;
 

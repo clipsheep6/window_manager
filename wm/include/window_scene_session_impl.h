@@ -45,12 +45,17 @@ class WindowSceneSessionImpl : public WindowSessionImpl {
 public:
     explicit WindowSceneSessionImpl(const sptr<WindowOption>& option);
     ~WindowSceneSessionImpl();
+
+    // lifecycle func
     WMError Create(const std::shared_ptr<AbilityRuntime::Context>& context,
         const sptr<Rosen::ISession>& iSession, const std::string& identityToken = "") override;
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WMError Destroy(bool needNotifyServer, bool needClearListener = true) override;
     WMError NotifyDrawingCompleted() override;
+    void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
+    void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+
     WMError SetTextFieldAvoidInfo(double textFieldPositionY, double textFieldHeight) override;
     void PreProcessCreate();
     void SetDefaultProperty();
@@ -136,8 +141,6 @@ public:
     WSError UpdateWindowMode(WindowMode mode) override;
     WSError UpdateMaximizeMode(MaximizeMode mode) override;
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
-    void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
-    void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WMError NotifyPrepareClosePiPWindow() override;
     void UpdateSubWindowState(const WindowType& type);
     WMError SetSystemBarProperties(const std::map<WindowType, SystemBarProperty>& properties,
@@ -189,8 +192,11 @@ protected:
     WMError NotifySpecificWindowSessionProperty(WindowType type, const SystemBarProperty& property);
 
 private:
+    // lifecycle func
     WMError DestroyInner(bool needNotifyServer);
     WMError SyncDestroyAndDisconnectSpecificSession(int32_t persistentId);
+    void PreLayoutOnShow(WindowType type);
+
     bool IsValidSystemWindowType(const WindowType& type);
     WMError CheckParmAndPermission();
     static uint32_t maxFloatingWindowSize_;
@@ -219,7 +225,6 @@ private:
     std::atomic<bool> isDefaultDensityEnabled_ = false;
     uint32_t getAvoidAreaCnt_ = 0;
     bool enableImmersiveMode_ = false;
-    void PreLayoutOnShow(WindowType type);
 
     WMError RegisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;
     WMError UnregisterKeyboardPanelInfoChangeListener(const sptr<IKeyboardPanelInfoChangeListener>& listener) override;

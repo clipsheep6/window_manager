@@ -55,19 +55,31 @@ class WindowSessionImpl : public Window, public virtual SessionStageStub {
 public:
     explicit WindowSessionImpl(const sptr<WindowOption>& option);
     ~WindowSessionImpl();
-    void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
-    void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
-    bool PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
-    virtual bool NotifyOnKeyPreImeEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
-    static sptr<Window> Find(const std::string& name);
-    static std::vector<sptr<Window>> GetSubWindow(int parentId);
-    // inherits from window
+
+    // lifecycle func
     virtual WMError Create(const std::shared_ptr<AbilityRuntime::Context>& context,
         const sptr<Rosen::ISession>& iSession, const std::string& identityToken = "");
     WMError Show(uint32_t reason = 0, bool withAnimation = false) override;
     WMError Hide(uint32_t reason = 0, bool withAnimation = false, bool isFromInnerkits = true) override;
     WMError Destroy() override;
     virtual WMError Destroy(bool needNotifyServer, bool needClearListener = true);
+    void NotifyForegroundInteractiveStatus(bool interactive) override;
+    void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
+    void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
+    void NotifyForegroundFailed(WMError ret);
+    void NotifyBackgroundFailed(WMError ret);
+    WSError NotifyDestroy() override;
+    void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
+    void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
+
+    void ConsumePointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
+    void ConsumeKeyEvent(std::shared_ptr<MMI::KeyEvent>& inputEvent) override;
+    bool PreNotifyKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
+    virtual bool NotifyOnKeyPreImeEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
+    static sptr<Window> Find(const std::string& name);
+    static std::vector<sptr<Window>> GetSubWindow(int parentId);
+
+    // inherits from window
     WMError NapiSetUIContent(const std::string& contentInfo, napi_env env, napi_value storage,
         BackupAndRestoreType type, sptr<IRemoteObject> token, AppExecFwk::Ability* ability) override;
     WMError SetUIContentByName(const std::string& contentInfo, napi_env env, napi_value storage,
@@ -132,7 +144,6 @@ public:
     void NotifyOccupiedAreaChangeInfoInner(sptr<OccupiedAreaChangeInfo> info);
     void NotifyOccupiedAreaChangeInfo(sptr<OccupiedAreaChangeInfo> info,
                                       const std::shared_ptr<RSTransaction>& rsTransaction = nullptr) override;
-    void NotifyForegroundInteractiveStatus(bool interactive) override;
     void NotifyDisplayMove(DisplayId from, DisplayId to) override;
 
     WMError RegisterLifeCycleListener(const sptr<IWindowLifeCycle>& listener) override;
@@ -172,13 +183,8 @@ public:
     SystemSessionConfig GetSystemSessionConfig() const;
     sptr<ISession> GetHostSession() const;
     int32_t GetFloatingWindowParentId();
-    void NotifyAfterForeground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
-    void NotifyAfterBackground(bool needNotifyListeners = true, bool needNotifyUiContent = true);
-    void NotifyForegroundFailed(WMError ret);
-    void NotifyBackgroundFailed(WMError ret);
     WSError MarkProcessed(int32_t eventId) override;
     void UpdateTitleButtonVisibility();
-    WSError NotifyDestroy() override;
     WSError NotifyCloseExistPipWindow() override;
     WSError NotifyTransferComponentData(const AAFwk::WantParams& wantParams) override;
     WSErrorCode NotifyTransferComponentDataSync(const AAFwk::WantParams& wantParams,
@@ -201,8 +207,6 @@ public:
     WindowState state_ { WindowState::STATE_INITIAL };
     WindowState requestState_ { WindowState::STATE_INITIAL };
     WSError UpdateMaximizeMode(MaximizeMode mode) override;
-    void NotifySessionForeground(uint32_t reason, bool withAnimation) override;
-    void NotifySessionBackground(uint32_t reason, bool withAnimation, bool isFromInnerkits) override;
     WSError UpdateTitleInTargetPos(bool isShow, int32_t height) override;
     WSError NotifyDialogStateChange(bool isForeground) override;
     bool IsMainHandlerAvailable() const override;
@@ -237,15 +241,17 @@ public:
     virtual void SetUiDvsyncSwitch(bool dvsyncSwitch) override;
 
 protected:
+    // lifecycle func
     WMError Connect();
-    bool IsWindowSessionInvalid() const;
-    void NotifyWindowAfterUnfocused();
-    void NotifyWindowAfterFocused();
     void NotifyAfterActive();
     void NotifyAfterInactive();
     void NotifyBeforeDestroy(std::string windowName);
     void NotifyAfterDestroy();
     void ClearListenersById(int32_t persistentId);
+
+    bool IsWindowSessionInvalid() const;
+    void NotifyWindowAfterUnfocused();
+    void NotifyWindowAfterFocused();
     void ClearVsyncStation();
     WMError WindowSessionCreateCheck();
     void UpdateDecorEnableToAce(bool isDecorEnable);
