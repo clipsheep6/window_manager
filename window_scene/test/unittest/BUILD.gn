@@ -57,6 +57,7 @@ group("unittest") {
     ":ws_scene_session_manager_test5",
     ":ws_scene_session_manager_test6",
     ":ws_scene_session_test",
+    ":ws_scene_system_ability_listener_test",
     ":ws_screen_cutout_controller_test",
     ":ws_screen_property_test",
     ":ws_screen_rotation_property_test",
@@ -1073,6 +1074,22 @@ ohos_unittest("ws_scene_session_lifecycle_test") {
   ]
 }
 
+ohos_unittest("ws_scene_system_ability_listener_test") {
+  module_out_path = module_out_path
+
+  sources = [
+    "scene_system_ability_listener_test.cpp",
+  ]
+
+  deps = [ ":ws_unittest_common" ]
+
+  external_deps = [
+    "ability_base:session_info",
+    "c_utils:utils",
+    "hilog:libhilog",
+  ]
+}
+
 ohos_unittest("ws_scene_session_dirty_manager_test") {
   module_out_path = module_out_path
 
@@ -1669,6 +1686,7 @@ ohos_static_library("ws_unittest_common") {
     "hilog:libhilog",
     "input:libmmi-client",
     "ipc:ipc_single",
+    "samgr:samgr_proxy",
   ]
 
   public_external_deps = [
