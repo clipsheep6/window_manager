@@ -1360,30 +1360,44 @@ napi_value JsWindow::OnMoveWindowTo(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value JsWindow::OnResize(napi_env env, napi_callback_info info)
+static WMError CheckOnResize(napi_env env, size_t argc, napi_value* argv, int32_t& width, int32_t& height)
 {
     WMError errCode = WMError::WM_OK;
-    size_t argc = 4;
-    napi_value argv[4] = {nullptr};
-    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 2 || argc > 3) { // 2: minimum param num, 3: maximum param num
-        WLOGFE("Argc is invalid: %{public}zu", argc);
+    const size_t minParamNum = 2;
+    const size_t maxParamNum = 3;
+    if (argc < minParamNum || argc > maxParamNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Argc is invalid: %{public}zu", argc);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
-    int32_t width = 0;
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid.");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+
     if (errCode == WMError::WM_OK && !ConvertFromJsValue(env, argv[0], width)) {
-        WLOGFE("Failed to convert parameter to width");
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to width");
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
-    int32_t height = 0;
     if (errCode == WMError::WM_OK && !ConvertFromJsValue(env, argv[1], height)) {
-        WLOGFE("Failed to convert parameter to height");
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to height");
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
     if (width <= 0 || height <= 0) {
-        WLOGFE("width or height should greater than 0!");
+        TLOGE(WmsLogTag::DEFAULT, "width or height should greater than 0!");
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
+    return errCode;
+}
+
+napi_value JsWindow::OnResize(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    int32_t width = 0;
+    int32_t height = 0;
+    WMError errCode = CheckOnResize(env, argc, argv, width, height);
+
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, errCode, width, height](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -1415,30 +1429,42 @@ napi_value JsWindow::OnResize(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value JsWindow::OnResizeWindow(napi_env env, napi_callback_info info)
+static WmErrorCode CheckOnResizeWindow(napi_env env, size_t argc, napi_value* argv, int32_t& width, int32_t& height)
 {
     WmErrorCode errCode = WmErrorCode::WM_OK;
-    size_t argc = 4;
-    napi_value argv[4] = {nullptr};
-    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 2) { // 2: minimum param num
-        WLOGFE("Argc is invalid: %{public}zu", argc);
+    const size_t minParamNum = 2;
+    if (argc < minParamNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Argc is invalid: %{public}zu", argc);
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
-    int32_t width = 0;
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid.");
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+
     if (errCode == WmErrorCode::WM_OK && !ConvertFromJsValue(env, argv[0], width)) {
-        WLOGFE("Failed to convert parameter to width");
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to width");
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
-    int32_t height = 0;
     if (errCode == WmErrorCode::WM_OK && !ConvertFromJsValue(env, argv[1], height)) {
-        WLOGFE("Failed to convert parameter to height");
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to height");
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
     if (width <= 0 || height <= 0) {
-        WLOGFE("width or height should greater than 0!");
+        TLOGE(WmsLogTag::DEFAULT, "width or height should greater than 0!");
         errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
     }
+    return errCode;
+}
+
+napi_value JsWindow::OnResizeWindow(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    int32_t width = 0;
+    int32_t height = 0;
+    WmErrorCode errCode = CheckOnResizeWindow(env, argc, argv, width, height);
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
@@ -1472,20 +1498,23 @@ napi_value JsWindow::OnResizeWindow(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value JsWindow::OnSetWindowType(napi_env env, napi_callback_info info)
+static WMError CheckWindowType(napi_env env, size_t argc, napi_value* argv, WindowType& winType)
 {
     WMError errCode = WMError::WM_OK;
-    size_t argc = 4;
-    napi_value argv[4] = {nullptr};
-    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 1 || argc > 2) { // 2 is max num of argc
-        WLOGFE("Argc is invalid: %{public}zu", argc);
+    const size_t minParamNum = 1;
+    const size_t maxParamNum = 2;
+    if (argc < minParamNum || argc > maxParamNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Argc is invalid: %{public}zu", argc);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
-    WindowType winType = WindowType::SYSTEM_WINDOW_BASE;
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid.");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+
     uint32_t resultValue = 0;
     if (errCode == WMError::WM_OK && !ConvertFromJsValue(env, argv[0], resultValue)) {
-        WLOGFE("Failed to convert parameter to windowType");
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to windowType");
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
     if (resultValue >= static_cast<uint32_t>(WindowType::SYSTEM_WINDOW_BASE) &&
@@ -1494,9 +1523,19 @@ napi_value JsWindow::OnSetWindowType(napi_env env, napi_callback_info info)
     } else if (JS_TO_NATIVE_WINDOW_TYPE_MAP.count(static_cast<ApiWindowType>(resultValue)) != 0) {
         winType = JS_TO_NATIVE_WINDOW_TYPE_MAP.at(static_cast<ApiWindowType>(resultValue));
     } else {
-        WLOGFE("Do not support this type: %{public}u", resultValue);
+        TLOGE(WmsLogTag::DEFAULT, "Do not support this type: %{public}u", resultValue);
         errCode = WMError::WM_ERROR_INVALID_PARAM;
     }
+    return errCode;
+}
+
+napi_value JsWindow::OnSetWindowType(napi_env env, napi_callback_info info)
+{
+    size_t argc = 4;
+    napi_value argv[4] = {nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    WindowType winType = WindowType::SYSTEM_WINDOW_BASE;
+    WMError errCode = CheckWindowType(env, argc, argv, winType);
 
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
@@ -1530,38 +1569,42 @@ napi_value JsWindow::OnSetWindowType(napi_env env, napi_callback_info info)
     return result;
 }
 
+static WmErrorCode CheckWindowMode(napi_env env, size_t argc, napi_value* argv, WindowMode& winMode)
+{
+    const size_t minParamNum = 1;
+    if (argc < minParamNum || argv == nullptr) {
+        return WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    napi_value nativeMode = argv[0];
+    if (nativeMode == nullptr) {
+        return WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    uint32_t resultValue = 0;
+    napi_get_value_uint32(env, nativeMode, &resultValue);
+    if (resultValue >= static_cast<uint32_t>(WindowMode::WINDOW_MODE_SPLIT_PRIMARY)) {
+        winMode = static_cast<WindowMode>(resultValue);
+    } else if (resultValue >= static_cast<uint32_t>(ApiWindowMode::UNDEFINED) &&
+               resultValue <= static_cast<uint32_t>(ApiWindowMode::MODE_END)) {
+        winMode = JS_TO_NATIVE_WINDOW_MODE_MAP.at(static_cast<ApiWindowMode>(resultValue));
+    } else {
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    return errCode;
+}
+
 napi_value JsWindow::OnSetWindowMode(napi_env env, napi_callback_info info)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
-        WLOGFE("set window mode permission denied!");
+        TLOGE(WmsLogTag::DEFAULT, "set window mode permission denied!");
         return NapiThrowError(env, WmErrorCode::WM_ERROR_NOT_SYSTEM_APP);
     }
-    WmErrorCode errCode = WmErrorCode::WM_OK;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 1) {
-        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-    }
     WindowMode winMode = WindowMode::WINDOW_MODE_FULLSCREEN;
-    if (errCode == WmErrorCode::WM_OK) {
-        napi_value nativeMode = argv[0];
-        if (nativeMode == nullptr) {
-            errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-        } else {
-            uint32_t resultValue = 0;
-            napi_get_value_uint32(env, nativeMode, &resultValue);
-            if (resultValue >= static_cast<uint32_t>(WindowMode::WINDOW_MODE_SPLIT_PRIMARY)) {
-                winMode = static_cast<WindowMode>(resultValue);
-            } else if (resultValue >= static_cast<uint32_t>(ApiWindowMode::UNDEFINED) &&
-                resultValue <= static_cast<uint32_t>(ApiWindowMode::MODE_END)) {
-                winMode = JS_TO_NATIVE_WINDOW_MODE_MAP.at(
-                    static_cast<ApiWindowMode>(resultValue));
-            } else {
-                errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-            }
-        }
-    }
+    WmErrorCode errCode = CheckWindowMode(env, argc, argv, winMode);
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
@@ -2800,36 +2843,45 @@ napi_value JsWindow::OnIsWindowShowingSync(napi_env env, napi_callback_info info
     return CreateJsValue(env, state);
 }
 
+static WmErrorCode CheckPreferredOrientation(napi_env env, size_t argc, napi_value* argv, Orientation& reqOrientation)
+{
+    const size_t minParamNum = 1;
+    if (argc < minParamNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Argc is invalid: %{public}zu", argc);
+        return WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid");
+        return WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    if (argv[0] == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to Orientation");
+        return WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    uint32_t resultValue = 0;
+    if (errCode == WmErrorCode::WM_OK && !ConvertFromJsValue(env, argv[0], resultValue)) {
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to orientation");
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    auto apiOrientation = static_cast<ApiOrientation>(resultValue);
+    if (apiOrientation < ApiOrientation::BEGIN || apiOrientation > ApiOrientation::END) {
+        TLOGE(WmsLogTag::DEFAULT, "Orientation %{public}u invalid!", static_cast<uint32_t>(apiOrientation));
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    } else {
+        reqOrientation = JS_TO_NATIVE_ORIENTATION_MAP.at(apiOrientation);
+    }
+    return errCode;
+}
+
 napi_value JsWindow::OnSetPreferredOrientation(napi_env env, napi_callback_info info)
 {
-    WmErrorCode errCode = WmErrorCode::WM_OK;
     Orientation requestedOrientation = Orientation::UNSPECIFIED;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 1) { // 1: params num
-        WLOGFE("Argc is invalid: %{public}zu", argc);
-        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-    } else {
-        if (argv[0] == nullptr) {
-            errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-            WLOGFE("Failed to convert parameter to Orientation");
-        } else {
-            uint32_t resultValue = 0;
-            if (errCode == WmErrorCode::WM_OK && !ConvertFromJsValue(env, argv[0], resultValue)) {
-                WLOGFE("Failed to convert parameter to orientation");
-                errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-            }
-            auto apiOrientation = static_cast<ApiOrientation>(resultValue);
-            if (apiOrientation < ApiOrientation::BEGIN ||
-                apiOrientation > ApiOrientation::END) {
-                WLOGFE("Orientation %{public}u invalid!", static_cast<uint32_t>(apiOrientation));
-                errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-            } else {
-                requestedOrientation = JS_TO_NATIVE_ORIENTATION_MAP.at(apiOrientation);
-            }
-        }
-    }
+    WmErrorCode errCode = CheckPreferredOrientation(env, argc, argv, requestedOrientation);
     if (errCode == WmErrorCode::WM_ERROR_INVALID_PARAM) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
@@ -3317,27 +3369,38 @@ napi_value JsWindow::OnSetTopmost(napi_env env, napi_callback_info info)
     return result;
 }
 
+static WMError CheckKeepScreenOn(napi_env env, size_t argc, napi_value* argv, bool& keepScreenOn)
+{
+    const size_t minParamNum = 1;
+    const size_t maxParamNum = 2;
+    if (argc < minParamNum || argc > maxParamNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Argc is invalid: %{public}zu", argc);
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid.");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+
+    WMError errCode = WMError::WM_OK;
+    napi_value nativeVal = argv[0];
+    if (nativeVal == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to keepScreenOn");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    } else {
+        CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+            napi_get_value_bool(env, nativeVal, &keepScreenOn));
+    }
+    return errCode;
+}
+
 napi_value JsWindow::OnSetKeepScreenOn(napi_env env, napi_callback_info info)
 {
-    WMError errCode = WMError::WM_OK;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 1 || argc > 2) { // 2: maximum params num
-        WLOGFE("Argc is invalid: %{public}zu", argc);
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
-    }
     bool keepScreenOn = true;
-    if (errCode == WMError::WM_OK) {
-        napi_value nativeVal = argv[0];
-        if (nativeVal == nullptr) {
-            WLOGFE("Failed to convert parameter to keepScreenOn");
-            errCode = WMError::WM_ERROR_INVALID_PARAM;
-        } else {
-            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
-                napi_get_value_bool(env, nativeVal, &keepScreenOn));
-        }
-    }
+    WMError errCode = CheckKeepScreenOn(env, argc, argv, keepScreenOn);
 
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
@@ -3790,26 +3853,38 @@ napi_value JsWindow::OnSetRaiseByClickEnabled(napi_env env, napi_callback_info i
     return result;
 }
 
+static WMError CheckHideNonSystemFloatingWindows(napi_env env, size_t argc, napi_value* argv, bool& shouldHide)
+{
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid.");
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+    const size_t minParamNum = 1;
+    const size_t maxParamNum = 2;
+    if (argc < minParamNum || argc > maxParamNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Argc is invalid: %{public}zu", argc);
+        return WMError::WM_ERROR_INVALID_PARAM;
+    }
+
+    WMError errCode = WMError::WM_OK;
+    napi_value nativeVal = argv[0];
+    if (nativeVal == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Failed to convert parameter to shouldHide");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    } else {
+        napi_get_value_bool(env, nativeVal, &shouldHide);
+    }
+    return errCode;
+}
+
 napi_value JsWindow::OnHideNonSystemFloatingWindows(napi_env env, napi_callback_info info)
 {
-    WMError errCode = WMError::WM_OK;
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 1 || argc > 2) { // 2: maximum params num
-        WLOGFE("Argc is invalid: %{public}zu", argc);
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
-    }
     bool shouldHide = false;
-    if (errCode == WMError::WM_OK) {
-        napi_value nativeVal = argv[0];
-        if (nativeVal == nullptr) {
-            WLOGFE("Failed to convert parameter to shouldHide");
-            errCode = WMError::WM_ERROR_INVALID_PARAM;
-        } else {
-            napi_get_value_bool(env, nativeVal, &shouldHide);
-        }
-    }
+    WMError errCode = CheckHideNonSystemFloatingWindows(env, argc, argv, shouldHide);
+
     wptr<Window> weakToken(windowToken_);
     NapiAsyncTask::CompleteCallback complete =
         [weakToken, shouldHide, errCode](napi_env env, NapiAsyncTask& task, int32_t status) {
@@ -3847,6 +3922,30 @@ napi_value JsWindow::OnHideNonSystemFloatingWindows(napi_env env, napi_callback_
     return result;
 }
 
+static WmErrorCode CheckSingleFrameComposerEnabled(napi_env env, size_t argc, napi_value* argv, bool& enabled)
+{
+    const size_t paramNum = 1;
+    if (argc != paramNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Invalid parameter, argc is invalid: %{public}zu", argc);
+        return WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid");
+        return WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    napi_value nativeVal = argv[0];
+    if (nativeVal == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Invalid parameter, failed to convert parameter to enabled");
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    } else {
+        CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
+            napi_get_value_bool(env, nativeVal, &enabled));
+    }
+    return errCode;
+}
+
 napi_value JsWindow::OnSetSingleFrameComposerEnabled(napi_env env, napi_callback_info info)
 {
     WmErrorCode errCode = WmErrorCode::WM_OK;
@@ -3860,20 +3959,7 @@ napi_value JsWindow::OnSetSingleFrameComposerEnabled(napi_env env, napi_callback
         size_t argc = 4;
         napi_value argv[4] = {nullptr};
         napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-        if (argc != 1) { // 1: the param num
-            WLOGFE("Invalid parameter, argc is invalid: %{public}zu", argc);
-            errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-        }
-        if (errCode == WmErrorCode::WM_OK) {
-            napi_value nativeVal = argv[0];
-            if (nativeVal == nullptr) {
-                WLOGFE("Invalid parameter, failed to convert parameter to enabled");
-                errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
-            } else {
-                CHECK_NAPI_RETCODE(errCode, WmErrorCode::WM_ERROR_INVALID_PARAM,
-                    napi_get_value_bool(env, nativeVal, &enabled));
-            }
-        }
+        errCode = CheckSingleFrameComposerEnabled(env, argc, argv, enabled);
     }
 
     wptr<Window> weakToken(windowToken_);
@@ -5164,23 +5250,43 @@ napi_value JsWindow::OnSetWaterMarkFlag(napi_env env, napi_callback_info info)
     return result;
 }
 
+static WmErrorCode CheckHandwritingFlag(napi_env env, size_t argc, napi_value* argv, bool& isAddFlag)
+{
+    WmErrorCode errCode = WmErrorCode::WM_OK;
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid.");
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    const size_t minParamNum = 1;
+    if (argc < minParamNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Argc is invalid: %{public}zu", argc);
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    }
+    if (errCode != WmErrorCode::WM_OK) {
+        return errCode;
+    }
+
+    napi_value nativeBool = argv[0];
+    if (nativeBool == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "SetHandwritingFlag Invalid window flag");
+        errCode = WmErrorCode::WM_ERROR_INVALID_PARAM;
+    } else {
+        napi_get_value_bool(env, nativeBool, &isAddFlag);
+    }
+    return errCode;
+}
+
 napi_value JsWindow::OnSetHandwritingFlag(napi_env env, napi_callback_info info)
 {
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 1) {
-        WLOGFE("Argc is invalid: %{public}zu", argc);
-        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
+    bool isAddFlag = false;
+    WmErrorCode errCode = CheckHandwritingFlag(env, argc, argv, isAddFlag);
+    if (errCode != WmErrorCode::WM_OK) {
+        return NapiThrowError(env, errCode);
     }
 
-    napi_value nativeBool = argv[0];
-    if (nativeBool == nullptr) {
-        WLOGFE("SetHandwritingFlag Invalid window flag");
-        return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
-    }
-    bool isAddFlag = false;
-    napi_get_value_bool(env, nativeBool, &isAddFlag);
     wptr<Window> weakToken(windowToken_);
     std::shared_ptr<WmErrorCode> errCodePtr = std::make_shared<WmErrorCode>(WmErrorCode::WM_OK);
     NapiAsyncTask::ExecuteCallback execute = [weakToken, isAddFlag, errCodePtr]() {
@@ -5219,16 +5325,38 @@ napi_value JsWindow::OnSetHandwritingFlag(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value JsWindow::OnSetAspectRatio(napi_env env, napi_callback_info info)
+static WMError CheckAspectRatio(napi_env env, size_t argc, napi_value* argv, double& aspectRatio)
 {
     WMError errCode = WMError::WM_OK;
+    const size_t minParamNum = 1;
+    const size_t maxParamNum = 2;
+    if (argc < minParamNum || argc > maxParamNum) {
+        TLOGE(WmsLogTag::DEFAULT, "Argc is invalid: %{public}zu", argc);
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (argv == nullptr) {
+        TLOGE(WmsLogTag::DEFAULT, "Argv is invalid.");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    }
+    if (errCode != WMError::WM_OK) {
+        return errCode;
+    }
+
+    napi_value nativeVal = argv[0];
+    if (nativeVal == nullptr) {
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
+    } else {
+        CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
+            napi_get_value_double(env, nativeVal, &aspectRatio));
+    }
+    return errCode;
+}
+
+napi_value JsWindow::OnSetAspectRatio(napi_env env, napi_callback_info info)
+{
     size_t argc = 4;
     napi_value argv[4] = {nullptr};
     napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
-    if (argc < 1 || argc > 2) { // 2: maximum params num
-        WLOGFE("[NAPI]Argc is invalid: %{public}zu", argc);
-        errCode = WMError::WM_ERROR_INVALID_PARAM;
-    }
 
     if (windowToken_ == nullptr) {
         WLOGFE("WindowToken_ is nullptr");
@@ -5241,16 +5369,7 @@ napi_value JsWindow::OnSetAspectRatio(napi_env env, napi_callback_info info)
     }
 
     double aspectRatio = 0.0;
-    if (errCode == WMError::WM_OK) {
-        napi_value nativeVal = argv[0];
-        if (nativeVal == nullptr) {
-            errCode = WMError::WM_ERROR_INVALID_PARAM;
-        } else {
-            CHECK_NAPI_RETCODE(errCode, WMError::WM_ERROR_INVALID_PARAM,
-                napi_get_value_double(env, nativeVal, &aspectRatio));
-        }
-    }
-
+    WMError errCode = CheckAspectRatio(env, argc, argv, aspectRatio);
     if (errCode == WMError::WM_ERROR_INVALID_PARAM || aspectRatio <= 0.0) {
         return NapiThrowError(env, WmErrorCode::WM_ERROR_INVALID_PARAM);
     }
@@ -5996,7 +6115,7 @@ napi_value JsWindow::OnGetImmersiveModeEnabledState(napi_env env, napi_callback_
     return CreateJsValue(env, isEnabled);
 }
 
-void BindFunctions(napi_env env, napi_value object, const char *moduleName)
+void BindFunctionsInner1(napi_env env, napi_value object, const char* moduleName)
 {
     BindNativeFunction(env, object, "show", moduleName, JsWindow::Show);
     BindNativeFunction(env, object, "showWindow", moduleName, JsWindow::ShowWindow);
@@ -6045,6 +6164,10 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "setBackgroundColor", moduleName, JsWindow::SetBackgroundColor);
     BindNativeFunction(env, object, "setWindowBackgroundColor", moduleName, JsWindow::SetWindowBackgroundColorSync);
     BindNativeFunction(env, object, "setBrightness", moduleName, JsWindow::SetBrightness);
+}
+
+void BindFunctionsInner2(napi_env env, napi_value object, const char* moduleName)
+{
     BindNativeFunction(env, object, "setWindowBrightness", moduleName, JsWindow::SetWindowBrightness);
     BindNativeFunction(env, object, "setTopmost", moduleName, JsWindow::SetTopmost);
     BindNativeFunction(env, object, "setDimBehind", moduleName, JsWindow::SetDimBehind);
@@ -6087,6 +6210,10 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "maximize", moduleName, JsWindow::Maximize);
     BindNativeFunction(env, object, "setResizeByDragEnabled", moduleName, JsWindow::SetResizeByDragEnabled);
     BindNativeFunction(env, object, "setRaiseByClickEnabled", moduleName, JsWindow::SetRaiseByClickEnabled);
+}
+
+void BindFunctionsInner3(napi_env env, napi_value object, const char* moduleName)
+{
     BindNativeFunction(env, object, "raiseAboveTarget", moduleName, JsWindow::RaiseAboveTarget);
     BindNativeFunction(env, object, "hideNonSystemFloatingWindows", moduleName,
         JsWindow::HideNonSystemFloatingWindows);
@@ -6108,6 +6235,13 @@ void BindFunctions(napi_env env, napi_value object, const char *moduleName)
     BindNativeFunction(env, object, "setWindowGrayScale", moduleName, JsWindow::SetWindowGrayScale);
     BindNativeFunction(env, object, "setImmersiveModeEnabledState", moduleName, JsWindow::SetImmersiveModeEnabledState);
     BindNativeFunction(env, object, "getImmersiveModeEnabledState", moduleName, JsWindow::GetImmersiveModeEnabledState);
+}
+
+void BindFunctions(napi_env env, napi_value object, const char *moduleName)
+{
+    BindFunctionsInner1(env, object, moduleName);
+    BindFunctionsInner2(env, object, moduleName);
+    BindFunctionsInner3(env, object, moduleName);
 }
 }  // namespace Rosen
 }  // namespace OHOS
