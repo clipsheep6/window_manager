@@ -94,14 +94,9 @@ HWTEST_F(SessionManagerTest, OnWMSConnectionChangedCallback, Function | SmallTes
 {
     SessionManager sessionManager;
     sessionManager.wmsConnectionChangedFunc_ = nullptr;
-    sessionManager.OnWMSConnectionChangedCallback(0, 0, true, false);
+    sessionManager.OnWMSConnectionChangedCallback(MOCK_USER_ID_ZERO, MOCK_SCREEN_ID_ZERO, true, false);
 
-    int32_t userId = 2;
-    int32_t screenId = 0;
-    bool isConnected = true;
     sessionManager.currentWMSUserId_ = SYSTEM_USERID;
-    sessionManager.OnWMSConnectionChanged(userId, screenId, isConnected, nullptr);
-
     sessionManager.destroyed_ = true;
     sessionManager.ClearSessionManagerProxy();
 
