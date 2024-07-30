@@ -100,6 +100,7 @@ const unsigned int XCOLLIE_TIMEOUT_S = 10;
 constexpr int32_t CAST_WIRED_PROJECTION_START = 1005;
 constexpr int32_t CAST_WIRED_PROJECTION_STOP = 1007;
 constexpr int32_t RES_FAILURE_FOR_PRIVACY_WINDOW = -2;
+const int32_t REMOVE_DISPLAY_NODE = 0;
 
 // based on the bundle_util
 inline int32_t GetUserIdByCallingUid()
@@ -173,6 +174,7 @@ void ScreenSessionManager::FoldScreenPowerInit()
             rsInterface_.SetTpFeatureConfig(tpType, fullTpChange.c_str());
             #endif
             rsInterface_.SetScreenPowerStatus(SCREEN_ID_MAIN, ScreenPowerStatus::POWER_STATUS_OFF);
+            foldScreenController_->AddOrRemoveDisplayNodeToTree(SCREEN_ID_MAIN, REMOVE_DISPLAY_NODE);
             rsInterface_.SetScreenPowerStatus(SCREEN_ID_FULL, ScreenPowerStatus::POWER_STATUS_ON);
         } else if (rsInterface_.GetActiveScreenId() == SCREEN_ID_MAIN) {
             TLOGI(WmsLogTag::DMS, "ScreenSessionManager Fold Screen Power Main animation Init 3.");
@@ -187,6 +189,7 @@ void ScreenSessionManager::FoldScreenPowerInit()
             rsInterface_.SetTpFeatureConfig(tpType, mainTpChange.c_str());
             #endif
             rsInterface_.SetScreenPowerStatus(SCREEN_ID_FULL, ScreenPowerStatus::POWER_STATUS_OFF);
+            foldScreenController_->AddOrRemoveDisplayNodeToTree(SCREEN_ID_FULL, REMOVE_DISPLAY_NODE);
             rsInterface_.SetScreenPowerStatus(SCREEN_ID_MAIN, ScreenPowerStatus::POWER_STATUS_ON);
         } else {
             TLOGI(WmsLogTag::DMS, "ScreenSessionManager Fold Screen Power Init, invalid active screen id");
@@ -1534,6 +1537,35 @@ bool ScreenSessionManager::GetPowerStatus(ScreenPowerState state, PowerStateChan
     return true;
 }
 
+void ScreenSessionManager::SetScreenPowerEnterCoordination()
+{
+    TLOGI(WmsLogTag::DMS, "[UL_POWER]SetScreenPower enter status:%{public}u", ScreenPowerStatus::POWER_STATUS_ON);
+    auto screenIds = GetAllScreenIds();
+    if (screenIds.empty()) {
+        TLOGI(WmsLogTag::DMS, "[UL_POWER]SetScreenPower screenIds empty");
+        return;
+    }
+
+    // EnterCoordination
+    if (GetFoldDisplayMode() == FoldDisplayMode::COORDINATION) {
+        TLOGI(WmsLogTag::DMS, "[UL_POWER]SetScreenPower Enter Coordination");
+        rsInterface_.SetScreenPowerStatus(SCREEN_ID_MAIN, ScreenPowerStatus::POWER_STATUS_ON);
+    }
+}
+
+void ScreenSessionManager::ExitCoordination()
+{
+    if (GetFoldDisplayMode() != FoldDisplayMode::COORDINATION) {
+        return;
+    }
+    TLOGI(WmsLogTag::DMS, "[UL_POWER]ExitCoordination");
+    rsInterface_.SetScreenPowerStatus(SCREEN_ID_MAIN, ScreenPowerStatus::POWER_STATUS_OFF);
+    if (foldScreenController_ != nullptr) {
+        foldScreenController_->AddOrRemoveDisplayNodeToTree(SCREEN_ID_MAIN, REMOVE_DISPLAY_NODE);
+        foldScreenController_->RecoverDisplayModeByFoldStatus();
+    }
+}
+
 bool ScreenSessionManager::SetScreenPower(ScreenPowerStatus status, PowerStateChangeReason reason)
 {
     TLOGI(WmsLogTag::DMS, "[UL_POWER]SetScreenPower enter status:%{public}u", status);
@@ -1549,6 +1581,10 @@ bool ScreenSessionManager::SetScreenPower(ScreenPowerStatus status, PowerStateCh
         TLOGI(WmsLogTag::DMS, "[UL_POWER]SetScreenPower exit because buttonBlock_");
         buttonBlock_ = false;
         return true;
+    }
+
+    if (status == ScreenPowerStatus::POWER_STATUS_OFF || status == ScreenPowerStatus::POWER_STATUS_SUSPEND) {
+        ExitCoordination();
     }
 
     if (((status == ScreenPowerStatus::POWER_STATUS_OFF || status == ScreenPowerStatus::POWER_STATUS_SUSPEND) &&
@@ -2276,6 +2312,7 @@ ScreenId ScreenSessionManager::CreateVirtualScreen(VirtualScreenOption option,
             SysCapUtil::GetClientName().c_str(), IPCSkeleton::GetCallingPid());
         return SCREEN_ID_INVALID;
     }
+    ExitCoordination();
     TLOGI(WmsLogTag::DMS, "ENTER");
     if (SessionPermission::IsBetaVersion()) {
         CheckAndSendHiSysEvent("CREATE_VIRTUAL_SCREEN", "hmos.screenrecorder");

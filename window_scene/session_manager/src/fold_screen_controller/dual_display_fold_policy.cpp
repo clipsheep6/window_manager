@@ -103,6 +103,12 @@ void DualDisplayFoldPolicy::SendSensorResult(FoldStatus foldStatus)
 {
     TLOGI(WmsLogTag::DMS, "SendSensorResult FoldStatus: %{public}d", foldStatus);
     FoldDisplayMode displayMode = GetModeMatchStatus();
+    bool isScreenOn = PowerMgr::PowerMgrClient::GetInstance().IsFoldScreenOn();
+    if (currentDisplayMode_ == FoldDisplayMode::COORDINATION && isScreenOn &&
+        displayMode == FoldDisplayMode::MAIN) {
+        WLOGW("last displayMode is coordination return");
+        return;
+    }
     if (displayMode != currentDisplayMode_) {
         ChangeScreenDisplayMode(displayMode);
     }
@@ -304,11 +310,9 @@ void DualDisplayFoldPolicy::ChangeScreenDisplayModeToCoordination()
     // on sub screen
     auto taskScreenOnSub = [=] {
         TLOGI(WmsLogTag::DMS, "ChangeScreenDisplayMode: on sub screenId");
-        screenId_ = SCREEN_ID_SUB;
-        ScreenSessionManager::GetInstance().SetKeyguardDrawnDoneFlag(false);
-        ScreenSessionManager::GetInstance().SetScreenPower(ScreenPowerStatus::POWER_STATUS_ON,
-            PowerStateChangeReason::STATE_CHANGE_REASON_DISPLAY_SWITCH);
-        PowerMgr::PowerMgrClient::GetInstance().RefreshActivity();
+        if (isScreenOn) {
+            ScreenSessionManager::GetInstance().SetScreenPowerEnterCoordination();
+        }
     };
     screenPowerTaskScheduler_->PostAsyncTask(taskScreenOnSub, "taskScreenOnSub");
     AddOrRemoveDisplayNodeToTree(SCREEN_ID_SUB, ADD_DISPLAY_NODE);
@@ -368,6 +372,14 @@ void DualDisplayFoldPolicy::AddOrRemoveDisplayNodeToTree(ScreenId screenId, int3
         TLOGI(WmsLogTag::DMS, "add or remove displayNode");
         transactionProxy->FlushImplicitTransaction();
     }
+}
+
+void DualDisplayFoldPolicy::RecoverDisplayModeByFoldStatus()
+{
+    FoldDisplayMode displayMode = GetModeMatchStatus();
+    currentDisplayMode_ = displayMode;
+    lastDisplayMode_ = displayMode;
+    WLOGFI("UpdateDisplayModeOnlyValue:%{public}d", displayMode);
 }
 
 } // namespace OHOS::Rosen
