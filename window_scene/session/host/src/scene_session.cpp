@@ -397,6 +397,23 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
     return WSError::WS_OK;
 }
 
+WSError SceneSession::OnSystemSessionEvent(SessionEvent event)
+{
+    auto weakThis = wptr(this);
+    auto session = weakThis.promote();
+    if (!session) {
+        TLOGW(WmsLogTag::WMS_SYSTEM, "IPC communicate failed since hostSession is nullptr");
+        return WSError::WS_ERROR_NULLPTR;
+    } else if (!SessionPermission::IsSystemCalling()) {
+        TLOGW(WmsLogTag::WMS_SYSTEM, "This is not system window, permission denied!");
+        return WSError::WS_ERROR_NOT_SYSTEM_APP;
+    } else if (session->moveDragController_->GetStartDragFlag()) {
+        TLOGW(WmsLogTag::WMS_SYSTEM, "Repeat operation, window is moving");
+        return WSError::WS_ERROR_REPEAT_OPERATION;
+    }
+    WSError errorCode = OnSessionEvent(event);
+    return errorCode;
+}
 uint32_t SceneSession::GetWindowDragHotAreaType(uint32_t type, int32_t pointerX, int32_t pointerY)
 {
     std::shared_lock<std::shared_mutex> lock(windowDragHotAreaMutex_);
@@ -1613,7 +1630,8 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
     bool isSubWindow = WindowHelper::IsSubWindow(windowType);
     bool isDialog = WindowHelper::IsDialogWindow(windowType);
     bool isMaxModeAvoidSysBar = property->GetMaximizeMode() == MaximizeMode::MODE_AVOID_SYSTEM_BAR;
-    if (isMovableWindowType && (isMainWindow || isSubWindow || isDialog) &&
+    bool isSystemWindow = WindowHelper::IsSystemWindow(windowType);
+    if (isMovableWindowType && (isMainWindow || isSubWindow || isDialog || isSystemWindow) &&
         !isMaxModeAvoidSysBar) {
         if (CheckDialogOnForeground() && isPointDown) {
             HandlePointDownDialog();
@@ -1635,7 +1653,7 @@ WSError SceneSession::TransferPointerEvent(const std::shared_ptr<MMI::PointerEve
                 return WSError::WS_OK;
             }
         }
-        if (IsDecorEnable() && moveDragController_->ConsumeMoveEvent(pointerEvent, winRect_)) {
+        if ((IsDecorEnable() || isSystemWindow) && moveDragController_->ConsumeMoveEvent(pointerEvent, winRect_)) {
             PresentFoucusIfNeed(pointerEvent->GetPointerAction());
             pointerEvent->MarkProcessed();
             return WSError::WS_OK;
@@ -2023,6 +2041,10 @@ void SceneSession::SetSurfaceBounds(const WSRect& rect)
         surfaceNode_->SetFrame(rect.posX_, rect.posY_, rect.width_, rect.height_);
     } else if (WindowHelper::IsDialogWindow(GetWindowType()) && surfaceNode_) {
         TLOGD(WmsLogTag::WMS_DIALOG, "dialogWindow setSurfaceBounds");
+        surfaceNode_->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
+        surfaceNode_->SetFrame(rect.posX_, rect.posY_, rect.width_, rect.height_);
+    }  else if (WindowHelper::IsSystemWindow(GetWindowType()) && surfaceNode_) {
+        TLOGD(WmsLogTag::WMS_DIALOG, "systemWindow setSurfaceBounds");
         surfaceNode_->SetBounds(rect.posX_, rect.posY_, rect.width_, rect.height_);
         surfaceNode_->SetFrame(rect.posX_, rect.posY_, rect.width_, rect.height_);
     } else {
