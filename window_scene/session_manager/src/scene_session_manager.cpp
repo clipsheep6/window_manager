@@ -1389,7 +1389,7 @@ void SceneSessionManager::CreateKeyboardPanelSession(sptr<SceneSession> keyboard
             .screenId_ = static_cast<uint64_t>(displayId),
             .isRotable_ = true,
         };
-        static bool is2in1 = system::GetParameter("const.product.devicetype", "unknown") == "2in1";
+        static bool is2in1 = systemConfig_.uiType_ == UI_TYPE_PC;
         if (is2in1) {
             panelInfo.sceneType_ = SceneType::INPUT_SCENE;
             TLOGI(WmsLogTag::WMS_KEYBOARD, "Set panel canvasNode");
