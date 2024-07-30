@@ -626,12 +626,12 @@ napi_value JsWindowStage::OnSetDefaultDensityEnabled(napi_env env, napi_callback
 static void OnCreateSubWindowTask(napi_env env, NapiAsyncTask& task, int32_t status,
     std::shared_ptr<WindowScene> weakScene, std::string windowName)
 {
-    auto windowOption = sptr<Rosen::WindowOption>::MakeSptr();
-    windowOption->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
-    windowOption->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
-    windowOption->SetOnlySupportSceneBoard(true);
+    auto option = sptr<Rosen::WindowOption>::MakeSptr();
+    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
+    option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
+    option->SetOnlySupportSceneBoard(true);
     WMError errorCode = WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
-    auto window = weakScene->CreateWindow(windowName, windowOption, errorCode);
+    auto window = weakScene->CreateWindow(windowName, option, errorCode);
         if (errorCode == WMError::WM_ERROR_DEVICE_NOT_SUPPORT) {
             WLOGFE("[NAPI]Get window failed");
             task.Reject(env, JsErrUtils::CreateJsError(env, errorCode, "Get window failed"));
@@ -643,8 +643,8 @@ static void OnCreateSubWindowTask(napi_env env, NapiAsyncTask& task, int32_t sta
                 "Get window failed"));
             return;
         }
-        task.Resolve(env, CreateJsWindowObject(env, window));
-        WLOGI("[NAPI]Create sub window %{public}s end", windowName.c_str());
+    task.Resolve(env, CreateJsWindowObject(env, window));
+    WLOGI("[NAPI]Create sub window %{public}s end", windowName.c_str());
 }
 
 napi_value JsWindowStage::OnCreateSubWindowWithOptions(napi_env env, napi_callback_info info)
