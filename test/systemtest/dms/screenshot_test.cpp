@@ -16,6 +16,8 @@
 #include <cinttypes>
 #include <gtest/gtest.h>
 
+#include "mock_display_manager_adapter.h"
+#include "singleton_mocker.h"
 #include "common_test_utils.h"
 #include "display_test_utils.h"
 #include "display_manager_proxy.h"
@@ -28,6 +30,7 @@ using namespace testing::ext;
 
 namespace OHOS {
 namespace Rosen {
+using Mocker = SingletonMocker<DisplayManagerAdapter, MockDisplayManagerAdapter>;
 namespace {
     constexpr HiviewDFX::HiLogLabel LABEL = {LOG_CORE, HILOG_DOMAIN_DISPLAY, "ScreenshotTest"};
 }
@@ -91,6 +94,8 @@ namespace {
  */
 HWTEST_F(ScreenshotTest, ScreenShotValid01, Function | MediumTest | Level2)
 {
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    EXPECT_CALL(m->Mock(), GetDisplaySnapshot(_, _)).Times(1).WillOnce(Return(CommonTestUtils::CreatePixelMap()));
     ASSERT_NE(nullptr, DisplayManager::GetInstance().GetScreenshot(defaultId_));
 }
 
@@ -111,6 +116,8 @@ HWTEST_F(ScreenshotTest, ScreenShotValid02, Function | MediumTest | Level2)
  */
 HWTEST_F(ScreenshotTest, ScreenShotValid03, Function | MediumTest | Level2)
 {
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    EXPECT_CALL(m->Mock(), GetDisplaySnapshot(_, _)).Times(1).WillOnce(Return(CommonTestUtils::CreatePixelMap()));
     auto& dm = DisplayManager::GetInstance();
     std::shared_ptr<Media::PixelMap> screenshot = dm.GetScreenshot(defaultId_);
     ASSERT_NE(nullptr, screenshot);
@@ -126,8 +133,10 @@ HWTEST_F(ScreenshotTest, ScreenShotValid03, Function | MediumTest | Level2)
  */
 HWTEST_F(ScreenshotTest, ScreenShotValid04, Function | MediumTest | Level2)
 {
+    std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    EXPECT_CALL(m->Mock(), GetDisplaySnapshot(_, _)).Times(1).WillOnce(Return(CommonTestUtils::CreatePixelMap()));
     auto& dm = DisplayManager::GetInstance();
-    std::shared_ptr<Media::PixelMap> screenshot = dm.GetScreenshot(defaultId_, defaultScreen_,
+    std::shared_ptr<Media::PixelMap> screenshot = dm.GetScreenshot(defaultId_, {0, 0 ,1920 , 1080},
                                                                    defaultImage_, defaultRot_);
     ASSERT_NE(nullptr, screenshot);
 }
