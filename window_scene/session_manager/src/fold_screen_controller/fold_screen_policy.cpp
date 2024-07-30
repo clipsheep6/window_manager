@@ -56,8 +56,4 @@ void FoldScreenPolicy::ClearState()
     currentDisplayMode_ = FoldDisplayMode::UNKNOWN;
     currentFoldStatus_ = FoldStatus::UNKNOWN;
 }
-
-void FoldScreenPolicy::AddOrRemoveDisplayNodeToTree(ScreenId screenId, int32_t command) {};
-
-void FoldScreenPolicy::RecoverDisplayModeByFoldStatus() {};
 } // namespace OHOS::Rosen

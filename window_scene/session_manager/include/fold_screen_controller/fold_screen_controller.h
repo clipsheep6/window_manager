@@ -47,8 +47,6 @@ public:
     void LockDisplayStatus(bool locked);
     void SetOnBootAnimation(bool onBootAnimation);
     void UpdateForPhyScreenPropertyChange();
-    void AddOrRemoveDisplayNodeToTree(ScreenId screenId, int32_t command);
-    void RecoverDisplayModeByFoldStatus();
 private:
     sptr<FoldScreenPolicy> GetFoldScreenPolicy(DisplayDeviceType productType);
     sptr<FoldScreenPolicy> foldScreenPolicy_;

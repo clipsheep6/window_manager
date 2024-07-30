@@ -271,8 +271,6 @@ public:
     void ReportFoldStatusToScb(std::vector<std::string>& screenFoldInfo);
     std::vector<DisplayPhysicalResolution> GetAllDisplayPhysicalResolution() override;
 
-    void SetScreenPowerEnterCoordination();
-
 protected:
     ScreenSessionManager();
     virtual ~ScreenSessionManager() = default;
@@ -448,7 +446,6 @@ private:
     bool IsDefaultMirrorMode(ScreenId screenId);
     void SetCastFromSettingData();
     void RegisterCastObserver(std::vector<ScreenId>& mirrorScreenIds);
-    void ExitCoordination();
 
 private:
     class ScbClientListenerDeathRecipient : public IRemoteObject::DeathRecipient {

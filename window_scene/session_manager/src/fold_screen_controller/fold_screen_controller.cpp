@@ -169,14 +169,4 @@ void FoldScreenController::UpdateForPhyScreenPropertyChange()
     }
     foldScreenPolicy_->UpdateForPhyScreenPropertyChange();
 }
-
-void FoldScreenController::AddOrRemoveDisplayNodeToTree(ScreenId screenId, int32_t command)
-{
-    foldScreenPolicy_->AddOrRemoveDisplayNodeToTree(screenId, command);
-}
-
-void FoldScreenController::RecoverDisplayModeByFoldStatus()
-{
-    foldScreenPolicy_->RecoverDisplayModeByFoldStatus();
-}
 } // namespace OHOS::Rosen
