@@ -7381,7 +7381,7 @@ WSError SceneSessionManager::UpdateSessionAvoidAreaListener(int32_t& persistentI
 bool SceneSessionManager::UpdateSessionAvoidAreaIfNeed(const int32_t& persistentId,
     const sptr<SceneSession>& sceneSession, const AvoidArea& avoidArea, AvoidAreaType avoidAreaType)
 {
-    if ((sceneSession == nullptr) || (enterRecent_.load())) {
+    if ((sceneSession == nullptr) || (enterRecent_.load() && avoidAreaType != AvoidAreaType::TYPE_KEYBOARD)) {
         TLOGI(WmsLogTag::WMS_IMMS, "scene session null or in recent no need update avoid area");
         return false;
     }
