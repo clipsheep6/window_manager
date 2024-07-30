@@ -72,13 +72,47 @@ HWTEST_F(MultiScreenManagerTest, FilterPhysicalAndVirtualScreen, Function | Smal
  * @tc.desc: VirtualScreenMirrorSwitch func
  * @tc.type: FUNC
  */
-HWTEST_F(MultiScreenManagerTest, VirtualScreenMirrorSwitch, Function | SmallTest | Level1)
+HWTEST_F(MultiScreenManagerTest, VirtualScreenMirrorSwitch01, Function | SmallTest | Level1)
 {
     ScreenId mainScreenId = 1;
     std::vector<ScreenId> ScreenIds = {2, 3};
     ScreenId screenGroupId;
     MultiScreenManager::GetInstance().VirtualScreenMirrorSwitch(mainScreenId, ScreenIds, screenGroupId);
     EXPECT_EQ(screenGroupId, 0);
+}
+
+/**
+ * @tc.name: VirtualScreenMirrorSwitch
+ * @tc.desc: VirtualScreenMirrorSwitch func
+ * @tc.type: FUNC
+ */
+HWTEST_F(MultiScreenManagerTest, VirtualScreenMirrorSwitch02, Function | SmallTest | Level1)
+{
+    ScreenId mainScreenId = 1002;
+    std::vector<ScreenId> ScreenIds = {2, 3};
+    ScreenId screenGroupId;
+    sptr<ScreenSession> session = new ScreenSession();
+    ScreenSessionManager::GetInstance().screenSessionMap_[mainScreenId] = screenSession;
+    MultiScreenManager::GetInstance().VirtualScreenMirrorSwitch(mainScreenId, ScreenIds, screenGroupId);
+    EXPECT_EQ(screenGroupId, DMError::DM_OK);
+}
+
+/**
+ * @tc.name: VirtualScreenMirrorSwitch
+ * @tc.desc: VirtualScreenMirrorSwitch func
+ * @tc.type: FUNC
+ */
+HWTEST_F(MultiScreenManagerTest, VirtualScreenMirrorSwitch03, Function | SmallTest | Level1)
+{
+    ScreenId mainScreenId = 1002;
+    std::vector<ScreenId> ScreenIds = {2, 3};
+    ScreenId screenGroupId;
+    sptr<ScreenSession> session = new ScreenSession();
+    ScreenSessionManager::GetInstance().screenSessionMap_[mainScreenId] = screenSession;
+    sptr<ScreenSessionGroup> sessiongroup = new ScreenSessionGroup();
+    ScreenSessionManager::GetInstance().smsScreenGroupMap_[mainScreenId, sessiongroup];
+    MultiScreenManager::GetInstance().VirtualScreenMirrorSwitch(mainScreenId, ScreenIds, screenGroupId);
+    EXPECT_EQ(screenGroupId, DMError::DM_OK);
 }
 
 /**
@@ -136,9 +170,22 @@ HWTEST_F(MultiScreenManagerTest, VirtualScreenUniqueSwitch02, Function | SmallTe
  * @tc.desc: UniqueSwitch func
  * @tc.type: FUNC
  */
-HWTEST_F(MultiScreenManagerTest, UniqueSwitch, Function | SmallTest | Level1)
+HWTEST_F(MultiScreenManagerTest, UniqueSwitch01, Function | SmallTest | Level1)
 {
     std::vector<ScreenId> screenIds = {};
+    DMError ret = MultiScreenManager::GetInstance().UniqueSwitch(screenIds);
+    EXPECT_EQ(ret, DMError::DM_OK);
+}
+
+/**
+ * @tc.name: UniqueSwitch
+ * @tc.desc: UniqueSwitch func
+ * @tc.type: FUNC
+ */
+HWTEST_F(MultiScreenManagerTest, UniqueSwitch02, Function | SmallTest | Level1)
+{
+    std::vector<ScreenId> screenIds = {};
+    screenIds.emplace_back(1001);
     DMError ret = MultiScreenManager::GetInstance().UniqueSwitch(screenIds);
     EXPECT_EQ(ret, DMError::DM_OK);
 }
@@ -151,6 +198,60 @@ HWTEST_F(MultiScreenManagerTest, UniqueSwitch, Function | SmallTest | Level1)
 HWTEST_F(MultiScreenManagerTest, MirrorSwitch, Function | SmallTest | Level1)
 {
     std::vector<ScreenId> screenIds = {};
+    ScreenId screenGroupId = 0;
+    DMError ret = MultiScreenManager::GetInstance().MirrorSwitch(1, screenIds, screenGroupId);
+    EXPECT_EQ(ret, DMError::DM_OK);
+}
+
+/**
+ * @tc.name: MirrorSwitch
+ * @tc.desc: MirrorSwitch func
+ * @tc.type: FUNC
+ */
+HWTEST_F(MultiScreenManagerTest, MirrorSwitch02, Function | SmallTest | Level1)
+{
+    std::vector<ScreenId> screenIds = {};
+    ScreenId screenGroupId = 0;
+    DMError ret = MultiScreenManager::GetInstance().MirrorSwitch(1001, screenIds, screenGroupId);
+    EXPECT_EQ(ret, DMError::DM_OK);
+}
+
+/**
+ * @tc.name: MirrorSwitch
+ * @tc.desc: MirrorSwitch func
+ * @tc.type: FUNC
+ */
+HWTEST_F(MultiScreenManagerTest, MirrorSwitch03, Function | SmallTest | Level1)
+{
+    std::vector<ScreenId> screenIds = {};
+    ScreenId screenGroupId = 10;
+    DMError ret = MultiScreenManager::GetInstance().MirrorSwitch(1001, screenIds, screenGroupId);
+    EXPECT_EQ(ret, DMError::DM_OK);
+}
+
+/**
+ * @tc.name: MirrorSwitch
+ * @tc.desc: MirrorSwitch func
+ * @tc.type: FUNC
+ */
+HWTEST_F(MultiScreenManagerTest, MirrorSwitch03, Function | SmallTest | Level1)
+{
+    std::vector<ScreenId> screenIds = {};
+    screenIds.emplace_back(1001);
+    ScreenId screenGroupId = 0;
+    DMError ret = MultiScreenManager::GetInstance().MirrorSwitch(1001, screenIds, screenGroupId);
+    EXPECT_EQ(ret, DMError::DM_OK);
+}
+
+/**
+ * @tc.name: MirrorSwitch
+ * @tc.desc: MirrorSwitch func
+ * @tc.type: FUNC
+ */
+HWTEST_F(MultiScreenManagerTest, MirrorSwitch04, Function | SmallTest | Level1)
+{
+    std::vector<ScreenId> screenIds = {};
+    screenIds.emplace_back(1001);
     ScreenId screenGroupId = 0;
     DMError ret = MultiScreenManager::GetInstance().MirrorSwitch(1, screenIds, screenGroupId);
     EXPECT_EQ(ret, DMError::DM_OK);

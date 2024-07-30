@@ -64,7 +64,7 @@ namespace {
      * @tc.desc: ChangeScreenDisplayMode
      * @tc.type: FUNC
      */
-    HWTEST_F(DualDisplayFoldPolicyTest, ChangeScreenDisplayMode, Function | SmallTest | Level3)
+    HWTEST_F(DualDisplayFoldPolicyTest, ChangeScreenDisplayMode01, Function | SmallTest | Level3)
     {
         std::recursive_mutex mutex;
         DualDisplayFoldPolicy dualDisplayFoldPolicy(mutex, std::shared_ptr<TaskScheduler>());
@@ -83,6 +83,35 @@ namespace {
         dualDisplayFoldPolicy.ChangeScreenDisplayMode(FoldDisplayMode::COORDINATION);
         mode = ssm_.GetFoldDisplayMode();
         ASSERT_EQ(mode, ssm_.GetFoldDisplayMode());
+    }
+
+    /**
+     * @tc.name: ChangeScreenDisplayMode
+     * @tc.desc: ChangeScreenDisplayMode
+     * @tc.type: FUNC
+     */
+    HWTEST_F(DualDisplayFoldPolicyTest, ChangeScreenDisplayMode02, Function | SmallTest | Level3)
+    {
+        std::recursive_mutex mutex;
+        DualDisplayFoldPolicy dualDisplayFoldPolicy(mutex, std::shared_ptr<TaskScheduler>());
+        sptr<ScreenSession> session = new ScreenSession();
+        ssm_.screenSessionMap_[mainScreenId] = screenSession;
+        ScreenId screenId = 1001;
+        dualDisplayFoldPolicy.ChangeScreenDisplayMode(FoldDisplayMode::UNKNOWN);
+        auto ret  = ssm_.HasRsScreenId();
+        ASSERT_EQ(false, ret);
+
+        dualDisplayFoldPolicy.ChangeScreenDisplayMode(FoldDisplayMode::SUB);
+        auto ret  = ssm_.HasRsScreenId();
+        ASSERT_EQ(false, ret);
+
+        dualDisplayFoldPolicy.ChangeScreenDisplayMode(FoldDisplayMode::MAIN);
+        auto ret  = ssm_.HasRsScreenId();
+        ASSERT_EQ(false, ret);
+
+        dualDisplayFoldPolicy.ChangeScreenDisplayMode(FoldDisplayMode::COORDINATION);
+        auto ret  = ssm_.HasRsScreenId();
+        ASSERT_EQ(false, ret);
     }
 
     /**
@@ -357,6 +386,35 @@ namespace {
         dualDisplayFoldPolicy.AddOrRemoveDisplayNodeToTree(screenId, command);
         FoldDisplayMode mode = ssm_.GetFoldDisplayMode();
         ASSERT_EQ(mode, ssm_.GetFoldDisplayMode());
+    }
+
+    /**
+     * @tc.name: TriggerScreenDisplayModeUpdate
+     * @tc.desc: TriggerScreenDisplayModeUpdate
+     * @tc.type: FUNC
+     */
+    HWTEST_F(DualDisplayFoldPolicyTest, TriggerScreenDisplayModeUpdate, Function | SmallTest | Level3)
+    {
+        std::recursive_mutex mutex;
+        DualDisplayFoldPolicy dualDisplayFoldPolicy(mutex, std::shared_ptr<TaskScheduler>());
+        sptr<ScreenSession> session = new ScreenSession();
+        ssm_.screenSessionMap_[mainScreenId] = screenSession;
+        ScreenId screenId = 1001;
+        dualDisplayFoldPolicy.TriggerScreenDisplayModeUpdate(FoldDisplayMode::UNKNOWN);
+        auto ret  = ssm_.HasRsScreenId();
+        ASSERT_EQ(false, ret);
+
+        dualDisplayFoldPolicy.TriggerScreenDisplayModeUpdate(FoldDisplayMode::SUB);
+        auto ret  = ssm_.HasRsScreenId();
+        ASSERT_EQ(false, ret);
+
+        dualDisplayFoldPolicy.TriggerScreenDisplayModeUpdate(FoldDisplayMode::MAIN);
+        auto ret  = ssm_.HasRsScreenId();
+        ASSERT_EQ(false, ret);
+
+        dualDisplayFoldPolicy.TriggerScreenDisplayModeUpdate(FoldDisplayMode::COORDINATION);
+        auto ret  = ssm_.HasRsScreenId();
+        ASSERT_EQ(false, ret);
     }
 }
 } // namespace Rosen
