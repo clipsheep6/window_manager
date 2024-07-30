@@ -623,10 +623,10 @@ napi_value JsWindowStage::OnSetDefaultDensityEnabled(napi_env env, napi_callback
     return CreateJsValue(env, static_cast<int32_t>(ret));
 }
 
-static void OnCreateSubWindowTask(napi_env env, NapiAsyncTask& task, int32_t status, WindowOption option,
+static void OnCreateSubWindowTask(napi_env env, NapiAsyncTask& task, int32_t status,
     std::shared_ptr<WindowScene> weakScene, std::string windowName)
 {
-    sptr<Rosen::WindowOption> windowOption = new Rosen::WindowOption(option);
+    auto windowOption = sptr<Rosen::WindowOption>::MakeSptr();
     windowOption->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_SUB_WINDOW);
     windowOption->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     windowOption->SetOnlySupportSceneBoard(true);
@@ -679,7 +679,7 @@ napi_value JsWindowStage::OnCreateSubWindowWithOptions(napi_env env, napi_callba
                 task.Reject(env, JsErrUtils::CreateJsError(env, WmErrorCode::WM_ERROR_STATE_ABNORMALLY));
                 return;
             }
-            OnCreateSubWindowTask(env, task, status, option, weakScene, windowName);
+            OnCreateSubWindowTask(env, task, status, weakScene, windowName);
         };
     napi_value callback = (argv[2] != nullptr && GetType(env, argv[2]) == napi_function) ? argv[2] : nullptr;
     napi_value result = nullptr;
