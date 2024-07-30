@@ -1725,6 +1725,7 @@ HWTEST_F(ScreenSessionTest, GetScreenSnapshot, Function | SmallTest | Level2)
 {
     GTEST_LOG_(INFO) << "ScreenSessionTest: GetScreenSnapshot start";
     sptr<ScreenSession> session = new(std::nothrow) ScreenSession();
+    session->displayNode_ = nullptr;
     auto pixelmap = session->GetScreenSnapshot(1.0, 1.0);
     EXPECT_EQ(pixelmap, nullptr);
 
@@ -1869,6 +1870,25 @@ HWTEST_F(ScreenSessionTest, FillScreenInfo, Function | SmallTest | Level2)
     session->FillScreenInfo(info);
     EXPECT_NE(nullptr, info);
     GTEST_LOG_(INFO) << "ScreenSessionTest: FillScreenInfo end";
+}
+
+/**
+ * @tc.name: SetScreenScale
+ * @tc.desc: SetScreenScale test
+ * @tc.type: FUNC
+*/
+HWTEST_F(ScreenSessionTest, SetScreenScale, Function | SmallTest | Level2)
+{
+    ScreenSession session;
+    float scaleX = 1.0f;
+    float scaleY = 1.0f;
+    float pivotX = 0.5f;
+    float pivotY = 0.5f;
+    session.SetScreenScale(scaleX, scaleY, pivotX, pivotY);
+    EXPECT_EQ(session.property_.GetScaleX(), scaleX);
+    EXPECT_EQ(session.property_.GetScaleY(), scaleY);
+    EXPECT_EQ(session.property_.GetPivotX(), pivotX);
+    EXPECT_EQ(session.property_.GetPivotY(), pivotY);
 }
 } // namespace
 } // namespace Rosen

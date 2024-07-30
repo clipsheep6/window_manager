@@ -69,6 +69,8 @@ public:
     static bool gestureNavigationEnabled_;
     static ProcessGestureNavigationEnabledChangeFunc callbackFunc_;
     static sptr<SceneSessionManager> ssm_;
+private:
+    static constexpr uint32_t WAIT_SYNC_IN_NS = 50000;
 };
 
 sptr<SceneSessionManager> SceneSessionManagerTest3::ssm_ = nullptr;
@@ -98,6 +100,7 @@ void SceneSessionManagerTest3::SetUpTestCase()
 void SceneSessionManagerTest3::TearDownTestCase()
 {
     ssm_ = nullptr;
+    usleep(WAIT_SYNC_IN_NS);
 }
 
 void SceneSessionManagerTest3::SetUp()
@@ -1461,19 +1464,17 @@ HWTEST_F(SceneSessionManagerTest3, SetFocusedSessionId, Function | SmallTest | L
 */
 HWTEST_F(SceneSessionManagerTest3, RequestFocusStatus, Function | SmallTest | Level3)
 {
-    FocusChangeReason reasonInput = FocusChangeReason::DEFAULT;
-    FocusChangeReason reasonResult = FocusChangeReason::DEFAULT;
     int32_t focusedSession = ssm_->GetFocusedSessionId();
     EXPECT_EQ(focusedSession, 10086);
 
     int32_t persistentId = INVALID_SESSION_ID;
     WMError result01 = ssm_->RequestFocusStatus(persistentId, true);
     EXPECT_EQ(result01, WMError::WM_ERROR_NULLPTR);
-    reasonResult = ssm_->GetFocusChangeReason();
+    FocusChangeReason reasonResult = ssm_->GetFocusChangeReason();
     EXPECT_EQ(reasonResult, FocusChangeReason::DEFAULT);
 
     persistentId = 10000;
-    reasonInput = FocusChangeReason::SCB_SESSION_REQUEST;
+    FocusChangeReason reasonInput = FocusChangeReason::SCB_SESSION_REQUEST;
     WMError result02 = ssm_->RequestFocusStatus(persistentId, true, true, reasonInput);
     EXPECT_EQ(result02, WMError::WM_ERROR_NULLPTR);
     reasonResult = ssm_->GetFocusChangeReason();
@@ -1577,10 +1578,10 @@ HWTEST_F(SceneSessionManagerTest3, RegisterSessionExceptionFunc, Function | Smal
     sceneSession = new (std::nothrow) SceneSession(info, nullptr);
     ASSERT_NE(nullptr, sceneSession);
     ssm_->RegisterSessionExceptionFunc(sceneSession);
-    bool result01 = ssm_->IsSessionVisible(sceneSession);
+    bool result01 = ssm_->IsSessionVisibleForeground(sceneSession);
     EXPECT_FALSE(result01);
     sceneSession->UpdateNativeVisibility(true);
-    bool result02 = ssm_->IsSessionVisible(sceneSession);
+    bool result02 = ssm_->IsSessionVisibleForeground(sceneSession);
     ASSERT_TRUE(result02);
 }
 
@@ -1655,7 +1656,7 @@ HWTEST_F(SceneSessionManagerTest3, NotifyDumpInfoResult, Function | SmallTest | 
     std::vector<std::string> params = {"-a"};
     std::string dumpInfo = "";
     WSError result01 = ssm_->GetSessionDumpInfo(params, dumpInfo);
-    EXPECT_EQ(result01, WSError::WS_ERROR_INVALID_PERMISSION);
+    EXPECT_EQ(result01, WSError::WS_OK);
     params.clear();
     params.push_back("-w");
     params.push_back("23456");
@@ -1887,6 +1888,8 @@ HWTEST_F(SceneSessionManagerTest3, UpdateRecoveredSessionInfo02, Function | Smal
     ASSERT_NE(sceneSession, nullptr);
     ssm_->sceneSessionMap_.insert({0, sceneSession});
     ssm_->UpdateRecoveredSessionInfo(recoveredPersistentIds);
+    constexpr uint32_t WAIT_SYNC_IN_NS = 50000;
+    usleep(WAIT_SYNC_IN_NS);
 }
 
 /**
@@ -2019,29 +2022,6 @@ HWTEST_F(SceneSessionManagerTest3, ConfigSubWindowSizeLimits02, Function | Small
     mainFloat02.SetValue(subFloat);
     mainFloat02.SetValue({{"miniHeight", mainFloat02}});
     ssm_->ConfigSubWindowSizeLimits(mainFloat02);
-}
-
-/**
- * @tc.name: NotifyStackEmpty
- * @tc.desc: SceneSesionManager notify stack empty
- * @tc.type: FUNC
-*/
-HWTEST_F(SceneSessionManagerTest3, NotifyStackEmpty, Function | SmallTest | Level3)
-{
-    WSError ret;
-    int32_t persistentId = 10086;
-    ret = ssm_->NotifyStackEmpty(persistentId);
-    ASSERT_EQ(ret, WSError::WS_OK);
-
-    SessionInfo info;
-    info.abilityName_ = "SceneSessionManagerTest3";
-    info.bundleName_ = "NotifyStackEmpty";
-    info.screenId_ = 0;
-    sptr<SceneSession> sceneSession = new (std::nothrow) SceneSession(info, nullptr);
-    ASSERT_NE(nullptr, sceneSession);
-    ssm_->sceneSessionMap_.insert({10086, sceneSession});
-    ret = ssm_->NotifyStackEmpty(persistentId);
-    ASSERT_EQ(WSError::WS_OK, ret);
 }
 }
 } // namespace Rosen

@@ -197,6 +197,9 @@ public:
     void SetFoldDisplayMode(const FoldDisplayMode displayMode) override;
     void SetDisplayNodeScreenId(ScreenId screenId, ScreenId displayNodeScreenId);
 
+    void SetDisplayScale(ScreenId screenId, float scaleX, float scaleY,
+        float pivotX, float pivotY) override;
+
     void SetFoldStatusLocked(bool locked) override;
 
     FoldDisplayMode GetFoldDisplayMode() override;
@@ -237,7 +240,8 @@ public:
     void SetClient(const sptr<IScreenSessionManagerClient>& client) override;
     ScreenProperty GetScreenProperty(ScreenId screenId) override;
     std::shared_ptr<RSDisplayNode> GetDisplayNode(ScreenId screenId) override;
-    void UpdateScreenRotationProperty(ScreenId screenId, const RRect& bounds, float rotation) override;
+    void UpdateScreenRotationProperty(ScreenId screenId, const RRect& bounds, float rotation,
+        ScreenPropertyChangeType screenPropertyChangeType) override;
     uint32_t GetCurvedCompressionArea() override;
     ScreenProperty GetPhyScreenProperty(ScreenId screenId) override;
     void SetScreenPrivacyState(bool hasPrivate) override;
@@ -293,7 +297,7 @@ private:
     void MirrorSwitchNotify(ScreenId screenId);
     ScreenId GetDefaultScreenId();
     void AddVirtualScreenDeathRecipient(const sptr<IRemoteObject>& displayManagerAgent, ScreenId smsScreenId);
-    void PublishCastEvent(const bool &isPlugIn);
+    void SendCastEvent(const bool &isPlugIn);
     void HandleScreenEvent(sptr<ScreenSession> screenSession, ScreenId screenId, ScreenEvent screenEvent);
     void ScbStatusRecoveryWhenSwitchUser(std::vector<int32_t> oldScbPids, int32_t newScbPid);
     void SwitchScbNodeHandle(int32_t userId, int32_t newScbPid, bool coldBoot);
@@ -327,7 +331,6 @@ private:
 #endif // DEVICE_STATUS_ENABLE
     void ShowFoldStatusChangedInfo(int errCode, std::string& dumpInfo);
     void SetMirrorScreenIds(std::vector<ScreenId>& mirrorScreenIds);
-    std::shared_ptr<RSDisplayNode> GetScreenSnapshotDisplayNode(DisplayId displayId);
     class ScreenIdManager {
     friend class ScreenSessionGroup;
     public:
@@ -413,6 +416,7 @@ private:
     std::condition_variable screenOffCV_;
     int32_t screenOffDelay_ {0};
     std::vector<ScreenId> mirrorScreenIds_;
+    std::mutex snapBypickerMutex_;
 
     std::mutex freezedPidListMutex_;
     std::set<int32_t> freezedPidList_;
@@ -424,9 +428,7 @@ private:
     std::atomic<bool> buttonBlock_ = false;
     std::atomic<bool> isScreenLockSuspend_ = false;
     std::atomic<bool> gotScreenlockFingerprint_ = false;
-    std::atomic<bool> isScreenShotByPicker_ = false;
     std::atomic<bool> isPhyScreenConnected_ = false;
-    std::atomic<bool> isInGetSnapshotByPicker_ = false;
 
     // Fold Screen
     std::map<ScreenId, ScreenProperty> phyScreenPropMap_;

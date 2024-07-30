@@ -35,6 +35,7 @@ using HandlReadPropertyFunc = void (WindowSessionProperty::*)(Parcel& parcel);
 
 class WindowSessionProperty : public Parcelable {
 public:
+    friend class HidumpController;
     WindowSessionProperty() = default;
     ~WindowSessionProperty() = default;
     explicit WindowSessionProperty(const sptr<WindowSessionProperty>& property);
@@ -93,6 +94,7 @@ public:
     void SetIsShaped(bool isShaped);
     void SetCompatibleModeInPc(bool compatibleModeInPc);
     void SetIsSupportDragInPcCompatibleMode(bool isSupportDragInPcCompatibleMode);
+    void SetIsPcAppInPad(bool isPcAppInPad);
 
     bool GetIsNeedUpdateWindowMode() const;
     const std::string& GetWindowName() const;
@@ -144,6 +146,7 @@ public:
     bool GetIsShaped() const;
     KeyboardLayoutParams GetKeyboardLayoutParams() const;
     bool GetCompatibleModeInPc() const;
+    bool GetIsPcAppInPad() const;
     bool GetIsSupportDragInPcCompatibleMode() const;
 
     bool MarshallingWindowLimits(Parcel& parcel) const;
@@ -272,6 +275,7 @@ private:
     // Transform info
     Transform trans_;
     bool isFloatingWindowAppType_ = false;
+    mutable std::mutex touchHotAreasMutex_;
     std::vector<Rect> touchHotAreas_;  // coordinates relative to window.
     bool hideNonSystemFloatingWindows_ = false;
     bool forceHide_ = false;
@@ -294,6 +298,7 @@ private:
     static const std::map<uint32_t, HandlReadPropertyFunc> readFuncMap_;
     bool compatibleModeInPc_ = false;
     bool isSupportDragInPcCompatibleMode_ = false;
+    bool isPcAppInPad_ = false;
 };
 
 struct FreeMultiWindowConfig : public Parcelable {
@@ -326,6 +331,34 @@ struct FreeMultiWindowConfig : public Parcelable {
         config->decorModeSupportInfo_ = parcel.ReadUint32();
         config->defaultWindowMode_ = static_cast<WindowMode>(parcel.ReadUint32());
         config->maxMainFloatingWindowNumber_ = parcel.ReadUint32();
+        return config;
+    }
+};
+
+struct AppForceLandscapeConfig : public Parcelable {
+    int32_t mode_ = 0;
+    std::string homePage_;
+
+    AppForceLandscapeConfig() {}
+    AppForceLandscapeConfig(int32_t mode, const std::string& homePage) : mode_(mode), homePage_(homePage) {}
+
+    virtual bool Marshalling(Parcel& parcel) const override
+    {
+        if (!parcel.WriteInt32(mode_) ||
+            !parcel.WriteString(homePage_)) {
+            return false;
+        }
+        return true;
+    }
+
+    static AppForceLandscapeConfig* Unmarshalling(Parcel& parcel)
+    {
+        AppForceLandscapeConfig* config = new (std::nothrow) AppForceLandscapeConfig();
+        if (config == nullptr) {
+            return nullptr;
+        }
+        config->mode_ = parcel.ReadInt32();
+        config->homePage_ = parcel.ReadString();
         return config;
     }
 };
@@ -427,6 +460,11 @@ struct SystemSessionConfig : public Parcelable {
         config->uiType_ = parcel.ReadString();
         config->supportTypeFloatWindow_ = parcel.ReadBool();
         return config;
+    }
+
+    bool IsFreeMultiWindowMode() const
+    {
+        return freeMultiWindowEnable_ && freeMultiWindowSupport_;
     }
 };
 } // namespace Rosen

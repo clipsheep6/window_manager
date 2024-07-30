@@ -236,4 +236,14 @@ WSError SceneSessionManagerLite::UnregisterIAbilityManagerCollaborator(int32_t t
 {
     return SceneSessionManager::GetInstance().UnregisterIAbilityManagerCollaborator(type);
 }
+
+WMError SceneSessionManagerLite::GetWindowStyleType(WindowStyleType& windowStyletype)
+{
+    return SceneSessionManager::GetInstance().GetWindowStyleType(windowStyletype);
+}
+
+WMError SceneSessionManagerLite::TerminateSessionByPersistentId(int32_t persistentId)
+{
+    return SceneSessionManager::GetInstance().TerminateSessionByPersistentId(persistentId);
+}
 } // namespace OHOS::Rosen

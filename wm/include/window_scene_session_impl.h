@@ -81,6 +81,7 @@ public:
     WMError SetLayoutFullScreen(bool status) override;
     WMError SetFullScreen(bool status) override;
     WMError BindDialogTarget(sptr<IRemoteObject> targetToken) override;
+    WMError SetDialogBackGestureEnabled(bool isEnabled) override;
     WMError GetWindowLimits(WindowLimits& windowLimits) override;
     WMError SetWindowLimits(WindowLimits& windowLimits) override;
     static void UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration);
@@ -151,14 +152,20 @@ public:
     bool GetDefaultDensityEnabled() override;
     WMError HideNonSecureWindows(bool shouldHide) override;
     virtual WMError SetWindowMask(const std::vector<std::vector<uint32_t>>& windowMask) override;
-    WSError SwitchFreeMultiWindow(bool enable) override;
-    void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) override;
+    WSError CompatibleFullScreenRecover() override;
+    WSError CompatibleFullScreenMinimize() override;
+    WSError CompatibleFullScreenClose() override;
     void UpdateDensity() override;
     WSError UpdateOrientation() override;
     WSError UpdateDisplayId(uint64_t displayId) override;
     WMError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
+
+    WSError SwitchFreeMultiWindow(bool enable) override;
+    void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) override;
     virtual WMError SetImmersiveModeEnabledState(bool enable) override;
     virtual bool GetImmersiveModeEnabledState() const override;
+    uint32_t GetStatusBarHeight() override;
+    void NotifySessionFullScreen(bool fullScreen) override;
 
 protected:
     void DestroySubWindow();

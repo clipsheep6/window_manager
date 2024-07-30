@@ -421,6 +421,14 @@ enum class BackupAndRestoreType : int32_t {
 };
 
 /**
+ * @brief Enumerates window Style type.
+ */
+enum class WindowStyleType : uint8_t {
+    WINDOW_STYLE_DEFAULT = 0,
+    WINDOW_STYLE_FREE_MULTI_WINDOW = 1,
+};
+
+/**
  * @struct PointInfo.
  *
  * @brief point Info.
@@ -1088,6 +1096,31 @@ enum ForceHideState : uint32_t {
     NOT_HIDDEN = 0,
     HIDDEN_WHEN_FOCUSED,
     HIDDEN_WHEN_UNFOCUSED
+};
+
+enum class ExtensionWindowAttribute : int32_t {
+    SYSTEM_WINDOW = 0,
+    SUB_WINDOW = 1,
+    UNKNOWN = 2
+};
+
+struct SystemWindowOptions {
+    int32_t windowType = -1;
+};
+
+struct SubWindowOptions {
+    std::string title;
+    bool decorEnabled = false;
+    bool isModal = false;
+    bool isTopmost = false;
+};
+
+struct ExtensionWindowConfig {
+    std::string windowName;
+    ExtensionWindowAttribute windowAttribute = ExtensionWindowAttribute::UNKNOWN;
+    Rect windowRect;
+    SubWindowOptions subWindowOptions;
+    SystemWindowOptions systemWindowOptions;
 };
 
 /**

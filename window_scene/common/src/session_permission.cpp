@@ -27,6 +27,7 @@
 #include <singleton.h>
 #include <singleton_container.h>
 #include "common/include/session_permission.h"
+#include "parameters.h"
 #include "window_manager_hilog.h"
 
 namespace OHOS {
@@ -100,6 +101,12 @@ bool SessionPermission::IsSystemCalling()
     uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
     bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
     return isSystemApp;
+}
+
+bool SessionPermission::IsSystemAppCall()
+{
+    uint64_t callingTokenId = IPCSkeleton::GetCallingFullTokenID();
+    return Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(callingTokenId);
 }
 
 bool SessionPermission::IsSACalling()
@@ -307,6 +314,12 @@ bool SessionPermission::CheckCallingIsUserTestMode(pid_t pid)
         return false;
     }
     return isUserTestMode;
+}
+
+bool SessionPermission::IsBetaVersion()
+{
+    std::string betaName = OHOS::system::GetParameter("const.logsystem.versiontype", "");
+    return betaName.find("beta") != std::string::npos;
 }
 
 } // namespace Rosen

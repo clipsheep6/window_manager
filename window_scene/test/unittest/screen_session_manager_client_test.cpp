@@ -400,7 +400,9 @@ HWTEST_F(ScreenSessionManagerClientTest, UpdateScreenRotationProperty, Function 
     float rotation = 90;
     float scaleX = 1.0;
     float scaleY = 1.0;
-    screenSessionManagerClient_->UpdateScreenRotationProperty(screenId, bounds, rotation);
+    ScreenPropertyChangeType screenPropertyChangeType = ScreenPropertyChangeType::ROTATION_BEGIN;
+    screenSessionManagerClient_->UpdateScreenRotationProperty(screenId, bounds, rotation,
+        screenPropertyChangeType);
     screenSessionManagerClient_->SetDisplayNodeScreenId(screenId, displayNodeScreenId);
     screenSessionManagerClient_->GetPhyScreenProperty(screenId);
     screenSessionManagerClient_->UpdateAvailableArea(screenId, area);
@@ -426,7 +428,9 @@ HWTEST_F(ScreenSessionManagerClientTest, GetScreenSnapshot, Function | SmallTest
     bounds.rect_.width_ = 1344;
     bounds.rect_.height_ = 2772;
     float rotation = 90;
-    screenSessionManagerClient_->UpdateScreenRotationProperty(screenId, bounds, rotation);
+    ScreenPropertyChangeType screenPropertyChangeType = ScreenPropertyChangeType::ROTATION_BEGIN;
+    screenSessionManagerClient_->UpdateScreenRotationProperty(screenId, bounds, rotation,
+        screenPropertyChangeType);
     screenSessionManagerClient_->SetDisplayNodeScreenId(screenId, displayNodeScreenId);
     std::shared_ptr<Media::PixelMap> res = screenSessionManagerClient_->GetScreenSnapshot(screenId, scaleX, scaleY);
     EXPECT_EQ(nullptr, res);
@@ -955,6 +959,38 @@ HWTEST_F(ScreenSessionManagerClientTest, OnFoldStatusChangedReportUE, Function |
 
     ASSERT_TRUE(screenSessionManagerClient_ != nullptr);
     screenSessionManagerClient_->OnFoldStatusChangedReportUE(screenFoldInfo);
+}
+
+/**
+ * @tc.name: UpdateDisplayScale01
+ * @tc.desc: UpdateDisplayScale test
+ * @tc.type: FUNC
+*/
+HWTEST_F(ScreenSessionManagerClientTest, UpdateDisplayScale01, Function | SmallTest | Level2)
+{
+    ASSERT_TRUE(screenSessionManagerClient_ != nullptr);
+    const float scaleX = 1.0f;
+    const float scaleY = 1.0f;
+    const float pivotX = 0.5f;
+    const float pivotY = 0.5f;
+    ScreenId defaultScreenId = screenSessionManagerClient_->GetDefaultScreenId();
+    screenSessionManagerClient_->UpdateDisplayScale(defaultScreenId, scaleX, scaleY, pivotX, pivotY);
+}
+
+/**
+ * @tc.name: UpdateDisplayScale02
+ * @tc.desc: UpdateDisplayScale test
+ * @tc.type: FUNC
+*/
+HWTEST_F(ScreenSessionManagerClientTest, UpdateDisplayScale02, Function | SmallTest | Level2)
+{
+    ASSERT_TRUE(screenSessionManagerClient_ != nullptr);
+    const float scaleX = 1.0f;
+    const float scaleY = 1.0f;
+    const float pivotX = 0.5f;
+    const float pivotY = 0.5f;
+    uint64_t fakeScreenId = 100;
+    screenSessionManagerClient_->UpdateDisplayScale(fakeScreenId, scaleX, scaleY, pivotX, pivotY);
 }
 } // namespace Rosen
 } // namespace OHOS

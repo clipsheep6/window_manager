@@ -37,7 +37,6 @@ public:
         sptr<WindowSessionProperty> property = nullptr, sptr<IRemoteObject> token = nullptr,
         const std::string& identityToken = "") override;
     WSError DrawingCompleted() override;
-    WSError UpdateActiveStatus(bool isActive) override;
     WSError ChangeSessionVisibilityWithStatusBar(const sptr<AAFwk::SessionInfo> abilitySessionInfo,
         bool visible) override;
     WSError PendingSessionActivation(const sptr<AAFwk::SessionInfo> abilitySessionInfo) override;
@@ -85,7 +84,9 @@ public:
     WSError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
     WMError UpdateSessionPropertyByAction(const sptr<WindowSessionProperty>& property,
         WSPropertyChangeAction action) override;
-    int32_t GetAppForceLandscapeMode(const std::string& bundleName) override;
+    WMError GetAppForceLandscapeConfig(AppForceLandscapeConfig& config) override;
+    int32_t GetStatusBarHeight() override;
+    WSError SetDialogSessionBackGestureEnabled(bool isEnabled) override;
 
 private:
     static inline BrokerDelegator<SessionProxy> delegator_;
