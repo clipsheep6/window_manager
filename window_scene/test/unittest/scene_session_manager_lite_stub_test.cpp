@@ -673,6 +673,24 @@ HWTEST_F(SceneSessionManagerLiteStubTest, HandleGetWindowStyleType, Function | S
         SceneSessionManagerLiteStub::HandleGetWindowStyleType(data, reply);
     EXPECT_EQ(ERR_NONE, res);
 }
+
+/**
+ * @tc.name: ProcessRemoteRequest
+ * @tc.desc: test ProcessRemoteRequest
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerStubTest, ProcessRemoteRequest, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    uint32_t code = static<uint32_t>(
+        ISceneSessionManagerLite::SceneSessionManagerLiteMessage::TRANS_ID_SET_SESSION_LABEL
+    );
+    ASSERT_NE(nullptr, sceneSessionManagerLiteStub_);
+    auto ret = sceneSessionManagerLiteStub_->ProcessRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(ret, ERR_NONE);
+}
 }
 }
 }
