@@ -2071,10 +2071,11 @@ void SceneSessionManager::EraseSceneSessionMapById(int32_t persistentId)
     nonSystemFloatSceneSessionMap_.erase(persistentId);
 }
 
-WSError SceneSessionManager::RequestSceneSessionDestruction(
-    const sptr<SceneSession>& sceneSession, bool needRemoveSession, bool isSaveSnapshot)
+WSError SceneSessionManager::RequestSceneSessionDestruction(const sptr<SceneSession>& sceneSession,
+    bool needRemoveSession, bool isSaveSnapshot, bool isForceClean)
 {
-    auto task = [this, weakSceneSession = wptr<SceneSession>(sceneSession), needRemoveSession, isSaveSnapshot]() {
+    auto task = [this, weakSceneSession = wptr<SceneSession>(sceneSession),
+        needRemoveSession, isSaveSnapshot, isForceClean]() {
         auto scnSession = weakSceneSession.promote();
         if (scnSession == nullptr) {
             TLOGE(WmsLogTag::WMS_MAIN, "Destruct session is nullptr");
@@ -2112,7 +2113,7 @@ WSError SceneSessionManager::RequestSceneSessionDestruction(
             OHOS::AAFwk::Want want;
             scnSessionInfo->want = want;
         }
-        return RequestSceneSessionDestructionInner(scnSession, scnSessionInfo, needRemoveSession);
+        return RequestSceneSessionDestructionInner(scnSession, scnSessionInfo, needRemoveSession, isForceClean);
     };
     std::string taskName = "RequestSceneSessionDestruction:PID:" +
         (sceneSession != nullptr ? std::to_string(sceneSession->GetPersistentId()) : "nullptr");
@@ -2140,15 +2141,19 @@ void SceneSessionManager::HandleCastScreenDisConnection(const sptr<SceneSession>
     }
 }
 
-WSError SceneSessionManager::RequestSceneSessionDestructionInner(
-    sptr<SceneSession> &scnSession, sptr<AAFwk::SessionInfo> scnSessionInfo, const bool needRemoveSession)
+WSError SceneSessionManager::RequestSceneSessionDestructionInner(sptr<SceneSession> &scnSession,
+    sptr<AAFwk::SessionInfo> scnSessionInfo, const bool needRemoveSession, const bool isForceClean)
 {
     auto persistentId = scnSession->GetPersistentId();
     NotifySessionUpdate(scnSession->GetSessionInfo(), ActionType::SINGLE_CLOSE);
     TLOGI(WmsLogTag::WMS_MAIN, "begin CloseUIAbility: %{public}d system: %{public}u",
         persistentId,
         static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_));
-    AAFwk::AbilityManagerClient::GetInstance()->CloseUIAbilityBySCB(scnSessionInfo);
+    if (isForceClean){
+        AAFwk::AbilityManagerClient::GetInstance()->CleanUIAbilityBySCB(scnSessionInfo);
+    } else {
+        AAFwk::AbilityManagerClient::GetInstance()->CloseUIAbilityBySCB(scnSessionInfo);
+    }
     scnSession->SetSessionInfoAncoSceneState(AncoSceneState::DEFAULT_STATE);
     if (needRemoveSession) {
         if (CheckCollaboratorType(scnSession->GetCollaboratorType())) {
