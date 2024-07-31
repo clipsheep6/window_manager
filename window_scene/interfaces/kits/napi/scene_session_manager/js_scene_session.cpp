@@ -1068,15 +1068,20 @@ void JsSceneSession::ProcessTouchOutsideRegister()
 void JsSceneSession::OnTouchOutside()
 {
     WLOGFI("[NAPI]OnTouchOutside");
-    auto task = [jsCallBack = GetJSCallback(TOUCH_OUTSIDE_CB), env = env_]() {
-        if (!jsCallBack) {
-            WLOGFE("[NAPI]jsCallBack is nullptr");
-            return;
-        }
-        napi_value argv[] = {};
-        napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), 0, argv, nullptr);
-    };
-    taskScheduler_->PostMainThreadTask(task);
+    auto complete = std::make_unique<NapiAsyncTask::CompleteCallback>(
+        [jsCallBack = GetJSCallback(TOUCH_OUTSIDE_CB), eng = env_] (napi_env env, NapiAsyncTask& task, int32_t status) {
+            if (!jsCallBack) {
+                WLOGFE("[NAPI]jsCallBack is nullptr");
+                return;
+            }
+            napi_value argv[] = {};
+            napi_call_function(env, NapiGetUndefined(env), jsCallBack->GetNapiValue(), 0, argv, nullptr);
+        };
+
+    napi_ref callback = nullptr;
+    std::unique_ptr<NapiAsyncTask::ExecuteCallback> execute = nullptr;
+    NapiAsyncTask::Schedule("JsSceneSession::OnTouchOutside", env_,
+        std::make_unique<NapiAsyncTask(callback, std::move(execute), std::move(complete)));
 }
 
 void JsSceneSession::Finalizer(napi_env env, void* data, void* hint)
