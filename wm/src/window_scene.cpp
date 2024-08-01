@@ -22,6 +22,7 @@
 #include "window_manager_hilog.h"
 #include "singleton_container.h"
 #include "perform_reporter.h"
+#include "foundation/window/window_manager/wm/include/static_call.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -129,6 +130,20 @@ sptr<Window> WindowScene::CreateWindow(const std::string& windowName, sptr<Windo
     TLOGD(WmsLogTag::WMS_SUB, "WindowScene Name: %{public}s, parentId: %{public}u",
         windowName.c_str(), mainWindow->GetWindowId());
     return SingletonContainer::Get<StaticCall>().CreateWindow(windowName, option, mainWindow->GetContext());
+}
+
+sptr<Window> WindowScene::CreateWindow(const std::string& windowName, sptr<WindowOption>& option,
+    WMError& errorCode) const
+{
+    if (windowName.empty() || mainWindow_ == nullptr || option == nullptr) {
+        TLOGE(WmsLogTag::WMS_MAIN, " WindowScene Name: %{public}s", windowName.c_str());
+        return nullptr;
+    }
+    option->SetParentId(mainWindow_->GetWindowId());
+    option->SetWindowTag(WindowTag::SUB_WINDOW);
+    TLOGD(WmsLogTag::WMS_SUB, "WindowScene Name: %{public}s, parentId: %{public}u",
+        windowName.c_str(), mainWindow_->GetWindowId());
+    return SingletonContainer::Get<StaticCall>().CreateWindow(windowName, option, mainWindow_->GetContext(), errorCode);
 }
 
 sptr<Window> WindowScene::GetMainWindow() const

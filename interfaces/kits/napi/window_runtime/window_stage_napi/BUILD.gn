@@ -51,7 +51,11 @@ ohos_shared_library("windowstage") {
     ":window_stage_js",
   ]
 
-  external_deps = [ "napi:ace_napi" ]
+  external_deps = [
+    "c_utils:utils",
+    "napi:ace_napi",
+    ]
+
 
   relative_install_dir = "module/application"
 
