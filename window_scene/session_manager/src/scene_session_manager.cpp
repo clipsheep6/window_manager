@@ -335,8 +335,8 @@ void SceneSessionManager::ConfigWindowSceneXml()
     }
 
     item = config["backgroundswitch"];
-    if(item.IsInts()) {
-        auto numbers = *item.intsvalue_;
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
         if (numbers.size() == 1 && number[0] == 1) {
             systemConfig_.backgroundswitch = true;
         }
@@ -344,8 +344,8 @@ void SceneSessionManager::ConfigWindowSceneXml()
     WLOGFD("Load ConfigWindowSceneXml backgroundswitch%{public}d", systemConfig_.backgroundswitch);
 
     item = config["defaultWindowMode"];
-    if(item.IsInts()) {
-        auto numbers = *item.intsvalue_;
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
         if (numbers.size() == 1 &&
             (number[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FULLSCREEN) ||
              number[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FLOATING))) {
@@ -354,12 +354,12 @@ void SceneSessionManager::ConfigWindowSceneXml()
     }
 
     item = config["defaultMaximizeMode"];
-    if(item.IsInts()) {
-        auto numbers = *item.intsvalue_;
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
         if (numbers.size() == 1 &&
             (number[0] == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
              number[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
-            systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<int32_t>(numbers[0]));
+            systemConfig_.defaultWindowMode_ = static_cast<MaximizeMode>(static_cast<int32_t>(numbers[0]));
         }
     }
 
@@ -369,8 +369,11 @@ void SceneSessionManager::ConfigWindowSceneXml()
     }
 
     item = config["maxFloatingWindowSize"];
-    if (GetSingleIntItem(item, param)) {
-        systemConfig_.maxFloatingWindowSize_ = static_cast<uint32_t>(param);
+    if (item.IsInts()) {
+        auto numbers = *item.intsValue_;
+        if (numbers.size() == 1 && number[0] == 1) {
+            systemConfig_.maxFloatingWindowSize_ = static_cast<uint32_t>(numbers[0]);
+        }
     }
 
     item = config["windowAnimation"];
@@ -1669,7 +1672,7 @@ WSError SceneSessionManager::PrepareTerminate(int32_t persistentId, bool& isPrep
     return WSError::WS_OK;
 }
 
-    WSError SceneSessionManager::RequestSceneSessionActivation(
+WSError SceneSessionManager::RequestSceneSessionActivation(
     const sptr<SceneSession>& sceneSession, bool isNewActive)
 {
     wptr<SceneSession> weakSceneSession(sceneSession);
