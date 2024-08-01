@@ -343,6 +343,22 @@ HWTEST_F(SessionStubTest, HandleSetDialogSessionBackGestureEnabled01, Function |
     auto res = session_->HandleSetDialogSessionBackGestureEnabled(data, reply);
     ASSERT_EQ(0, res);
 }
+
+/**
+ * @tc.name: ProcessRemoteRequest001
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, ProcessRemoteRequest001, Function | SmallTest | Level2)
+{
+    uint32_t code = static_cast<uint32_t>(SesssionInterfaceCode::TRANS_ID_CONNECT);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    auto res = session_->ProcessRemoteRequest(data, reply);
+    ASSERT_EQ(ERR_INVALID_DATA, res);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
