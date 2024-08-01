@@ -54,8 +54,7 @@ ohos_shared_library("windowstage") {
   external_deps = [
     "c_utils:utils",
     "napi:ace_napi",
-    ]
-
+  ]
 
   relative_install_dir = "module/application"
 
