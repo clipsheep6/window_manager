@@ -909,7 +909,8 @@ void Session::SetWindowSessionProperty(const sptr<WindowSessionProperty>& proper
         property->SetIsNeedUpdateWindowMode(true);
         property->SetWindowMode(sessionProperty->GetWindowMode());
     }
-    if (SessionHelper::IsMainWindow(GetWindowType()) && GetSessionInfo().screenId_ != -1 && property) {
+    if (SessionHelper::IsMainWindow(GetWindowType()) &&
+        GetSessionInfo().screenId_ != -1 && property) {
         property->SetDisplayId(GetSessionInfo().screenId_);
     }
     SetSessionProperty(property);
@@ -1651,8 +1652,8 @@ void Session::PresentFocusIfPointDown()
 
 void Session::HandlePointDownDialog()
 {
-    auto dialogVec = GetDialogVector();
     sptr<Session> lastValidDialog = nullptr;
+    auto dialogVec = GetDialogVector();
     for (auto dialog : dialogVec) {
         if (dialog && (dialog->GetSessionState() == SessionState::STATE_FOREGROUND ||
             dialog->GetSessionState() == SessionState::STATE_ACTIVE)) {
@@ -2268,7 +2269,6 @@ WSError Session::SetSessionProperty(const sptr<WindowSessionProperty>& property)
     if (property == nullptr) {
         return WSError::WS_OK;
     }
-
     auto hotAreasChangeCallback = [weakThis = wptr(this)]() {
         auto session = weakThis.promote();
         if (session == nullptr) {

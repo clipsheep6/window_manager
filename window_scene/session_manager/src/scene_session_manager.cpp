@@ -335,33 +335,49 @@ void SceneSessionManager::ConfigWindowSceneXml()
     }
 
     item = config["backgroundswitch"];
-    int32_t param = -1;
-    systemConfig_.backgroundswitch = GetSingleIntItem(item, param) && param == 1;
+    if(item.IsInts()) {
+        auto numbers = *item.intsvalue_;
+        if (numbers.size() == 1 && number[0] == 1) {
+            systemConfig_.backgroundswitch = true;
+        }
+    }
     WLOGFD("Load ConfigWindowSceneXml backgroundswitch%{public}d", systemConfig_.backgroundswitch);
+
     item = config["defaultWindowMode"];
-    if (GetSingleIntItem(item, param) &&
-        (param == static_cast<int32_t>(WindowMode::WINDOW_MODE_FULLSCREEN) ||
-        param == static_cast<int32_t>(WindowMode::WINDOW_MODE_FLOATING))) {
-        systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<uint32_t>(param));
+    if(item.IsInts()) {
+        auto numbers = *item.intsvalue_;
+        if (numbers.size() == 1 &&
+            (number[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FULLSCREEN) ||
+             number[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FLOATING))) {
+            systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<int32_t>(numbers[0]));
+        }
     }
+
     item = config["defaultMaximizeMode"];
-    if (GetSingleIntItem(item, param) &&
-        (param == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
-         param == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
-        SceneSession::maximizeMode_ = static_cast<MaximizeMode>(param);
+    if(item.IsInts()) {
+        auto numbers = *item.intsvalue_;
+        if (numbers.size() == 1 &&
+            (number[0] == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
+             number[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
+            systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<int32_t>(numbers[0]));
+        }
     }
+
     item = config["keyboardAnimation"];
     if (item.IsMap()) {
         ConfigKeyboardAnimation(item);
     }
+
     item = config["maxFloatingWindowSize"];
     if (GetSingleIntItem(item, param)) {
         systemConfig_.maxFloatingWindowSize_ = static_cast<uint32_t>(param);
     }
+
     item = config["windowAnimation"];
     if (item.IsMap()) {
         ConfigWindowAnimation(item);
     }
+
     item = config["startWindowTransitionAnimation"];
     if (item.IsMap()) {
         ConfigStartingWindowAnimation(item);
@@ -739,7 +755,7 @@ void SceneSessionManager::UpdateRecoveredSessionInfo(const std::vector<int32_t>&
         }
         removeFailRecoveredSession();
     };
-    return taskScheduler_->PostAsyncTask(task, "UpdateSessionInfoBySCB");
+    return taskScheduler_->PostAsyncTask(task);
 }
 
 bool SceneSessionManager::ConfigAppWindowShadow(const WindowSceneConfig::ConfigItem& shadowConfig,
@@ -1653,17 +1669,14 @@ WSError SceneSessionManager::PrepareTerminate(int32_t persistentId, bool& isPrep
     return WSError::WS_OK;
 }
 
-std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
+    WSError SceneSessionManager::RequestSceneSessionActivation(
     const sptr<SceneSession>& sceneSession, bool isNewActive)
 {
     wptr<SceneSession> weakSceneSession(sceneSession);
-    std::shared_ptr<std::promise<int32_t>> promise = std::make_shared<std::promise<int32_t>>();
-    auto future = promise->get_future();
-    auto task = [this, weakSceneSession, isNewActive, promise]() {
+    auto task = [this, weakSceneSession, isNewActive]() {
         sptr<SceneSession> scnSession = weakSceneSession.promote();
         if (scnSession == nullptr) {
             TLOGE(WmsLogTag::WMS_MAIN, "Request active session is nullptr");
-            promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_NULLPTR));
             return WSError::WS_ERROR_INVALID_WINDOW;
         }
 
@@ -1674,14 +1687,13 @@ std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
             persistentId, static_cast<uint32_t>(scnSession->GetSessionInfo().isSystem_), isNewActive);
         if (!GetSceneSession(persistentId)) {
             TLOGE(WmsLogTag::WMS_MAIN, "Request active session invalid by %{public}d", persistentId);
-            promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_INVALID_SESSION));
             return WSError::WS_ERROR_INVALID_WINDOW;
         }
         if (CheckCollaboratorType(scnSession->GetCollaboratorType())) {
             WLOGD("Request active collaborator native session");
             scnSession = GetSceneSession(persistentId);
         }
-        auto ret = RequestSceneSessionActivationInner(scnSession, isNewActive, promise);
+        auto ret = RequestSceneSessionActivationInner(scnSession, isNewActive);
         if (ret == WSError::WS_OK) {
             scnSession->SetExitSplitOnBackground(false);
         }
@@ -1691,7 +1703,7 @@ std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
     std::string taskName = "RequestSceneSessionActivation:PID:" +
         (sceneSession != nullptr ? std::to_string(sceneSession->GetPersistentId()) : "nullptr");
     taskScheduler_->PostAsyncTask(task, taskName);
-    return future;
+    return WSError::WS_OK;
 }
 
 bool SceneSessionManager::IsKeyboardForeground()
@@ -1750,7 +1762,7 @@ int32_t SceneSessionManager::ChangeUIAbilityVisibilityBySCB(sptr<SceneSession>& 
 }
 
 WSError SceneSessionManager::RequestSceneSessionActivationInner(
-    sptr<SceneSession>& scnSession, bool isNewActive, const std::shared_ptr<std::promise<int32_t>>& promise)
+    sptr<SceneSession>& scnSession, bool isNewActive)
 {
     auto persistentId = scnSession->GetPersistentId();
     RequestInputMethodCloseKeyboard(persistentId);
@@ -1823,7 +1835,6 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         WindowInfoReporter::GetInstance().InsertShowReportInfo(sessionInfo.bundleName_);
     }
     NotifyCollaboratorAfterStart(scnSession, scnSessionInfo);
-    promise->set_value(static_cast<int32_t>(errCode));
 
     if (errCode != ERR_OK) {
         TLOGI(WmsLogTag::WMS_MAIN, "failed! errCode: %{public}d", errCode);
@@ -8717,7 +8728,7 @@ void SceneSessionManager::NotifyUpdateRectAfterLayout()
         }
     };
     // need sync task since animation transcation need
-    return taskScheduler_->PostAsyncTask(task, "NotifyUpdateRectAfterLayout");
+    return taskScheduler_->PostAsyncTask(task);
 }
 
 WMError SceneSessionManager::GetVisibilityWindowInfo(std::vector<sptr<WindowVisibilityInfo>>& infos)
