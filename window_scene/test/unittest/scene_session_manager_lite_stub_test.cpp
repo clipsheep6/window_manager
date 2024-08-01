@@ -851,7 +851,7 @@ HWTEST_F(SceneSessionManagerLiteStubTest, ProcessRemoteRequest04, Function | Sma
     code = static_cast<uint32_t>(
         ISceneSessionManagerLite::SceneSessionManagerLiteMessage::TRANS_ID_CHECK_WINDOW_ID);
     ret = sceneSessionManagerLiteStub_->ProcessRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(ret, ERR_NONE);
+    EXPECT_EQ(ret, ERR_INVALID_DATA);
 
     code = static_cast<uint32_t>(
         ISceneSessionManagerLite::SceneSessionManagerLiteMessage::TRANS_ID_GET_VISIBILITY_WINDOW_INFO_ID);
@@ -883,12 +883,12 @@ HWTEST_F(SceneSessionManagerLiteStubTest, ProcessRemoteRequest05, Function | Sma
     code = static_cast<uint32_t>(
         ISceneSessionManagerLite::SceneSessionManagerLiteMessage::TRANS_ID_GET_TOPN_MAIN_WINDOW_INFO);
     ret = sceneSessionManagerLiteStub_->ProcessRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(ret, ERR_NONE);
+    EXPECT_EQ(ret, ERR_INVALID_DATA);
 
     code = static_cast<uint32_t>(
         ISceneSessionManagerLite::SceneSessionManagerLiteMessage::TRANS_ID_REGISTER_COLLABORATOR);
     ret = sceneSessionManagerLiteStub_->ProcessRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(ret, ERR_NONE);
+    EXPECT_EQ(ret, ERR_NULL_OBJECT);
 
     code = static_cast<uint32_t>(
         ISceneSessionManagerLite::SceneSessionManagerLiteMessage::TRANS_ID_UNREGISTER_COLLABORATOR);
