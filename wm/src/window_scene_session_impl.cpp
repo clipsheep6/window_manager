@@ -3053,6 +3053,11 @@ WMError WindowSceneSessionImpl::UpdateWindowModeImmediately(WindowMode mode)
             property_->SetMaximizeMode(MaximizeMode::MODE_RECOVER);
         }
     }
+
+    if(mode == WindowMode::WINDOW_MODE_FLOATING) {
+        property_->SetWindowType(WindowType::WINDOW_TYPE_FLOAT);
+    }
+    
     NotifyWindowStatusChange(mode);
     return WMError::WM_OK;
 }
