@@ -1235,7 +1235,7 @@ HWTEST_F(SceneSessionManagerStubTest, ProcessRemoteRequest04, Function | SmallTe
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
-        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_GET_MISSION_INFO_BY_CONTINUE_SESSION_ID);
+        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_GET_SESSION_INFO_BY_CONTINUE_SESSION_ID);
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
