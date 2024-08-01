@@ -358,8 +358,8 @@ void SceneSessionManager::ConfigWindowSceneXml()
     if (item.IsInts()) {
         auto numbers = *item.intsValue_;
         if (numbers.size() == 1 &&
-            (number[0] == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
-             number[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
+            (numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
+             numbers[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
             SceneSession::maximizeMode_ = static_cast<MaximizeMode>(static_cast<int32_t>(numbers[0]));
         }
     }
