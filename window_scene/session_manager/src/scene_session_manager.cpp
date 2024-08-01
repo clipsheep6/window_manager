@@ -1795,7 +1795,6 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
     auto scnSessionInfo = SetAbilitySessionInfo(scnSession);
     if (!scnSessionInfo) {
         TLOGE(WmsLogTag::WMS_LIFE, "create AbilityInfo fail id %{public}d", persistentId);
-        promise->set_value(static_cast<int32_t>(WSError::WS_ERROR_NULLPTR));
         return WSError::WS_ERROR_INVALID_WINDOW;
     }
     scnSession->NotifyActivation();
