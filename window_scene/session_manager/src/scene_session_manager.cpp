@@ -329,6 +329,7 @@ void SceneSessionManager::ConfigWindowSceneXml()
     if (item.IsMap()) {
         ConfigWindowEffect(item);
     }
+
     item = config["decor"];
     if (item.IsMap()) {
         ConfigDecor(item);
@@ -337,7 +338,7 @@ void SceneSessionManager::ConfigWindowSceneXml()
     item = config["backgroundswitch"];
     if (item.IsInts()) {
         auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && number[0] == 1) {
+        if (numbers.size() == 1 && numbers[0] == 1) {
             systemConfig_.backgroundswitch = true;
         }
     }
@@ -347,8 +348,8 @@ void SceneSessionManager::ConfigWindowSceneXml()
     if (item.IsInts()) {
         auto numbers = *item.intsValue_;
         if (numbers.size() == 1 &&
-            (number[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FULLSCREEN) ||
-             number[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FLOATING))) {
+            (numbers[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FULLSCREEN) ||
+             numbers[0] == static_cast<int32_t>(WindowMode::WINDOW_MODE_FLOATING))) {
             systemConfig_.defaultWindowMode_ = static_cast<WindowMode>(static_cast<int32_t>(numbers[0]));
         }
     }
@@ -359,7 +360,7 @@ void SceneSessionManager::ConfigWindowSceneXml()
         if (numbers.size() == 1 &&
             (number[0] == static_cast<int32_t>(MaximizeMode::MODE_AVOID_SYSTEM_BAR) ||
              number[0] == static_cast<int32_t>(MaximizeMode::MODE_FULL_FILL))) {
-            systemConfig_.defaultWindowMode_ = static_cast<MaximizeMode>(static_cast<int32_t>(numbers[0]));
+            SceneSession::maximizeMode_ = static_cast<MaximizeMode>(static_cast<int32_t>(numbers[0]));
         }
     }
 
@@ -371,7 +372,7 @@ void SceneSessionManager::ConfigWindowSceneXml()
     item = config["maxFloatingWindowSize"];
     if (item.IsInts()) {
         auto numbers = *item.intsValue_;
-        if (numbers.size() == 1 && number[0] == 1) {
+        if (numbers.size() == 1) {
             systemConfig_.maxFloatingWindowSize_ = static_cast<uint32_t>(numbers[0]);
         }
     }
