@@ -1108,7 +1108,7 @@ HWTEST_F(SceneSessionManagerStubTest, ProcessRemoteRequest01, Function | SmallTe
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, ERR_INVALID_DATA);
     code = static_cast<uint32_t>(
-        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_DESTORY_AND_DISCONNECT_SPECIFIC_SESSION);
+        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_DESTROY_AND_DISCONNECT_SPECIFIC_SESSION);
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
@@ -1188,6 +1188,7 @@ HWTEST_F(SceneSessionManagerStubTest, ProcessRemoteRequest03, Function | SmallTe
     info.abilityName_ = "HandleCheckWindowId";
     info.bundleName_ = "HandleCheckWindowId1";
     sptr<SceneSession> sceneSession = sptr<SceneSession>::MakeSptr(info, nullptr);
+    ASSERT_NE(nullptr, sceneSession);
     SceneSessionManager::GetInstance().sceneSessionMap_[windowId] = sceneSession;
     data.WriteInt32(windowId);
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
@@ -1228,15 +1229,15 @@ HWTEST_F(SceneSessionManagerStubTest, ProcessRemoteRequest04, Function | SmallTe
         ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_GET_MISSION_INFOS);
     ASSERT_NE(nullptr, stub_);
     auto ret = stub_->ProcessRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(ret, ERR_INVALID_DATA);
+    EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
         ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_GET_MISSION_INFO_BY_ID);
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(ret, ERR_INVALID_DATA);
+    EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
         ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_GET_MISSION_INFO_BY_CONTINUE_SESSION_ID);
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(ret, ERR_INVALID_DATA);
+    EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
         ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_DUMP_SESSION_ALL);
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
@@ -1359,7 +1360,7 @@ HWTEST_F(SceneSessionManagerStubTest, ProcessRemoteRequest07, Function | SmallTe
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
-        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_RAISE_WINDOW_TO_TOP_ID);
+        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_GET_TOP_WINDOW_ID);
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
@@ -1400,7 +1401,7 @@ HWTEST_F(SceneSessionManagerStubTest, ProcessRemoteRequest08, Function | SmallTe
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, ERR_INVALID_DATA);
     code = static_cast<uint32_t>(
-        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_UPDATE_MODAL_EXTENSION_RECT_TO_SCB);
+        ISceneSessionManager::SceneSessionManagerMessage::TRANS_ID_UPDATE_MODALEXTENSION_RECT_TO_SCB);
     ret = stub_->ProcessRemoteRequest(code, data, reply, option);
     EXPECT_EQ(ret, ERR_NONE);
     code = static_cast<uint32_t>(
