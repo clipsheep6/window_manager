@@ -33,6 +33,7 @@ public:
     void ReportPiPControlEvent(int32_t templateType, PiPControlType controlType);
     void ReportPiPRatio(int32_t windowWidth, int32_t windowHeight);
     void ReportPiPRestore();
+    
 private:
     std::string GetPackageName() const;
     std::string packageName_;

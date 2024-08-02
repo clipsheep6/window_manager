@@ -38,6 +38,7 @@ public:
     sptr<WindowProperty> CreateWindowProperty(uint32_t windowId,
         WindowType type = WindowType::WINDOW_TYPE_APP_MAIN_WINDOW);
     static void SetDisplayGroupInfo(DisplayId displayId, Rect displayRect);
+    
 private:
     static sptr<WindowNodeContainer> container_;
     static DisplayGroupInfo& displayGroupInfo_;

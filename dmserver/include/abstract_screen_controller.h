@@ -137,6 +137,7 @@ private:
         ScreenId ConvertToRsScreenId(ScreenId) const;
         bool ConvertToDmsScreenId(ScreenId, ScreenId&) const;
         ScreenId ConvertToDmsScreenId(ScreenId) const;
+        
     private:
         std::atomic<ScreenId> dmsScreenCount_ {0};
         std::map<ScreenId, ScreenId> rs2DmsScreenIdMap_;

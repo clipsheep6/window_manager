@@ -46,6 +46,7 @@ public:
     sptr<DisplayInfo> GetDefaultDisplayInfo() override;
     virtual sptr<DisplayInfo> GetDisplayInfoById(DisplayId displayId) override;
     sptr<CutoutInfo> GetCutoutInfo(DisplayId displayId) override;
+    
 protected:
     ScreenSessionManagerLite() = default;
     virtual ~ScreenSessionManagerLite();

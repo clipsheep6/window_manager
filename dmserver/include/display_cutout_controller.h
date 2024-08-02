@@ -52,6 +52,7 @@ public:
     static void SetWaterfallAreaCompressionSizeWhenHorizontal(uint32_t size);
     static bool IsWaterfallAreaCompressionEnableWhenHorizontal();
     static uint32_t GetWaterfallAreaCompressionSizeWhenHorizontal();
+    
 private:
     DMRect CalcCutoutBoundingRect(std::string svgPath);
     void CheckBoundingRectsBoundary(DisplayId displayId, std::vector<DMRect>& boundingRects);

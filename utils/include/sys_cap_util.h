@@ -24,6 +24,7 @@ class SysCapUtil {
 public:
     static std::string GetClientName();
     static std::string GetBundleName();
+    
 private:
     static std::string GetProcessName();
 };

@@ -33,6 +33,7 @@ public:
     void SetUp() override;
     void TearDown() override;
     static sptr<WindowRoot> windowRoot_;
+    
 private:
     static sptr<MoveDragController> moveDragController_;
     static std::shared_ptr<MMI::IInputEventConsumer> inputListener_;

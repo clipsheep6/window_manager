@@ -34,6 +34,7 @@ public:
     void UpdateAllWindowsZoomInfo(DisplayId displayId);
     void UpdateWindowZoomInfo(uint32_t windowId);
     void ClearZoomTransform(std::vector<sptr<WindowNode>> nodes);
+    
 private:
     struct DisplayZoomInfo {
         int32_t pivotX;

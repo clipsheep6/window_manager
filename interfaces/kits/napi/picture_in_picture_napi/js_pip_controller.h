@@ -39,6 +39,7 @@ public:
     static napi_value SetPiPControlEnabled(napi_env env, napi_callback_info info);
     static napi_value RegisterCallback(napi_env env, napi_callback_info info);
     static napi_value UnregisterCallback(napi_env env, napi_callback_info info);
+    
 private:
     enum class ListenerType : uint32_t {
         STATE_CHANGE_CB,

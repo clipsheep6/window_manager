@@ -42,6 +42,7 @@ public:
     void TearDown() override;
     SessionInfo info;
     sptr<SubSession::SpecificSessionCallback> specificCallback = nullptr;
+    
 private:
     RSSurfaceNode::SharedPtr CreateRSSurfaceNode();
     sptr<SubSession> subSession_;

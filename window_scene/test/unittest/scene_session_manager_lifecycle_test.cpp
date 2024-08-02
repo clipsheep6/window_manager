@@ -52,6 +52,7 @@ public:
     static void SetVisibleForAccessibility(sptr<SceneSession>& sceneSession);
     int32_t GetTaskCount(sptr<SceneSession>& session);
     static sptr<SceneSessionManager> ssm_;
+    
 private:
     static constexpr uint32_t WAIT_SYNC_IN_NS = 200000;
 };

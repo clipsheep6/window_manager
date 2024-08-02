@@ -32,6 +32,7 @@ public:
     virtual void TearDown() override;
     Utils::TestWindowInfo fullAppInfo_1_;
     Utils::TestWindowInfo fullAppInfo_2_;
+    
 private:
     static constexpr uint32_t WAIT_SYANC_US = 100000;
 };

@@ -31,6 +31,7 @@ public:
     void OnBackPress() override;
     void OnKeyEvent(const std::shared_ptr<MMI::KeyEvent>& keyEvent) override;
     void OnPointerEvent(const std::shared_ptr<MMI::PointerEvent>& pointerEvent) override;
+    
 private:
     sptr<IWindowExtensionCallback> componentCallback_;
 };

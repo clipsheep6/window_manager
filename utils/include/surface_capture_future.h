@@ -30,6 +30,7 @@ public:
     {
         FutureCall(pixelmap);
     }
+
 protected:
     void Call(std::shared_ptr<Media::PixelMap> pixelmap) override
     {
@@ -46,6 +47,7 @@ protected:
     {
         return pixelMap_;
     }
+    
 private:
     bool flag_ = false;
     std::shared_ptr<Media::PixelMap> pixelMap_ = nullptr;

@@ -34,6 +34,7 @@ public:
 
     sptr<Surface> GetSurface() const;
     void SetHandler(sptr<SurfaceReaderHandler> handler);
+    
 private:
     class BufferListener : public IBufferConsumerListener {
     public:

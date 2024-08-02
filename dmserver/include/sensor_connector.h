@@ -49,6 +49,7 @@ friend SensorConnector;
 public:
     GravitySensorSubscriber() = delete;
     ~GravitySensorSubscriber() = default;
+
 private:
     static void SubscribeGravitySensor();
     static void UnsubscribeGravitySensor();
@@ -78,6 +79,7 @@ friend SensorConnector;
 public:
     MotionSubscriber() = delete;
     ~MotionSubscriber() = default;
+    
 private:
     static void SubscribeMotionSensor();
     static void UnsubscribeMotionSensor();

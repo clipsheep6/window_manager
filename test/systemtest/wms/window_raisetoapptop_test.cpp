@@ -35,6 +35,7 @@ public:
 
     std::vector<sptr<Window>> activeWindows_;
     Utils::TestWindowInfo fullInfo_;
+    
 private:
     static constexpr uint32_t TEST_SLEEP_S = 1;
 };

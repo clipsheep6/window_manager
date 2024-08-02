@@ -54,6 +54,7 @@ friend ScreenSensorConnector;
 public:
     MotionSubscriber() = delete;
     ~MotionSubscriber() = default;
+    
 private:
     static void SubscribeMotionSensor();
     static void UnsubscribeMotionSensor();

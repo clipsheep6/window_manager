@@ -87,6 +87,7 @@ public:
     void OnWindowVisibilityChangedCallback(const bool isVisible) override;
     void OnWindowStatusChange(WindowStatus status) override;
     void OnWindowTitleButtonRectChanged(const TitleButtonRect& titleButtonRect) override;
+    
 private:
     std::function<void(void*)> cjCallBack_;
     wptr<CjWindowListener> weakRef_ = nullptr;

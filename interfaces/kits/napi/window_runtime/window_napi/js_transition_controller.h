@@ -28,6 +28,7 @@ public:
     ~JsTransitionContext();
     static void Finalizer(napi_env env, void* data, void* hint);
     static napi_value CompleteTransition(napi_env env, napi_callback_info info);
+
 private:
     napi_value OnCompleteTransition(napi_env env, napi_callback_info info);
     wptr<Window> windowToken_;
@@ -41,6 +42,7 @@ public:
     void AnimationForShown() override;
     void AnimationForHidden() override;
     void SetJsController(std::shared_ptr<NativeReference> jsVal);
+    
 private:
     void CallJsMethod(const std::string& methodName, napi_value const * argv, size_t argc);
     napi_env env_;

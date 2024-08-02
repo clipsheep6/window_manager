@@ -136,6 +136,7 @@ public:
      * @param rect Window extension rect.
      */
     void SetBounds(const Rect& rect) const;
+    
 private:
     class Impl;
     sptr<Impl> pImpl_;

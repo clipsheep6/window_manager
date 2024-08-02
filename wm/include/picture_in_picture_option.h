@@ -46,6 +46,7 @@ public:
     std::shared_ptr<XComponentController> GetXComponentController();
     void SetNodeControllerRef(napi_ref ref);
     napi_ref GetNodeControllerRef() const;
+    
 private:
     void* contextPtr_ = nullptr;
     uint32_t templateType_  = 0;

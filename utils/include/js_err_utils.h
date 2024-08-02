@@ -29,6 +29,7 @@ public:
     static napi_value CreateJsError(napi_env env, const WmErrorCode& errorCode, std::string msg = "");
     static napi_value CreateJsError(napi_env env, const DMError& errorCode, std::string msg = "");
     static napi_value CreateJsError(napi_env env, const DmErrorCode& errorCode, std::string msg = "");
+    
 private:
     static inline napi_value CreateJsNumber(napi_env env, int32_t value)
     {

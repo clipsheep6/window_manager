@@ -40,6 +40,7 @@ public:
     void TearDown() override;
     void InitRemoteAnimation();
     void CreateWindowNodeContainer();
+    
 private:
     RSSurfaceNode::SharedPtr CreateRSSurfaceNode(uint32_t windowId);
     sptr<WindowProperty> CreateWindowProperty(uint32_t windowId);

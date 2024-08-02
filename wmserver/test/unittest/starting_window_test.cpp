@@ -37,6 +37,7 @@ public:
     void TearDown() override;
 
     sptr<WindowProperty> CreateWindowProperty();
+    
 private:
     static sptr<WindowTransitionInfo> transitionInfo_;
     RSSurfaceNode::SharedPtr CreateRSSurfaceNode();

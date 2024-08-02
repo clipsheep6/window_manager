@@ -32,6 +32,7 @@ public:
     int32_t DisableWindowDecor();
     int32_t SetShowOnLockScreen(bool showOnLockScreen);
     static std::shared_ptr<CJWindowStageImpl> CreateCJWindowStage(std::shared_ptr<WindowScene> windowScene);
+    
 private:
     std::weak_ptr<Rosen::WindowScene> windowScene_;
 };

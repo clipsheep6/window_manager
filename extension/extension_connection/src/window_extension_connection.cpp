@@ -53,6 +53,7 @@ public:
     void Hide() const;
     void SetBounds(const Rect& rect) const;
     void RequestFocus() const;
+
 private:
     class WindowExtensionClientRecipient
         final : public IRemoteObject::DeathRecipient {
@@ -60,6 +61,7 @@ private:
         explicit WindowExtensionClientRecipient(sptr<IWindowExtensionCallback> callback);
         ~WindowExtensionClientRecipient() = default;
         void OnRemoteDied(const wptr<IRemoteObject>& remote);
+        
     private:
         sptr<IWindowExtensionCallback> callback_;
     };

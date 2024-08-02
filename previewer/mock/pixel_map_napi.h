@@ -31,6 +31,7 @@ public:
     static napi_value CreatePixelMap(napi_env env, std::shared_ptr<PixelMap> pixelmap);
     napi_env getEnv();
     napi_ref getWrapper();
+    
 private:
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;

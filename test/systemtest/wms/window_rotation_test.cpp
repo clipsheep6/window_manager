@@ -58,6 +58,7 @@ public:
     Utils::TestWindowInfo fullInfo_;
     sptr<DisplayListener> displayListener_;
     sptr<ScreenListener> screenListener_;
+    
 private:
     static constexpr uint32_t SPLIT_TEST_SLEEP_S = 1;
     static constexpr long FUTURE_GET_RESULT_TIMEOUT = 1000;

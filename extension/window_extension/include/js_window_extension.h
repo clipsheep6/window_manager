@@ -82,6 +82,7 @@ public:
      * @param sessionInfo Indicates the {@link SessionInfo} structure containing session info about the extension.
      */
     virtual void OnStart(const AAFwk::Want& want, sptr<AAFwk::SessionInfo> sessionInfo) override;
+    
 private:
     void GetSrcPath(std::string& srcPath) const;
     napi_value CallJsMethod(const char* name, napi_value const * argv = nullptr, size_t argc = 0) const;

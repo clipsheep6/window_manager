@@ -51,6 +51,7 @@ public:
     {
         callback_ = callback;
     }
+    
 private:
     std::function<void(std::vector<std::string>)> callback_;
 };

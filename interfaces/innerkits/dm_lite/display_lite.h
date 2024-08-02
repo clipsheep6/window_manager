@@ -74,9 +74,11 @@ public:
      * @return Rotation of the display..
      */
     Rotation GetRotation() const;
+
 protected:
     // No more methods or variables can be defined here.
     DisplayLite(const std::string& name, sptr<DisplayInfo> info);
+    
 private:
     // No more methods or variables can be defined here.
     void UpdateDisplayInfo(sptr<DisplayInfo>) const;

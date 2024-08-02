@@ -573,6 +573,7 @@ public:
         translateY_ = parcel.ReadFloat();
         translateZ_ = parcel.ReadFloat();
     }
+    
 private:
     static inline bool NearZero(float val)
     {

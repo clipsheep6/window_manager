@@ -36,6 +36,7 @@ public:
     std::vector<sptr<Window>> activeWindows_;
     static vector<Rect> fullScreenExpecteds_;
     static inline float virtualPixelRatio_ = 0.0;
+    
 private:
     static constexpr uint32_t WAIT_SYANC_US = 100000;
     static void InitAvoidArea();

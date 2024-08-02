@@ -60,6 +60,7 @@ public:
         JsWindowExtensionContext* me = CheckParamsAndGetThis<JsWindowExtensionContext>(env, info);
         return (me != nullptr) ? me->OnStartAbility(env, info) : nullptr;
     }
+    
 private:
     std::weak_ptr<WindowExtensionContext> context_;
 

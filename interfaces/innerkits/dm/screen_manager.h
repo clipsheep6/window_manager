@@ -331,6 +331,7 @@ public:
      * @return DM_OK means set success, others means failed.
      */
     DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval);
+    
 private:
     ScreenManager();
     ~ScreenManager();

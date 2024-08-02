@@ -40,6 +40,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    
 private:
     sptr<KeyboardSession> GetKeyboardSession(std::string &abilityName, std::string &bundleName);
 };

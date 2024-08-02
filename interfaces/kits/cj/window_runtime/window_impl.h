@@ -102,6 +102,7 @@ public:
     int32_t SetWindowSystemBarProperties(const CBarProperties& cProperties);
     ResWindow CheckWindow();
     OHOS::FFI::RuntimeType* GetRuntimeType() override { return GetClassType(); }
+    
 private:
     friend class OHOS::FFI::RuntimeType;
     friend class OHOS::FFI::TypeBase;

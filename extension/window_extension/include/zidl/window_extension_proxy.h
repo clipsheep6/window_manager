@@ -32,6 +32,7 @@ public:
     void Show() override;
     void RequestFocus() override;
     void GetExtensionWindow(sptr<IWindowExtensionClient>& token) override;
+    
 private:
     static inline BrokerDelegator<WindowExtensionProxy> delegator_;
 };

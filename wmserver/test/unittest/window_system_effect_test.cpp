@@ -33,6 +33,7 @@ public:
     void TearDown() override;
 
     sptr<WindowProperty> CreateWindowProperty();
+    
 private:
     RSSurfaceNode::SharedPtr CreateRSSurfaceNode(std::string name);
     sptr<WindowNode> node_ = nullptr;

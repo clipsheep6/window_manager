@@ -39,6 +39,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    
 private:
     sptr<WindowExtensionSessionImpl> window_ = nullptr;
 };

@@ -43,6 +43,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    
 private:
     std::shared_ptr<DistributedClient> distributedClient_;
 };

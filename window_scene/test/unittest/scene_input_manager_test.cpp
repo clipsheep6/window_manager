@@ -31,6 +31,7 @@ public:
     void SetUp() override;
     void TearDown() override;
     static sptr<SceneSessionManager> ssm_;
+    
 private:
     static constexpr uint32_t WAIT_SYNC_IN_NS = 500000;
 };

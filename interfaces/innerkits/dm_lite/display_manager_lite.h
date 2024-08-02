@@ -124,6 +124,7 @@ public:
      * @return Default display object.
      */
     sptr<DisplayLite> GetDisplayById(DisplayId displayId);
+    
 private:
     DisplayManagerLite();
     ~DisplayManagerLite();
