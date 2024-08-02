@@ -352,12 +352,300 @@ HWTEST_F(SessionStubTest, HandleSetDialogSessionBackGestureEnabled01, Function |
  */
 HWTEST_F(SessionStubTest, ProcessRemoteRequest001, Function | SmallTest | Level2)
 {
-    uint32_t code = static_cast<uint32_t>(SesssionInterfaceCode::TRANS_ID_CONNECT);
+    uint32_t code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CONNECT);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    auto res = session_->ProcessRemoteRequest(data, reply);
+    ASSERT_NE(nullptr, session_);
+    auto res = session_->ProcessRemoteRequest(code, data, reply, option);
     ASSERT_EQ(ERR_INVALID_DATA, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_FOREGROUND);
+    data.WriteBool(false);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_BACKGROUND);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DISCONNECT);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SHOW);
+    data.WriteBool(false);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_HIDE);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_DRAWING_COMPLETED);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_RECTCHANGE_LISTENER_REGISTERED);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SESSION_EVENT);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+}
+
+/**
+ * @tc.name: ProcessRemoteRequest002
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, ProcessRemoteRequest002, Function | SmallTest | Level2)
+{
+    uint32_t code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_SESSION_RECT);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_NE(nullptr, session_);
+    auto res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_TO_APP_TOP);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_BACKPRESSED);
+    data.WriteBool(true);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_MARK_PROCESSED);
+    int32_t eventId = 0;
+    data.WriteInt32(eventId);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_DATA, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_MAXIMIZE_MODE);
+    data.WriteUint32(1);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_MAXIMIZE_MODE);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NEED_AVOID);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+}
+
+/**
+ * @tc.name: ProcessRemoteRequest003
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, ProcessRemoteRequest003, Function | SmallTest | Level2)
+{
+    uint32_t code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_AVOID_AREA);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_NE(nullptr, session_);
+    auto res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_ASPECT_RATIO);
+    data.WriteFloat(0.0f);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_WINDOW_ANIMATION_FLAG);
+    data.WriteBool(true);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_CUSTOM_ANIMATION);
+    data.WriteBool(true);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_LANDSCAPE_MULTI_WINDOW);
+    data.WriteBool(true);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_ABOVE_TARGET);
+    data.WriteInt32(1);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_RAISE_APP_MAIN_WINDOW);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+}
+
+/**
+ * @tc.name: ProcessRemoteRequest004
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, ProcessRemoteRequest004, Function | SmallTest | Level2)
+{
+    uint32_t code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_CHANGE_SESSION_VISIBILITY_WITH_STATUS_BAR);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_NE(nullptr, session_);
+    auto res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_VALUE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_ACTIVE_PENDING_SESSION);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_VALUE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TERMINATE);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_VALUE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_EXCEPTION);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_VALUE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_PROCESS_POINT_DOWN_SESSION);
+    data.WriteInt32(0);
+    data.WriteInt32(0);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SEND_POINTEREVENT_FOR_MOVE_DRAG);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(-1, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_KEYBOARD_SESSION_GRAVITY);
+    data.WriteUint32(1);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+}
+
+/**
+ * @tc.name: ProcessRemoteRequest005
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, ProcessRemoteRequest005, Function | SmallTest | Level2)
+{
+    uint32_t code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CALLING_SESSION_ID);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteUint32(1);
+    ASSERT_NE(nullptr, session_);
+    auto res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_CUSTOM_DECOR_HEIGHT);
+    data.WriteInt32(0);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_SESSION_PROPERTY);
+    data.WriteBool(false);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_ADJUST_KEYBOARD_LAYOUT);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_DATA, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_ABILITY_RESULT);
+    data.WriteUint32(1);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_VALUE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRANSFER_EXTENSION_DATA);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_VALUE, res);
+}
+
+/**
+ * @tc.name: ProcessRemoteRequest006
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, ProcessRemoteRequest006, Function | SmallTest | Level2)
+{
+    uint32_t code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_ASYNC_ON);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_NE(nullptr, session_);
+    auto res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_SYNC_ON);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_DIED);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_VALUE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_EXTENSION_TIMEOUT);
+    data.WriteInt32(0);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_DATA, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_TRIGGER_BIND_MODAL_UI_EXTENSION);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_REPORT_ACCESSIBILITY_EVENT);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_DATA, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_NOTIFY_PIP_WINDOW_PREPARE_CLOSE);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_RECT);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+}
+
+/**
+ * @tc.name: ProcessRemoteRequest007
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, ProcessRemoteRequest007, Function | SmallTest | Level2)
+{
+    uint32_t code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_PIP_CONTROL_STATUS);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    ASSERT_NE(nullptr, session_);
+    auto res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_DATA, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_LAYOUT_FULL_SCREEN_CHANGE);
+    data.WriteBool(false);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_FORCE_LANDSCAPE_MODE);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_INVALID_DATA, res);
+    std::string name = "test";
+    data.WriteString(name);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_GET_STATUSBAR_HEIGHT);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_SET_DIALOG_SESSION_BACKGESTURE_ENABLE);
+    data.WriteBool(false);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(ERR_NONE, res);
+    code = static_cast<uint32_t>(803);
+    res = session_->ProcessRemoteRequest(code, data, reply, option);
+    ASSERT_EQ(IPC_STUB_UNKNOW_TRANS_ERR, res);
+    // code = static_cast<uint32_t>(SessionInterfaceCode::TRANS_ID_UPDATE_ACTIVE_STATUS);
+    // data.WriteBool(false);
+    // res = session_->ProcessRemoteRequest(code, data, reply, option);
+    // ASSERT_EQ(ERR_NONE, res);
+}
+
+/**
+ * @tc.name: HandleForeground014
+ * @tc.desc: sessionStub sessionStubTest
+ * @tc.type: FUNC
+ * @tc.require: #I6JLSI
+ */
+HWTEST_F(SessionStubTest, HandleForeground014, Function | SmallTest | Level2)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    data.WriteBool(true);
+    sptr<WindowSessionProperty> property = sptr<WindowSessionProperty>::MakeSptr();
+    ASSERT_NE(nullptr, property);
+    data.WriteStrongParcelable(property);
+    auto res = session_->HandleForeground(data, reply);
+    ASSERT_EQ(ERR_NONE, res);
+    data.WriteBool(true);
+    property = nullptr;
+    data.WriteStrongParcelable(property);
+    res = session_->HandleForeground(data, reply);
+    ASSERT_EQ(ERR_INVALID_DATA, res);
+    sptr<KeyboardLayoutParams> keyboardLayoutParams = sptr<KeyboardLayoutParams>::MakeSptr();
+    data.WriteStrongParcelable(keyboardLayoutParams);
+    res = session_->HandleAdjustKeyboardLayout(data, reply);
+    ASSERT_EQ(ERR_NONE, res);
 }
 }
 } // namespace Rosen
