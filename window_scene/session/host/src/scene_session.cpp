@@ -384,21 +384,29 @@ WSError SceneSession::OnSessionEvent(SessionEvent event)
 
 WSError SceneSession::OnSystemSessionEvent(SessionEvent event)
 {
-    auto weakThis = wptr(this);
-    auto session = weakThis.promote();
-    if (!session) {
-        TLOGW(WmsLogTag::WMS_SYSTEM, "IPC communicate failed since hostSession is nullptr");
-        return WSError::WS_ERROR_NULLPTR;
-    } else if (!SessionPermission::IsSystemCalling()) {
+    if (event != SessionEvent::EVENTT_START_MOVE) {
+        TLOGW(WmsLogTag::WMS_SYSTEM, "This is not start move event");
+        return WSError::WS_ERROR_NULLPTR; 
+    }
+    if (!SessionPermission::IsSystemCalling()) {
         TLOGW(WmsLogTag::WMS_SYSTEM, "This is not system window, permission denied!");
         return WSError::WS_ERROR_NOT_SYSTEM_APP;
-    } else if (session->moveDragController_->GetStartDragFlag()) {
-        TLOGW(WmsLogTag::WMS_SYSTEM, "Repeat operation, window is moving");
-        return WSError::WS_ERROR_REPEAT_OPERATION;
     }
-    WSError errorCode = OnSessionEvent(event);
-    return errorCode;
+    auto task = [weakThis = wptr(this), event, this]() {
+        auto session = weakThis.promote();
+        if (!session || !session->moveDragController_) {
+            TLOGW(WmsLogTag::WMS_SYSTEM, "IPC communicate failed since hostSession is nullptr");
+            return WSError::WS_ERROR_NULLPTR;
+        } 
+        if (session->moveDragController_->GetStartDragFlag()) {
+            TLOGW(WmsLogTag::WMS_SYSTEM, "Repeat operation, window is moving");
+            return WSError::WS_ERROR_REPEAT_OPERATION;
+        }
+        OnSessionEvent(event);
+        return WSError::WS_OK;
+    }
 }
+
 uint32_t SceneSession::GetWindowDragHotAreaType(uint32_t type, int32_t pointerX, int32_t pointerY)
 {
     std::shared_lock<std::shared_mutex> lock(windowDragHotAreaMutex_);

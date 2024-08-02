@@ -514,6 +514,9 @@ bool WindowSceneSessionImpl::HandlePointDownEvent(const std::shared_ptr<MMI::Poi
     auto hostSession = GetHostSession();
     CHECK_HOST_SESSION_RETURN_ERROR_IF_NULL(hostSession, needNotifyEvent);
     if ((WindowHelper::IsSystemWindow(windowType) || isFixedSubWin) && !isDecorDialog) {
+        if (!isFixedSubWin && !(windowType == WindowType::WINDOW_TYPE_DIALOG)) {
+            hostSession->SendPointEventForMoveDrag(pointerEvent);
+        }
         hostSession->SendPointEventForMoveDrag(pointerEvent);
     } else {
         if (dragType != AreaType::UNDEFINED) {

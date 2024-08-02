@@ -846,11 +846,11 @@ napi_value JsWindow::GetImmersiveModeEnabledState(napi_env env, napi_callback_in
     return (me != nullptr) ? me->OnGetImmersiveModeEnabledState(env, info) : nullptr;
 }
 
-napi_value JsWindow::StartMove(napi_env env, napi_callback_info info)
+napi_value JsWindow::StartMoving(napi_env env, napi_callback_info info)
 {
     TLOGD(WmsLogTag::WMS_IMMS, "[NAPI]StartMove");
     JsWindow* me = CheckParamsAndGetThis<JsWindow>(env, info);
-    return (me != nullptr) ? me->OnStartMove(env, info) : nullptr;
+    return (me != nullptr) ? me->OnStartMoving(env, info) : nullptr;
 }
 
 static void UpdateSystemBarProperties(std::map<WindowType, SystemBarProperty>& systemBarProperties,
@@ -5984,7 +5984,7 @@ napi_value JsWindow::OnGetImmersiveModeEnabledState(napi_env env, napi_callback_
     return CreateJsValue(env, isEnabled);
 }
 
-napi_value JsWindow::OnStartMove(napi_env env, napi_callback_info info)
+napi_value JsWindow::OnStartMoving(napi_env env, napi_callback_info info)
 {
     if (windowToken_ == nullptr) {
         TLOGE(WmsLogTag::WMS_SYSTEM, "windowToken_ is nullptr.");
@@ -6024,14 +6024,14 @@ napi_value JsWindow::OnStartMove(napi_env env, napi_callback_info info)
         }
     };
     napi_value result = nullptr;
-    NapiAsyncTask::Schedule("JsWindow::OnStartMove",
+    NapiAsyncTask::Schedule("JsWindow::OnStartMoving",
         env, CreateAsyncTaskWithLastParam(env, nullptr, std::move(execute), std::move(complete), &result));
     return result;
 }
 
 void BindFunctions(napi_env env, napi_value object, const char *moduleName)
 {
-    BindNativeFunction(env, object, "startMove", moduleName, JsWindow::StartMove);
+    BindNativeFunction(env, object, "startMoving", moduleName, JsWindow::StartMoving);
     BindNativeFunction(env, object, "show", moduleName, JsWindow::Show);
     BindNativeFunction(env, object, "showWindow", moduleName, JsWindow::ShowWindow);
     BindNativeFunction(env, object, "showWithAnimation", moduleName, JsWindow::ShowWithAnimation);
