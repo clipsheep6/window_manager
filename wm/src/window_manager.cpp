@@ -1329,7 +1329,7 @@ WindowStyleType WindowManager::GetWindowStyleType()
 
 WMError WindowManager::SetProcessWatermark(int32_t pid, const std::string& busiessName, bool isEnabled)
 {
-    WMError ret = SingletonContainer::Get<WindowAdapter>().GetWindowStyleType(pid, busiessName, isEnabled);
+    WMError ret = SingletonContainer::Get<WindowAdapter>().SetProcessWatermark(pid, busiessName, isEnabled);
     if (ret != WMError::WM_OK) {
         TLOGE(WmsLogTag::DEFAULT, "set process watermark failed");
     }

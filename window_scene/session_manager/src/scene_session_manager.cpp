@@ -9983,9 +9983,7 @@ WMError SceneSessionManager::SetProcessWatermark(int32_t pid, const std::string&
             }
             surfaceNode->SetWatermarkEnabled(busiessName, isEnabled);
         }
-        
     }
-    
     return WMError::WM_OK;
 }
 } // namespace OHOS::Rosen

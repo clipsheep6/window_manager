@@ -928,18 +928,23 @@ WMError WindowAdapter::GetWindowModeType(WindowModeType& windowModeType)
     return wmsProxy->GetWindowModeType(windowModeType);
 }
 
+
+WMError WindowAdapter::SetProcessWatermark(int32_t pid, const std::string& busiessName, bool isEnabled)
+{
+    INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
+
+    WLOGFD("get window mode type");
+    auto wmsProxy = GetWindowManagerServiceProxy();
+    CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_ERROR_SAMGR);
+    return wmsProxy->SetProcessWatermark(pid, busiessName, isEnabled);
+}
+
 WMError WindowAdapter::GetWindowStyleType(WindowStyleType& windowStyleType)
 {
     INIT_PROXY_CHECK_RETURN(WMError::WM_ERROR_SAMGR);
     auto wmsProxy = GetWindowManagerServiceProxy();
     CHECK_PROXY_RETURN_ERROR_IF_NULL(wmsProxy, WMError::WM_ERROR_SAMGR);
     return wmsProxy->GetWindowStyleType(windowStyleType);
-}
-
-sptr<IWindowManager> WindowAdapter::GetWindowManagerServiceProxy() const
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    return windowManagerServiceProxy_;
 }
 
 sptr<IWindowManager> WindowAdapter::GetWindowManagerServiceProxy() const
