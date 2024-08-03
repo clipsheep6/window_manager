@@ -261,7 +261,7 @@ public:
 
     WMError GetWindowStyleType(WindowStyleType& windowStyleType) override { return WMError::WM_OK; }
     WMError SetProcessWatermark(int32_t pid, const std::string& busiessName, bool isEnabled) override
-    { 
+    {
         return WMError::WM_OK;
     }
 };
