@@ -1010,4 +1010,14 @@ int SceneSessionManagerStub::HandleGetWindowStyleType(MessageParcel& data, Messa
     reply.WriteInt32(static_cast<int32_t>(errCode));
     return ERR_NONE;
 }
+
+int SceneSessionManagerStub::HandleSetProcessWatermark(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t pid = data.ReadInt32();
+    std::string busiessName = data.ReadString();
+    bool isEnabled = data.ReadBool();
+    WMError errCode = SetProcessWatermark(pid, busiessName, isEnabled);
+    reply.WriteInt32(static_cast<int32_t>(errCode));
+    return ERR_NONE;
+}
 } // namespace OHOS::Rosen

@@ -361,6 +361,7 @@ public:
     WSError SetAppForceLandscapeConfig(const std::string& bundleName, const AppForceLandscapeConfig& config);
     AppForceLandscapeConfig GetAppForceLandscapeConfig(const std::string& bundleName);
     WMError TerminateSessionByPersistentId(int32_t persistentId);
+    WMError SetProcessWatermark(int32_t pid, const std::string& busiessName, bool isEnabled) override;
 
 protected:
     SceneSessionManager();

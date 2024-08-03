@@ -942,5 +942,11 @@ sptr<IWindowManager> WindowAdapter::GetWindowManagerServiceProxy() const
     return windowManagerServiceProxy_;
 }
 
+sptr<IWindowManager> WindowAdapter::GetWindowManagerServiceProxy() const
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return windowManagerServiceProxy_;
+}
+
 } // namespace Rosen
 } // namespace OHOS
