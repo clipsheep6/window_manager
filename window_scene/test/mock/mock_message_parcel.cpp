@@ -16,6 +16,7 @@
 #include "iremote_object.h"
 #include "message_parcel.h"
 #include "window_manager_hilog.h"
+
 namespace OHOS {
 namespace {
 bool g_setWriteBoolErrorFlag = false;

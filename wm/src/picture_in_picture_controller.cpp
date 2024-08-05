@@ -36,22 +36,22 @@
 
 namespace OHOS {
 namespace Rosen {
-    sptr<IRemoteObject> PictureInPictureController::remoteObj_;
+sptr<IRemoteObject> PictureInPictureController::remoteObj_;
 namespace {
-    constexpr int32_t DELAY_RESET = 100;
-    constexpr int32_t PIP_DESTROY_TIMEOUT = 600;
-    constexpr int32_t PIP_SUCCESS = 1;
-    constexpr int32_t FAILED = 0;
-    constexpr uint32_t PIP_LOW_PRIORITY = 0;
-    constexpr uint32_t PIP_HIGH_PRIORITY = 1;
-    const std::string PIP_CONTENT_PATH = "/system/etc/window/resources/pip_content.abc";
-    const std::string KEY = "auto_start_pip_status";
-    const std::string SETTING_COLUMN_KEYWORD = "KEYWORD";
-    const std::string SETTING_COLUMN_VALUE = "VALUE";
-    const std::string DESTROY_TIMEOUT_TASK = "PipDestroyTimeout";
-    const std::string SETTING_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/"
-        "settingsdata/SETTINGSDATA?Proxy=true";
-    constexpr const char *SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
+constexpr int32_t DELAY_RESET = 100;
+constexpr int32_t PIP_DESTROY_TIMEOUT = 600;
+constexpr int32_t PIP_SUCCESS = 1;
+constexpr int32_t FAILED = 0;
+constexpr uint32_t PIP_LOW_PRIORITY = 0;
+constexpr uint32_t PIP_HIGH_PRIORITY = 1;
+const std::string PIP_CONTENT_PATH = "/system/etc/window/resources/pip_content.abc";
+const std::string KEY = "auto_start_pip_status";
+const std::string SETTING_COLUMN_KEYWORD = "KEYWORD";
+const std::string SETTING_COLUMN_VALUE = "VALUE";
+const std::string DESTROY_TIMEOUT_TASK = "PipDestroyTimeout";
+const std::string SETTING_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/"
+    "settingsdata/SETTINGSDATA?Proxy=true";
+constexpr const char *SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
 }
 
 uint32_t PictureInPictureController::GetPipPriority(uint32_t pipTemplateType)

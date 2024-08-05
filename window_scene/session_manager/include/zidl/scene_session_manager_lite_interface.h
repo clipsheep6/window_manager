@@ -26,6 +26,7 @@
 #include "mission_snapshot.h"
 #include "session_info.h"
 #include "zidl/window_manager_lite_interface.h"
+
 namespace OHOS::Media {
 class PixelMap;
 } // namespace OHOS::Media
