@@ -1,4 +1,4 @@
-# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -1789,6 +1789,7 @@ ohos_static_library("ws_unittest_common") {
   ]
 
   public_external_deps = [
+    "ability_base:configuration",
     "ability_base:session_info",
     "ability_base:want",
   ]

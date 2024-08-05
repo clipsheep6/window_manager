@@ -39,6 +39,7 @@ ohos_fuzztest("SessionStubExtensionFuzzTest") {
   ]
 
   external_deps = [
+    "ability_base:configuration",
     "accessibility:accessibility_common",
     "accessibility:accessibility_interface",
     "c_utils:utils",
