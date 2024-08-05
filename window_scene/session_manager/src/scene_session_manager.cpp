@@ -1133,7 +1133,6 @@ AvoidArea SceneSessionManager::GetRootSessionAvoidArea(AvoidAreaType type)
             }
         }
         return avoidArea;
-
     }
     return {};
 }
