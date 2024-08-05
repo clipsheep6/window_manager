@@ -101,6 +101,8 @@ public:
     
     void SetUiDvsyncSwitch(bool dvsyncSwitch) override;
 
+    WMError GetSessionRectByType(AvoidAreaType type, WSRect& rect);
+
     WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) override;
 
     static sptr<RootScene> staticRootScene_;

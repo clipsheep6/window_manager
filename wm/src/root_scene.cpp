@@ -245,7 +245,10 @@ void RootScene::SetUiDvsyncSwitch(bool dvsyncSwitch)
     }
     vsyncStation_->SetUiDvsyncSwitch(dvsyncSwitch);
 }
-
+WMError RootScene::GetSessionRectByType(AvoidAreaType type, WSRect& rect)
+{
+    return WMError::WM_OK;
+}
 WMError RootScene::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
 {
     if (getSessionRectCallback_ == nullptr) {

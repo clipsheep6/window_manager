@@ -137,7 +137,7 @@ public:
 
     void SetRootSceneContext(const std::weak_ptr<AbilityRuntime::Context>& contextWeak);
     sptr<RootSceneSession> GetRootSceneSession();
-    WSRect GetRootSessionAvoidSessionRect(AvoidAreaType type);
+    AvoidArea GetRootSessionAvoidArea(AvoidAreaType type);
     sptr<SceneSession> GetSceneSession(int32_t persistentId);
     void PostFlushWindowInfoTask(FlushWindowInfoTask &&task, const std::string taskName, const int delayTime);
 
