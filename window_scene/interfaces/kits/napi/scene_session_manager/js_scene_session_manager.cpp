@@ -1233,7 +1233,7 @@ napi_value JsSceneSessionManager::OnGetRootSceneSession(napi_env env, napi_callb
             SceneSessionManager::GetInstance().InitPersistentStorage();
         });
     rootScene_->SetGetSessionRectCallback([](AvoidAreaType type) {
-        return SceneSessionManager::GetInstance().GetRootSessionAvoidSessionRect(type);
+        return SceneSessionManager::GetInstance().GetRootSessionAvoidArea(type);
     });
     if (!Session::IsScbCoreEnabled()) {
         rootScene_->SetFrameLayoutFinishCallback([]() {
@@ -2110,7 +2110,6 @@ napi_value JsSceneSessionManager::OnGetRootSceneUIContext(napi_env env, napi_cal
         napi_throw(env, CreateJsError(env, static_cast<int32_t>(WmErrorCode::WM_ERROR_STATE_ABNORMALLY)));
         return NapiGetUndefined(env);
     }
-    WLOGFD("OnGetRootSceneUIContext success");
     return uiContext;
 }
 

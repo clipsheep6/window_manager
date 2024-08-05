@@ -35,7 +35,7 @@ class UIContent;
 
 namespace OHOS {
 namespace Rosen {
-using GetSessionRectCallback = std::function<WSRect(AvoidAreaType)>;
+using GetSessionRectCallback = std::function<AvoidArea(AvoidAreaType)>;
 
 class RootScene : public Window {
 public:
@@ -101,7 +101,7 @@ public:
     
     void SetUiDvsyncSwitch(bool dvsyncSwitch) override;
 
-    WMError GetSessionRectByType(AvoidAreaType type, WSRect& rect);
+    WMError GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea) override;
 
     static sptr<RootScene> staticRootScene_;
 
