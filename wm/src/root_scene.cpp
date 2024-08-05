@@ -252,7 +252,7 @@ WMError RootScene::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
         TLOGE(WmsLogTag::WMS_IMMS, "getSessionRectCallback is nullptr");
         return WMError::WM_ERROR_NULLPTR;
     }
-    rect = getSessionRectCallback_(type);
+    avoidArea = getSessionRectCallback_(type);
     return WMError::WM_OK;
 }
 } // namespace Rosen
