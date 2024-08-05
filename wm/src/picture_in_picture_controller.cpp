@@ -81,8 +81,7 @@ PictureInPictureController::PictureInPictureController(sptr<PipOption> pipOption
         userId = DEFAULT_USERID;
     }
     TLOGI(WmsLogTag::WMS_PIP, "userId = %{public}d", userId);
-    setting_url_proxy_ =
-    const std::string SETTING_URI_PROXY = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_" +
+    setting_url_proxy_ = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_" +
         std:to_string(userId) + "?Proxy=true";
 
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
