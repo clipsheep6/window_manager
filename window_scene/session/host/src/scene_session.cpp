@@ -1155,6 +1155,11 @@ void SceneSession::GetKeyboardAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 
 void SceneSession::GetCutoutAvoidArea(WSRect& rect, AvoidArea& avoidArea)
 {
+    if (Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_PRIMARY ||
+        Session::GetWindowMode() == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
+        return;
+    }
+
     auto display = DisplayManager::GetInstance().GetDisplayById(GetSessionProperty()->GetDisplayId());
     if (display == nullptr) {
         TLOGE(WmsLogTag::WMS_IMMS, "Failed to get display");
