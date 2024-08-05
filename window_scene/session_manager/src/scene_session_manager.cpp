@@ -1088,52 +1088,8 @@ sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
     return taskScheduler_->PostSyncTask(task, "GetRootSceneSession");
 }
 
-AvoidArea SceneSessionManager::GetRootSessionAvoidArea(AvoidAreaType type)
+WSRect SceneSessionManager::GetRootSessionAvoidSessionRect(AvoidAreaType type)
 {
-    sptr<RootSceneSession> rootSession = GetRootSceneSession();
-    if (rootSession == nullptr || rootSession->GetSessionProperty() == nullptr) {
-        return {};
-    }
-    DisplayId displayId = rootSession->GetSessionProperty()->GetDisplayId();
-    std::vector<sptr<SceneSession>> sessionVector;
-    switch (type) {
-        case AvoidAreaType::TYPE_SYSTEM: {
-            sessionVector = GetSceneSessionVectorByType(WindowType::WINDOW_TYPE_STATUS_BAR, displayId);
-            break;
-        }
-        case AvoidAreaType::TYPE_KEYBOARD: {
-            sessionVector = GetSceneSessionVectorByType(WindowType::WINDOW_TYPE_KEYBOARD_PANEL, displayId);
-            break;
-        }
-        default: {
-            TLOGD(WmsLogTag::WMS_IMMS, "unsupported type %{public}u", type);
-            return {};
-        }
-    }
-
-    for (auto& session : sessionVector) {
-        if (!session->IsVisible()) {
-            continue;
-        }
-        const WSRect rect = session->GetSessionRect();
-        TLOGI(WmsLogTag::WMS_IMMS, "type: %{public}u, rect: %{public}s", type, rect.ToString().c_str());
-        AvoidArea avoidArea;
-        switch (type) {
-            case AvoidAreaType::TYPE_SYSTEM: {
-                avoidArea.topRect_ = SessionHelper::TransferToRect(rect);
-                break;
-            }
-            case AvoidAreaType::TYPE_KEYBOARD: {
-                avoidArea.bottomRect_ = SessionHelper::TransferToRect(rect);
-                break;
-            }
-            default: {
-                TLOGD(WmsLogTag::WMS_IMMS, "unsupported type %{public}u", type);
-                return {};
-            }
-        }
-        return avoidArea;
-    }
     return {};
 }
 
