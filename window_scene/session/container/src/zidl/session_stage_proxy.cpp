@@ -832,7 +832,7 @@ void SessionStageProxy::NotifyTransformChange(const Transform& transform)
         return;
     }
     if (remote->SendRequest(static_cast<uint32_t>(SessionStageInterfaceCode::TRANS_ID_NOTIFY_TRANSFORM_CHANGE),
-                              data, reply, option) != ERR_NONE) {
+                            data, reply, option) != ERR_NONE) {
         WLOGFE("Send NotifyTransformChange Requset failed");
     }
 }

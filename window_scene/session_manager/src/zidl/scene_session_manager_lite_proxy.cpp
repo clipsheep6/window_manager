@@ -929,7 +929,7 @@ WMError SceneSessionManagerLiteProxy::GetMainWindowInfos(int32_t topNum, std::ve
         return WMError::WM_ERROR_IPC_FAILED;
     }
     if (remote->SendRequest(static_cast<int32_t>(SceneSessionManagerLiteMessage::TRANS_ID_GET_TOPN_MAIN_WINDOW_INFO),
-                              data, reply, option) != ERR_NONE) {
+                            data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_MAIN, "send request fail");
         return WMError::WM_ERROR_IPC_FAILED;
     }

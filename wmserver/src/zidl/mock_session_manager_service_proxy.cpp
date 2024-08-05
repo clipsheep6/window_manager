@@ -112,7 +112,7 @@ void MockSessionManagerServiceProxy::RegisterSMSRecoverListener(const sptr<IRemo
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-       TLOGE(WmsLogTag::WMS_RECOVER, "remote is null");
+        TLOGE(WmsLogTag::WMS_RECOVER, "remote is null");
         return;
     }
     if (remote->SendRequest(static_cast<uint32_t>(

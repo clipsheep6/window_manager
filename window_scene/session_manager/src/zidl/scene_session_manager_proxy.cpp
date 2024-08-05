@@ -1828,8 +1828,8 @@ void SceneSessionManagerProxy::UpdateModalExtensionRect(const sptr<IRemoteObject
         return;
     }
     if (remote->SendRequest(static_cast<uint32_t>(
-                              SceneSessionManagerMessage::TRANS_ID_UPDATE_MODALEXTENSION_RECT_TO_SCB),
-                              data, reply, option) != ERR_NONE) {
+                            SceneSessionManagerMessage::TRANS_ID_UPDATE_MODALEXTENSION_RECT_TO_SCB),
+                            data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_UIEXT, "SendRequest failed");
     }
 }
@@ -1862,8 +1862,8 @@ void SceneSessionManagerProxy::ProcessModalExtensionPointDown(const sptr<IRemote
         return;
     }
     if (remote->SendRequest(static_cast<uint32_t>(
-                              SceneSessionManagerMessage::TRANS_ID_PROCESS_MODALEXTENSION_POINTDOWN_TO_SCB),
-                              data, reply, option) != ERR_NONE) {
+                            SceneSessionManagerMessage::TRANS_ID_PROCESS_MODALEXTENSION_POINTDOWN_TO_SCB),
+                            data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_UIEXT, "SendRequest failed");
     }
 }
@@ -1900,8 +1900,8 @@ void SceneSessionManagerProxy::AddExtensionWindowStageToSCB(const sptr<ISessionS
         return;
     }
     if (remote->SendRequest(static_cast<uint32_t>(
-                              SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB),
-                              data, reply, option) != ERR_NONE) {
+                            SceneSessionManagerMessage::TRANS_ID_ADD_EXTENSION_WINDOW_STAGE_TO_SCB),
+                            data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_UIEXT, "SendRequest failed");
     }
 }
@@ -1934,8 +1934,8 @@ void SceneSessionManagerProxy::RemoveExtensionWindowStageFromSCB(const sptr<ISes
         return;
     }
     if (remote->SendRequest(static_cast<uint32_t>(
-                              SceneSessionManagerMessage::TRANS_ID_REMOVE_EXTENSION_WINDOW_STAGE_FROM_SCB),
-                              data, reply, option) != ERR_NONE) {
+                            SceneSessionManagerMessage::TRANS_ID_REMOVE_EXTENSION_WINDOW_STAGE_FROM_SCB),
+                            data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_UIEXT, "SendRequest failed");
     }
 }
@@ -1963,8 +1963,8 @@ WSError SceneSessionManagerProxy::AddOrRemoveSecureSession(int32_t persistentId,
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (remote->SendRequest(static_cast<uint32_t>(
-                              SceneSessionManagerMessage::TRANS_ID_ADD_OR_REMOVE_SECURE_SESSION),
-                              data, reply, option) != ERR_NONE) {
+                            SceneSessionManagerMessage::TRANS_ID_ADD_OR_REMOVE_SECURE_SESSION),
+                            data, reply, option) != ERR_NONE) {
         TLOGE(WmsLogTag::WMS_UIEXT, "SendRequest failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
