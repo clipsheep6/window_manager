@@ -77,7 +77,7 @@ PictureInPictureController::PictureInPictureController(sptr<PipOption> pipOption
     curState_ = PiPWindowState::STATE_UNDEFINED;
 
     int32_t userId = 0;
-    if (GetCurrentUserId(userId)) {
+    if (!GetCurrentUserId(userId)) {
         userId = DEFAULT_USERID;
     }
     TLOGI(WmsLogTag::WMS_PIP, "userId = %{public}d", userId);
