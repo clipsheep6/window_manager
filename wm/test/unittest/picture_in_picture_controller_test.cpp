@@ -111,22 +111,6 @@ HWTEST_F(PictureInPictureControllerTest, GetPipPriority, Function | SmallTest | 
 }
 
 /**
- * @tc.name: GetCurrentUserId
- * @tc.desc: GetCurrentUserId
- * @tc.type: FUNC
- */
-HWTEST_F(PictureInPictureControllerTest, GetCurrentUserId, Function | SmallTest | Level2)
-{
-    sptr<PipOption> option = new (std::nothrow) PipOption();
-    ASSERT_NE(nullptr, option);
-    sptr<PictureInPictureController> pipControl =
-        new (std::nothrow) PictureInPictureController(option, nullptr, 100, nullptr);
-    ASSERT_NE(nullptr, pipControl);
-    int32_t userId = 0;
-    ASSERT_EQ(true, pipControl->GetPipPriority(userId));
-}
-
-/**
  * @tc.name: ShowPictureInPictureWindow01
  * @tc.desc: ShowPictureInPictureWindow
  * @tc.type: FUNC

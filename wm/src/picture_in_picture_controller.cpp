@@ -33,7 +33,6 @@
 #include "result_set.h"
 #include "system_ability_definition.h"
 #include "uri.h"
-#include "os_account_manager.h"
 
 namespace OHOS {
 namespace Rosen {
@@ -52,7 +51,6 @@ namespace {
     const std::string SETTING_COLUMN_VALUE = "VALUE";
     const std::string DESTROY_TIMEOUT_TASK = "PipDestroyTimeout";
     constexpr const char *SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
-    const int32_t DEFAULT_USERID = 100;
 }
 
 uint32_t PictureInPictureController::GetPipPriority(uint32_t pipTemplateType)
@@ -76,13 +74,10 @@ PictureInPictureController::PictureInPictureController(sptr<PipOption> pipOption
     this->handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
     curState_ = PiPWindowState::STATE_UNDEFINED;
 
-    int32_t userId = 0;
-    if (!GetCurrentUserId(userId)) {
-        userId = DEFAULT_USERID;
-    }
-    TLOGI(WmsLogTag::WMS_PIP, "userId = %{public}d", userId);
+    int32_t clientUserId = GetUserIdByUid(getuid());
+    TLOGI(WmsLogTag::WMS_PIP, "clientUserId = %{public}d", clientUserId);
     setting_url_proxy_ = "datashare:///com.ohos.settingsdata/entry/settingsdata/USER_SETTINGSDATA_" +
-        std::to_string(userId) + "?Proxy=true";
+        std::to_string(clientUserId) + "?Proxy=true";
 
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
@@ -102,22 +97,6 @@ PictureInPictureController::~PictureInPictureController()
 {
     PictureInPictureManager::DetachAutoStartController(handleId_, weakRef_);
     remoteObj_ = nullptr;
-}
-
-bool PictureInPictureController::GetCurrentUserId(int32_t &userId)
-{
-    std::vector<int32_t> activeIds;
-    int32_t ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
-    if (ret != 0) {
-        TLOGE(WmsLogTag::WMS_PIP, "QueryActiveOsAccountIds failed ret: %{public}d", ret);
-        return false;
-    }
-    if (activeIds.empty()) {
-        TLOGE(WmsLogTag::WMS_PIP, "QueryActiveOsAccountIds activeIds empty");
-        return false;
-    }
-    userId = activeIds[0];
-    return true;
 }
 
 WMError PictureInPictureController::CreatePictureInPictureWindow(StartPipType startType)

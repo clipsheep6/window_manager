@@ -73,8 +73,7 @@
           "libjpeg-turbo",
           "libxml2",
           "bounds_checking_function",
-          "device_status",
-          "os_account"
+          "device_status"
         ],
         "third_party": [
         ]
