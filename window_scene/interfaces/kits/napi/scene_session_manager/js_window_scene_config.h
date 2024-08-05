@@ -22,6 +22,7 @@
 
 #include "interfaces/include/ws_common.h"
 #include "window_session_property.h"
+
 namespace OHOS::Rosen {
 
 class JsWindowSceneConfig {
