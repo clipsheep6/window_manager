@@ -48,6 +48,7 @@ static sptr<Window> CreateWindowWithSession(sptr<WindowOption>& option,
 
     if (windowSessionImpl == nullptr) {
         WLOGFE("malloc windowSessionImpl failed");
+        errCode = WMError::WM_ERROR_INVALID_WINDOW;
         return nullptr;
     }
 
@@ -66,12 +67,14 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
 {
     if (windowName.empty()) {
         WLOGFE("window name is empty");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
         return nullptr;
     }
     if (option == nullptr) {
         option = new(std::nothrow) WindowOption();
         if (option == nullptr) {
             WLOGFE("malloc option failed");
+            errCode = WMError::WM_ERROR_INVALID_PARAM;
             return nullptr;
         }
     }
@@ -86,6 +89,7 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
     WindowType type = option->GetWindowType();
     if (!(WindowHelper::IsAppWindow(type) || WindowHelper::IsSystemWindow(type))) {
         WLOGFE("window type is invalid %{public}d", type);
+        errCode = WMError::WM_ERROR_INVALID_TYPE;
         return nullptr;
     }
     option->SetWindowName(windowName);
@@ -99,6 +103,7 @@ sptr<Window> Window::Create(const std::string& windowName, sptr<WindowOption>& o
     sptr<WindowImpl> windowImpl = new(std::nothrow) WindowImpl(option);
     if (windowImpl == nullptr) {
         WLOGFE("malloc windowImpl failed");
+        errCode = WMError::WM_ERROR_INVALID_WINDOW;
         return nullptr;
     }
     WMError error = windowImpl->Create(option->GetParentId(), context);
@@ -116,10 +121,12 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
     if (!iSession || !option) {
         WLOGFE("host window session is nullptr: %{public}u or option is null: %{public}u",
             iSession == nullptr, option == nullptr);
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
         return nullptr;
     }
     if (option->GetWindowName().empty()) {
         WLOGFE("window name in option is empty");
+        errCode = WMError::WM_ERROR_INVALID_PARAM;
         return nullptr;
     }
     uint32_t version = 10;
@@ -134,6 +141,7 @@ sptr<Window> Window::Create(sptr<WindowOption>& option, const std::shared_ptr<OH
     if (!(WindowHelper::IsAppWindow(type) || WindowHelper::IsUIExtensionWindow(type)
         || WindowHelper::IsAppComponentWindow(type))) {
         WLOGFE("window type is invalid %{public}d", type);
+        errCode = WMError::WM_ERROR_INVALID_TYPE;
         return nullptr;
     }
     return CreateWindowWithSession(option, context, errCode,
