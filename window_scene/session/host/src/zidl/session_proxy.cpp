@@ -325,12 +325,12 @@ WSError SessionProxy::PendingSessionActivation(sptr<AAFwk::SessionInfo> abilityS
         WLOGFE("WriteInterfaceToken or other param failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteBool(abilitySessionInfo->hasContinuousTask)) {
-        WLOGFE("Write hasContinuousTask failed");
+    if (!data.WriteBool(abilitySessionInfo->canStartAbilityFromBackground)) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Write canStartAbilityFromBackground failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
-    if (!data.WriteBool(abilitySessionInfo->isAtomicService)) {
-        TLOGE(WmsLogTag::WMS_LIFE, "Write isAtomicService failed");
+    if (!data.WriteBool(abilitySessionInfo->isAtomicService) || !data.WriteBool(abilitySessionInfo->isBackTransition)) {
+        TLOGE(WmsLogTag::WMS_LIFE, "Write isAtomicService or isBackTransition failed");
         return WSError::WS_ERROR_IPC_FAILED;
     }
     if (abilitySessionInfo->callerToken) {
