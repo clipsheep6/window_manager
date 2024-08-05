@@ -160,6 +160,7 @@ public:
     WMError AdjustKeyboardLayout(const KeyboardLayoutParams& params) override;
 
     WSError SwitchFreeMultiWindow(bool enable) override;
+    virtual bool GetFreeMultiWindowModeEnabledState() override;
     void NotifyKeyboardPanelInfoChange(const KeyboardPanelInfo& keyboardPanelInfo) override;
     virtual WMError SetImmersiveModeEnabledState(bool enable) override;
     virtual bool GetImmersiveModeEnabledState() const override;
@@ -213,6 +214,7 @@ private:
         WindowLimits& newLimits, WindowLimits& customizedLimits, float& virtualPixelRatio);
     void CalculateNewLimitsByRatio(WindowLimits& newLimits, WindowLimits& customizedLimits);
     void NotifyDisplayInfoChange();
+    void UpdateDefaultStatusBarColor();
     bool userLimitsSet_ = false;
     bool enableDefaultAnimation_ = true;
     sptr<IAnimationTransitionController> animationTransitionController_;
