@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
+#include "fold_screen_controller/sensor_fold_state_manager/single_display_sensor_fold_state_manager.h"
 #include <parameters.h>
 
 #include "fold_screen_controller/fold_screen_policy.h"
-#include "fold_screen_controller/sensor_fold_state_manager/single_display_sensor_fold_state_manager.h"
 #include "fold_screen_controller/sensor_fold_state_manager/sensor_fold_state_manager.h"
 #include "session/screen/include/screen_session.h"
 
@@ -46,7 +46,6 @@ SingleDisplaySensorFoldStateManager::~SingleDisplaySensorFoldStateManager() {}
 void SingleDisplaySensorFoldStateManager::HandleAngleChange(float angle, int hall,
     sptr<FoldScreenPolicy> foldScreenPolicy)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     FoldStatus nextState = GetNextFoldState(angle, hall);
     HandleSensorChange(nextState, angle, foldScreenPolicy);
 }
@@ -54,7 +53,6 @@ void SingleDisplaySensorFoldStateManager::HandleAngleChange(float angle, int hal
 void SingleDisplaySensorFoldStateManager::HandleHallChange(float angle, int hall,
     sptr<FoldScreenPolicy> foldScreenPolicy)
 {
-    std::lock_guard<std::recursive_mutex> lock(mutex_);
     FoldStatus nextState = GetNextFoldState(angle, hall);
     HandleSensorChange(nextState, angle, foldScreenPolicy);
 }

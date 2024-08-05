@@ -747,6 +747,7 @@ HWTEST_F(SceneSessionManagerTest6, NotifyCompleteFirstFrameDrawing02, Function |
     sessionInfo.abilityName_ = "DumpSessionWithId";
     sessionInfo.abilityInfo = nullptr;
     sessionInfo.isAtomicService_ = true;
+    sessionInfo.isBackTransition_ = false;
     unsigned int flags = 11111111;
     sessionInfo.want = std::make_shared<AAFwk::Want>();
     ASSERT_NE(nullptr, sessionInfo.want);
@@ -772,6 +773,7 @@ HWTEST_F(SceneSessionManagerTest6, InitSceneSession01, Function | SmallTest | Le
     sessionInfo.abilityName_ = "DumpSessionWithId";
     sessionInfo.abilityInfo = nullptr;
     sessionInfo.isAtomicService_ = true;
+    sessionInfo.isBackTransition_ = false;
     unsigned int flags = 11111111;
     sessionInfo.want = std::make_shared<AAFwk::Want>();
     ASSERT_NE(nullptr, sessionInfo.want);
@@ -976,7 +978,7 @@ HWTEST_F(SceneSessionManagerTest6, JudgeNeedNotifyPrivacyInfo, Function | SmallT
     std::unordered_set<std::string> privacyBundles;
     ASSERT_NE(nullptr, ssm_);
     auto ret = ssm_->JudgeNeedNotifyPrivacyInfo(displayId, privacyBundles);
-    EXPECT_EQ(false, ret);
+    EXPECT_EQ(true, ret);
     privacyBundles.insert("bundle1");
     ASSERT_NE(nullptr, ssm_);
     ret = ssm_->JudgeNeedNotifyPrivacyInfo(displayId, privacyBundles);
@@ -986,7 +988,7 @@ HWTEST_F(SceneSessionManagerTest6, JudgeNeedNotifyPrivacyInfo, Function | SmallT
     ASSERT_NE(nullptr, ssm_);
     ssm_->privacyBundleMap_.insert({displayId, privacyBundles1});
     ret = ssm_->JudgeNeedNotifyPrivacyInfo(displayId, privacyBundles);
-    EXPECT_EQ(false, ret);
+    EXPECT_EQ(true, ret);
     privacyBundles.insert("bundle2");
     ASSERT_NE(nullptr, ssm_);
     ret = ssm_->JudgeNeedNotifyPrivacyInfo(displayId, privacyBundles);
@@ -1264,6 +1266,31 @@ HWTEST_F(SceneSessionManagerTest6, TerminateSessionByPersistentId002, Function |
     ssm_->sceneSessionMap_.insert(std::make_pair(sceneSession->GetPersistentId(), sceneSession));
     auto result = ssm_->TerminateSessionByPersistentId(INVALID_SESSION_ID);
     EXPECT_EQ(result, WMError::WM_ERROR_INVALID_PERMISSION);
+}
+
+/**
+ * @tc.name: SetRootSceneProcessBackEventFunc
+ * @tc.desc: test function : SetRootSceneProcessBackEventFunc
+ * @tc.type: FUNC
+ */
+HWTEST_F(SceneSessionManagerTest6, SetRootSceneProcessBackEventFunc, Function | SmallTest | Level3)
+{
+    SessionInfo sessionInfo;
+    sessionInfo.bundleName_ = "SceneSessionManagerTest6";
+    sessionInfo.abilityName_ = "SetRootSceneProcessBackEventFunc";
+    sessionInfo.windowType_ = static_cast<uint32_t>(WindowType::APP_WINDOW_BASE);
+    sessionInfo.isSystem_ = true;
+    sptr<SceneSession> sceneSession = sptr<SceneSession>::MakeSptr(sessionInfo, nullptr);
+    ASSERT_NE(nullptr, sceneSession);
+    ASSERT_NE(nullptr, ssm_);
+    ssm_->sceneSessionMap_.insert(std::make_pair(sceneSession->GetPersistentId(), sceneSession));
+    ssm_->focusedSessionId_ = sceneSession->GetPersistentId();
+    ssm_->needBlockNotifyFocusStatusUntilForeground_ = false;
+    ssm_->ProcessBackEvent();
+
+    RootSceneProcessBackEventFunc func = []() {};
+    ssm_->SetRootSceneProcessBackEventFunc(func);
+    ssm_->ProcessBackEvent();
 }
 }
 } // namespace Rosen

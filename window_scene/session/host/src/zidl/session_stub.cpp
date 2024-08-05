@@ -41,7 +41,7 @@ int SessionStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParc
     WLOGFD("Scene session on remote request!, code: %{public}u", code);
     if (data.ReadInterfaceToken() != GetDescriptor()) {
         WLOGFE("Failed to check interface token!");
-        return ERR_INVALID_STATE;
+        return ERR_TRANSACTION_FAILED;
     }
 
     return ProcessRemoteRequest(code, data, reply, option);
@@ -404,8 +404,9 @@ int SessionStub::HandlePendingSessionActivation(MessageParcel& data, MessageParc
     abilitySessionInfo->callingTokenId = data.ReadUint32();
     abilitySessionInfo->reuse = data.ReadBool();
     abilitySessionInfo->processOptions.reset(data.ReadParcelable<AAFwk::ProcessOptions>());
-    abilitySessionInfo->hasContinuousTask = data.ReadBool();
+    abilitySessionInfo->canStartAbilityFromBackground = data.ReadBool();
     abilitySessionInfo->isAtomicService = data.ReadBool();
+    abilitySessionInfo->isBackTransition = data.ReadBool();
     if (data.ReadBool()) {
         abilitySessionInfo->callerToken = data.ReadRemoteObject();
     }
