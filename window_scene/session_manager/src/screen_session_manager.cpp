@@ -4979,4 +4979,16 @@ std::vector<DisplayPhysicalResolution> ScreenSessionManager::GetAllDisplayPhysic
     }
     return allDisplayPhysicalResolution_;
 }
+
+DMError ScreenSessionManager::SetVirtualScreenSecurityExemption(ScreenId screenId, uint32_t pid,
+    std::vector<uint64_t>& windowIdList)
+{
+    TLOGI(WmsLogTag::DMS, "screenId: %{public}d", static_cast<int32_t>(screenId));
+    TLOGI(WmsLogTag::DMS, "pid: %{public}d", static_cast<int32_t>(pid));
+    TLOGI(WmsLogTag::DMS, "windowIdList size: %{public}d", static_cast<int32_t>(windowIdList.size()));
+    for (auto a : windowIdList) {
+        TLOGI(WmsLogTag::DMS, "windowIdList val: %{public}d", static_cast<int32_t>(a));
+    }
+}
+
 } // namespace OHOS::Rosen
