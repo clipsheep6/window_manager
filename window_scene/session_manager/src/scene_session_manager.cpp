@@ -7020,7 +7020,8 @@ void SceneSessionManager::DealwithVisibilityChange(const std::vector<std::pair<u
         if ((WindowHelper::IsSubWindow(session->GetWindowType()) ||
             session->GetWindowType() == WindowType::WINDOW_TYPE_DIALOG) && isVisible == true) {
             if (session->GetParentSession() != nullptr &&
-                !session->GetParentSession()->IsSessionForeground()) {
+                !session->GetParentSession()->IsSessionForeground() && 
+                !session->GetParentSession()->GetRSVisible()) {
                     continue;
                 }
         }
