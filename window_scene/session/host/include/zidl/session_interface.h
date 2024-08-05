@@ -59,13 +59,13 @@ public:
     /**
      * @brief 设置窗口默认动画
      * @param needDefaultAnimationFlag 标记开启/关闭窗口默认动画
-     * @return 设置成功返回WSError::WS_OK，否则返回相应错误码 
+     * @return 设置成功返回 WSError::WS_OK，否则返回相应错误码 
      */
     virtual WSError UpdateWindowAnimationFlag(bool needDefaultAnimationFlag) { return WSError::WS_OK; }
     /**
      * @brief 在窗口动画播放完成之后更新窗口控件状态
      * @param isAdd 上下树标记，true表示上树，false表示下树
-     * @return 设置成功返回WSError::WS_OK，否则返回相应错误码
+     * @return 设置成功返回 WSError::WS_OK，否则返回相应错误码
      * @permission 需要系统应用权限
      */
     virtual WSError UpdateWindowSceneAfterCustomAnimation(bool isAdd) { return WSError::WS_OK; }
