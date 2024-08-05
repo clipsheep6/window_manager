@@ -248,11 +248,6 @@ void RootScene::SetUiDvsyncSwitch(bool dvsyncSwitch)
 
 WMError RootScene::GetAvoidAreaByType(AvoidAreaType type, AvoidArea& avoidArea)
 {
-    if (getSessionRectCallback_ == nullptr) {
-        TLOGE(WmsLogTag::WMS_IMMS, "getSessionRectCallback is nullptr");
-        return WMError::WM_ERROR_NULLPTR;
-    }
-    avoidArea = getSessionRectCallback_(type);
     return WMError::WM_OK;
 }
 } // namespace Rosen
