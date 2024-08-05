@@ -272,6 +272,7 @@ ohos_shared_library("libwm") {
     "input:libmmi-client",
     "ipc:ipc_single",
     "napi:ace_napi",
+    "os_account:os_account_innerkits",
     "samgr:samgr_proxy",
   ]
 
