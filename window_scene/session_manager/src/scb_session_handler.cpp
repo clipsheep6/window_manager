@@ -15,6 +15,7 @@
 
 #include "scb_session_handler.h"
 #include "scene_session_manager.h"
+
 namespace OHOS {
 namespace Rosen {
 

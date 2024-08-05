@@ -31,6 +31,7 @@
 #include "window_visibility_info.h"
 #include "wm_common.h"
 #include "window_helper.h"
+
 namespace OHOS {
 namespace Rosen {
 constexpr int32_t RGB_LENGTH = 6;

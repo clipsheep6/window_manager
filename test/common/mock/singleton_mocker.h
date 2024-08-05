@@ -17,6 +17,7 @@
 #define FRAMEWORKS_WM_TEST_UT_SINGLETON_MOCKER_H
 
 #include "singleton_container.h"
+
 namespace OHOS {
 namespace Rosen {
 template<class T, class MockT>

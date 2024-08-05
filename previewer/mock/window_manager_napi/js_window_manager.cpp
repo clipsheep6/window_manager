@@ -19,6 +19,7 @@
 #include "window_helper.h"
 #include "window_manager_hilog.h"
 #include "window_option.h"
+
 namespace OHOS {
 namespace Rosen {
 using namespace AbilityRuntime;

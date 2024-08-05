@@ -21,6 +21,7 @@
 #include "window_manager_hilog.h"
 using namespace testing;
 using namespace testing::ext;
+
 namespace OHOS {
 namespace Rosen {
 namespace {
