@@ -105,6 +105,82 @@ namespace {
     }
 
     /**
+     * @tc.name: CurrentRotation90
+     * @tc.desc: CurrentRotation90 func
+     * @tc.type: FUNC
+     */
+    HWTEST_F(ScreenCutoutControllerTest, CurrentRotation90, Function | SmallTest | Level3)
+    {
+        sptr<ScreenCutoutController> controller = new ScreenCutoutController();
+        std::vector<DMRect> displayBoundaryRects;
+        DMRect emptyRect = {10, 10, 20, 20};
+        DMRect emptyRect_ = {30, 30, 40, 40};
+        displayBoundaryRects.push_back(emptyRect);
+        displayBoundaryRects.push_back(emptyRect_);
+
+        std::vector<DMRect> finalVector;
+        uint32_t displayWidth = 100;
+        controller->CurrentRotation90(displayBoundaryRects, finalVector, displayWidth);
+
+        ASSERT_EQ(finalVector.size(), 2);
+        ASSERT_EQ(finalVector[0].posX_, 70);
+        ASSERT_EQ(finalVector[0].posY_, 10);
+        ASSERT_EQ(finalVector[0].width_, 20);
+        ASSERT_EQ(finalVector[0].height_, 20);
+    }
+
+     /**
+     * @tc.name: CurrentRotation180
+     * @tc.desc: CurrentRotation180 func
+     * @tc.type: FUNC
+     */
+    HWTEST_F(ScreenCutoutControllerTest, CurrentRotation180, Function | SmallTest | Level3)
+    {
+        sptr<ScreenCutoutController> controller = new ScreenCutoutController();
+        std::vector<DMRect> displayBoundaryRects;
+        DMRect emptyRect = {10, 10, 20, 20};
+        DMRect emptyRect_ = {30, 30, 40, 40};
+        displayBoundaryRects.push_back(emptyRect);
+        displayBoundaryRects.push_back(emptyRect_);
+
+        std::vector<DMRect> finalVector;
+        uint32_t displayWidth = 100;
+        uint32_t displayHeight = 200;
+        controller->CurrentRotation180(displayBoundaryRects, finalVector, displayWidth, displayHeight);
+
+        ASSERT_EQ(finalVector.size(), 2);
+        ASSERT_EQ(finalVector[0].posX_, 70);
+        ASSERT_EQ(finalVector[0].posY_, 170);
+        ASSERT_EQ(finalVector[0].width_, 20);
+        ASSERT_EQ(finalVector[0].height_, 20);
+    }
+
+    /**
+     * @tc.name: CurrentRotation270
+     * @tc.desc: CurrentRotation270 func
+     * @tc.type: FUNC
+     */
+    HWTEST_F(ScreenCutoutControllerTest, CurrentRotation270, Function | SmallTest | Level3)
+    {
+        sptr<ScreenCutoutController> controller = new ScreenCutoutController();
+        std::vector<DMRect> displayBoundaryRects;
+        DMRect emptyRect = {10, 10, 20, 20};
+        DMRect emptyRect_ = {30, 30, 40, 40};
+        displayBoundaryRects.push_back(emptyRect);
+        displayBoundaryRects.push_back(emptyRect_);
+
+        std::vector<DMRect> finalVector;
+        uint32_t displayHeight = 200;
+        controller->CurrentRotation270(displayBoundaryRects, finalVector, displayHeight);
+
+        ASSERT_EQ(finalVector.size(), 2);
+        ASSERT_EQ(finalVector[0].posX_, 10);
+        ASSERT_EQ(finalVector[0].posY_, 170);
+        ASSERT_EQ(finalVector[0].width_, 20);
+        ASSERT_EQ(finalVector[0].height_, 20);
+    }
+
+    /**
      * @tc.name: CheckBoundaryRects
      * @tc.desc: ScreenCutoutController check boundary rects
      * @tc.type: FUNC
