@@ -1984,7 +1984,7 @@ WMError WindowSceneSessionImpl::MaximizeFloating()
     }
     if (GetGlobalMaximizeMode() != MaximizeMode::MODE_AVOID_SYSTEM_BAR) {
         hostSession_->OnSessionEvent(SessionEvent::EVENT_MAXIMIZE);
-        SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);
+        SetWindowMode(WindowMode::WINDOW_MODE_FULLSCREEN);1
         UpdateDecorEnable(true);
         property_->SetMaximizeMode(MaximizeMode::MODE_FULL_FILL);
     } else {
@@ -2006,6 +2006,10 @@ WMError WindowSceneSessionImpl::Recover()
     WLOGFI("WindowSceneSessionImpl::Recover id: %{public}d", GetPersistentId());
     if (IsWindowSessionInvalid()) {
         WLOGFE("session is invalid");
+        return WMError::WM_ERROR_INVALID_WINDOW;
+    }
+    if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FLOATING)) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, " not supprt floating, can not Recover");
         return WMError::WM_ERROR_INVALID_WINDOW;
     }
     auto hostSession = GetHostSession();
@@ -2040,6 +2044,10 @@ WMError WindowSceneSessionImpl::Recover(uint32_t reason)
     if (!(isPC || IsFreeMultiWindowMode())) {
         WLOGFE("The device is not supported");
         return WMError::WM_ERROR_DEVICE_NOT_SUPPORT;
+    }
+    if (!WindowHelper::IsWindowModeSupported(property_->GetModeSupportInfo(), WindowMode::WINDOW_MODE_FLOATING)) {
+        TLOGE(WmsLogTag::WMS_LAYOUT, " not supprt floating, can not Recover");
+        return WMError::WM_ERROR_INVALID_WINDOW;
     }
     auto hostSession = GetHostSession();
     CHECK_HOST_SESSION_RETURN_ERROR_IF_NULL(hostSession, WMError::WM_ERROR_INVALID_WINDOW);
