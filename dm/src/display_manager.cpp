@@ -87,6 +87,7 @@ public:
     sptr<Display> GetDisplayByScreenId(ScreenId screenId);
     DMError ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy);
     DMError ResetAllFreezeStatus();
+    DMError SetVirtualScreenSecurityExemption(ScreenId screenId, uint32_t pid, std::vector<uint64_t>& windowIdList);
     void OnRemoteDied();
 private:
     void ClearDisplayStateCallback();
@@ -1908,6 +1909,18 @@ DMError DisplayManager::ResetAllFreezeStatus()
 DMError DisplayManager::Impl::ResetAllFreezeStatus()
 {
     return SingletonContainer::Get<DisplayManagerAdapter>().ResetAllFreezeStatus();
+}
+
+DMError DisplayManager::SetVirtualScreenSecurityExemption(ScreenId screenId, uint32_t pid,
+    std::vector<uint64_t>& windowIdList)
+{
+    pImpl_->SetVirtualScreenSecurityExemption(screenId, pid, windowIdList);
+}
+
+DMError DisplayManager::Impl::SetVirtualScreenSecurityExemption(ScreenId screenId, uint32_t pid,
+    std::vector<uint64_t>& windowIdList)
+{
+    return SingletonContainer::Get<DisplayManagerAdapter>().SetVirtualScreenSecurityExemption(screenId, pid, windowIdList);
 }
 } // namespace OHOS::Rosen
 
