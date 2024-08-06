@@ -665,8 +665,9 @@ WMError WindowImpl::SetUIContentInner(const std::string& contentInfo, napi_env e
             return WMError::WM_ERROR_NULLPTR;
         }
         float virtualPixelRatio = display->GetVirtualPixelRatio();
+        auto displayInfo = display->GetDisplayInfo();
         config.SetDensity(virtualPixelRatio);
-        config.SetOrientation(static_cast<int32_t>(display->GetOrientation()));
+        config.SetOrientation(static_cast<int32_t>(displayInfo->GetDisplayOrientation());
         uiContent_->UpdateViewportConfig(config, WindowSizeChangeReason::UNDEFINED, nullptr);
         WLOGFD("notify uiContent window size change end");
     }
