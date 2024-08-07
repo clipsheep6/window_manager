@@ -380,11 +380,24 @@ HWTEST_F(WindowSessionPropertyTest, IsFloatingWindowAppType, Function | SmallTes
 */
 HWTEST_F(WindowSessionPropertyTest, SetTouchHotAreas, Function | SmallTest | Level2)
 {
-    std::vector<Rect> *rects = new std::vector<Rect>;
-    WindowSessionProperty windowSessionProperty;
-    windowSessionProperty.SetTouchHotAreas(*rects);
-    WindowSessionProperty *property = new WindowSessionProperty();
-    ASSERT_EQ(property->GetTokenState(), false);
+    sptr<WindowSessionProperty> property = sptr<WindowSessionProperty>::MakeSptr();
+    EXPECT_NE(nullptr, property);
+    Rect rect { 4, 4, 4, 4 };
+    std::vector<Rect> vRect { rect };
+    property->SetPersistentId(0);
+    property->SetSessionPropertyChangeCallback(nullptr);
+    EXPECT_EQ(nullptr, property->touchHotAreasChangeCallback_);
+    property->SetTouchHotAreas(vRect);
+
+    auto func = [](){};
+    property->SetPersistentId(1);
+    property->SetSessionPropertyChangeCallback(func);
+    property->SetTouchHotAreas(vRect);
+    EXPECT_NE(nullptr, property->touchHotAreasChangeCallback_);
+
+    Rect rect1 { 5, 5, 5, 5 };
+    vRect.emplace_back(rect1);
+    property->SetTouchHotAreas(vRect);
 }
 
 /**
@@ -678,6 +691,23 @@ HWTEST_F(WindowSessionPropertyTest, GetSessionInfo, Function | SmallTest | Level
 }
 
 /**
+ * @tc.name: EditSessionInfo
+ * @tc.desc: EditSessionInfo
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionPropertyTest, EditSessionInfo, Function | SmallTest | Level2)
+{
+    std::string abilityName = "1234";
+    std::string abilityNameNew = "12345";
+    SessionInfo info;
+    info.abilityName_ = abilityName;
+    sptr<WindowSessionProperty> property = sptr<WindowSessionProperty>::MakeSptr();
+    property->SetSessionInfo(info);
+    property->EditSessionInfo().abilityName_ = abilityNameNew;
+    ASSERT_EQ(property->EditSessionInfo().abilityName_, abilityNameNew);
+}
+
+/**
  * @tc.name: GetWindowRect
  * @tc.desc: GetWindowRect
  * @tc.type: FUNC
@@ -947,6 +977,35 @@ HWTEST_F(WindowSessionPropertyTest, MarshallingPiPTemplateInfo, Function | Small
     bool result = property->MarshallingPiPTemplateInfo(parcel);
     ASSERT_EQ(result, false);
     delete property;
+}
+
+/**
+ * @tc.name: MarshallingSessionInfo
+ * @tc.desc: MarshallingSessionInfo test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionPropertyTest, MarshallingSessionInfo, Function | SmallTest | Level2)
+{
+    Parcel parcel;
+    SessionInfo info = { "testBundleName", "testModuleName", "testAbilityName" };
+    info.want = std::make_shared<AAFwk::Want>();
+    sptr<WindowSessionProperty> property = sptr<WindowSessionProperty>::MakeSptr();
+    bool result = property->MarshallingSessionInfo(parcel);
+    ASSERT_EQ(result, true);
+}
+
+/**
+ * @tc.name: UnMarshallingSessionInfo
+ * @tc.desc: UnMarshallingSessionInfo test
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowSessionPropertyTest, UnMarshallingSessionInfo, Function | SmallTest | Level2)
+{
+    Parcel parcel;
+    WindowSessionProperty windowSessionProperty;
+    sptr<WindowSessionProperty> property = sptr<WindowSessionProperty>::MakeSptr();
+    windowSessionProperty.UnmarshallingWindowLimits(parcel, property);
+    ASSERT_EQ(property->GetTokenState(), false);
 }
 
 /**

@@ -692,4 +692,10 @@ void ScreenManager::OnRemoteDied()
 {
     pImpl_->OnRemoteDied();
 }
+
+bool ScreenManager::SetVirtualScreenStatus(ScreenId screenId, VirtualScreenStatus screenStatus)
+{
+    return SingletonContainer::Get<ScreenManagerAdapter>().SetVirtualScreenStatus(screenId, screenStatus);
+}
+
 } // namespace OHOS::Rosen
