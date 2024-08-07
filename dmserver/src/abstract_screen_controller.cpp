@@ -1108,6 +1108,12 @@ DMError AbstractScreenController::MakeMirror(ScreenId screenId, std::vector<Scre
     return DMError::DM_OK;
 }
 
+DMError AbstractScreenController::MultiScreenModeSwitch(ScreenId mainScreenId, ScreenId secondaryScreenId,
+    ScreenSourceMode secondaryScreenMode)
+{
+    return DMError::DM_OK;
+}
+
 DMError AbstractScreenController::StopScreens(const std::vector<ScreenId>& screenIds, ScreenCombination stopCombination)
 {
     std::lock_guard<std::recursive_mutex> lock(mutex_);

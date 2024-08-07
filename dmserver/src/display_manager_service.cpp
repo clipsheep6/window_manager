@@ -538,6 +538,16 @@ DMError DisplayManagerService::MakeMirror(ScreenId mainScreenId, std::vector<Scr
     return DMError::DM_OK;
 }
 
+DMError DisplayManagerService::MultiScreenModeSwitch(ScreenId mainScreenId, ScreenId secondaryScreenId,
+    ScreenSourceMode secondaryScreenMode)
+{
+    if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {
+        WLOGFE("make mirror permission denied!");
+        return DMError::DM_ERROR_NOT_SYSTEM_APP;
+    }
+    return DMError::DM_OK;
+}
+
 DMError DisplayManagerService::StopMirror(const std::vector<ScreenId>& mirrorScreenIds)
 {
     if (!Permission::IsSystemCalling() && !Permission::IsStartByHdcd()) {

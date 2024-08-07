@@ -482,6 +482,15 @@ DMError ScreenManager::MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> m
     return ret;
 }
 
+DMError ScreenManager::MultiScreenModeSwitch(ScreenId mainScreenId, ScreenId secondaryScreenId,
+    ScreenSourceMode secondaryScreenMode)
+{
+    WLOGFI("MultiScreenModeSwitch: %{public}" PRIu64"", mainScreenId);
+    DMError ret = SingletonContainer::Get<ScreenManagerAdapter>().MultiScreenModeSwitch(mainScreenId,
+        secondaryScreenId, secondaryScreenMode);
+    return ret;
+}
+
 DMError ScreenManager::StopExpand(const std::vector<ScreenId>& expandScreenIds)
 {
     WLOGFD("Stop expand");
