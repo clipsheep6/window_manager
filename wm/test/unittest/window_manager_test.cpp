@@ -1174,6 +1174,20 @@ HWTEST_F(WindowManagerTest, GetWindowStyleType, Function | SmallTest | Level2)
     ASSERT_EQ(Rosen::WindowStyleType::WINDOW_STYLE_DEFAULT, type);
 }
 
+/**
+ * @tc.name: SetProcessWatermark
+ * @tc.desc: check SetProcessWatermark
+ * @tc.type: FUNC
+ */
+HWTEST_F(WindowManagerTest, SetProcessWatermark, Function | SmallTest | Level2)
+{
+    int32_t pid = 1000;
+    const std::string busiessName = "SetProcessWatermarkBusiessName";
+    bool isEnabled = true;
+    auto ret = WindowManager::GetInstance().SetProcessWatermark(pid, busiessName, isEnabled);
+    ASSERT_EQ(WMError::WM_OK, ret);
+}
+
 }
 } // namespace Rosen
 } // namespace OHOS

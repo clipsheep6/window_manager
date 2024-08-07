@@ -9964,4 +9964,31 @@ void SceneSessionManager::SetRootSceneProcessBackEventFunc(const RootSceneProces
     rootSceneProcessBackEventFunc_ = processBackEventFunc;
     TLOGI(WmsLogTag::WMS_EVENT, "called");
 }
+
+WMError SceneSessionManager::SetProcessWatermark(int32_t pid, const std::string& busiessName, bool isEnabled)
+{
+    if (!SessionPermission::IsSACalling()) {
+        TLOGE(WmsLogTag::DEFAULT, "Process satermark sa calling permission denied!");
+        return WMError::WM_ERROR_INVALID_PERMISSION;
+    }
+    TLOGI(WmsLogTag::WMS_LIFE, "Set process watermark, pid:%{public}d,busiessName:%{public}s,isEnabled:%{public}u",
+        pid, busiessName.c_str(), isEnabled);
+    for (const auto& item : sceneSessionMap_) {
+        auto sceneSession = item.second;
+        if (sceneSession == nullptr) {
+            continue;
+        }
+        int32_t callingPid = sceneSession->GetCallingPid();
+        if (pid == callingPid) {
+            auto surfaceNode = sceneSession->GetSurfaceNode();
+            if (surfaceNode == nullptr) {
+                TLOGE(WmsLogTag::DEFAULT, "surfaceNode is nullptr when set process watermark, wid:%{public}d",
+                    sceneSession->GetPersistentId());
+                continue;
+            }
+            surfaceNode->SetWatermarkEnabled(busiessName, isEnabled);
+        }
+    }
+    return WMError::WM_OK;
+}
 } // namespace OHOS::Rosen

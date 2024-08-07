@@ -1637,6 +1637,51 @@ HWTEST_F(SceneSessionManagerTest, GetAppForceLandscapeConfig, Function | SmallTe
     ASSERT_EQ(config.mode_, 0);
     ASSERT_EQ(config.homePage_, "");
 }
+
+/**
+ * @tc.name: SetProcessWatermark
+ * @tc.desc: add or cancel process watermark by pid
+ * @tc.type: FUNC
+*/
+HWTEST_F(SceneSessionManagerTest, SetProcessWatermark, Function | SmallTest | Level3)
+{
+    int32_t pid = 1000;
+    const std::string busiessName = "SetProcessWatermarkBusiessName";
+    bool isEnabled = false;
+
+    auto result = ssm_->SetProcessWatermark(pid, busiessName, isEnabled);
+    ASSERT_EQ(result, WMError::WM_OK);
+
+    SessionInfo info;
+    sptr<SceneSession> sceneSession1 = ssm_->CreateSceneSession(info, nullptr);
+    sptr<SceneSession> sceneSession2 = ssm_->CreateSceneSession(info, nullptr);
+    sptr<SceneSession> sceneSession3 = ssm_->CreateSceneSession(info, nullptr);
+    ASSERT_NE(nullptr, sceneSession1);
+    ASSERT_NE(nullptr, sceneSession2);
+    ASSERT_NE(nullptr, sceneSession3);
+    sceneSession1->SetCallingPid(1000);
+    sceneSession2->SetCallingPid(1001);
+    sceneSession3->SetCallingPid(1000);
+    struct RSSurfaceNodeConfig rsSurfaceNodeConfig;
+    std::shared_ptr<RSSurfaceNode> node = RSSurfaceNode::Create(rsSurfaceNodeConfig, RSSurfaceNodeType::DEFAULT);
+    sceneSession3->surfaceNode_ = node;
+    ssm_->sceneSessionMap_.insert({sceneSession1->GetPersistentId, sceneSession1});
+    ssm_->sceneSessionMap_.insert({sceneSession2->GetPersistentId, sceneSession2});
+    ssm_->sceneSessionMap_.insert({sceneSession3->GetPersistentId, sceneSession3});
+    ssm_->sceneSessionMap_.insert({-1, nullptr});
+
+    result = ssm_->SetProcessWatermark(pid, busiessName, isEnabled);
+    ASSERT_EQ(result, WMError::WM_OK);
+
+    isEnabled = true;
+    result = ssm_->SetProcessWatermark(pid, busiessName, isEnabled);
+    ASSERT_EQ(result, WMError::WM_OK);
+
+    ssm_->sceneSessionMap_.erase(sceneSession1->GetPersistentId());
+    ssm_->sceneSessionMap_.erase(sceneSession2->GetPersistentId());
+    ssm_->sceneSessionMap_.erase(sceneSession3->GetPersistentId());
+    ssm_->sceneSessionMap_.erase(-1);
+}
 }
 } // namespace Rosen
 } // namespace OHOS

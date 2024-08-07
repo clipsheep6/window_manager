@@ -116,6 +116,7 @@ public:
     WMError ToggleShownStateForAllAppWindows() override;
     WMError GetWindowModeType(WindowModeType& windowModeType) override;
     WMError GetWindowStyleType(WindowStyleType& windowStyleType) override;
+    WMError SetProcessWatermark(int32_t pid, const std::string& busiessName, bool isEnabled) override;
 
 private:
     template<typename T>
