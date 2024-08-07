@@ -676,18 +676,18 @@ DMError AbstractScreenController::DestroyVirtualScreen(ScreenId screenId)
 
     sptr<IDisplayManagerAgent> displayManagerAgent = nullptr;
     bool agentFound = false;
-    for (auto &agentIter : screenAgentMap_) {
-        for (auto iter = agentIter.second.begin(); iter != agentIter.second.end(); iter++) {
+    for (auto agentIter = screenAgentMap_.begin(); agentIter != screenAgentMap_.end(); agentIter++) {
+        for (auto iter = (*agentIter).second.begin(); iter != (*agentIter).second.end(); iter++) {
             if (*iter == screenId) {
-                iter = agentIter.second.erase(iter);
+                iter = (*agentIter).second.erase(iter);
                 agentFound = true;
                 break;
             }
         }
         if (agentFound) {
-            if (agentIter.first != nullptr && agentIter.second.empty()) {
-                agentIter.first->RemoveDeathRecipient(deathRecipient_);
-                screenAgentMap_.erase(agentIter.first);
+            if ((*agentIter).first != nullptr && (*agentIter).second.empty()) {
+                (*agentIter).first->RemoveDeathRecipient(deathRecipient_);
+                agentIter = screenAgentMap_.erase(agentIter);
             }
             break;
         }
