@@ -36,8 +36,8 @@ using namespace OHOS::Rosen;
 
 namespace OHOS {
 namespace {
-    constexpr size_t DATA_MIN_SIZE = 2;
-    constexpr size_t DATA_MAX_SIZE = 1024;
+constexpr size_t DATA_MIN_SIZE = 2;
+constexpr size_t DATA_MAX_SIZE = 1024;
 }
 class FocusChangedListener : public IFocusChangedListener {
 public:
@@ -230,7 +230,7 @@ size_t GetObject(T &object, const uint8_t *data, size_t size)
     return memcpy_s(&object, objectSize, data, objectSize) == EOK ? objectSize : 0;
 }
 
-/* 调用该接口后, 需要释放内存 */
+/* 调用该接口后, 需要释放内�? */
 char *CopyDataToString(const uint8_t *data, size_t size)
 {
     if (size > DATA_MAX_SIZE) {
