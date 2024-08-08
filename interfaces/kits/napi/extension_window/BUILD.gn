@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2023-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -100,6 +100,7 @@ ohos_shared_library("extensionwindow_napi") {
   ]
 
   external_deps = [
+    "ability_base:configuration",
     "ability_runtime:runtime",
     "ace_engine:ace_uicontent",
     "c_utils:utils",
