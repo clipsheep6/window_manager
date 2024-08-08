@@ -926,6 +926,7 @@ void Session::SetWindowSessionProperty(const sptr<WindowSessionProperty>& proper
         if (sessionProperty->GetCompatibleModeInPc()) {
             property->SetDragEnabled(sessionProperty->GetIsSupportDragInPcCompatibleMode());
         }
+        property->SetIsAppSupportPhoneInPc(sessionProperty->GetIsAppSupportPhoneInPc());
     }
     if (sessionProperty && SessionHelper::IsMainWindow(GetWindowType())) {
         property->SetIsPcAppInPad(sessionProperty->GetIsPcAppInPad());
@@ -1139,6 +1140,18 @@ WSError Session::SetActive(bool active)
         isActive_ = active;
     }
     return WSError::WS_OK;
+}
+
+void Session::ProcessClickModalSpecificWindowOutside(int32_t posX, int32_t posY)
+{
+    if (clickModalSpecificWindowOutsideFunc_ && !winRect_.IsInRegion(posX, posY)) {
+        clickModalSpecificWindowOutsideFunc_();
+    }
+}
+
+void Session::SetClickModalSpecificWindowOutsideListener(const NotifyClickModalSpecificWindowOutsideFunc& func)
+{
+    clickModalSpecificWindowOutsideFunc_ = func;
 }
 
 void Session::NotifyForegroundInteractiveStatus(bool interactive)
@@ -1625,7 +1638,7 @@ const char* Session::DumpPointerWindowArea(MMI::WindowArea area) const
     };
     auto iter = areaMap.find(area);
     if (iter == areaMap.end()) {
-        return "UNKNOW";
+        return "UNKNOWN";
     }
     return iter->second;
 }
@@ -2170,6 +2183,18 @@ WSError Session::SetCompatibleModeInPc(bool enable, bool isSupportDragInPcCompat
     return WSError::WS_OK;
 }
 
+WSError Session::SetAppSupportPhoneInPc(bool isSupportPhone)
+{
+    TLOGI(WmsLogTag::WMS_SCB, "isSupportPhone: %{public}d", isSupportPhone);
+    auto property = GetSessionProperty();
+    if (property == nullptr) {
+        TLOGE(WmsLogTag::WMS_SCB, "id: %{public}d property is nullptr", persistentId_);
+        return WSError::WS_ERROR_NULLPTR;
+    }
+    property->SetIsAppSupportPhoneInPc(isSupportPhone);
+    return WSError::WS_OK;
+}
+
 WSError Session::SetIsPcAppInPad(bool enable)
 {
     TLOGI(WmsLogTag::WMS_SCB, "SetIsPcAppInPad enable: %{public}d", enable);
@@ -2235,11 +2260,6 @@ WSError Session::UpdateWindowMode(WindowMode mode)
         property->SetWindowMode(mode);
         if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY || mode == WindowMode::WINDOW_MODE_SPLIT_SECONDARY) {
             property->SetMaximizeMode(MaximizeMode::MODE_RECOVER);
-            if (mode == WindowMode::WINDOW_MODE_SPLIT_PRIMARY) {
-                surfaceNode_->MarkUifirstNode(false);
-            }
-        } else {
-            surfaceNode_->MarkUifirstNode(true);
         }
         return sessionStage_->UpdateWindowMode(mode);
     }
