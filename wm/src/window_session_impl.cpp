@@ -191,6 +191,8 @@ WindowSessionImpl::WindowSessionImpl(const sptr<WindowOption>& option)
     isMainHandlerAvailable_ = option->GetMainHandlerAvailable();
     isIgnoreSafeArea_ = WindowHelper::IsSubWindow(optionWindowType);
     windowOption_ = option;
+    auto layoutCallback = sptr<FutureCallback>::MakeSptr();
+    property_->SetLayoutCallback(layoutCallback);
     surfaceNode_ = CreateSurfaceNode(property_->GetWindowName(), optionWindowType);
     handler_ = std::make_shared<AppExecFwk::EventHandler>(AppExecFwk::EventRunner::GetMainEventRunner());
     if (surfaceNode_ != nullptr) {
@@ -587,28 +589,7 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
         postTaskDone_ = false;
         UpdateRectForRotation(wmRect, preRect, wmReason, rsTransaction);
     } else if (handler_ != nullptr && rsTransaction != nullptr && CheckIfNeedCommitRsTransaction(wmReason)) {
-        auto task = [weak = wptr(this), wmReason, wmRect, preRect, rsTransaction]() mutable {
-            auto window = weak.promote();
-            if (!window) {
-                TLOGE(WmsLogTag::WMS_LAYOUT, "window is null, updateViewPortConfig failed");
-                return;
-            }
-            if (rsTransaction) {
-                RSTransaction::FlushImplicitTransaction();
-                rsTransaction->Begin();
-            }
-            if ((wmRect != preRect) || (wmReason != window->lastSizeChangeReason_) ||
-                !window->postTaskDone_) {
-                window->NotifySizeChange(wmRect, wmReason);
-                window->lastSizeChangeReason_ = wmReason;
-            }
-            window->UpdateViewportConfig(wmRect, wmReason, rsTransaction);
-            if (rsTransaction) {
-                rsTransaction->Commit();
-            }
-            window->postTaskDone_ = true;
-        };
-        handler_->PostTask(task, "WMS_WindowSessionImpl_UpdateRectForNoRotation");
+        UpdateRectForNoRotation(wmRect, preRect, wmReason, rsTransaction);
     } else {
         if ((wmRect != preRect) || (wmReason != lastSizeChangeReason_) || !postTaskDone_) {
             NotifySizeChange(wmRect, wmReason);
@@ -616,6 +597,9 @@ WSError WindowSessionImpl::UpdateRect(const WSRect& rect, SizeChangeReason reaso
             postTaskDone_ = true;
         }
         UpdateViewportConfig(wmRect, wmReason, rsTransaction);
+    }
+    if (property_ && property_->GetLayoutCallback() != nullptr) {
+        property_->GetLayoutCallback()->OnUpdateSessionRect(rect);
     }
 
     return WSError::WS_OK;
@@ -662,6 +646,33 @@ void WindowSessionImpl::UpdateRectForRotation(const Rect& wmRect, const Rect& pr
         }
         window->postTaskDone_ = true;
     }, "WMS_WindowSessionImpl_UpdateRectForRotation");
+}
+
+void WindowSessionImpl::UpdateRectForNoRotation(const Rect& wmRect, const Rect& preRect,
+    WindowSizeChangeReason wmReason, const std::shared_ptr<RSTransaction>& rsTransaction)
+{
+    auto task = [weak = wptr(this), wmReason, wmRect, preRect, rsTransaction]() mutable {
+        auto window = weak.promote();
+        if (!window) {
+            TLOGE(WmsLogTag::WMS_LAYOUT, "window is null, updateViewPortConfig failed");
+            return;
+        }
+        if (rsTransaction) {
+            RSTransaction::FlushImplicitTransaction();
+            rsTransaction->Begin();
+        }
+        if ((wmRect != preRect) || (wmReason != window->lastSizeChangeReason_) ||
+            !window->postTaskDone_) {
+            window->NotifySizeChange(wmRect, wmReason);
+            window->lastSizeChangeReason_ = wmReason;
+        }
+        window->UpdateViewportConfig(wmRect, wmReason, rsTransaction);
+        if (rsTransaction) {
+            rsTransaction->Commit();
+        }
+        window->postTaskDone_ = true;
+    };
+    handler_->PostTask(task, "WMS_WindowSessionImpl_UpdateRectForNoRotation");
 }
 
 void WindowSessionImpl::NotifyRotationAnimationEnd()
