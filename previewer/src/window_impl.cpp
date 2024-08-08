@@ -113,11 +113,15 @@ std::vector<sptr<Window>> WindowImpl::GetSubWindow(uint32_t parentId)
 
 void WindowImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
+    WLOGFI("WindowImpl UpdateConfigurationForAll previewer before");
     std::lock_guard<std::mutex> lock(globalMutex_);
     for (const auto& winPair : windowMap_) {
         auto window = winPair.second.second;
+        WLOGFI("WindowImpl window UpdateConfigurationForAll previewer before");
         window->UpdateConfiguration(configuration);
+        WLOGFI("WindowImpl window UpdateConfigurationForAll previewer after");
     }
+    WLOGFI("WindowImpl UpdateConfigurationForAll previewer after");
 }
 
 std::shared_ptr<RSSurfaceNode> WindowImpl::GetSurfaceNode() const
@@ -820,9 +824,12 @@ int64_t WindowImpl::GetVSyncPeriod()
 
 void WindowImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
+    WLOGFI("WindowImpl UpdateConfiguration previewer before");
     if (uiContent_ != nullptr) {
-        WLOGFD("notify ace winId:%{public}u", GetWindowId());
+        WLOGFI("notify ace winId:%{public}u", GetWindowId());
+        WLOGFI("notify ace winId previewer");
         uiContent_->UpdateConfiguration(configuration);
+        WLOGFI("WindowImpl UpdateConfiguration previewer end");
     }
 }
 

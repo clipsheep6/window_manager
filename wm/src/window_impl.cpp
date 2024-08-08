@@ -279,10 +279,14 @@ std::vector<sptr<Window>> WindowImpl::GetSubWindow(uint32_t parentId)
 
 void WindowImpl::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
+    WLOGFI("WindowImpl UpdateConfigurationForAll before");
     for (const auto& winPair : windowMap_) {
         auto window = winPair.second.second;
+        WLOGFI("WindowImpl window UpdateConfigurationForAll before");
         window->UpdateConfiguration(configuration);
+        WLOGFI("WindowImpl window UpdateConfigurationForAll after");
     }
+    WLOGFI("WindowImpl UpdateConfigurationForAll after");
 }
 
 std::shared_ptr<RSSurfaceNode> WindowImpl::GetSurfaceNode() const
@@ -3315,9 +3319,12 @@ bool WindowImpl::IsFocused() const
 
 void WindowImpl::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
+    WLOGFI("WindowImpl UpdateConfiguration before");
     if (uiContent_ != nullptr) {
         WLOGFD("notify ace winId:%{public}u", GetWindowId());
+        WLOGFI("notify ace winId");
         uiContent_->UpdateConfiguration(configuration);
+        WLOGFI("WindowImpl UpdateConfiguration end");
     }
     if (subWindowMap_.count(GetWindowId()) == 0) {
         return;

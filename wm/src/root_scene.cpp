@@ -145,19 +145,25 @@ void RootScene::UpdateViewportConfig(const Rect& rect, WindowSizeChangeReason re
 
 void RootScene::UpdateConfiguration(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
+    TLOGI(WmsLogTag::WMS_MAIN, "RootScene UpdateConfiguration display config: %{public}s for all windows.", configuration->GetName().c_str());
     if (uiContent_) {
-        WLOGFD("notify root scene ace");
+        WLOGFI("notify root scene ace before");
         uiContent_->UpdateConfiguration(configuration);
+        WLOGFI("notify root scene ace after");
     }
 }
 
 void RootScene::UpdateConfigurationForAll(const std::shared_ptr<AppExecFwk::Configuration>& configuration)
 {
-    WLOGD("notify root scene ace for all");
+    TLOGI(WmsLogTag::WMS_MAIN, "RootScene UpdateConfigurationForAll display config: %{public}s for all windows.", configuration->GetName().c_str());
     if (staticRootScene_) {
+        TLOGI(WmsLogTag::WMS_MAIN, "staticRootScene UpdateConfigurationForAll before.");
         staticRootScene_->UpdateConfiguration(configuration);
+        TLOGI(WmsLogTag::WMS_MAIN, "staticRootScene UpdateConfigurationForAll after.");
         if (configurationUpdatedCallback_) {
+            TLOGI(WmsLogTag::WMS_MAIN, "staticRootScene configurationUpdatedCallback_ after.");
             configurationUpdatedCallback_(configuration);
+            TLOGI(WmsLogTag::WMS_MAIN, "staticRootScene configurationUpdatedCallback_ after.");
         }
     }
 }
