@@ -2308,7 +2308,7 @@ void JsSceneSession::TerminateSessionTotal(const SessionInfo& info, TerminateTyp
     taskScheduler_->PostMainThreadTask(task, "TerminateSessionTotal:name:" + info.abilityName_);
 }
 
-void JsSceneSession::UpdateSessionLabel(const std::string &label)
+void JsSceneSession::UpdateSessionLabel(const std::string& label)
 {
     WLOGFI("[NAPI]run UpdateSessionLabel");
 
@@ -2358,7 +2358,7 @@ void JsSceneSession::ProcessUpdateSessionIconRegister()
     WLOGFD("ProcessUpdateSessionIconRegister success");
 }
 
-void JsSceneSession::UpdateSessionIcon(const std::string &iconPath)
+void JsSceneSession::UpdateSessionIcon(const std::string& iconPath)
 {
     WLOGFI("[NAPI]run UpdateSessionIcon");
 

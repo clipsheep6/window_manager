@@ -131,7 +131,7 @@ std::string GetCurrentTime()
         static_cast<uint64_t>(tn.tv_nsec);
     return std::to_string(uTime);
 }
-int Comp(const std::pair<uint64_t, WindowVisibilityState> &a, const std::pair<uint64_t, WindowVisibilityState> &b)
+int Comp(const std::pair<uint64_t, WindowVisibilityState>& a, const std::pair<uint64_t, WindowVisibilityState>& b)
 {
     return a.first < b.first;
 }
@@ -532,7 +532,7 @@ WSError SceneSessionManager::GetFreeMultiWindowEnableState(bool& enable)
     return WSError::WS_OK;
 }
 
-WSError SceneSessionManager::SetSessionContinueState(const sptr<IRemoteObject> &token,
+WSError SceneSessionManager::SetSessionContinueState(const sptr<IRemoteObject>& token,
     const ContinueState& continueState)
 {
     TLOGI(WmsLogTag::DEFAULT, "Enter");
@@ -1289,7 +1289,7 @@ sptr<KeyboardSession::KeyboardSessionCallback> SceneSessionManager::CreateKeyboa
     return keyboardCb;
 }
 
-WMError SceneSessionManager::CheckWindowId(int32_t windowId, int32_t &pid)
+WMError SceneSessionManager::CheckWindowId(int32_t windowId, int32_t& pid)
 {
     if (!SessionPermission::IsSystemCalling()) {
         TLOGE(WmsLogTag::WMS_EVENT, "CheckWindowId permission denied!");
@@ -2108,7 +2108,7 @@ void SceneSessionManager::HandleCastScreenDisConnection(const sptr<SceneSession>
     }
 }
 
-WSError SceneSessionManager::RequestSceneSessionDestructionInner(sptr<SceneSession> &scnSession,
+WSError SceneSessionManager::RequestSceneSessionDestructionInner(sptr<SceneSession>& scnSession,
     sptr<AAFwk::SessionInfo> scnSessionInfo, const bool needRemoveSession, const bool isForceClean)
 {
     auto persistentId = scnSession->GetPersistentId();
@@ -3000,7 +3000,7 @@ WSError SceneSessionManager::ProcessBackEvent()
     return WSError::WS_OK;
 }
 
-WSError SceneSessionManager::InitUserInfo(int32_t userId, std::string &fileDir)
+WSError SceneSessionManager::InitUserInfo(int32_t userId, std::string& fileDir)
 {
     if (userId == DEFAULT_USERID || fileDir.empty()) {
         TLOGE(WmsLogTag::WMS_MAIN, "params invalid");
@@ -4792,8 +4792,8 @@ void SceneSessionManager::NotifyFocusStatus(sptr<SceneSession>& sceneSession, bo
     }
 }
 
-int32_t SceneSessionManager::NotifyRssThawApp(const int32_t uid, const std::string &bundleName,
-    const std::string &reason)
+int32_t SceneSessionManager::NotifyRssThawApp(const int32_t uid, const std::string& bundleName,
+    const std::string& reason)
 {
     uint32_t resType = ResourceSchedule::ResType::SYNC_RES_TYPE_THAW_ONE_APP;
     nlohmann::json payload;
@@ -5617,7 +5617,7 @@ WSError SceneSessionManager::NotifyWaterMarkFlagChangedResult(bool hasWaterMark)
     return WSError::WS_OK;
 }
 
-void SceneSessionManager::ProcessPreload(const AppExecFwk::AbilityInfo &abilityInfo) const
+void SceneSessionManager::ProcessPreload(const AppExecFwk::AbilityInfo& abilityInfo) const
 {
     if (!bundleMgr_) {
         WLOGFE("bundle manager is nullptr.");
@@ -5698,7 +5698,7 @@ void SceneSessionManager::NotifySessionMovedToFront(int32_t persistentId)
     }
 }
 
-WSError SceneSessionManager::SetSessionLabel(const sptr<IRemoteObject> &token, const std::string &label)
+WSError SceneSessionManager::SetSessionLabel(const sptr<IRemoteObject>& token, const std::string& label)
 {
     WLOGFI("Enter label: %{public}s", label.c_str());
     auto task = [this, &token, &label]() {
@@ -5719,8 +5719,8 @@ WSError SceneSessionManager::SetSessionLabel(const sptr<IRemoteObject> &token, c
     return taskScheduler_->PostSyncTask(task, "SetSessionLabel");
 }
 
-WSError SceneSessionManager::SetSessionIcon(const sptr<IRemoteObject> &token,
-    const std::shared_ptr<Media::PixelMap> &icon)
+WSError SceneSessionManager::SetSessionIcon(const sptr<IRemoteObject>& token,
+    const std::shared_ptr<Media::PixelMap>& icon)
 {
     WLOGFI("Enter");
     if (!SessionPermission::JudgeCallerIsAllowedToUseSystemAPI()) {
@@ -5750,7 +5750,7 @@ WSError SceneSessionManager::SetSessionIcon(const sptr<IRemoteObject> &token,
 }
 
 WSError SceneSessionManager::IsValidSessionIds(
-    const std::vector<int32_t> &sessionIds, std::vector<bool> &results)
+    const std::vector<int32_t>& sessionIds, std::vector<bool>& results)
 {
     WLOGFI("Enter");
     std::shared_lock<std::shared_mutex> lock(sceneSessionMapMutex_);
@@ -6033,7 +6033,7 @@ std::string SceneSessionManager::AnonymizeDeviceId(const std::string& deviceId)
     return anonDeviceId;
 }
 
-WSError SceneSessionManager::DumpSessionAll(std::vector<std::string> &infos)
+WSError SceneSessionManager::DumpSessionAll(std::vector<std::string>& infos)
 {
     WLOGFI("Dump all session.");
     if (!SessionPermission::IsSystemCalling()) {
@@ -6057,7 +6057,7 @@ WSError SceneSessionManager::DumpSessionAll(std::vector<std::string> &infos)
     return taskScheduler_->PostSyncTask(task, "DumpSessionAll");
 }
 
-WSError SceneSessionManager::DumpSessionWithId(int32_t persistentId, std::vector<std::string> &infos)
+WSError SceneSessionManager::DumpSessionWithId(int32_t persistentId, std::vector<std::string>& infos)
 {
     WLOGFI("Dump session with id %{public}d", persistentId);
     if (!SessionPermission::IsSystemCalling()) {
@@ -6118,8 +6118,8 @@ __attribute__((no_sanitize("cfi"))) WSError SceneSessionManager::GetAllAbilityIn
     return GetAbilityInfosFromBundleInfo(bundleInfos, scbAbilityInfos);
 }
 
-WSError SceneSessionManager::GetAbilityInfosFromBundleInfo(std::vector<AppExecFwk::BundleInfo> &bundleInfos,
-    std::vector<SCBAbilityInfo> &scbAbilityInfos)
+WSError SceneSessionManager::GetAbilityInfosFromBundleInfo(std::vector<AppExecFwk::BundleInfo>& bundleInfos,
+    std::vector<SCBAbilityInfo>& scbAbilityInfos)
 {
     if (bundleInfos.empty()) {
         WLOGFE("bundleInfos is empty");
@@ -7252,7 +7252,7 @@ void SceneSessionManager::WindowDestroyNotifyVisibility(const sptr<SceneSession>
     }
 }
 
-sptr<SceneSession> SceneSessionManager::FindSessionByToken(const sptr<IRemoteObject> &token)
+sptr<SceneSession> SceneSessionManager::FindSessionByToken(const sptr<IRemoteObject>& token)
 {
     if (token == nullptr) {
         TLOGW(WmsLogTag::DEFAULT, "token is nullptr");
@@ -7304,7 +7304,7 @@ void SceneSessionManager::PreloadInLakeApp(const std::string& bundleName)
     }
 }
 
-WSError SceneSessionManager::PendingSessionToForeground(const sptr<IRemoteObject> &token)
+WSError SceneSessionManager::PendingSessionToForeground(const sptr<IRemoteObject>& token)
 {
     TLOGI(WmsLogTag::DEFAULT, "Enter");
     auto pid = IPCSkeleton::GetCallingRealPid();
@@ -7324,7 +7324,7 @@ WSError SceneSessionManager::PendingSessionToForeground(const sptr<IRemoteObject
     return taskScheduler_->PostSyncTask(task, "PendingSessionToForeground");
 }
 
-WSError SceneSessionManager::PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject> &token)
+WSError SceneSessionManager::PendingSessionToBackgroundForDelegator(const sptr<IRemoteObject>& token)
 {
     auto task = [this, &token]() {
         auto session = FindSessionByToken(token);
@@ -8005,7 +8005,7 @@ bool SceneSessionManager::IsSessionClearable(sptr<SceneSession> scnSession)
 }
 
 WSError SceneSessionManager::RegisterIAbilityManagerCollaborator(int32_t type,
-    const sptr<AAFwk::IAbilityManagerCollaborator> &impl)
+    const sptr<AAFwk::IAbilityManagerCollaborator>& impl)
 {
     WLOGFI("type: %{public}d", type);
     auto isSaCall = SessionPermission::IsSACalling();
@@ -8404,7 +8404,7 @@ WSError SceneSessionManager::UpdateTitleInTargetPos(int32_t persistentId, bool i
     return sceneSession->UpdateTitleInTargetPos(isShow, height);
 }
 
-void AppAnrListener::OnAppDebugStarted(const std::vector<AppExecFwk::AppDebugInfo> &debugInfos)
+void AppAnrListener::OnAppDebugStarted(const std::vector<AppExecFwk::AppDebugInfo>& debugInfos)
 {
     WLOGFI("AppAnrListener OnAppDebugStarted");
     if (debugInfos.empty()) {
@@ -8414,7 +8414,7 @@ void AppAnrListener::OnAppDebugStarted(const std::vector<AppExecFwk::AppDebugInf
     DelayedSingleton<ANRManager>::GetInstance()->SwitchAnr(false);
 }
 
-void AppAnrListener::OnAppDebugStoped(const std::vector<AppExecFwk::AppDebugInfo> &debugInfos)
+void AppAnrListener::OnAppDebugStoped(const std::vector<AppExecFwk::AppDebugInfo>& debugInfos)
 {
     WLOGFI("AppAnrListener OnAppDebugStoped");
     if (debugInfos.empty()) {
@@ -9329,7 +9329,7 @@ void SceneSessionManager::CacVisibleWindowNum()
     }
     if (isFullScreen) {
         std::for_each(visibleWindowNumInfo.begin(), visibleWindowNumInfo.end(),
-                      [](auto &info) { info.visibleWindowNum = 1; });
+                      [](auto& info) { info.visibleWindowNum = 1; });
     }
     std::unique_lock<std::shared_mutex> lock(lastInfoMutex_);
     if (visibleWindowNumInfo.size() > 0 && !IsVectorSame(lastInfo_, visibleWindowNumInfo)) {
