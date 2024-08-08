@@ -476,6 +476,17 @@ void SceneSession::RegisterSessionChangeCallback(const sptr<SceneSession::Sessio
     sessionChangeCallback_ = sessionChangeCallback;
 }
 
+void SceneSession::RegisterDefaultAnimationFlagChangeCallback(NotifyWindowAnimationFlagChangeFunc&& callback)
+{
+    auto task = [this, callback = std::move(callback)] {
+        if (sessionChangeCallback_) {
+            sessionChangeCallback_->onWindowAnimationFlagChange_ = std::move(callback);
+            sessionChangeCallback_->onWindowAnimationFlagChange_(IsNeedDefaultAnimation());
+        }
+    };
+    PostTask(task, "RegisterDefaultAnimationFlagChangeCallback");
+}
+
 WSError SceneSession::SetGlobalMaximizeMode(MaximizeMode mode)
 {
     auto task = [weakThis = wptr(this), mode]() {
