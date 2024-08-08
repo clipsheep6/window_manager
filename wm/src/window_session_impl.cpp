@@ -2127,11 +2127,6 @@ void WindowSessionImpl::NotifyAfterForeground(bool needNotifyListeners, bool nee
     TLOGD(WmsLogTag::WMS_MAIN, "SetFrameRateLinkerEnable: true, linkerId = %{public}" PRIu64,
         vsyncStation_->GetFrameRateLinkerId());
     vsyncStation_->SetFrameRateLinkerEnable(true);
-    if (WindowHelper::IsMainWindow(GetType())) {
-        TLOGD(WmsLogTag::WMS_MAIN, "IsMainWindow: %{public}d, WindowType: %{public}d",
-            WindowHelper::IsMainWindow(GetType()), GetType());
-        vsyncStation_->SetDisplaySoloistFrameRateLinkerEnable(true);
-    }
 }
 
 void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool needNotifyUiContent)
@@ -2152,11 +2147,6 @@ void WindowSessionImpl::NotifyAfterBackground(bool needNotifyListeners, bool nee
     TLOGD(WmsLogTag::WMS_MAIN, "SetFrameRateLinkerEnable: false, linkerId = %{public}" PRIu64,
         vsyncStation_->GetFrameRateLinkerId());
     vsyncStation_->SetFrameRateLinkerEnable(false);
-    if (WindowHelper::IsMainWindow(GetType())) {
-        TLOGD(WmsLogTag::WMS_MAIN, "IsMainWindow: %{public}d, WindowType: %{public}d",
-            WindowHelper::IsMainWindow(GetType()), GetType());
-        vsyncStation_->SetDisplaySoloistFrameRateLinkerEnable(false);
-    }
 }
 
 static void RequestInputMethodCloseKeyboard(bool isNeedKeyboard, bool keepKeyboardFlag)
