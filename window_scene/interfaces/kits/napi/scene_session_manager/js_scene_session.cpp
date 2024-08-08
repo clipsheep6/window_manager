@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #include "js_scene_utils.h"
 #include "js_scene_session.h"
 
