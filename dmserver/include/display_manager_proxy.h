@@ -82,6 +82,8 @@ public:
     void NotifyDisplayEvent(DisplayEvent event) override;
     bool SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze) override;
     DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId, ScreenId& screenGroupId) override;
+    DMError MultiScreenModeSwitch(ScreenId mainScreenId, ScreenId secondaryScreenId,
+        ScreenSourceMode secondaryScreenMode) override;
     DMError StopMirror(const std::vector<ScreenId>& mirrorScreenIds) override;
     sptr<ScreenInfo> GetScreenInfoById(ScreenId screenId) override;
     sptr<ScreenGroupInfo> GetScreenGroupInfoById(ScreenId screenId) override;

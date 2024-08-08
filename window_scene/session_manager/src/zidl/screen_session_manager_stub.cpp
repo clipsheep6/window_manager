@@ -243,6 +243,14 @@ int32_t ScreenSessionManagerStub::OnRemoteRequest(uint32_t code, MessageParcel& 
             reply.WriteUint64(static_cast<uint64_t>(screenGroupId));
             break;
         }
+        case DisplayManagerMessage::TRANS_ID_MULTI_SCREEN_MODE_SWITCH: {
+            ScreenId mainScreenId = static_cast<ScreenId>(data.ReadUint64());
+            ScreenId secondaryScreenId = static_cast<ScreenId>(data.ReadUint64());
+            ScreenSourceMode secondaryScreenMode = static_cast<ScreenSourceMode>(data.ReadUint64());
+            DMError ret = MultiScreenModeSwitch(mainScreenId, secondaryScreenId, secondaryScreenMode);
+            reply.WriteInt32(static_cast<int32_t>(ret));
+            break;
+        }
         case DisplayManagerMessage::TRANS_ID_SCREEN_STOP_MIRROR: {
             std::vector<ScreenId> mirrorScreenIds;
             if (!data.ReadUInt64Vector(&mirrorScreenIds)) {

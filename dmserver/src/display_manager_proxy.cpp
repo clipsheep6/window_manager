@@ -1294,6 +1294,38 @@ DMError DisplayManagerProxy::MakeMirror(ScreenId mainScreenId, std::vector<Scree
     return ret;
 }
 
+DMError DisplayManagerProxy::MultiScreenModeSwitch(ScreenId mainScreenId, ScreenId secondaryScreenId,
+    ScreenSourceMode secondaryScreenMode)
+{
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        WLOGFW("create mirror fail: remote is null");
+        return DMError::DM_ERROR_NULLPTR;
+    }
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        WLOGFE("create mirror fail: WriteInterfaceToken failed");
+        return DMError::DM_ERROR_WRITE_INTERFACE_TOKEN_FAILED;
+    }
+    bool res = data.WriteUint64(static_cast<uint64_t>(mainScreenId)) &&
+        data.WriteUint64(secondaryScreenId) &&
+        data.WriteUint32(static_cast<uint32_t>(secondaryScreenMode));
+    if (!res) {
+        WLOGFE("create mirror fail: data write failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    if (remote->SendRequest(static_cast<uint32_t>(DisplayManagerMessage::TRANS_ID_SCREEN_MAKE_MIRROR),
+        data, reply, option) != ERR_NONE) {
+        WLOGFW("create mirror fail: SendRequest failed");
+        return DMError::DM_ERROR_IPC_FAILED;
+    }
+    DMError ret = static_cast<DMError>(reply.ReadInt32());
+    return ret;
+}
+
 DMError DisplayManagerProxy::StopMirror(const std::vector<ScreenId>& mirrorScreenIds)
 {
     sptr<IRemoteObject> remote = Remote();

@@ -94,6 +94,8 @@ public:
     bool SetFreeze(std::vector<DisplayId> displayIds, bool isFreeze) override;
 
     DMError MakeMirror(ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenIds, ScreenId& screenGroupId) override;
+    DMError MultiScreenModeSwitch(ScreenId mainScreenId, ScreenId secondaryScreenId,
+        ScreenSourceMode secondaryScreenMode) override;
     DMError MakeExpand(std::vector<ScreenId> screenId, std::vector<Point> startPoints,
         ScreenId& screenGroupId) override;
     DMError StopMirror(const std::vector<ScreenId>& mirrorScreenIds) override;
