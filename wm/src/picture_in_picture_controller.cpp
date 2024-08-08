@@ -652,6 +652,12 @@ void PictureInPictureController::UpdateXComponentPositionAndSize()
 
 void PictureInPictureController::UpdatePiPSourceRect() const
 {
+    if (useTypeNode_) {
+        Rect rect = {0, 0, 0, 0};
+        TLOGI(WmsLogTag::WMS_PIP, "use typeNode, unable to locate source rect");
+        window_->UpdatePiPRect(rect, WindowSizeChangeReason::PIP_RESTORE);
+        return;
+    }
     if (mainWindowXComponentController_ == nullptr || window_ == nullptr) {
         TLOGE(WmsLogTag::WMS_PIP, "xcomponent controller not valid");
         return;
@@ -665,12 +671,16 @@ void PictureInPictureController::UpdatePiPSourceRect() const
     Rect rect = { posX, posY, width, height };
     TLOGI(WmsLogTag::WMS_PIP, "result rect: [%{public}d, %{public}d, %{public}u, %{public}u]",
         rect.posX_, rect.posY_, rect.width_, rect.height_);
-    window_->UpdatePiPRect(rect, WindowSizeChangeReason::RECOVER);
+    window_->UpdatePiPRect(rect, WindowSizeChangeReason::PIP_RESTORE);
 }
 
 void PictureInPictureController::ResetExtController()
 {
     TLOGI(WmsLogTag::WMS_PIP, "called");
+    if (useTypeNode_) {
+        TLOGI(WmsLogTag::WMS_PIP, "skip resetExtController as nodeController enabled");
+        return;
+    }
     if (mainWindowXComponentController_ == nullptr || pipXComponentController_ == nullptr) {
         TLOGE(WmsLogTag::WMS_PIP, "error when resetExtController, one of the xComponentController is null");
         return;
@@ -704,6 +714,14 @@ WMError PictureInPictureController::SetXComponentController(std::shared_ptr<XCom
         listener->OnPictureInPictureStart();
     }
     return WMError::WM_OK;
+}
+
+void PictureInPictureController::OnPictureInPictureStart()
+{
+    useTypeNode_ = true;
+    for (auto& listener : pipLifeCycleListeners_) {
+        listener->OnPictureInPictureStart();
+    }
 }
 
 WMError PictureInPictureController::RegisterPiPLifecycle(const sptr<IPiPLifeCycle>& listener)
@@ -849,6 +867,11 @@ std::string PictureInPictureController::GetPiPNavigationId()
 napi_ref PictureInPictureController::GetCustomNodeController()
 {
     return pipOption_ == nullptr ? nullptr : pipOption_->GetNodeControllerRef();
+}
+
+napi_ref PictureInPictureController::GetTypeNode() const
+{
+    return pipOption_ == nullptr ? nullptr : pipOption_->GetTypeNodeRef();
 }
 
 PictureInPictureController::PiPMainWindowListenerImpl::PiPMainWindowListenerImpl(const sptr<Window> window)

@@ -96,6 +96,8 @@ public:
     PiPWindowState GetControllerState();
     std::string GetPiPNavigationId();
     napi_ref GetCustomNodeController();
+    napi_ref GetTypeNode() const;
+    void OnPictureInPictureStart();
 
     class PiPMainWindowListenerImpl : public Rosen::IWindowChangeListener {
     public:
@@ -170,6 +172,7 @@ private:
     std::mutex mutex_;
     int32_t handleId_ = -1;
     bool isStoppedFromClient_ = false;
+    bool useTypeNode_ = false;
 };
 } // namespace Rosen
 } // namespace OHOS
