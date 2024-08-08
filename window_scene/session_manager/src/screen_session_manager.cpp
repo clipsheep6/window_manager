@@ -1074,7 +1074,16 @@ sptr<ScreenSession> ScreenSessionManager::CreatePhysicalMirrorSessionInner(Scree
         .property = property,
     };
     screenSession = new ScreenSession(config, ScreenSessionReason::CREATE_SESSION_FOR_MIRROR);
-    screenSession->SetName("CastEngine");
+    if (!screenSession) {
+        TLOGE(WmsLogTag::DMS, "screenSession is null");
+        return nullptr;
+    }
+    if (ScreenSceneConfig::GetExternalScreenDefaultMode() == "none") {
+        // pc is none, pad&&phone is mirror
+        screenSession->SetName("ExtendedDisplay");
+    } else {
+        screenSession->SetName("CastEngine");
+    }
     screenSession->SetMirrorScreenType(MirrorScreenType::PHYSICAL_MIRROR);
     screenSession->SetScreenCombination(ScreenCombination::SCREEN_MIRROR);
     NotifyScreenChanged(screenSession->ConvertToScreenInfo(), ScreenChangeEvent::SCREEN_SWITCH_CHANGE);
@@ -3492,6 +3501,8 @@ std::shared_ptr<Media::PixelMap> ScreenSessionManager::GetScreenSnapshot(Display
     std::shared_ptr<Media::PixelMap> screenshot = callback->GetResult(2000); // wait for <= 2000ms
     if (screenshot == nullptr) {
         TLOGE(WmsLogTag::DMS, "Failed to get pixelmap from RS, return nullptr!");
+    } else {
+        TLOGI(WmsLogTag::DMS, "Sucess to get pixelmap from RS!");
     }
     // notify dm listener
     sptr<ScreenshotInfo> snapshotInfo = new ScreenshotInfo();
