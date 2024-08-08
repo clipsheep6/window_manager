@@ -269,6 +269,8 @@ public:
     void FoldScreenPowerInit();
     DMError ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy) override;
     DMError ResetAllFreezeStatus() override;
+    bool IsFreezedPid(const int32_t& agentPid, const DisplayManagerAgentType& agentType);
+    void NotifyUnfreezed(const std::set<int32_t>& pidList, const sptr<ScreenSession>& screenSession);
 
     void ReportFoldStatusToScb(std::vector<std::string>& screenFoldInfo);
     std::vector<DisplayPhysicalResolution> GetAllDisplayPhysicalResolution() override;
@@ -372,6 +374,10 @@ private:
     ClientAgentContainer<IDisplayManagerAgent, DisplayManagerAgentType> dmAgentContainer_;
     DeviceScreenConfig deviceScreenConfig_;
     std::vector<DisplayPhysicalResolution> allDisplayPhysicalResolution_ {};
+    std::set<DisplayManagerAgentType> agentTypeSet_;
+    std::vector<float> foldAngles_;
+    sptr<DisplayChangeInfo> displayChangeInfo_;
+    ScreenChangeEvent screenChangeEvent_;
 
     mutable std::recursive_mutex screenSessionMapMutex_;
     std::map<ScreenId, sptr<ScreenSession>> screenSessionMap_;
