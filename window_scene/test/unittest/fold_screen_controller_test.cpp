@@ -24,7 +24,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
+constexpr uint32_t SLEEP_TIME_IN_US = 100000; // 100ms
 }
 class FoldScreenControllerTest : public testing::Test {
 public:
@@ -57,67 +57,67 @@ void FoldScreenControllerTest::TearDown()
 
 namespace {
 
-    /**
-     * @tc.name: SetFoldDisplayMode
-     * @tc.desc: FoldScreenController set display mode
-     * @tc.type: FUNC
-     */
-    HWTEST_F(FoldScreenControllerTest, SetDisplayMode, Function | SmallTest | Level3)
-    {
-        ssm_.SetFoldDisplayMode(FoldDisplayMode::MAIN);
-        ASSERT_EQ(FoldDisplayMode::UNKNOWN, ssm_.GetFoldDisplayMode());
+/**
+ * @tc.name: SetFoldDisplayMode
+ * @tc.desc: FoldScreenController set display mode
+ * @tc.type: FUNC
+ */
+HWTEST_F(FoldScreenControllerTest, SetDisplayMode, Function | SmallTest | Level3)
+{
+    ssm_.SetFoldDisplayMode(FoldDisplayMode::MAIN);
+    ASSERT_EQ(FoldDisplayMode::UNKNOWN, ssm_.GetFoldDisplayMode());
 
-        ssm_.SetFoldDisplayMode(FoldDisplayMode::FULL);
-        ASSERT_EQ(FoldDisplayMode::UNKNOWN, ssm_.GetFoldDisplayMode());
-    }
+    ssm_.SetFoldDisplayMode(FoldDisplayMode::FULL);
+    ASSERT_EQ(FoldDisplayMode::UNKNOWN, ssm_.GetFoldDisplayMode());
+}
 
-    /**
-     * @tc.name: GetFoldDisplayMode
-     * @tc.desc: GetFoldDisplayMode get display mode
-     * @tc.type: FUNC
-     */
-    HWTEST_F(FoldScreenControllerTest, GetFoldDisplayMode, Function | SmallTest | Level3)
-    {
-        ssm_.SetFoldDisplayMode(FoldDisplayMode::MAIN);
-        ASSERT_EQ(FoldDisplayMode::UNKNOWN, ssm_.GetFoldDisplayMode());
+/**
+ * @tc.name: GetFoldDisplayMode
+ * @tc.desc: GetFoldDisplayMode get display mode
+ * @tc.type: FUNC
+ */
+HWTEST_F(FoldScreenControllerTest, GetFoldDisplayMode, Function | SmallTest | Level3)
+{
+    ssm_.SetFoldDisplayMode(FoldDisplayMode::MAIN);
+    ASSERT_EQ(FoldDisplayMode::UNKNOWN, ssm_.GetFoldDisplayMode());
 
-        ssm_.SetFoldDisplayMode(FoldDisplayMode::FULL);
-        ASSERT_EQ(FoldDisplayMode::UNKNOWN, ssm_.GetFoldDisplayMode());
-    }
+    ssm_.SetFoldDisplayMode(FoldDisplayMode::FULL);
+    ASSERT_EQ(FoldDisplayMode::UNKNOWN, ssm_.GetFoldDisplayMode());
+}
 
-    /**
-     * @tc.name: IsFoldable
-     * @tc.desc: FoldScreenController whether is foldable device or not
-     * @tc.type: FUNC
-     */
-    HWTEST_F(FoldScreenControllerTest, IsFoldable, Function | SmallTest | Level3)
-    {
-        ASSERT_EQ(false, ssm_.IsFoldable());
-    }
+/**
+ * @tc.name: IsFoldable
+ * @tc.desc: FoldScreenController whether is foldable device or not
+ * @tc.type: FUNC
+ */
+HWTEST_F(FoldScreenControllerTest, IsFoldable, Function | SmallTest | Level3)
+{
+    ASSERT_EQ(false, ssm_.IsFoldable());
+}
 
-    /**
-     * @tc.name: GetFoldStatus
-     * @tc.desc: FoldScreenController get device fold status
-     * @tc.type: FUNC
-     */
-    HWTEST_F(FoldScreenControllerTest, GetFoldStatus, Function | SmallTest | Level3)
-    {
-        ssm_.SetFoldDisplayMode(FoldDisplayMode::MAIN);
-        ASSERT_EQ(FoldStatus::UNKNOWN, ssm_.GetFoldStatus());
+/**
+ * @tc.name: GetFoldStatus
+ * @tc.desc: FoldScreenController get device fold status
+ * @tc.type: FUNC
+ */
+HWTEST_F(FoldScreenControllerTest, GetFoldStatus, Function | SmallTest | Level3)
+{
+    ssm_.SetFoldDisplayMode(FoldDisplayMode::MAIN);
+    ASSERT_EQ(FoldStatus::UNKNOWN, ssm_.GetFoldStatus());
 
-        ssm_.SetFoldDisplayMode(FoldDisplayMode::FULL);
-        ASSERT_EQ(FoldStatus::UNKNOWN, ssm_.GetFoldStatus());
-    }
+    ssm_.SetFoldDisplayMode(FoldDisplayMode::FULL);
+    ASSERT_EQ(FoldStatus::UNKNOWN, ssm_.GetFoldStatus());
+}
 
-    /**
-     * @tc.name: GetCurrentFoldCreaseRegion
-     * @tc.desc: FoldScreenController get crease region
-     * @tc.type: FUNC
-     */
-    HWTEST_F(FoldScreenControllerTest, GetCurrentFoldCreaseRegion, Function | SmallTest | Level3)
-    {
-        ASSERT_EQ(nullptr, ssm_.GetCurrentFoldCreaseRegion());
-    }
+/**
+ * @tc.name: GetCurrentFoldCreaseRegion
+ * @tc.desc: FoldScreenController get crease region
+ * @tc.type: FUNC
+ */
+HWTEST_F(FoldScreenControllerTest, GetCurrentFoldCreaseRegion, Function | SmallTest | Level3)
+{
+    ASSERT_EQ(nullptr, ssm_.GetCurrentFoldCreaseRegion());
+}
 }
 } // namespace Rosen
 } // namespace OHOS

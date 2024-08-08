@@ -22,6 +22,7 @@
 #include "window_manager_hilog.h"
 #include "parameters.h"
 #include "pointer_event.h"
+
 namespace OHOS::Rosen {
 namespace {
 constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, HILOG_DOMAIN_WINDOW, "SystemSession" };

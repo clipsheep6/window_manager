@@ -22,6 +22,7 @@
 #include "native_engine/native_value.h"
 #include "refbase.h"
 #include "window.h"
+
 namespace OHOS {
 namespace Rosen {
 enum class CaseType {

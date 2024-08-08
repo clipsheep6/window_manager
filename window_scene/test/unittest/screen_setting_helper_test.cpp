@@ -24,7 +24,7 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Rosen {
 namespace {
-    constexpr uint32_t SLEEP_TIME_US = 100000;
+constexpr uint32_t SLEEP_TIME_US = 100000;
 }
 
 class ScreenSettingHelperTest : public testing::Test {
@@ -54,89 +54,89 @@ void ScreenSettingHelperTest::TearDown()
 
 namespace {
 
-    /**
-     * @tc.name: RegisterSettingDpiObserver
-     * @tc.desc: RegisterSettingDpiObserver
-     * @tc.type: FUNC
-     */
-    HWTEST_F(ScreenSettingHelperTest, RegisterSettingDpiObserver, Function | SmallTest | Level3)
-    {
-        auto func = [] (const std::string&) {
-            TLOGI(WmsLogTag::DMS, "UT test");
-        };
-        ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
-        screenSettingHelper.RegisterSettingDpiObserver(func);
-        screenSettingHelper.dpiObserver_ = nullptr;
-        ASSERT_EQ(screenSettingHelper.dpiObserver_, nullptr);
-    }
+/**
+ * @tc.name: RegisterSettingDpiObserver
+ * @tc.desc: RegisterSettingDpiObserver
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSettingHelperTest, RegisterSettingDpiObserver, Function | SmallTest | Level3)
+{
+    auto func = [] (const std::string&) {
+        TLOGI(WmsLogTag::DMS, "UT test");
+    };
+    ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
+    screenSettingHelper.RegisterSettingDpiObserver(func);
+    screenSettingHelper.dpiObserver_ = nullptr;
+    ASSERT_EQ(screenSettingHelper.dpiObserver_, nullptr);
+}
 
-    /**
-     * @tc.name: UnregisterSettingDpiObserver
-     * @tc.desc: UnregisterSettingDpiObserver
-     * @tc.type: FUNC
-     */
-    HWTEST_F(ScreenSettingHelperTest, UnregisterSettingDpiObserver, Function | SmallTest | Level3)
-    {
-        ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
-        screenSettingHelper.UnregisterSettingDpiObserver();
-        ASSERT_EQ(screenSettingHelper.dpiObserver_, nullptr);
-    }
+/**
+ * @tc.name: UnregisterSettingDpiObserver
+ * @tc.desc: UnregisterSettingDpiObserver
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSettingHelperTest, UnregisterSettingDpiObserver, Function | SmallTest | Level3)
+{
+    ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
+    screenSettingHelper.UnregisterSettingDpiObserver();
+    ASSERT_EQ(screenSettingHelper.dpiObserver_, nullptr);
+}
 
-    /**
-     * @tc.name: GetSettingDpi
-     * @tc.desc: GetSettingDpi
-     * @tc.type: FUNC
-     */
-    HWTEST_F(ScreenSettingHelperTest, GetSettingDpi, Function | SmallTest | Level3)
-    {
-        ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
-        uint32_t dpi = 0;
-        std::string key = "test";
-        bool ret = screenSettingHelper.GetSettingDpi(dpi, key);
-        ASSERT_FALSE(ret);
-    }
+/**
+ * @tc.name: GetSettingDpi
+ * @tc.desc: GetSettingDpi
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSettingHelperTest, GetSettingDpi, Function | SmallTest | Level3)
+{
+    ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
+    uint32_t dpi = 0;
+    std::string key = "test";
+    bool ret = screenSettingHelper.GetSettingDpi(dpi, key);
+    ASSERT_FALSE(ret);
+}
 
-    /**
-     * @tc.name: RegisterSettingCastObserver
-     * @tc.desc: RegisterSettingCastObserver
-     * @tc.type: FUNC
-     */
-    HWTEST_F(ScreenSettingHelperTest, RegisterSettingCastObserver, Function | SmallTest | Level3)
-    {
-        auto func = [] (const std::string&) {
-            TLOGI(WmsLogTag::DMS, "UT test");
-        };
-        ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
-        screenSettingHelper.RegisterSettingCastObserver(func);
-        screenSettingHelper.castObserver_ = nullptr;
-        ASSERT_EQ(screenSettingHelper.castObserver_, nullptr);
-    }
+/**
+ * @tc.name: RegisterSettingCastObserver
+ * @tc.desc: RegisterSettingCastObserver
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSettingHelperTest, RegisterSettingCastObserver, Function | SmallTest | Level3)
+{
+    auto func = [] (const std::string&) {
+        TLOGI(WmsLogTag::DMS, "UT test");
+    };
+    ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
+    screenSettingHelper.RegisterSettingCastObserver(func);
+    screenSettingHelper.castObserver_ = nullptr;
+    ASSERT_EQ(screenSettingHelper.castObserver_, nullptr);
+}
 
-    /**
-     * @tc.name: UnregisterSettingCastObserver
-     * @tc.desc: UnregisterSettingCastObserver
-     * @tc.type: FUNC
-     */
-    HWTEST_F(ScreenSettingHelperTest, UnregisterSettingCastObserver, Function | SmallTest | Level3)
-    {
-        ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
-        screenSettingHelper.UnregisterSettingCastObserver();
-        ASSERT_EQ(screenSettingHelper.castObserver_, nullptr);
-    }
+/**
+ * @tc.name: UnregisterSettingCastObserver
+ * @tc.desc: UnregisterSettingCastObserver
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSettingHelperTest, UnregisterSettingCastObserver, Function | SmallTest | Level3)
+{
+    ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
+    screenSettingHelper.UnregisterSettingCastObserver();
+    ASSERT_EQ(screenSettingHelper.castObserver_, nullptr);
+}
 
-    /**
-     * @tc.name: GetSettingCast
-     * @tc.desc: GetSettingCast
-     * @tc.type: FUNC
-     */
-    HWTEST_F(ScreenSettingHelperTest, GetSettingCast, Function | SmallTest | Level3)
-    {
-        ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
-        bool enable = true;
-        std::string key = "test";
-        bool ret = screenSettingHelper.GetSettingCast(enable, key);
-        ASSERT_FALSE(ret);
-    }
+/**
+ * @tc.name: GetSettingCast
+ * @tc.desc: GetSettingCast
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenSettingHelperTest, GetSettingCast, Function | SmallTest | Level3)
+{
+    ScreenSettingHelper screenSettingHelper = ScreenSettingHelper();
+    bool enable = true;
+    std::string key = "test";
+    bool ret = screenSettingHelper.GetSettingCast(enable, key);
+    ASSERT_FALSE(ret);
+}
 }
 } // namespace Rosen
 } // namespace OHOS
