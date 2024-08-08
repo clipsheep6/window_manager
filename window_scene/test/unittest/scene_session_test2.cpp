@@ -240,6 +240,10 @@ HWTEST_F(SceneSessionTest2, HandleEnterWinwdowArea2, Function | SmallTest | Leve
     WSError result = scensession->HandleEnterWinwdowArea(1, 1);
     ASSERT_EQ(result, WSError::WS_OK);
 
+    scensession->sessionInfo_.isSystem_ = true;
+    WSError result = scensession->HandleEnterWinwdowArea(1, 1);
+    ASSERT_EQ(result, WSError::WS_OK);
+
     property = new(std::nothrow) WindowSessionProperty();
     property->SetWindowType(WindowType::ABOVE_APP_SYSTEM_WINDOW_END);
     property->SetWindowMode(WindowMode::WINDOW_MODE_FLOATING);
@@ -943,6 +947,9 @@ HWTEST_F(SceneSessionTest2, ProcessPointDownSession, Function | SmallTest | Leve
     };
     scensession->specificCallback_->onSessionTouchOutside_ = sessionTouchOutsideFun;
     scensession->specificCallback_->onOutsideDownEvent_ = outsideDownEventFun;
+    EXPECT_EQ(WSError::WS_OK, scensession->ProcessPointDownSession(3, 4));
+
+    scensession->specificCallback_->onSessionTouchOutside_ = nullptr;
     EXPECT_EQ(WSError::WS_OK, scensession->ProcessPointDownSession(3, 4));
 }
 
