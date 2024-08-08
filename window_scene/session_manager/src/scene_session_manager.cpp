@@ -1700,6 +1700,7 @@ std::future<int32_t> SceneSessionManager::RequestSceneSessionActivation(
     std::string taskName = "RequestSceneSessionActivation:PID:" +
         (sceneSession != nullptr ? std::to_string(sceneSession->GetPersistentId()) : "nullptr");
     taskScheduler_->PostAsyncTask(task, taskName);
+    TLOGI(WmsLogTag::WMS_MAIN, "RequestSceneSessionActivation success");
     return future;
 }
 
@@ -1782,6 +1783,7 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         FillSessionInfo(scnSession);
         if (!PreHandleCollaborator(scnSession, persistentId)) {
             scnSession->NotifySessionExceptionInner(SetAbilitySessionInfo(scnSession), true);
+            TLOGE(WmsLogTag::WMS_LIFE, "Application fails to be started, notify session exception, persistentId: %{public}d, ancoSceneState: %{public}d", persistentId, scnSession->GetSessionInfo().ancoSceneState);
             return WSError::WS_ERROR_PRE_HANDLE_COLLABORATOR_FAILED;
         }
     }
@@ -1848,6 +1850,7 @@ WSError SceneSessionManager::RequestSceneSessionActivationInner(
         scnSession->SetClientIdentityToken(scnSessionInfo->identityToken);
         scnSession->ResetSessionConnectState();
     }
+    TLOGI(WmsLogTag::WMS_MAIN, "RequestSceneSessionActivationInner success");
     return WSError::WS_OK;
 }
 
@@ -8147,7 +8150,7 @@ void SceneSessionManager::NotifySessionCreate(sptr<SceneSession> sceneSession, c
         std::string bundleName = sessionInfo.bundleName_;
         int64_t timestamp = containerStartAbilityTime;
         WindowInfoReporter::GetInstance().ReportContainerStartBegin(missionId, bundleName, timestamp);
-        WLOGFI("call NotifyMissionCreated");
+        WLOGFI("call NotifyMissionCreated, persistentId: %{public}d, bundleName: %{public}s", missionId, bundleName.c_str());
         collaborator->NotifyMissionCreated(abilitySessionInfo);
     }
 }
