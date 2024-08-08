@@ -390,6 +390,7 @@ struct SystemSessionConfig : public Parcelable {
     bool freeMultiWindowSupport_ = false;
     FreeMultiWindowConfig freeMultiWindowConfig_;
     std::string uiType_;
+    std::string multiWindowUIType_;
     bool supportTypeFloatWindow_ = false;
 
     virtual bool Marshalling(Parcel& parcel) const override
@@ -425,6 +426,9 @@ struct SystemSessionConfig : public Parcelable {
             return false;
         }
         if (!parcel.WriteString(uiType_)) {
+            return false;
+        }
+        if (!parcel.WriteString(multiWindowUIType_)) {
             return false;
         }
         if (!parcel.WriteBool(supportTypeFloatWindow_)) {
@@ -464,6 +468,7 @@ struct SystemSessionConfig : public Parcelable {
         }
         config->freeMultiWindowConfig_ = *freeMultiWindowConfig;
         config->uiType_ = parcel.ReadString();
+        config->multiWindowUIType_ = parcel.ReadString();
         config->supportTypeFloatWindow_ = parcel.ReadBool();
         return config;
     }

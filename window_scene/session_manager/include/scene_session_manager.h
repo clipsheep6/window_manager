@@ -374,6 +374,7 @@ private:
     void RegisterAppListener();
     void InitPrepareTerminateConfig();
     void LoadWindowSceneXml();
+    void LoadWindowParameter();
     void ConfigWindowSceneXml();
     void ConfigWindowSceneXml(const WindowSceneConfig::ConfigItem& config);
     void ConfigWindowEffect(const WindowSceneConfig::ConfigItem& effectConfig);
