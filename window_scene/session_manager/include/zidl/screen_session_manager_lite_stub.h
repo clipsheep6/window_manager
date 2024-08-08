@@ -39,6 +39,17 @@ private:
     int HandleGetDefaultDisplayInfo(MessageParcel& data, MessageParcel& reply);
     int HandleGetDisplayById(MessageParcel& data, MessageParcel& reply);
     int HandleGetCutoutInfo(MessageParcel& data, MessageParcel& reply);
+    int HandleWakeUpBegin(MessageParcel& data, MessageParcel& reply);
+    int HandleWakeUpEnd(MessageParcel& data, MessageParcel& reply);
+    int HandleSuspendBegin(MessageParcel& data, MessageParcel& reply);
+    int HandleSuspendEnd(MessageParcel& data, MessageParcel& reply);
+    int HandleSetSpecifiedScreenPower(MessageParcel& data, MessageParcel& reply);
+    int HandleSetScreenPowerForAll(MessageParcel& data, MessageParcel& reply);
+    int HandleGetScreenPower(MessageParcel& data, MessageParcel& reply);
+    int HandleSetDisplayState(MessageParcel& data, MessageParcel& reply);
+    int HandleSetScreenBrightness(MessageParcel& data, MessageParcel& reply);
+    int HandleGetScreenBrightness(MessageParcel& data, MessageParcel& reply);
+    int HandleGetAllDisplayIds(MessageParcel& data, MessageParcel& reply);
 };
 } // namespace Rosen
 } // namespace OHOS
