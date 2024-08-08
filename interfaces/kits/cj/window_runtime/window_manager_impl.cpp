@@ -73,8 +73,9 @@ static int32_t CreateNewSystemWindow(OHOS::AbilityRuntime::Context* ctx,
         if (!instance) {
             return static_cast<int32_t>(WMError::WM_ERROR_NO_MEM);
         }
-        
         *windowId = instance->GetID();
+    } else if (wmErrorCode == WmErrorCode::WM_OK) {
+        wmErrorCode = WmErrorCode::WM_ERROR_SYSTEM_ABNORMALLY;
     }
     return static_cast<int32_t>(wmErrorCode);
 }
