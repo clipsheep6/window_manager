@@ -1088,7 +1088,7 @@ sptr<RootSceneSession> SceneSessionManager::GetRootSceneSession()
     return taskScheduler_->PostSyncTask(task, "GetRootSceneSession");
 }
 
-WSRect SceneSessionManager::GetRootSessionAvoidSessionRect(AvoidAreaType type)
+AvoidArea SceneSessionManager::GetRootSessionAvoidArea(AvoidAreaType type)
 {
     sptr<RootSceneSession> rootSession = GetRootSceneSession();
     if (rootSession == nullptr || rootSession->GetSessionProperty() == nullptr) {
@@ -1117,7 +1117,22 @@ WSRect SceneSessionManager::GetRootSessionAvoidSessionRect(AvoidAreaType type)
         }
         const WSRect rect = session->GetSessionRect();
         TLOGI(WmsLogTag::WMS_IMMS, "type: %{public}u, rect: %{public}s", type, rect.ToString().c_str());
-        return rect;
+        AvoidArea avoidArea;
+        switch (type) {
+            case AvoidAreaType::TYPE_SYSTEM: {
+                avoidArea.topRect_ = SessionHelper::TransferToRect(rect);
+                break;
+            }
+            case AvoidAreaType::TYPE_KEYBOARD: {
+                avoidArea.bottomRect_ = SessionHelper::TransferToRect(rect);
+                break;
+            }
+            default: {
+                TLOGD(WmsLogTag::WMS_IMMS, "unsupported type %{public}u", type);
+                return {};
+            }
+        }
+        return avoidArea;
     }
     return {};
 }
