@@ -132,6 +132,7 @@ void WindowManager::Impl::NotifyFocused(const sptr<FocusChangeInfo>& focusChange
         std::shared_lock<std::shared_mutex> lock(listenerMutex_);
         focusChangeListeners = focusChangedListeners_;
     }
+    TLOGD(WmsLogTag::WMS_FOCUS, "NotifyFocused listeners:%{public}zu", focusChangeListeners.size());
     for (auto& listener : focusChangeListeners) {
         listener->OnFocused(focusChangeInfo);
     }
@@ -147,6 +148,7 @@ void WindowManager::Impl::NotifyUnfocused(const sptr<FocusChangeInfo>& focusChan
         std::shared_lock<std::shared_mutex> lock(listenerMutex_);
         focusChangeListeners = focusChangedListeners_;
     }
+    TLOGD(WmsLogTag::WMS_FOCUS, "NotifyUnfocused listeners:%{public}zu", focusChangeListeners.size());
     for (auto& listener : focusChangeListeners) {
         listener->OnUnfocused(focusChangeInfo);
     }
