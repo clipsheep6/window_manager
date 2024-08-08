@@ -1126,6 +1126,17 @@ HWTEST_F(SceneSessionTest, UpdateCameraWindowStatus, Function | SmallTest | Leve
     sysSession->SetPiPTemplateInfo(pipType);
     sysSession->property_ = property;
     sysSession->UpdateCameraWindowStatus(false);
+
+    specificCallback_->onCameraFloatSessionChange_ = nullptr;
+    sysSession->UpdateCameraWindowStatus(false);
+    specificCallback_->onCameraFloatSessionChange_ = [](uint32_t accessTokenId, bool isShowing) {};
+    specificCallback_->onCameraSessionChange_ = nullptr;
+    sysSession->UpdateCameraWindowStatus(false);
+    specificCallback_->onCameraSessionChange_ = [](uint32_t accessTokenId, bool isShowing) {};
+    pipType.pipTemplateType = static_cast<uint32_t>(PiPTemplateType::END);
+    sysSession->UpdateCameraWindowStatus(false);
+    pipType.pipTemplateType = static_cast<uint32_t>(PiPTemplateType::VIDEO_MEETING);
+    sysSession->UpdateCameraWindowStatus(false);
     ASSERT_EQ(ret, 1);
 }
 
