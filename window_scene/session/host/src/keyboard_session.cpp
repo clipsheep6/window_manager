@@ -376,6 +376,10 @@ static bool IsCallingSessionSplitMode(const sptr<SceneSession>& callingSession)
 void KeyboardSession::RaiseCallingSession(const WSRect& keyboardPanelRect,
     const std::shared_ptr<RSTransaction>& rsTransaction)
 {
+    if (!IsSessionForeground()) {
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Keyboard is not foreground.");
+        return;
+    }
     sptr<SceneSession> callingSession = GetSceneSession(GetCallingSessionId());
     if (callingSession == nullptr) {
         TLOGI(WmsLogTag::WMS_KEYBOARD, "Calling session is nullptr");
@@ -531,8 +535,9 @@ void KeyboardSession::RelayoutKeyBoard()
 
 void KeyboardSession::OpenKeyboardSyncTransaction()
 {
-    if (isKeyboardSyncTransactionOpen_) {
-        TLOGI(WmsLogTag::WMS_KEYBOARD, "Keyboard sync transaction is already open");
+    if (isKeyboardSyncTransactionOpen_ || !IsSessionForeground()) {
+        TLOGI(WmsLogTag::WMS_KEYBOARD, "Do not open sync, isKeyboardSyncTransactionOpen_: %{public}d"
+            ", isSessionForeground: %{public}d", isKeyboardSyncTransactionOpen_, IsSessionForeground());
         return;
     }
     isKeyboardSyncTransactionOpen_ = true;
@@ -562,7 +567,7 @@ void KeyboardSession::CloseKeyboardSyncTransaction(const WSRect& keyboardPanelRe
         if (!isRotating && session->isKeyboardSyncTransactionOpen_) {
             rsTransaction = session->GetRSTransaction();
         }
-        if (isKeyboardShow) {
+        if (isKeyboardShow && session->IsSessionForeground()) {
             session->RaiseCallingSession(keyboardPanelRect, rsTransaction);
             if (session->specificCallback_ != nullptr && session->specificCallback_->onUpdateAvoidArea_ != nullptr) {
                 if (Session::IsScbCoreEnabled()) {
@@ -571,7 +576,7 @@ void KeyboardSession::CloseKeyboardSyncTransaction(const WSRect& keyboardPanelRe
                     session->specificCallback_->onUpdateAvoidArea_(session->GetPersistentId());
                 }
             }
-        } else {
+        } else if (!isKeyboardShow){
             session->RestoreCallingSession(rsTransaction);
             auto sessionProperty = session->GetSessionProperty();
             if (sessionProperty) {
