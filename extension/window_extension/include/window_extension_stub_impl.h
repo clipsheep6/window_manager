@@ -42,6 +42,7 @@ public:
         const sptr<IRemoteObject>& iSession = nullptr);
     void DestroyWindow();
     sptr<Window> GetWindow() const;
+    
 private:
     sptr<IDispatchInputEventListener> dispatchInputEventListener_;
     wptr<Window> window_;

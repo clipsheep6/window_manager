@@ -47,6 +47,7 @@ public:
      * @brief Turn off the func of window zoom.
      */
     void OffWindowZoom();
+    
 private:
     WindowAccessibilityController();
     ~WindowAccessibilityController() = default;

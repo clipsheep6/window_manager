@@ -64,6 +64,7 @@ public:
     static bool CheckWHValid(int32_t param);
     static bool CheckParamValid(const WriteToJpegParam &param);
     static bool SaveSnapShot(const std::string &filename, Media::PixelMap &pixelMap, std::string fileType = "jpeg");
+    
 private:
     static bool ProcessDisplayId(Rosen::DisplayId &displayId, bool isDisplayIdSet);
 };

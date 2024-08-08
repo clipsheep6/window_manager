@@ -165,6 +165,7 @@ public:
 protected:
     // No more methods or variables can be defined here.
     Display(const std::string& name, sptr<DisplayInfo> info);
+    
 private:
     // No more methods or variables can be defined here.
     void UpdateDisplayInfo(sptr<DisplayInfo>) const;

@@ -339,6 +339,7 @@ public:
      * @return screenStatus VIRTUAL_SCREEN_PLAY or VIRTUAL_SCREEN_PAUSE.
      */
     bool SetVirtualScreenStatus(ScreenId screenId, VirtualScreenStatus screenStatus);
+    
 private:
     ScreenManager();
     ~ScreenManager();

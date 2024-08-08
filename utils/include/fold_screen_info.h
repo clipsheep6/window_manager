@@ -57,6 +57,7 @@ DEFINE_VAR_FUNC_GET(std::vector<DMRect>, CreaseRects, creaseRects)
 
     void SetCreaseRects(std::vector<DMRect> value)
     { creaseRects_ = std::move(value); }
+    
 private:
     const static uint32_t MAX_CREASE_REGION_SIZE = 20;
 

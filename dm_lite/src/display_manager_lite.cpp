@@ -46,6 +46,7 @@ public:
     DMError UnregisterFoldStatusListener(sptr<IFoldStatusListener> listener);
     void OnRemoteDied();
     sptr<DisplayLite> GetDisplayById(DisplayId displayId);
+
 private:
     void NotifyDisplayCreate(sptr<DisplayInfo> info);
     void NotifyDisplayDestroy(DisplayId);
@@ -133,6 +134,7 @@ public:
             listener->OnChange(displayInfo->GetDisplayId());
         }
     };
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -148,6 +150,7 @@ public:
     {
         pImpl_->NotifyFoldStatusChanged(foldStatus);
     }
+    
 private:
     sptr<Impl> pImpl_;
 };

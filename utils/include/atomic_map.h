@@ -84,6 +84,7 @@ public:
         unlocked();
         return false;
     }
+    
 private:
     void locked()
     {

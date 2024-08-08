@@ -42,6 +42,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    
 private:
     sptr<KeyboardSession> GetKeyboardSession(const std::string& abilityName, const std::string& bundleName);
     sptr<SceneSession> GetSceneSession(const std::string& abilityName, const std::string& bundleName);

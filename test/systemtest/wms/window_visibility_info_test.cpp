@@ -48,6 +48,7 @@ public:
     void OnWindowVisibilityChanged(const std::vector<sptr<WindowVisibilityInfo>>& windowVisibilityInfo) override;
     std::vector<sptr<WindowVisibilityInfo>> windowVisibilityInfos_;
     bool isCallbackCalled_ { false };
+    
 private:
     std::mutex& mutex_;
     std::condition_variable& cv_;

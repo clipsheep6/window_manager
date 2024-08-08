@@ -154,6 +154,7 @@ public:
         }
         NotifyVirtualScreenGroupChanged(screenInfos[0], trigger, screenIds, groupEvent);
     };
+    
 private:
     void NotifyVirtualScreenGroupChanged(sptr<ScreenInfo> screenInfo,
         const std::string trigger, std::vector<ScreenId>& ids, ScreenGroupChangeEvent groupEvent)

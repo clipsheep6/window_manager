@@ -48,6 +48,7 @@ public:
     void SetOnBootAnimation(bool onBootAnimation);
     void UpdateForPhyScreenPropertyChange();
     void ExitCoordination();
+    
 private:
     sptr<FoldScreenPolicy> GetFoldScreenPolicy(DisplayDeviceType productType);
     sptr<FoldScreenPolicy> foldScreenPolicy_;

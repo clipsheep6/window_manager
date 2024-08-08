@@ -56,6 +56,7 @@ public:
     static bool IsDisplayRotationHorizontal(Rotation rotation);
     static DeviceRotation ConvertSensorToDeviceRotation(SensorRotation sensorRotation);
     static DisplayOrientation ConvertRotationToDisplayOrientation(Rotation rotation);
+    
 private:
     static Rotation GetCurrentDisplayRotation();
     static Orientation GetPreferredOrientation();

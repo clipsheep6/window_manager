@@ -31,6 +31,7 @@ public:
         CaseType caseType, int64_t callbackObject);
     WmErrorCode UnregisterListener(sptr<Window>, std::string type,
         CaseType caseType, int64_t callbackObject);
+        
 private:
     bool IsCallbackRegistered(std::string type, int64_t callbackObject);
     WmErrorCode ProcessWindowChangeRegister(sptr<CjWindowListener> listener, sptr<Window> window, bool isRegister);

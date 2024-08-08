@@ -105,6 +105,7 @@ public:
         void OnModeChange(WindowMode mode, bool hasDeco = true) override;
         WindowMode GetMode();
         bool IsValid();
+
     private:
         void DelayReset();
 
@@ -132,6 +133,7 @@ public:
         };
         void AfterBackground() override;
         void BackgroundFailed(int32_t type) override;
+        
     private:
         std::string navigationId_ = "";
         sptr<Window> window_;

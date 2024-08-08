@@ -41,6 +41,7 @@ public:
     SessionInfo info;
     sptr<MainSession::SpecificSessionCallback> specificCallback = nullptr;
     sptr<MainSession> mainSession_;
+    
 private:
     RSSurfaceNode::SharedPtr CreateRSSurfaceNode();
 };

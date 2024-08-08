@@ -124,6 +124,7 @@ public:
     {
         availableArea_ = area;
     }
+    
 private:
     static inline bool IsVertical(Rotation rotation)
     {

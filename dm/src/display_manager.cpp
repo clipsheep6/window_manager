@@ -88,6 +88,7 @@ public:
     DMError ProxyForFreeze(const std::set<int32_t>& pidList, bool isProxy);
     DMError ResetAllFreezeStatus();
     void OnRemoteDied();
+
 private:
     void ClearDisplayStateCallback();
     void ClearFoldStatusCallback();
@@ -222,6 +223,7 @@ public:
             listener->OnChange(displayInfo->GetDisplayId());
         }
     };
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -242,6 +244,7 @@ public:
     {
         pImpl_->NotifyDisplayStateChanged(id, state);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -257,6 +260,7 @@ public:
     {
         pImpl_->NotifyScreenshot(info);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -272,6 +276,7 @@ public:
     {
         pImpl_->NotifyPrivateWindowStateChanged(hasPrivate);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -287,6 +292,7 @@ public:
     {
         pImpl_->NotifyPrivateStateWindowListChanged(id, privacyWindowList);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -302,6 +308,7 @@ public:
     {
         pImpl_->NotifyFoldStatusChanged(foldStatus);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -317,6 +324,7 @@ public:
     {
         pImpl_->NotifyFoldAngleChanged(foldAngles);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -332,6 +340,7 @@ public:
     {
         pImpl_->NotifyCaptureStatusChanged(isCapture);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -347,6 +356,7 @@ public:
     {
         pImpl_->NotifyDisplayChangeInfoChanged(info);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -363,6 +373,7 @@ public:
     {
         pImpl_->NotifyDisplayModeChanged(displayMode);
     }
+
 private:
     sptr<Impl> pImpl_;
 };
@@ -378,6 +389,7 @@ public:
     {
         pImpl_->NotifyAvailableAreaChanged(area);
     }
+    
 private:
     sptr<Impl> pImpl_;
 };

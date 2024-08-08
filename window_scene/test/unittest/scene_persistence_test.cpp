@@ -31,6 +31,7 @@ public:
     static void TearDownTestCase();
     void SetUp() override;
     void TearDown() override;
+    
 private:
     std::shared_ptr<Media::PixelMap> mPixelMap = std::make_shared<Media::PixelMap>();
 };

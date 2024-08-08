@@ -43,6 +43,7 @@ public:
     float GetYDPI();
     RetStruct GetCutoutInfo();
     OHOS::FFI::RuntimeType* GetRuntimeType() override { return GetClassType(); }
+    
 private:
     sptr<Display> display_ = nullptr;
     friend class OHOS::FFI::RuntimeType;

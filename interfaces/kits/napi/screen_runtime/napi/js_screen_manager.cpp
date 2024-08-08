@@ -125,6 +125,7 @@ static napi_value SetScreenRotationLocked(napi_env env, napi_callback_info info)
     JsScreenManager* me = CheckParamsAndGetThis<JsScreenManager>(env, info);
     return (me != nullptr) ? me->OnSetScreenRotationLocked(env, info) : nullptr;
 }
+
 private:
 std::map<std::string, std::map<std::unique_ptr<NativeReference>, sptr<JsScreenListener>>> jsCbMap_;
 std::mutex mtx_;

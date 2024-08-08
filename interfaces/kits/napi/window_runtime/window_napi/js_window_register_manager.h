@@ -55,6 +55,7 @@ public:
         CaseType caseType, napi_env env, napi_value callback, napi_value parameter = nullptr);
     WmErrorCode UnregisterListener(sptr<Window> window, std::string type,
         CaseType caseType, napi_env env, napi_value value);
+        
 private:
     bool IsCallbackRegistered(napi_env env, std::string type, napi_value jsListenerObject);
     WmErrorCode ProcessWindowChangeRegister(sptr<JsWindowListener> listener, sptr<Window> window, bool isRegister,

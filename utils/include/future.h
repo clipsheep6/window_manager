@@ -72,6 +72,7 @@ public:
         flag_ = false;
         result_ = defaultValue;
     }
+
 protected:
     void Call(T res) override
     {
@@ -88,6 +89,7 @@ protected:
     {
         return result_;
     }
+    
 private:
     bool flag_ {false};
     T result_;

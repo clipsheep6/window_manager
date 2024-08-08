@@ -38,6 +38,7 @@ public:
 
     static inline std::shared_ptr<AbilityRuntime::AbilityContext> abilityContext_;
     std::unique_ptr<Mocker> m = std::make_unique<Mocker>();
+    
 private:
     static constexpr uint32_t WAIT_SYNC_IN_NS = 200000;
 };

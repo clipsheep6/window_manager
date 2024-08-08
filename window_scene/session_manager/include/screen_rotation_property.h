@@ -41,6 +41,7 @@ public:
     ScreenRotationProperty() = delete;
     ~ScreenRotationProperty() = default;
     static void HandleSensorEventInput(DeviceRotation deviceRotation);
+    
 private:
     static float ConvertDeviceToFloat(DeviceRotation deviceRotation);
 };

@@ -33,6 +33,7 @@ public:
     virtual DMError UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type);
     virtual void Clear();
+
 protected:
     bool InitDMSProxy();
     std::recursive_mutex mutex_;
@@ -45,6 +46,7 @@ class DMSDeathRecipientLite : public IRemoteObject::DeathRecipient {
 public:
     explicit DMSDeathRecipientLite(BaseAdapterLite& adapter);
     virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
+
 private:
     BaseAdapterLite& adapter_;
 };
@@ -58,6 +60,7 @@ public:
     virtual FoldDisplayMode GetFoldDisplayMode();
     virtual sptr<DisplayInfo> GetDisplayInfo(DisplayId displayId);
     virtual sptr<CutoutInfo> GetCutoutInfo(DisplayId displayId);
+    
 private:
     static inline SingletonDelegator<DisplayManagerAdapterLite> delegator;
 };

@@ -37,6 +37,7 @@ public:
     virtual DMError UnregisterDisplayManagerAgent(const sptr<IDisplayManagerAgent>& displayManagerAgent,
         DisplayManagerAgentType type);
     virtual void Clear();
+
 protected:
     bool InitDMSProxy();
     std::recursive_mutex mutex_;
@@ -49,6 +50,7 @@ class DMSDeathRecipient : public IRemoteObject::DeathRecipient {
 public:
     explicit DMSDeathRecipient(BaseAdapter& adapter);
     virtual void OnRemoteDied(const wptr<IRemoteObject>& wptrDeath) override;
+
 private:
     BaseAdapter& adapter_;
 };
@@ -150,6 +152,7 @@ public:
     virtual DMError SetVirtualScreenFlag(ScreenId screenId, VirtualScreenFlag screenFlag);
     virtual DMError SetVirtualScreenRefreshRate(ScreenId screenId, uint32_t refreshInterval);
     virtual bool SetVirtualScreenStatus(ScreenId screenId, VirtualScreenStatus screenStatus);
+    
 private:
     static inline SingletonDelegator<ScreenManagerAdapter> delegator;
 };

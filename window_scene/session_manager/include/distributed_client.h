@@ -57,6 +57,7 @@ public:
         REGISTER_OFF_LISTENER = 261,
         SET_MISSION_CONTINUE_STATE = 300
     };
+    
 private:
     class DmsDeathRecipient : public IRemoteObject::DeathRecipient {
     public:

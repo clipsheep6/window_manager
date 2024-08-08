@@ -45,6 +45,7 @@ public:
     static napi_value SetGestureNavigationEnabled(napi_env env, napi_callback_info info);
     static napi_value SetWaterMarkImage(napi_env env, napi_callback_info info);
     static napi_value ShiftAppWindowFocus(napi_env env, napi_callback_info info);
+    
 private:
     static napi_value OnGetLastWindow(napi_env env, napi_callback_info info);
     static bool ParseRequiredConfigOption(

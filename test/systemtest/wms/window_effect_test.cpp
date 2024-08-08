@@ -32,6 +32,7 @@ public:
     virtual void SetUp() override;
     virtual void TearDown() override;
     Utils::TestWindowInfo windowInfo_;
+    
 private:
     static constexpr uint32_t WAIT_SYNC_IN_NS = 200000;
 };

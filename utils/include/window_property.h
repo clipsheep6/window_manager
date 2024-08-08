@@ -153,6 +153,7 @@ public:
 
     double GetTextFieldPositionY() const;
     double GetTextFieldHeight() const;
+    
 private:
     bool MapMarshalling(Parcel& parcel) const;
     static void MapUnmarshalling(Parcel& parcel, WindowProperty* property);

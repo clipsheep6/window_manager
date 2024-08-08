@@ -69,6 +69,7 @@ public:
     static bool gestureNavigationEnabled_;
     static ProcessGestureNavigationEnabledChangeFunc callbackFunc_;
     static sptr<SceneSessionManager> ssm_;
+    
 private:
     static constexpr uint32_t WAIT_SYNC_IN_NS = 50000;
 };
